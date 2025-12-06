@@ -15,10 +15,26 @@
             margin: 0;
             padding: 0;
             width: 100%;
-            overflow-x: hidden; /* CRITICAL: Prevents mobile horizontal scroll */
+            /* overflow-x: hidden;  <-- Removed here to handle in specific classes or reset */
             font-family: 'Inter', sans-serif;
             background-color: #E8F5E9; /* accent-light */
             color: #1F2937; /* text-dark */
+        }
+        
+        /* Ensure default state handles horizontal overflow but allows vertical */
+        html {
+            overflow-x: hidden;
+        }
+        body {
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* UTILITY: Lock Scroll */
+        /* Applied via JS when modal is open */
+        html.no-scroll, body.no-scroll {
+            overflow: hidden !important;
+            height: 100vh !important;
         }
 
         /* --- VARIABLES --- */
@@ -37,7 +53,7 @@
             flex-direction: column;
             padding-bottom: 40px;
             width: 100%;
-            overflow-x: hidden;
+            overflow-x: hidden; /* Extra safety */
         }
         
         /* Hero */
@@ -187,8 +203,31 @@
     <!-- Calendly -->
     <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
     
-    <!-- ConvertKit (Updated to specific URL for your account) -->
+    <!-- ConvertKit -->
     <script src="https://living-in-raleigh.kit.com/e79dbafbfd/index.js" data-uid="e79dbafbfd" async></script>
 
+    <!-- Popup Scroll Lock -->
+    <script>
+        // Use a more aggressive observer to catch the modal
+        const observer = new MutationObserver(() => {
+            // ConvertKit modals usually have class 'formkit-modal' or are wrapped in 'formkit-overlay'
+            // We check for presence and visibility
+            const modal = document.querySelector('.formkit-modal');
+            
+            // Check if modal exists and is effectively visible (not display: none)
+            const isVisible = modal && window.getComputedStyle(modal).display !== 'none';
+
+            if (isVisible) {
+                document.documentElement.classList.add('no-scroll');
+                document.body.classList.add('no-scroll');
+            } else {
+                document.documentElement.classList.remove('no-scroll');
+                document.body.classList.remove('no-scroll');
+            }
+        });
+        
+        // Observe subtree to ensure we catch deep injections
+        observer.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+    </script>
 </body>
 </html>
