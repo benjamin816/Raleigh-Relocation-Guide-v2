@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book a Call | Living in Raleigh Team</title>
+  <meta name="robots" content="noindex,nofollow" />
+  <style>
+    :root{
+      --green:#0a7a3d;
+      --text:#111827;
+      --muted:#4b5563;
+      --bg:#ffffff;
+      --card:#ffffff;
+      --border:rgba(17,24,39,.10);
+      --shadow:0 10px 30px rgba(17,24,39,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      color:var(--text);
+      background:linear-gradient(180deg, #f8fafc 0%, #ffffff 60%);
+    }
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 28px 18px 40px;
+    }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 18px;
+      padding: 22px 18px 18px;
+    }
+    h1{
+      margin: 2px 0 8px;
+      font-size: clamp(26px, 3.2vw, 38px);
+      line-height: 1.1;
+      letter-spacing:-0.02em;
+    }
+    .green{color:var(--green); font-weight:800}
+    .sub{
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.45;
+    }
+    .frame{
+      width:100%;
+      border:0;
+      height: 740px; /* desktop default */
+      border-radius: 12px;
+      overflow:hidden;
+      background:#fff;
+    }
+    .note{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .note a{color:var(--green); text-decoration:none}
+    .note a:hover{text-decoration:underline}
+    @media (max-width: 640px){
+      .card{padding:18px 14px 14px}
+      .frame{height: 880px;} /* more vertical room on mobile */
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="card" aria-label="Book a call">
+      <h1>Book a call with the <span class="green">Living in Raleigh Team</span></h1>
+      <p class="sub">Pick a time below. You’ll get an instant confirmation email + calendar invite.</p>
+
+      <iframe
+        class="frame"
+        src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ04kxIcB2hnI_Mn_RshX3GzVK0X5o5MwGrM5VqtudGbd8hkHoDBOYXJvJqCNfAbeyplBTwvOMQi?gv=true"
+        title="Google Calendar appointment scheduling"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        allow="camera; microphone; fullscreen"
+      ></iframe>
+
+      <p class="note">
+        Prefer phone or in‑person? Reply to the confirmation email after booking and we’ll adjust.
+      </p>
+    </section>
+  </main>
+</body>
+</html>
