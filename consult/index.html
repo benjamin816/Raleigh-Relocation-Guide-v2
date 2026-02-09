@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Book a Call | Living in Raleigh Team</title>
   <meta name="robots" content="noindex,nofollow" />
+
+  <!-- Speed up first paint for the Google Calendar iframe -->
+  <link rel="preconnect" href="https://calendar.google.com" />
+  <link rel="preconnect" href="https://www.google.com" />
+  <link rel="preconnect" href="https://accounts.google.com" />
+
   <style>
     :root{
       --green:#0a7a3d;
@@ -14,6 +20,7 @@
       --card:#ffffff;
       --border:rgba(17,24,39,.10);
       --shadow:0 10px 30px rgba(17,24,39,.08);
+      --skeleton:rgba(17,24,39,.06);
     }
     *{box-sizing:border-box}
     body{
@@ -33,7 +40,19 @@
       box-shadow: var(--shadow);
       border-radius: 18px;
       padding: 22px 18px 18px;
+      overflow:hidden;
     }
+
+    /* Header image */
+    .hero{
+      display:block;
+      width:100%;
+      height:auto;
+      border-radius: 14px;
+      border:1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
     h1{
       margin: 2px 0 8px;
       font-size: clamp(26px, 3.2vw, 38px);
@@ -47,14 +66,58 @@
       font-size: 15px;
       line-height: 1.45;
     }
-    .frame{
+
+    /* Embed area */
+    .embedWrap{
+      position: relative;
+      width:100%;
+      border-radius: 12px;
+      overflow:hidden;
+      border:1px solid var(--border);
+      background:#fff;
+    }
+
+    /* A clean, intentional placeholder (not a spinner) */
+    .placeholder{
+      position:absolute;
+      inset:0;
+      padding: 18px;
+      background:#fff;
+      display:flex;
+      flex-direction:column;
+      gap: 14px;
+      justify-content:flex-start;
+      pointer-events:none;
+    }
+    .placeholderTitle{
+      font-size: 13px;
+      color: var(--muted);
+      margin: 0;
+    }
+    .sk{
+      height: 14px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, var(--skeleton), rgba(17,24,39,.10), var(--skeleton));
+      background-size: 200% 100%;
+      animation: shimmer 1.1s linear infinite;
+    }
+    .sk.w1{width: 62%}
+    .sk.w2{width: 88%}
+    .sk.w3{width: 74%}
+
+    @keyframes shimmer{
+      0%{background-position: 200% 0}
+      100%{background-position: -200% 0}
+    }
+
+    iframe.frame{
+      display:block;
       width:100%;
       border:0;
       height: 740px; /* desktop default */
-      border-radius: 12px;
-      overflow:hidden;
       background:#fff;
     }
+
     .note{
       margin-top: 14px;
       color: var(--muted);
@@ -63,31 +126,62 @@
     }
     .note a{color:var(--green); text-decoration:none}
     .note a:hover{text-decoration:underline}
+
     @media (max-width: 640px){
       .card{padding:18px 14px 14px}
-      .frame{height: 880px;} /* more vertical room on mobile */
+      iframe.frame{height: 880px;} /* more vertical room on mobile */
+      .placeholder{padding: 14px;}
+    }
+
+    /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .sk{animation:none}
     }
   </style>
 </head>
 <body>
   <main class="wrap">
     <section class="card" aria-label="Book a call">
+      <!-- Put green1.png inside /consult alongside this index.html -->
+      <img class="hero" src="green1.png" alt="Living in Raleigh Team" />
+
       <h1>Book a call with the <span class="green">Living in Raleigh Team</span></h1>
       <p class="sub">Pick a time below. You’ll get an instant confirmation email + calendar invite.</p>
 
-      <iframe
-        class="frame"
-        src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ04kxIcB2hnI_Mn_RshX3GzVK0X5o5MwGrM5VqtudGbd8hkHoDBOYXJvJqCNfAbeyplBTwvOMQi?gv=true"
-        title="Google Calendar appointment scheduling"
-        loading="lazy"
-        referrerpolicy="no-referrer-when-downgrade"
-        allow="camera; microphone; fullscreen"
-      ></iframe>
+      <div class="embedWrap">
+        <div id="cal-placeholder" class="placeholder" aria-hidden="true">
+          <p class="placeholderTitle">Loading the booking calendar…</p>
+          <div class="sk w2"></div>
+          <div class="sk w1"></div>
+          <div class="sk w3"></div>
+          <div class="sk w2"></div>
+        </div>
 
-      <p class="note">
-        Prefer phone or in‑person? Reply to the confirmation email after booking and we’ll adjust.
-      </p>
+        <iframe
+          id="cal-iframe"
+          class="frame"
+          src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ04kxIcB2hnI_Mn_RshX3GzVK0X5o5MwGrM5VqtudGbd8hkHoDBOYXJvJqCNfAbeyplBTwvOMQi?gv=true"
+          title="Google Calendar appointment scheduling"
+          loading="eager"
+          referrerpolicy="no-referrer-when-downgrade"
+          allow="camera; microphone; fullscreen"
+        ></iframe>
+      </div>
+
+      <p class="note">Prefer phone or in-person? Reply to the confirmation email after booking and we’ll adjust.</p>
     </section>
   </main>
+
+  <script>
+    // Hide the placeholder as soon as the Google iframe finishes loading.
+    (function () {
+      var iframe = document.getElementById('cal-iframe');
+      var ph = document.getElementById('cal-placeholder');
+      if (!iframe || !ph) return;
+      iframe.addEventListener('load', function () {
+        ph.style.display = 'none';
+      });
+    })();
+  </script>
 </body>
 </html>
