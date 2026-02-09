@@ -13,7 +13,7 @@
 
   <style>
     :root{
-      --green:#16a34a; /* kept for accents only */
+      --green:#16a34a; /* accent only */
       --text:#111827;
       --muted:#4b5563;
       --bg:#ffffff;
@@ -75,14 +75,10 @@
       overflow:hidden;
       border:1px solid var(--border);
       background:#ffffff;
+      --crop: 150px; /* hides the top Google header/description area */
     }
 
-    /* Crop the top of the Google embed (hides profile/name + description area) */
-    .embedWrap{ --crop: 150px; }
-
-    /* Make the iframe taller, then shift it up; the wrapper clips the top */
-
-    /* A clean, intentional placeholder (not a spinner) */ (not a spinner) */
+    /* Placeholder (intentional skeleton, not a spinner) */
     .placeholder{
       position:absolute;
       inset:0;
@@ -116,12 +112,14 @@
       100%{background-position: -200% 0}
     }
 
+    /* Crop technique: make iframe taller, shift it up, wrapper clips the top */
     iframe.frame{
       display:block;
       width:100%;
       border:0;
-      /* Responsive height to avoid awkward empty space */
-      height: clamp(680px, calc(100vh - 340px), 820px);
+      position:relative;
+      top: calc(var(--crop) * -1);
+      height: calc(clamp(680px, calc(100vh - 340px), 820px) + var(--crop));
       background:transparent;
     }
 
@@ -140,16 +138,8 @@
       iframe.frame{height: calc(clamp(780px, calc(100vh - 260px), 980px) + var(--crop));}
       .placeholder{padding: 14px;}
     }
-      iframe.frame{height: clamp(780px, calc(100vh - 260px), 980px);} 
-      .placeholder{padding: 14px;}
-      .embedOverlay{height: 76px;}
-    }
 
     /* Respect reduced motion */
-    @media (prefers-reduced-motion: reduce){
-      .sk{animation:none}
-    }
-
     @media (prefers-reduced-motion: reduce){
       .sk{animation:none}
     }
