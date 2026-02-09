@@ -6,7 +6,7 @@
   <title>Book a Call | Living in Raleigh Team</title>
   <meta name="robots" content="noindex,nofollow" />
 
-  <!-- Speed up firs, paint for the Google Calendar iframe -->
+  <!-- Speed up first paint for the Google Calendar iframe -->
   <link rel="preconnect" href="https://calendar.google.com" />
   <link rel="preconnect" href="https://www.google.com" />
   <link rel="preconnect" href="https://accounts.google.com" />
@@ -75,7 +75,7 @@
       overflow:hidden;
       border:1px solid var(--border);
       background:#ffffff;
-      --crop: 150px; /* hides the top Google header/description area */
+      --crop: 235px; /* hides the top Google header/profile area */
     }
 
     /* Placeholder (intentional skeleton, not a spinner) */
@@ -119,8 +119,9 @@
       border:0;
       position:relative;
       top: calc(var(--crop) * -1);
-      height: calc(clamp(680px, calc(100vh - 340px), 820px) + var(--crop));
-      background:transparent;
+      /* Keep this simple + stable. Taller iframe + wrapper clipping = no internal scroll. */
+      height: calc(980px + var(--crop));
+      background:#ffffff;
     }
 
     .note{
@@ -134,8 +135,8 @@
 
     @media (max-width: 640px){
       .card{padding:18px 14px 14px}
-      .embedWrap{ --crop: 170px; }
-      iframe.frame{height: calc(clamp(780px, calc(100vh - 260px), 980px) + var(--crop));}
+      .embedWrap{ --crop: 270px; }
+      iframe.frame{height: calc(1180px + var(--crop));}
       .placeholder{padding: 14px;}
     }
 
