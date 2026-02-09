@@ -79,6 +79,12 @@
       font-weight:500;
     }
 
+    /* Match Google inner calendar width */
+    .embedHeaderInner{
+      max-width:860px; /* visually aligns with Google calendar inner box */
+      margin:0 auto;
+    }
+
     /* Wrapper that clips the iframe after we shift it up */
     .embedWrap{
       position:relative;
@@ -115,7 +121,9 @@
       <!-- GREEN HEADER BAR -->
       <div class="embedShell">
         <div class="embedHeader">
-          Pick a time below. You’ll get an instant confirmation email plus a calendar invite. Choose from a video call, phone call, or meet with us in person. We look forward to meeting you!
+          <div class="embedHeaderInner">
+            Pick a time below. You’ll get an instant confirmation email plus a calendar invite. Choose from a video call, phone call, or meet with us in person. We look forward to meeting you!
+          </div>
         </div>
 
         <div class="embedWrap">
