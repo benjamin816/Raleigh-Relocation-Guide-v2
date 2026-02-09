@@ -13,7 +13,7 @@
 
   <style>
     :root{
-      --green:#0a7a3d;
+      --green:#16a34a; /* kept for accents only */
       --text:#111827;
       --muted:#4b5563;
       --bg:#ffffff;
@@ -74,7 +74,26 @@
       border-radius: 12px;
       overflow:hidden;
       border:1px solid var(--border);
-      background:#fff;
+      background:#ffffff;
+    }
+
+    /* Mask to cover Google profile header inside iframe (visual only) */
+    .embedMask{
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      height:56px; /* adjust if Google UI changes */
+      background:#ffffff;
+      z-index:3;
+      pointer-events:none;
+    }
+      position: relative;
+      width:100%;
+      border-radius: 12px;
+      overflow:hidden;
+      border:1px solid var(--border);
+      background:#ffffff;
     }
 
     /* A clean, intentional placeholder (not a spinner) */
@@ -82,7 +101,7 @@
       position:absolute;
       inset:0;
       padding: 18px;
-      background:#fff;
+      background:#ffffff;
       display:flex;
       flex-direction:column;
       gap: 14px;
@@ -114,8 +133,8 @@
       display:block;
       width:100%;
       border:0;
-      height: 740px; /* desktop default */
-      background:#fff;
+      height: 920px; /* desktop default (taller to avoid internal scrolling) */
+      background:transparent;
     }
 
     .note{
@@ -129,8 +148,9 @@
 
     @media (max-width: 640px){
       .card{padding:18px 14px 14px}
-      iframe.frame{height: 880px;} /* more vertical room on mobile */
+      iframe.frame{height: 1100px;} /* more vertical room on mobile */
       .placeholder{padding: 14px;}
+    }
     }
 
     /* Respect reduced motion */
@@ -149,6 +169,8 @@
       <p class="sub">Pick a time below. You’ll get an instant confirmation email + calendar invite.</p>
 
       <div class="embedWrap">
+        <!-- Mask bar to hide Google profile name / avatar area -->
+        <div class="embedMask"></div>
         <div id="cal-placeholder" class="placeholder" aria-hidden="true">
           <p class="placeholderTitle">Loading the booking calendar…</p>
           <div class="sk w2"></div>
