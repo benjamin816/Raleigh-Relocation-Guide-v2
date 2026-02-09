@@ -84,8 +84,10 @@
       position:relative;
       width:100%;
       background:#fff;
-      --crop:235px; /* trims Google header */
-      --frame:520px; /* visible calendar height (controls bottom whitespace) */
+      overflow:hidden;              /* IMPORTANT: clips the extra iframe height */
+      height:var(--frame);          /* IMPORTANT: this is the visible embed height */
+      --crop:235px;                 /* trims Google header */
+      --frame:560px;                /* visible calendar height (controls bottom whitespace) */
     }
 
     iframe.frame{
@@ -94,14 +96,12 @@
       border:0;
       position:relative;
       top:calc(var(--crop) * -1);
-      height:calc(var(--frame) + var(--crop));
+      height:calc(var(--frame) + var(--crop)); /* iframe is taller; wrapper clips it */
       background:#fff;
     }
 
     @media (max-width:640px){
-      .embedWrap{ --crop:270px; --frame:640px; }
-    }
-      iframe.frame{height:calc(1020px + var(--crop));}
+      .embedWrap{ --crop:270px; --frame:720px; }
     }
   </style>
 </head>
