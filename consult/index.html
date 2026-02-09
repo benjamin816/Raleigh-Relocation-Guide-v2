@@ -77,23 +77,40 @@
       background:#ffffff;
     }
 
-    /* Mask to cover Google profile header inside iframe (visual only) */
-    .embedMask{
+    /* Overlay header to hide Google profile name/avatar AND replace it with your own */
+    .embedOverlay{
       position:absolute;
       top:0;
       left:0;
       right:0;
-      height:56px; /* adjust if Google UI changes */
+      height:72px; /* tweak if Google UI changes */
       background:#ffffff;
       z-index:3;
       pointer-events:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 0 14px;
+      border-bottom:1px solid var(--border);
     }
-      position: relative;
+    .embedOverlayInner{
       width:100%;
-      border-radius: 12px;
-      overflow:hidden;
-      border:1px solid var(--border);
-      background:#ffffff;
+      max-width: 860px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .dot{
+      width:8px;
+      height:8px;
+      border-radius:999px;
+      background: var(--green);
+      flex:0 0 auto;
+      opacity:.9;
     }
 
     /* A clean, intentional placeholder (not a spinner) */
@@ -107,6 +124,7 @@
       gap: 14px;
       justify-content:flex-start;
       pointer-events:none;
+      z-index:2;
     }
     .placeholderTitle{
       font-size: 13px;
@@ -133,7 +151,8 @@
       display:block;
       width:100%;
       border:0;
-      height: 920px; /* desktop default (taller to avoid internal scrolling) */
+      /* Responsive height to avoid awkward empty space */
+      height: clamp(680px, calc(100vh - 340px), 820px);
       background:transparent;
     }
 
@@ -148,12 +167,16 @@
 
     @media (max-width: 640px){
       .card{padding:18px 14px 14px}
-      iframe.frame{height: 1100px;} /* more vertical room on mobile */
+      iframe.frame{height: clamp(780px, calc(100vh - 260px), 980px);} 
       .placeholder{padding: 14px;}
-    }
+      .embedOverlay{height: 76px;}
     }
 
     /* Respect reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .sk{animation:none}
+    }
+
     @media (prefers-reduced-motion: reduce){
       .sk{animation:none}
     }
@@ -169,8 +192,13 @@
       <p class="sub">Pick a time below. You’ll get an instant confirmation email + calendar invite.</p>
 
       <div class="embedWrap">
-        <!-- Mask bar to hide Google profile name / avatar area -->
-        <div class="embedMask"></div>
+        <!-- Overlay header to hide Google profile name/avatar and replace with branding -->
+        <div class="embedOverlay" aria-hidden="true">
+          <div class="embedOverlayInner">
+            <span class="dot"></span>
+            <span>Scheduling with the Living in Raleigh Team</span>
+          </div>
+        </div>
         <div id="cal-placeholder" class="placeholder" aria-hidden="true">
           <p class="placeholderTitle">Loading the booking calendar…</p>
           <div class="sk w2"></div>
