@@ -77,43 +77,12 @@
       background:#ffffff;
     }
 
-    /* Overlay header to hide Google profile name/avatar AND replace it with your own */
-    .embedOverlay{
-      position:absolute;
-      top:0;
-      left:0;
-      right:0;
-      height:72px; /* tweak if Google UI changes */
-      background:#ffffff;
-      z-index:3;
-      pointer-events:none;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      padding: 0 14px;
-      border-bottom:1px solid var(--border);
-    }
-    .embedOverlayInner{
-      width:100%;
-      max-width: 860px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      gap:10px;
-      color: var(--muted);
-      font-size: 13px;
-      font-weight: 600;
-    }
-    .dot{
-      width:8px;
-      height:8px;
-      border-radius:999px;
-      background: var(--green);
-      flex:0 0 auto;
-      opacity:.9;
-    }
+    /* Crop the top of the Google embed (hides profile/name + description area) */
+    .embedWrap{ --crop: 150px; }
 
-    /* A clean, intentional placeholder (not a spinner) */
+    /* Make the iframe taller, then shift it up; the wrapper clips the top */
+
+    /* A clean, intentional placeholder (not a spinner) */ (not a spinner) */
     .placeholder{
       position:absolute;
       inset:0;
@@ -167,6 +136,10 @@
 
     @media (max-width: 640px){
       .card{padding:18px 14px 14px}
+      .embedWrap{ --crop: 170px; }
+      iframe.frame{height: calc(clamp(780px, calc(100vh - 260px), 980px) + var(--crop));}
+      .placeholder{padding: 14px;}
+    }
       iframe.frame{height: clamp(780px, calc(100vh - 260px), 980px);} 
       .placeholder{padding: 14px;}
       .embedOverlay{height: 76px;}
@@ -192,13 +165,6 @@
       <p class="sub">Pick a time below. You’ll get an instant confirmation email + calendar invite.</p>
 
       <div class="embedWrap">
-        <!-- Overlay header to hide Google profile name/avatar and replace with branding -->
-        <div class="embedOverlay" aria-hidden="true">
-          <div class="embedOverlayInner">
-            <span class="dot"></span>
-            <span>Scheduling with the Living in Raleigh Team</span>
-          </div>
-        </div>
         <div id="cal-placeholder" class="placeholder" aria-hidden="true">
           <p class="placeholderTitle">Loading the booking calendar…</p>
           <div class="sk w2"></div>
