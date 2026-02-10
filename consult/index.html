@@ -20,7 +20,7 @@
       --shadow:0 10px 30px rgba(17,24,39,.08);
 
       /* Responsive tuning knobs (JS will adjust these too) */
-      --crop:235px;   /* trims Google header */
+      --crop:0px;   /* restored Google header */   /* trims Google header */
       --frame:520px;  /* visible calendar height */
     }
 
@@ -73,7 +73,7 @@
       background:#fff;
     }
 
-    /* Green bar that visually replaces the cropped Google header */
+    /* Green bar (intro message) */
     .embedHeader{
       background:var(--green);
       color:#fff;
@@ -104,8 +104,8 @@
       width:100%;
       border:0;
       position:relative;
-      top:calc(var(--crop) * -1);
-      height:calc(var(--frame) + var(--crop)); /* iframe is taller; wrapper clips it */
+      top:0; /* no vertical shift */
+      height:var(--frame); /* iframe is taller; wrapper clips it */
       background:#fff;
     }
 
