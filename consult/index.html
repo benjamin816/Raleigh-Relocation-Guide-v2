@@ -18,6 +18,10 @@
       --bg:#ffffff;
       --border:rgba(17,24,39,.10);
       --shadow:0 10px 30px rgba(17,24,39,.08);
+
+      /* Responsive tuning knobs (JS will adjust these too) */
+      --crop:235px;   /* trims Google header */
+      --frame:520px;  /* visible calendar height */
     }
 
     *{box-sizing:border-box}
@@ -81,8 +85,9 @@
 
     /* Match Google inner calendar width */
     .embedHeaderInner{
-      max-width:860px; /* visually aligns with Google calendar inner box */
+      width:min(860px, 100%);
       margin:0 auto;
+      padding:0 2px;
     }
 
     /* Wrapper that clips the iframe after we shift it up */
@@ -90,10 +95,8 @@
       position:relative;
       width:100%;
       background:#fff;
-      overflow:hidden;              /* IMPORTANT: clips the extra iframe height */
-      height:var(--frame);          /* IMPORTANT: this is the visible embed height */
-      --crop:235px;                 /* trims Google header */
-      --frame:560px;                /* visible calendar height (controls bottom whitespace) */
+      overflow:hidden;     /* clips the extra iframe height */
+      height:var(--frame); /* visible embed height */
     }
 
     iframe.frame{
@@ -106,8 +109,21 @@
       background:#fff;
     }
 
+    @media (max-width:900px){
+      .wrap{padding:22px 14px 34px}
+      .card{padding:18px 14px 14px}
+    }
+
     @media (max-width:640px){
-      .embedWrap{ --crop:270px; --frame:720px; }
+      :root{ --crop:270px; --frame:680px; }
+      .embedHeader{font-size:13px; padding:12px 12px}
+      .embedHeaderInner{padding:0}
+    }
+
+    @media (max-width:420px){
+      :root{ --crop:290px; --frame:760px; }
+    }
+  </style>
     }
   </style>
 </head>
@@ -141,5 +157,34 @@
 
     </section>
   </main>
+  <script>
+    // Bulletproofing: set iframe crop/frame based on viewport so mobile doesn't look broken.
+    // Note: we cannot read inside the Google iframe (cross-origin), so this is best-effort sizing.
+    (function () {
+      function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+      function setEmbedVars(){
+        var vw = window.innerWidth || 1024;
+        var vh = window.innerHeight || 800;
+
+        // Crop: slightly larger on small screens because Google header stacks taller.
+        var crop = (vw <= 420) ? 290 : (vw <= 640) ? 270 : 235;
+
+        // Frame: aim to show the full slot area without the Google footer.
+        // Use a % of viewport height, clamped so it doesn't get ridiculous.
+        var frame;
+        if (vw <= 420) frame = clamp(Math.round(vh * 0.80), 680, 920);
+        else if (vw <= 640) frame = clamp(Math.round(vh * 0.78), 640, 900);
+        else frame = clamp(Math.round(vh * 0.70), 500, 720);
+
+        document.documentElement.style.setProperty('--crop', crop + 'px');
+        document.documentElement.style.setProperty('--frame', frame + 'px');
+      }
+
+      setEmbedVars();
+      window.addEventListener('resize', setEmbedVars);
+      window.addEventListener('orientationchange', setEmbedVars);
+    })();
+  </script>
 </body>
 </html>
