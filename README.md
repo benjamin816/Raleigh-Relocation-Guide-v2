@@ -1,20 +1,18 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+﻿# Raleigh NC Guide (GitHub Pages Static Site)
 
-# Run and deploy your AI Studio app
+This repository is organized for pure static hosting on GitHub Pages using folder routing.
 
-This contains everything you need to run your app locally.
+## Routes
+- `/` homepage
+- `/consult/` consult landing page
+- `/2026/` 2026 guide lead magnet
+- `/areas/` areas hub
+- `/videos/` videos page
+- `/contact/` contact page
 
-View your app in AI Studio: https://ai.studio/apps/drive/1thkA_83Uz2yzFzMeU3zxGbrQjR1GgaZ3
+## Shared assets
+- `/assets/css/styles.css`
+- `/assets/js/script.js`
+- `/assets/images/`
 
-## Run Locally
-
-**Prerequisites:**  Node.js
-
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+No build step, framework, or backend is required.
