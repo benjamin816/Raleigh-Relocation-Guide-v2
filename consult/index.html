@@ -1,87 +1,189 @@
 ﻿<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Book a Raleigh Relocation Consult | Living in Raleigh NC</title>
-  <meta name="description" content="Schedule a one-on-one relocation consult with the Living in Raleigh team to map your move timeline, neighborhoods, and next steps.">
-  <meta name="robots" content="index,follow">
-  <link rel="canonical" href="https://raleighncguide.com/consult/">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Book a Raleigh Relocation Consult">
-  <meta property="og:description" content="Pick a consult time and get a personalized Raleigh relocation strategy.">
-  <meta property="og:url" content="https://raleighncguide.com/consult/">
-  <meta property="og:image" content="https://raleighncguide.com/assets/images/consult-hero.png">
-  <meta name="twitter:card" content="summary_large_image">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../assets/css/styles.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Book a Call | Living in Raleigh Team</title>
+  <meta name="robots" content="noindex,nofollow" />
+
+  <link rel="preconnect" href="https://calendar.google.com" />
+  <link rel="preconnect" href="https://www.google.com" />
+  <link rel="preconnect" href="https://accounts.google.com" />
+
+  <style>
+    :root{
+      --green:#16a34a;
+      --text:#111827;
+      --muted:#4b5563;
+      --bg:#ffffff;
+      --border:rgba(17,24,39,.10);
+      --shadow:0 10px 30px rgba(17,24,39,.08);
+
+      /* Responsive tuning knobs (JS will adjust these too) */
+      --crop:0px;   /* restored Google header */   /* trims Google header */
+      --frame:520px;  /* visible calendar height */
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      color:var(--text);
+      background:linear-gradient(180deg, #f8fafc 0%, #ffffff 60%);
+    }
+
+    .wrap{
+      max-width:980px;
+      margin:0 auto;
+      padding:28px 18px 40px;
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--border);
+      box-shadow:var(--shadow);
+      border-radius:18px;
+      padding:22px 18px 18px;
+      overflow:hidden;
+    }
+
+    .hero{
+      width:100%;
+      border-radius:14px;
+      border:1px solid var(--border);
+      margin-bottom:16px;
+    }
+
+    h1{
+      margin:2px 0 8px;
+      font-size:clamp(26px, 3.2vw, 38px);
+      line-height:1.1;
+      letter-spacing:-0.02em;
+    }
+
+    .green{color:var(--green); font-weight:800}
+
+    /* EMBED SHELL (single border + rounded corners) */
+    .embedShell{
+      margin-top:12px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      overflow:hidden;
+      background:#fff;
+    }
+
+    /* Green bar (intro message) */
+    .embedHeader{
+      background:var(--green);
+      color:#fff;
+      padding:14px 16px;
+      font-size:14px;
+      line-height:1.45;
+      font-weight:500;
+    }
+
+    /* Match Google inner calendar width */
+    .embedHeaderInner{
+      width:min(860px, 100%);
+      margin:0 auto;
+      padding:0 2px;
+    }
+
+    /* Wrapper that clips the iframe after we shift it up */
+    .embedWrap{
+      position:relative;
+      width:100%;
+      background:#fff;
+      overflow:hidden;     /* clips the extra iframe height */
+      height:var(--frame); /* visible embed height */
+    }
+
+    iframe.frame{
+      display:block;
+      width:100%;
+      border:0;
+      position:relative;
+      top:0; /* no vertical shift */
+      height:var(--frame); /* iframe is taller; wrapper clips it */
+      background:#fff;
+    }
+
+    @media (max-width:900px){
+      .wrap{padding:22px 14px 34px}
+      .card{padding:18px 14px 14px}
+    }
+
+    @media (max-width:640px){
+      :root{ --crop:270px; --frame:680px; }
+      .embedHeader{font-size:13px; padding:12px 12px}
+      .embedHeaderInner{padding:0}
+    }
+
+    @media (max-width:420px){
+      :root{ --crop:290px; --frame:760px; }
+    }
+  </style>
 </head>
-<body class="page-consult">
-  <a class="skip-link" href="#main">Skip to content</a>
-  <div class="site-shell">
-    <header class="site-header">
-      <div class="container inner">
-        <a class="brand" href="/">
-          <strong>Living in Raleigh NC</strong>
-          <span>Relocation Platform</span>
-        </a>
-        <button class="nav-toggle" data-nav-toggle aria-expanded="false" aria-label="Toggle menu"><span></span></button>
-        <nav class="site-nav" data-nav>
-          <a href="/">Home</a>
-          <a href="/areas/">Areas</a>
-          <a href="/videos/">Videos</a>
-          <a href="/2026/">2026 Guide</a>
-          <a class="active" href="/consult/">Consult</a>
-          <a href="/contact/">Contact</a>
-        </nav>
-      </div>
-    </header>
+<body>
+  <main class="wrap">
+    <section class="card">
+      <img class="hero" src="green1.png" alt="Living in Raleigh Team" />
 
-    <main id="main">
-      <section class="hero">
-        <div class="container hero-grid">
-          <article class="hero-panel">
-            <span class="eyebrow">Consult Landing Page</span>
-            <h1>Book a call with the Living in Raleigh Team</h1>
-            <p>Pick your appointment below. You will receive an instant confirmation email plus calendar invite. We can meet by video, phone, or in person depending on your move timeline.</p>
-            <div class="hero-cta">
-              <a class="btn btn-primary" href="#calendar">Choose a Time</a>
-              <a class="btn btn-ghost" href="/2026/">Get the Free 2026 Guide</a>
-            </div>
-          </article>
-          <aside class="hero-card">
-            <img src="../assets/images/consult-hero.png" alt="Living in Raleigh Team">
-            <p class="caption">Personalized relocation strategy call.</p>
-          </aside>
-        </div>
-      </section>
+      <h1>Book a call with the <span class="green">Living in Raleigh Team</span></h1>
 
-      <section class="section" id="calendar">
-        <div class="container">
-          <h2>Select your consult appointment</h2>
-          <p class="section-copy">If you do not see a perfect slot, use the contact page and we can coordinate a custom time.</p>
-          <div class="calendar-shell">
-            <div class="calendar-head">Choose your time and lock in your Raleigh relocation planning call.</div>
-            <iframe
-              src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true"
-              title="Google Calendar appointment scheduling"
-              loading="lazy"
-              allow="camera; microphone; fullscreen">
-            </iframe>
+      <!-- GREEN HEADER BAR -->
+      <div class="embedShell">
+        <div class="embedHeader">
+          <div class="embedHeaderInner">
+            Pick a time below. You’ll get an instant confirmation email plus a calendar invite. Choose from a video call, phone call, or meet with us in person. We look forward to meeting you!
           </div>
         </div>
-      </section>
-    </main>
 
-    <footer class="site-footer">
-      <div class="container row">
-        <span>Copyright <span data-year></span> Living in Raleigh NC</span>
-        <span><a href="/2026/">2026 Guide</a> | <a href="/contact/">Contact</a></span>
+        <div class="embedWrap">
+        <iframe
+          class="frame"
+          src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true"
+          title="Google Calendar appointment scheduling"
+          loading="eager"
+          allow="camera; microphone; fullscreen"
+        ></iframe>
+              </div>
       </div>
-    </footer>
-  </div>
-  <script src="../assets/js/script.js" defer></script>
+
+      <!-- BOTTOM NOTE REMOVED ENTIRELY -->
+
+    </section>
+  </main>
+  <script>
+    // Bulletproofing: set iframe crop/frame based on viewport so mobile doesn't look broken.
+    // Note: we cannot read inside the Google iframe (cross-origin), so this is best-effort sizing.
+    (function () {
+      function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+
+      function setEmbedVars(){
+        var vw = window.innerWidth || 1024;
+        var vh = window.innerHeight || 800;
+
+        // Crop: slightly larger on small screens because Google header stacks taller.
+        var crop = (vw <= 420) ? 290 : (vw <= 640) ? 270 : 235;
+
+        // Frame: aim to show the full slot area without the Google footer.
+        // Use a % of viewport height, clamped so it doesn't get ridiculous.
+        var frame;
+        if (vw <= 420) frame = clamp(Math.round(vh * 0.80), 680, 920);
+        else if (vw <= 640) frame = clamp(Math.round(vh * 0.78), 640, 900);
+        else frame = clamp(Math.round(vh * 0.70), 500, 720);
+
+        document.documentElement.style.setProperty('--crop', crop + 'px');
+        document.documentElement.style.setProperty('--frame', frame + 'px');
+      }
+
+      setEmbedVars();
+      window.addEventListener('resize', setEmbedVars);
+      window.addEventListener('orientationchange', setEmbedVars);
+    })();
+  </script>
 </body>
 </html>
+
