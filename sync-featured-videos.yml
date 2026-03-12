@@ -1,0 +1,43 @@
+﻿name: Sync Featured Videos
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: write
+
+env:
+  TARGET_BRANCH: Test-branch
+
+jobs:
+  sync-featured-videos:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Generate featured videos JSON
+        run: python scripts/sync_featured_videos.py
+
+      - name: Commit and push if changed
+        run: |
+          if git diff --quiet -- assets/data/featured-videos.json; then
+            echo "No content changes"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/data/featured-videos.json
+          git commit -m "chore: sync featured videos from playlist"
+          git push origin HEAD:${{ env.TARGET_BRANCH }}
