@@ -592,18 +592,22 @@
         return;
       }
 
-      var regions = svgDoc.querySelectorAll("g[data-suburb], g[id^='boundary-'], g[id^='suburb-']");
-      regions.forEach(function (region, index) {
-        var route = getRouteForRegion(region, index);
+      var regions = svgDoc.querySelectorAll("g[data-suburb], g[id^='boundary-'], g[id^='suburb-'], a");
+      regions.forEach(function (region) {
         if (region.getAttribute("data-route-bound") === "true") {
           return;
         }
 
-        if (!route) {
-          return;
+        if (String(region.tagName || "").toLowerCase() === "a") {
+          region.removeAttribute("href");
+          if (typeof region.removeAttributeNS === "function") {
+            try {
+              region.removeAttributeNS("http://www.w3.org/1999/xlink", "href");
+            } catch (error) {}
+          }
         }
 
-        region.style.cursor = "pointer";
+        region.style.cursor = "default";
         region.style.outline = "none";
         region.style.webkitTapHighlightColor = "transparent";
         region.setAttribute("data-route-bound", "true");
@@ -624,6 +628,21 @@
           }
         });
       });
+
+      var svgRoot = svgDoc.documentElement;
+      if (svgRoot && svgRoot.getAttribute("data-click-blocked") !== "true") {
+        svgRoot.setAttribute("data-click-blocked", "true");
+        svgRoot.addEventListener("click", function (event) {
+          event.preventDefault();
+          event.stopPropagation();
+        }, true);
+        svgRoot.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            event.stopPropagation();
+          }
+        }, true);
+      }
     };
 
     mapObject.addEventListener("load", wireSuburbMap);
@@ -895,6 +914,11 @@
     if (isExcludedPopupPage) {
       return;
     }
+    Array.prototype.slice.call(document.querySelectorAll(".lead-popup-dev-trigger, [data-lead-popup-dev], [data-dev-popup-trigger]")).forEach(function (node) {
+      if (node && node.parentNode) {
+        node.parentNode.removeChild(node);
+      }
+    });
     var isHomePage = Boolean(document.body && document.body.classList.contains("page-home"));
     var isBuyPage = Boolean(document.body && document.body.classList.contains("page-buy"));
     var isSellPage = Boolean(document.body && document.body.classList.contains("page-sell"));
@@ -2505,6 +2529,23 @@
 
     Array.prototype.slice.call(document.querySelectorAll(".utility-links.two-row")).forEach(function (nav) {
       nav.innerHTML = releaseNavMarkup;
+    });
+
+    Array.prototype.slice.call(document.querySelectorAll(".utility-links a")).forEach(function (linkNode) {
+      var label = String(linkNode.textContent || "").replace(/\s+/g, " ").trim().toLowerCase();
+      if (label !== "explore the area") {
+        return;
+      }
+      var previous = linkNode.previousElementSibling;
+      var next = linkNode.nextElementSibling;
+      if (previous && previous.classList && previous.classList.contains("sep")) {
+        previous.parentNode.removeChild(previous);
+      } else if (next && next.classList && next.classList.contains("sep")) {
+        next.parentNode.removeChild(next);
+      }
+      if (linkNode.parentNode) {
+        linkNode.parentNode.removeChild(linkNode);
+      }
     });
 
     Array.prototype.slice.call(document.querySelectorAll(".home-final-bottom-row > span:last-child, .site-footer .row > span:last-child, .legal-auto-footer-inner > span:last-child")).forEach(function (node) {
