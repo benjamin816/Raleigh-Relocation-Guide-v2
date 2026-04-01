@@ -595,31 +595,32 @@
       var regions = svgDoc.querySelectorAll("g[data-suburb], g[id^='boundary-'], g[id^='suburb-']");
       regions.forEach(function (region, index) {
         var route = getRouteForRegion(region, index);
-        if (!route || region.getAttribute("data-route-bound") === "true") {
+        if (region.getAttribute("data-route-bound") === "true") {
           return;
         }
 
-        region.setAttribute("tabindex", "0");
-        region.setAttribute("role", "link");
+        if (!route) {
+          return;
+        }
+
         region.style.cursor = "pointer";
         region.style.outline = "none";
         region.style.webkitTapHighlightColor = "transparent";
         region.setAttribute("data-route-bound", "true");
 
-        // Prevent mouse-down focus ring flash before navigation.
         region.addEventListener("mousedown", function (event) {
           event.preventDefault();
         });
 
         region.addEventListener("click", function (event) {
           event.preventDefault();
-          window.location.assign(route);
+          event.stopPropagation();
         });
 
         region.addEventListener("keydown", function (event) {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
-            window.location.assign(route);
+            event.stopPropagation();
           }
         });
       });
@@ -1142,16 +1143,6 @@
       popup_render_mode: useInlinePopup ? "inline" : "overlay",
       popup_previously_submitted: hasSubmitted
     });
-
-    var devTrigger = null;
-    if (isHomePage && !useInlinePopup) {
-      devTrigger = document.createElement("button");
-      devTrigger.type = "button";
-      devTrigger.className = "lead-popup-dev-trigger";
-      devTrigger.textContent = "DEV: OPEN POPUP";
-      devTrigger.setAttribute("aria-label", "Developer popup trigger");
-      document.body.appendChild(devTrigger);
-    }
 
     var calendarIcon = [
       "<svg viewBox='0 0 24 24' aria-hidden='true' focusable='false'>",
@@ -1815,13 +1806,6 @@
         closePopup(true, closeReason);
       });
     });
-
-    if (devTrigger) {
-      devTrigger.addEventListener("click", function () {
-        markPopupTouched("dev_open");
-        openPopup(true, "dev_button");
-      });
-    }
 
     popupHost.addEventListener("click", function (event) {
       var fieldNode = event.target.closest("[data-lead-field]");
@@ -2502,20 +2486,19 @@
     var releaseNavMarkup = [
       "<div class='menu-row'>",
       "<a href='/buy/'>BUY</a><span class='sep'>/</span>",
-      "<a href='/sell/'>SELL</a><span class='sep'>/</span>",
-      "<a href='/explore-the-area/'>EXPLORE THE AREA</a>",
+      "<a href='/sell/'>SELL</a>",
       "</div>",
       "<div class='menu-row'>",
-      "<a href='/consult/'>CONSULT</a><span class='sep'>/</span>",
-      "<a href='/2026/'>RELO GUIDE</a>",
+      "<a href='/consult/' target='_blank' rel='noopener noreferrer'>EXPLORATION CONSULTATION</a><span class='sep'>/</span>",
+      "<a href='/2026/' target='_blank' rel='noopener noreferrer'>2026 RELOCATION GUIDE</a>",
       "</div>"
     ].join("");
 
     var footerLinksMarkup = [
-      "<a href='/consult/'>Consult</a> | ",
+      "<a href='/consult/' target='_blank' rel='noopener noreferrer'>Exploration Consultation</a> | ",
+      "<a href='/2026/' target='_blank' rel='noopener noreferrer'>2026 Relocation Guide</a> | ",
       "<a href='/buy/'>Buy</a> | ",
       "<a href='/sell/'>Sell</a> | ",
-      "<a href='/explore-the-area/'>Explore The Area</a> | ",
       "<a href='#privacy-policy' data-legal-open='privacy'>Privacy Policy</a> | ",
       "<a href='#terms-of-service' data-legal-open='terms'>Terms of Service</a>"
     ].join("");
@@ -2528,8 +2511,15 @@
       node.innerHTML = footerLinksMarkup;
     });
 
+    Array.prototype.slice.call(document.querySelectorAll(".call-link")).forEach(function (callLinkNode) {
+      callLinkNode.setAttribute("href", "/consult/");
+      callLinkNode.setAttribute("target", "_blank");
+      callLinkNode.setAttribute("rel", "noopener noreferrer");
+    });
+
     var linkRemap = [
-      { prefix: "/raleighs-hottest-deals", target: "/explore-the-area/" },
+      { prefix: "/raleighs-hottest-deals", target: "/consult/" },
+      { prefix: "/explore-the-area", target: "/consult/" },
       { prefix: "/learning-center", target: "/consult/" },
       { prefix: "/about", target: "/consult/" },
       { prefix: "/relocation", target: "/2026/" },

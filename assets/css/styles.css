@@ -368,9 +368,9 @@ a {
   left: 50%;
   top: 72%;
   transform: translateX(-50%);
-  width: min(100% - 5rem, 901px);
+  width: min(100% - 5rem, 640px);
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   column-gap: clamp(1.9rem, 4.1vw, 3.1rem);
   row-gap: 0;
   z-index: 3;
