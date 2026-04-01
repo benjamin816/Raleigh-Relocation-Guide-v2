@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20260324d">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -55,12 +55,57 @@
     </div>
 
     <main id="main">
-      <section class="hero">
-        <div class="container panel">
-          <h1 style="margin:0;">Apex</h1>
-          <p class="section-copy" style="margin-top:0.9rem;">Content coming soon.</p>
+      <section class="raleigh-spotlight" aria-label="Apex overview and map">
+        <div class="raleigh-spotlight-grid">
+          <div class="raleigh-spotlight-copy">
+            <h1>APEX</h1>
+            <p>Apex is known for its charming downtown, top-rated schools, and strong sense of community. With beautiful neighborhoods, growing amenities, and easy access to the Triangle, Apex offers an ideal blend of comfort, convenience, and long-term value.</p>
+            <div class="raleigh-spotlight-video">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/ZDmRAdvyKdw?rel=0&modestbranding=1"
+                title="Apex neighborhood map tour video"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+          <div class="raleigh-spotlight-map">
+            <iframe
+              src="https://www.google.com/maps?q=Apex%2C%20NC&output=embed"
+              title="Apex map"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              allowfullscreen
+            ></iframe>
+          </div>
         </div>
       </section>
+      <div class="home-template">
+        <section class="section template-band home-featured-videos" data-video-feed-key="apex">
+          <div class="container home-featured-videos-inner">
+            <div class="home-featured-videos-head">
+              <div class="home-featured-videos-copy">
+                <p class="home-featured-videos-script">Local Video Tour Library</p>
+                <h2>FEATURED APEX VIDEOS</h2>
+                <p class="section-copy">Watch our latest videos for Apex. This section updates automatically from the matching YouTube playlist for this page.</p>
+              </div>
+              <a class="home-featured-videos-more" href="https://www.youtube.com/@living-in-raleigh-nc" target="_blank" rel="noopener noreferrer">WATCH MORE</a>
+            </div>
+            <div class="home-video-grid" data-page-size="3"></div>
+            <nav class="home-video-pagination" aria-label="Featured video pages" hidden></nav>
+          </div>
+        </section>
+      </div>
+
+      <div class="home-video-modal" hidden aria-hidden="true">
+        <div class="home-video-modal-backdrop" data-video-modal-close></div>
+        <div class="home-video-modal-dialog" role="dialog" aria-modal="true" aria-label="Featured video player">
+          <button type="button" class="home-video-modal-close" data-video-modal-close aria-label="Close video">×</button>
+          <iframe class="home-video-modal-frame" title="Featured video player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+      </div>
     </main>
     <footer class="site-footer">
       <div class="container row">
@@ -72,6 +117,8 @@
   <script src="/assets/js/script.js" defer></script>
 </body>
 </html>
+
+
 
 
 

@@ -66,7 +66,7 @@
           </div>
           <div class="card">
             <h3>Direct contact</h3>
-            <p>Email: <a href="mailto:hello@raleighncguide.com">hello@raleighncguide.com</a></p>
+            <p>Email: <a href="mailto:livinginraleighteam@gmail.com">livinginraleighteam@gmail.com</a></p>
             <p>Website: <a href="https://raleighncguide.com/">raleighncguide.com</a></p>
             <p class="form-note">Response times are typically within one business day.</p>
           </div>
@@ -87,6 +87,9 @@
               <label>Email
                 <input type="email" name="email" required>
               </label>
+              <label>Phone (optional)
+                <input type="tel" name="phone" autocomplete="tel">
+              </label>
               <label>Target move window
                 <select name="move_window" required>
                   <option value="">Select one</option>
@@ -101,6 +104,14 @@
               <textarea name="message" placeholder="Neighborhood goals, budget range, commute, school priorities, and anything else we should know." required></textarea>
             </label>
             <p style="margin-top:1rem;"><button class="btn btn-primary" type="submit">Send Message</button></p>
+            <div class="legal-consent-copy" data-legal-consent>
+              <label class="legal-consent-checkbox">
+                <input type="checkbox" name="sms_opt_in">
+                <span>I agree to be contacted by Living in Raleigh LLC d/b/a The Living in Raleigh Team via call, email, and text for real estate services. Message and data rates may apply. Message frequency varies. Reply STOP to unsubscribe, HELP for assistance, or use the unsubscribe link in our emails.</span>
+              </label>
+              <p class="legal-consent-note">SMS consent is optional and is not required to submit this form.</p>
+              <p class="legal-consent-links">Review our <a href="#privacy-policy" data-legal-open="privacy">Privacy Policy</a> and <a href="#terms-of-service" data-legal-open="terms">Terms of Service</a>.</p>
+            </div>
             <p class="form-note">This form opens your default email client because the site is fully static on GitHub Pages.</p>
           </form>
         </div>
@@ -109,7 +120,7 @@
 
     <footer class="site-footer">
       <div class="container row">
-        <span>Copyright <span data-year></span> Living in Raleigh NC</span>
+        <span>Copyright <span data-year></span> Living in Raleigh LLC</span>
         <span><a href="/consult/">Consult</a> | <a href="/2026/">2026 Guide</a></span>
       </div>
     </footer>
