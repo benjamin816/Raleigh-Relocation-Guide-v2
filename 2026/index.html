@@ -29,6 +29,8 @@
             --text-dark: #1F2937;
             --white: #FFFFFF;
             --frame: 520px;
+            --border: rgba(17,24,39,.10);
+            --shadow: 0 10px 30px rgba(17,24,39,.08);
         }
 
         /* --- LAYOUT --- */
@@ -67,9 +69,9 @@
         /* Content */
         .main-content {
             width: 100%;
-            max-width: 800px;
+            max-width: 980px;
             margin: 40px auto 0;
-            padding: 0 20px;
+            padding: 0 18px;
             position: relative;
             z-index: 10;
             text-align: center;
@@ -122,10 +124,11 @@
         .consultation-card {
             background: var(--white);
             margin-top: 5rem;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(47, 82, 51, 0.08);
-            border: 1px solid rgba(47, 82, 51, 0.1);
+            padding: 22px 18px 18px;
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
         }
         .consultation-title {
             font-size: 1.8rem;
@@ -147,7 +150,7 @@
         /* Appointment Setter Block (from /consult/) */
         .embedShell {
             margin-top: 12px;
-            border: 1px solid rgba(17,24,39,.10);
+            border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
             background: #fff;
@@ -186,7 +189,7 @@
         @media (max-width: 640px) {
             h1 { font-size: 2.25rem; }
             .download-btn { width: 100%; justify-content: center; padding: 1rem; }
-            .consultation-card { padding: 1.5rem; }
+            .consultation-card { padding: 18px 14px 14px; }
             :root { --frame: 680px; }
             .embedHeader { font-size: 13px; padding: 12px 12px; }
             .embedHeaderInner { padding: 0; }
