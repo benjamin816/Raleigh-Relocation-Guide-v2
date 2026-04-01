@@ -1,194 +1,493 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Raleigh Relocation Guide 2026</title>
-    
-    <!-- Styles -->
-    <style>
-        /* --- GLOBAL RESET & SCROLL FIX --- */
-        * {
-            box-sizing: border-box;
-        }
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            overflow-x: hidden; /* CRITICAL: Prevents mobile horizontal scroll */
-            font-family: 'Inter', sans-serif;
-            background-color: #E8F5E9; /* accent-light */
-            color: #1F2937; /* text-dark */
-        }
-
-        /* --- VARIABLES --- */
-        :root {
-            --primary-green: #2F5233;
-            --secondary-green: #5F8C63;
-            --accent-light: #E8F5E9;
-            --text-dark: #1F2937;
-            --white: #FFFFFF;
-        }
-
-        /* --- LAYOUT --- */
-        .page-container {
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            padding-bottom: 40px;
-            width: 100%;
-            overflow-x: hidden;
-        }
-        
-        /* Hero */
-        .hero-container {
-            width: 100%;
-            position: relative;
-            background-color: var(--primary-green);
-            line-height: 0;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-        }
-        .hero-image {
-            width: 100%;
-            height: auto;
-            display: block;
-        }
-        .hero-fade {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 40%;
-            background: linear-gradient(to bottom, transparent 0%, rgba(232, 245, 233, 0.2) 60%, var(--accent-light) 100%);
-            pointer-events: none;
-        }
-        
-        /* Content */
-        .main-content {
-            width: 100%;
-            max-width: 800px;
-            margin: 40px auto 0;
-            padding: 0 20px;
-            position: relative;
-            z-index: 10;
-            text-align: center;
-        }
-        h1 {
-            font-size: 3.5rem;
-            font-weight: 800;
-            color: var(--primary-green);
-            margin-bottom: 0.2em;
-            text-transform: uppercase;
-            line-height: 1.1;
-        }
-        h2 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: var(--secondary-green);
-            margin-top: 0.5rem;
-            margin-bottom: 3rem;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-        }
-        
-        /* Buttons */
-        .download-btn {
-            background-color: var(--primary-green);
-            color: white;
-            border: none;
-            padding: 1.25rem 3rem;
-            font-size: 1.25rem;
-            font-weight: 600;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(47, 82, 51, 0.2);
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            max-width: 100%;
-            /* Ensure text wraps on very small screens */
-            white-space: normal;
-            text-align: center;
-        }
-        .download-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(47, 82, 51, 0.3);
-            background-color: #264229;
-        }
-        
-        /* Consultation */
-        .consultation-card {
-            background: var(--white);
-            margin-top: 5rem;
-            padding: 3rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 40px rgba(47, 82, 51, 0.08);
-            border: 1px solid rgba(47, 82, 51, 0.1);
-        }
-        .consultation-title {
-            font-size: 1.8rem;
-            color: var(--primary-green);
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .calendly-container {
-            min-width: 320px;
-            height: 700px;
-            width: 100%;
-        }
-
-        /* Responsive Tweaks */
-        @media (max-width: 640px) {
-            h1 { font-size: 2.25rem; }
-            .download-btn { width: 100%; justify-content: center; padding: 1rem; }
-            .consultation-card { padding: 1.5rem; }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Living in Raleigh NC | Relocation Insights, Areas, and Expert Support</title>
+  <meta name="description" content="Living in Raleigh NC relocation platform with neighborhood guidance, videos, relocation resources, and one-on-one consult support.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://raleighncguide.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Living in Raleigh NC">
+  <meta property="og:description" content="Move to Raleigh with confidence using local insights, area breakdowns, and a tailored relocation plan.">
+  <meta property="og:url" content="https://raleighncguide.com/">
+  <meta property="og:image" content="https://raleighncguide.com/assets/images/consult-hero.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Living in Raleigh NC">
+  <meta name="twitter:description" content="Explore neighborhoods, local videos, and relocation support for your Raleigh move.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260327-popup8">
 </head>
-<body>
-
-    <div class="page-container">
-        <!-- Hero -->
-        <div class="hero-container">
-            <img src="https://lh3.googleusercontent.com/d/1ad8y4w1SQCXcnZzF7RDCF7FJue2IF6Fb" alt="Banner" class="hero-image" referrerpolicy="no-referrer" onerror="this.style.display='none'">
-            <div class="hero-fade"></div>
-        </div>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <h1>RALEIGH RELOCATION GUIDE</h1>
-            <h2>2026 EDITION</h2>
-            
-            <!-- Trigger Button using ConvertKit Native Toggle -->
-            <button class="download-btn" data-formkit-toggle="e79dbafbfd">
-                DOWNLOAD YOUR FREE COPY 
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
-            </button>
-
-            <div class="consultation-card">
-                <div class="consultation-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-                    <span>Schedule Your Relocation Consultation</span>
-                </div>
-                <p style="color: #666; margin-bottom: 2rem;">Ready to make the move? Book a free 15-minute intro call.</p>
-                <div class="calendly-inline-widget calendly-container" data-url="https://calendly.com/living-in-raleigh-nc/consultation?hide_event_type_details=1&hide_gdpr_banner=1&primary_color=2f5233"></div>
+<body class="page-home">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="site-shell">
+    <div class="home-header-stack">
+      <div class="team-strip">
+        <p>#1 RELOCATION TEAM IN RALEIGH</p>
+      </div>
+      <div class="utility-nav">
+        <div class="utility-inner">
+          <nav class="utility-links two-row" aria-label="Page links">
+            <div class="menu-row">
+              <a href="/buy/">BUY</a><span class="sep">/</span>
+              <a href="/sell/">SELL</a><span class="sep">/</span>
+              <a href="/explore-the-area/">EXPLORE THE AREA</a><span class="sep">/</span>
+              <a href="/about/">ABOUT</a>
             </div>
-        </main>
+            <div class="menu-row">
+              <a href="/relocation/">RELOCATION</a><span class="sep">/</span>
+              <div class="menu-dropdown">
+                <a class="menu-trigger" href="/raleighs-hottest-deals/">RALEIGH'S HOTTEST DEALS</a>
+                <div class="submenu">
+                  <a href="/raleighs-hottest-deals/builders/">BUILDERS</a>
+                  <a href="/raleighs-hottest-deals/hottest-deals/">HOTTEST DEALS</a>
+                  <a href="/raleighs-hottest-deals/new-construction-process/">NEW CONSTRUCTION PROCESS</a>
+                  <a href="/raleighs-hottest-deals/affordable-new-construction-hotlist/">AFFORDABLE NEW CONSTRUCTION HOTLIST</a>
+                </div>
+              </div>
+              <span class="sep">/</span>
+              <a href="/learning-center/">LEARNING CENTER</a>
+            </div>
+          </nav>
+          <a class="call-link" href="tel:+19197377896">Call Me</a>
+        </div>
+      </div>
+      <a href="/" class="home-stack-overlay-link" aria-label="Go to home"><img src="/assets/images/banner-image-2.png" alt="Banner image 2" class="home-stack-overlay"></a>
     </div>
+    <section class="home-promo-band" aria-label="Promo video">
+      <video class="home-promo-video" autoplay muted loop playsinline preload="metadata" controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture>
+        <source src="/assets/videos/promo-for-website.mp4" type="video/mp4">
+      </video>
+      <img class="home-promo-overlay" src="/assets/images/video-text-overlay-variant-1.png" alt="The Official Living in Raleigh NC Team">
+      <div class="home-promo-cta">
+        <a href="/buy/">BUYER RESOURCES</a>
+        <a href="/sell/">SELLER RESOURCES</a>
+        <a href="/raleighs-hottest-deals/builders/">BUILDERS</a>
+      </div>
+    </section>
 
-    <!-- SCRIPTS -->
-    
-    <!-- Calendly -->
-    <script src="https://assets.calendly.com/assets/external/widget.js" async></script>
-    
-    <!-- ConvertKit (Updated to specific URL for your account) -->
-    <script src="https://living-in-raleigh.kit.com/e79dbafbfd/index.js" data-uid="e79dbafbfd" async></script>
+    <section class="home-contact-strip" aria-label="Contact banner">
+      <div class="home-contact-inner">
+        <div class="home-contact-left">
+          <a href="tel:+19197377896" class="contact-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M22 16.9v3a2 2 0 0 1-2.2 2A19.8 19.8 0 0 1 11.2 19a19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4 2h3a2 2 0 0 1 2 1.7c.1.9.3 1.8.6 2.7a2 2 0 0 1-.5 2.1L8 9.6a16 16 0 0 0 6.4 6.4l1.1-1.1a2 2 0 0 1 2.1-.5c.9.3 1.8.5 2.7.6A2 2 0 0 1 22 16.9z"/>
+            </svg>
+            <span>919-737-7896</span>
+          </a>
+          <a href="mailto:livinginraleighteam@gmail.com" class="contact-item">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M3 5h18a2 2 0 0 1 2 2v.4L12.7 14a1.2 1.2 0 0 1-1.4 0L1 7.4V7a2 2 0 0 1 2-2zm20 4.2V17a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9.2l9.2 5.9a3.2 3.2 0 0 0 3.6 0L23 9.2z"/>
+            </svg>
+            <span>LIVINGINRALEIGHTEAM@GMAIL.COM</span>
+          </a>
+        </div>
+        <a
+          class="youtube-link"
+          href="https://www.youtube.com/@living-in-raleigh-nc"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Visit our YouTube channel"
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path fill="currentColor" d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.8.6 9.4.6 9.4.6s7.6 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L16 12l-6.4 3.6Z"/>
+          </svg>
+        </a>
+      </div>
+    </section>
 
+    <section class="home-map-stage" aria-label="Interactive suburb map">
+      <div class="home-map-stage-inner">
+        <div class="home-map-left-column">
+          <div class="home-map-copy">
+            <p class="home-map-kicker">Discover The Local Areas</p>
+            <h2>GREATER TRIANGLE AREA</h2>
+            <p>As North Carolina's capital and home to the nation's largest Research Park (RTP), Raleigh offers a dynamic mix of opportunity and livability for home buyers and sellers. From historic downtown neighborhoods to growing communities in Raleigh, Cary, and Wake Forest, the area provides housing options for every stage of life. A booming economy powered by technology, healthcare, and research continues to draw people from across the country. Combined with a thriving food scene, arts, and miles of greenways and parks, Raleigh delivers one of the highest qualities of life in the Southeast.</p>
+            <p>The Living in Raleigh NC Team is here to guide you through a smooth real estate journey.</p>
+          </div>
+          <div class="home-map-video-shell">
+            <div class="home-map-video-frame">
+              <iframe
+                src="https://www.youtube-nocookie.com/embed/cEa_EK2Y4Kg?rel=0&modestbranding=1"
+                title="Living in Raleigh NC Featured Video"
+                loading="lazy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin"
+                allowfullscreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+        <div class="home-map-shell">
+          <div class="map-composite">
+            <img src="/assets/images/map/base-layer-all-in-one.png" alt="Raleigh suburb map base" class="map-layer map-base">
+            <img src="/assets/images/map/labels-under-svg-overlay.png?v=20260312-underhit2" alt="Raleigh suburb labels under hit layer" class="map-layer map-under-hit">
+            <object
+              class="map-layer map-hit"
+              type="image/svg+xml"
+              data="/assets/maps/suburb-map-today-live.svg"
+              aria-label="Interactive suburb hover layer"
+            ></object>
+            <img src="/assets/images/map/labels-today-live.png" alt="Raleigh suburb labels" class="map-layer map-labels">
+            <img src="/assets/images/map/labels-top-overlay.png" alt="Raleigh suburb top labels" class="map-layer map-top-labels">
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <main id="main" class="home-template">
+      <section class="section local-area-banner">
+        <div class="container local-area-split">
+          <article class="local-card local-intro-card">
+            <p class="local-script">Introducing</p>
+            <h2>THE OFFICIAL LIVING IN RALEIGH NC TEAM</h2>
+            <p class="local-highlight-line">Your Ultimate Guide to Finding the Perfect Raleigh Neighborhood and Relocating with Ease!</p>
+            <p>Our team is genuinely passionate about showcasing everything that makes Raleigh an incredible place to call home. With its Southern charm, thriving economy, and welcoming communities, Raleigh has so much to offer. If you're curious about what it's truly like to live in this fast-growing capital city of North Carolina, then this is the perfect channel for you.</p>
+            <p>Our goal is to give you an insider&rsquo;s look at every part of the Raleigh and greater Triangle area, helping you discover the neighborhoods, communities, and amenities that best match your lifestyle. We specialize in working with clients from all over the country who are relocating to Raleigh, and we truly enjoy being part of that journey.</p>
+            <p>From local favorites and things to do, to housing options across Raleigh, Cary, Apex, Wake Forest, and beyond, we&rsquo;re dedicated to making your move to the Triangle as smooth and enjoyable as possible.</p>
+          </article>
+          <figure class="local-card local-image-card">
+            <img src="/assets/images/home/local-area-top-right.png?v=20260312-topright3" alt="Raleigh skyline overview">
+          </figure>
+          <figure class="local-card local-brand-image-card">
+            <img src="/assets/images/home/local-area-bottom-left.png?v=20260312-bottomleft1" alt="Living in Raleigh NC team brand panel">
+          </figure>
+          <article class="local-card local-intro-card local-intro-duplicate-card">
+            <p class="local-script">Why Choose</p>
+            <h2>THE #1 RELOCATION TEAM IN RALEIGH NC</h2>
+            <p class="local-highlight-line">Passionate Experts Dedicated to Helping You Relocate and Find Your Perfect Raleigh Home!</p>
+            <p>We&rsquo;re more than just real estate professionals&mdash;we&rsquo;re your go-to guides for everything Raleigh and the greater Triangle area.</p>
+            <p>Our specialization in relocation and new construction means we bring a deep understanding of the communities, builders, and opportunities throughout Raleigh, Cary, Apex, Wake Forest, and beyond. We help clients discover some of the best neighborhoods, new home communities, and hidden opportunities across the region.</p>
+            <p>Whether you're relocating for work, buying your dream home, investing in the area, or selling your current property, we provide the local insights and expertise needed to help you make confident decisions. With our deep knowledge of the Raleigh market and a personalized, client-focused approach, we aim to make the process as smooth and stress-free as possible. From the first conversation to closing day and beyond, we&rsquo;re here to guide you every step of the way as you make your move to the Triangle.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section template-band home-client-voices">
+        <div class="container home-client-voices-inner">
+          <div class="home-client-voices-head">
+            <p class="home-client-voices-script">Trusted by Raleigh Homeowners</p>
+            <h2>WHAT OUR CLIENTS ARE SAYING</h2>
+            <p class="section-copy">Hear from our clients about their experiences working with The Living in Raleigh NC Team. From smooth relocations to successful home sales, we're proud to deliver exceptional results every step of the way.</p>
+          </div>
+          <div class="home-client-voices-grid">
+            <article class="home-client-voice">
+              <p class="home-client-voice-mark">&ldquo;</p>
+              <p>We have worked with a number of realtors over the years, and Ben has been by far the best. He may be young, but he has the knowledge and professionalism of someone who has been in the field for decades. When working with Ben, you never feel like he&rsquo;s just trying to &ldquo;sell you a house&rdquo; he genuinely wants to make sure you&rsquo;re satisfied.</p>
+              <p>Working with Ben feels more like a friendship than a business transaction, which is exactly what you want in a realtor. If you&rsquo;re looking for someone to help you find your next home, look no further!</p>
+              <strong>DAVEION K - HOLLY SPRINGS NC</strong>
+            </article>
+            <article class="home-client-voice">
+              <p class="home-client-voice-mark">&ldquo;</p>
+              <p>My wife and I relocated from Pennsylvania to the Raleigh area and chose Ben after researching agents in the market. From the start, he took the time to understand our timeline, priorities, and the areas that would best fit us.</p>
+              <p>Since we were moving from out of state, Ben recorded detailed video walkthroughs and gave honest feedback so we could confidently evaluate homes remotely. He ultimately found us a new construction opportunity with strong builder incentives, negotiated closing costs covered, and helped us lock in a 4.25% interest rate when rates were around 6.8%.</p>
+              <p>We were able to close in just one month before our relocation deadline, and the entire process was smooth from start to finish. I would highly recommend Ben to anyone relocating to the Raleigh area.</p>
+              <strong>CESAR H - ROLESVILLE NC</strong>
+            </article>
+            <article class="home-client-voice">
+              <p class="home-client-voice-mark">&ldquo;</p>
+              <p>We highly recommend working with Ben! He has been such a great help to us from selling our old home to buying our forever home!</p>
+              <p>Ben was on top of his game when it came to looking for our new home. We didn&rsquo;t make it too easy with our preferred radius and long list of asks. He was very responsive at all times and always had a smile on. We viewed so many homes together our daughter started calling him &ldquo;Uncle Ben&rdquo;</p>
+              <p>Ben didn&rsquo;t make this experience feel transactional. It was a very enjoyable journey!</p>
+              <strong>NATALY C - KNIGHTDALE NC</strong>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section template-band home-partner-showcase">
+        <div class="container home-partner-showcase-inner">
+          <div class="home-partner-showcase-head">
+            <p class="home-partner-script">The Official Living in Raleigh NC Team</p>
+            <h2>PARTNER WITH THE BEST</h2>
+            <p class="section-copy">We will seamlessly guide you through your relocation process and help you discover the right opportunities in Raleigh NC. Our content library is tailored to equip you with practical and insightful guidance at every step.</p>
+          </div>
+          <div class="home-partner-cards">
+            <a class="home-partner-card" href="/relocation/">
+              <img src="/assets/images/home/services-relocation.jpg?v=20260312-services1" alt="Relocation guidance in Raleigh NC">
+              <span class="home-partner-overlay" aria-hidden="true"></span>
+              <span class="home-partner-content">
+                <span class="home-partner-title">RELOCATION</span>
+                <span class="home-partner-copy">Make your move to Raleigh easy and stress-free. We&rsquo;ll guide you through neighborhoods, schools, finances, and more.</span>
+              </span>
+            </a>
+            <a class="home-partner-card" href="/raleighs-hottest-deals/">
+              <img src="/assets/images/home/services-hottest-deals.jpg?v=20260312-services2" alt="Raleigh hottest deals">
+              <span class="home-partner-overlay" aria-hidden="true"></span>
+              <span class="home-partner-content">
+                <span class="home-partner-title">NEW CONSTRUCTION</span>
+                <span class="home-partner-copy">Find your perfect new home in Raleigh NC with exclusive opportunities, builder incentives, and market insights.</span>
+              </span>
+            </a>
+            <a class="home-partner-card" href="/learning-center/">
+              <img src="/assets/images/home/services-learning-center.jpg?v=20260312-services3" alt="Raleigh NC learning center">
+              <span class="home-partner-overlay" aria-hidden="true"></span>
+              <span class="home-partner-content">
+                <span class="home-partner-title">LEARNING CENTER</span>
+                <span class="home-partner-copy">Get the latest Raleigh NC insights with easy-to-read guides, blogs, and updates to support your move.</span>
+              </span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section template-band home-featured-videos">
+        <div class="container home-featured-videos-inner">
+          <div class="home-featured-videos-head">
+            <div class="home-featured-videos-copy">
+              <p class="home-featured-videos-script">Discover Raleigh Like Never Before</p>
+              <h2>FEATURED VIDEOS</h2>
+              <p class="section-copy">Curious about what it&rsquo;s like to live in Raleigh? Our videos give you an inside look at the best neighborhoods, attractions, and lifestyle options across the Triangle.</p>
+            </div>
+            <a class="home-featured-videos-more" href="https://www.youtube.com/@living-in-raleigh-nc" target="_blank" rel="noopener noreferrer">WATCH MORE</a>
+          </div>
+          <div class="home-video-grid" data-page-size="8">
+            <button type="button" class="home-video-card" data-video-id="cEa_EK2Y4Kg" data-video-title="Raleigh NC Local Guide">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/cEa_EK2Y4Kg/hqdefault.jpg" alt="Raleigh NC Local Guide thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Raleigh NC Local Guide</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="dQw4w9WgXcQ" data-video-title="Raleigh Area Breakdown">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg" alt="Raleigh Area Breakdown thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Raleigh Area Breakdown</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="JGwWNGJdvx8" data-video-title="Where to Live in the Triangle">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/JGwWNGJdvx8/hqdefault.jpg" alt="Where to Live in the Triangle thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Where to Live in the Triangle</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="ktvTqknDobU" data-video-title="Top Raleigh Neighborhood Picks">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/ktvTqknDobU/hqdefault.jpg" alt="Top Raleigh Neighborhood Picks thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Top Raleigh Neighborhood Picks</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="9bZkp7q19f0" data-video-title="Raleigh Cost of Living Guide">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg" alt="Raleigh Cost of Living Guide thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Raleigh Cost of Living Guide</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="3JZ_D3ELwOQ" data-video-title="Best Suburbs in the Triangle">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/3JZ_D3ELwOQ/hqdefault.jpg" alt="Best Suburbs in the Triangle thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Best Suburbs in the Triangle</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="hTWKbfoikeg" data-video-title="New Construction Raleigh Tips">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/hTWKbfoikeg/hqdefault.jpg" alt="New Construction Raleigh Tips thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">New Construction Raleigh Tips</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="L_jWHffIx5E" data-video-title="Raleigh vs Nearby Cities">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/L_jWHffIx5E/hqdefault.jpg" alt="Raleigh vs Nearby Cities thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Raleigh vs Nearby Cities</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="kJQP7kiw5Fk" data-video-title="Triangle Commute Insights">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg" alt="Triangle Commute Insights thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Triangle Commute Insights</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="fJ9rUzIMcZQ" data-video-title="Raleigh School Zones Overview">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/fJ9rUzIMcZQ/hqdefault.jpg" alt="Raleigh School Zones Overview thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Raleigh School Zones Overview</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="YQHsXMglC9A" data-video-title="Raleigh Home Buying Strategy">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/YQHsXMglC9A/hqdefault.jpg" alt="Raleigh Home Buying Strategy thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Raleigh Home Buying Strategy</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+            <button type="button" class="home-video-card" data-video-id="kXYiU_JCYtU" data-video-title="Moving Checklist for Raleigh">
+              <span class="home-video-thumb"><img src="https://i.ytimg.com/vi/kXYiU_JCYtU/hqdefault.jpg" alt="Moving Checklist for Raleigh thumbnail"></span>
+              <span class="home-video-play" aria-hidden="true"></span>
+              <span class="home-video-meta"><span class="home-video-title">Moving Checklist for Raleigh</span><span class="home-video-sub">🏡 Thinking about moving to Raleigh, NC...</span></span>
+            </button>
+          </div>
+          <nav class="home-video-pagination" aria-label="Featured video pages" hidden></nav>
+        </div>
+      </section>
+
+      <div class="home-video-modal" hidden aria-hidden="true">
+        <div class="home-video-modal-backdrop" data-video-modal-close></div>
+        <div class="home-video-modal-dialog" role="dialog" aria-modal="true" aria-label="Featured video player">
+          <button type="button" class="home-video-modal-close" data-video-modal-close aria-label="Close video">×</button>
+          <iframe class="home-video-modal-frame" title="Featured video player" src="" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </div>
+      </div>
+
+      <section class="section template-band home-guide-download">
+        <div class="home-guide-download-grid">
+          <div class="home-guide-download-copy">
+            <p class="home-guide-download-script">Download For Free</p>
+            <h2>RELOCATING TO THE<br>GREATER RALEIGH AREA</h2>
+            <p>Download our ultimate Raleigh Relocation Guide and discover everything you need to know about neighborhoods, top dining spots, local attractions, and more to make your move seamless!</p>
+            <a class="home-guide-download-btn" href="/2026/">Access The Raleigh Guide</a>
+          </div>
+          <div class="home-guide-download-media">
+            <img class="home-guide-download-bg" src="/assets/images/home/relocation-guide-bg.jpeg?v=20260316-guide1" alt="" aria-hidden="true">
+            <span class="home-guide-download-shade" aria-hidden="true"></span>
+            <img class="home-guide-download-book" src="/assets/images/home/relocation-guide-book.png?v=20260316-guide1" alt="Relocating to Raleigh guide cover">
+          </div>
+        </div>
+      </section>
+
+      <section class="section template-band home-communities-showcase">
+        <div class="container home-communities-inner">
+          <div class="home-communities-head">
+            <p class="home-communities-script">Explore The Local Areas</p>
+            <h2>OUR COMMUNITIES</h2>
+          </div>
+          <div class="home-communities-grid">
+            <a class="home-community-card" href="/explore-the-area/durham/">
+              <img src="/assets/images/communities/durham.jpg?v=20260316-communities1" alt="Durham area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">DURHAM</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/chapel-hill/">
+              <img src="/assets/images/communities/chapel-hill.jpg?v=20260316-communities1" alt="Chapel Hill area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">CHAPEL HILL</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/morrisville/">
+              <img src="/assets/images/communities/morrisville.jpg?v=20260316-communities1" alt="Morrisville area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">MORRISVILLE</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/cary/">
+              <img src="/assets/images/communities/cary.jpg?v=20260316-communities1" alt="Cary area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">CARY</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/apex/">
+              <img src="/assets/images/communities/apex.jpg?v=20260316-communities1" alt="Apex area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">APEX</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/holly-springs/">
+              <img src="/assets/images/communities/holly-springs.jpg?v=20260316-communities1" alt="Holly Springs area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">HOLLY SPRINGS</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/fuquay-varina/">
+              <img src="/assets/images/communities/fuquay-varina.jpg?v=20260316-communities1" alt="Fuquay Varina area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">FUQUAY VARINA</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/garner/">
+              <img src="/assets/images/communities/garner.jpg?v=20260316-communities1" alt="Garner area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">GARNER</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/clayton/">
+              <img src="/assets/images/communities/clayton.jpg?v=20260316-communities1" alt="Clayton area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">CLAYTON</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/south-raleigh/">
+              <img src="/assets/images/communities/south-raleigh.jpg?v=20260316-communities1" alt="South Raleigh area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">SOUTH RALEIGH</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/east-raleigh/">
+              <img src="/assets/images/communities/east-raleigh.jpg?v=20260316-communities1" alt="East Raleigh area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">EAST RALEIGH</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/knightdale/">
+              <img src="/assets/images/communities/knightdale.jpg?v=20260316-communities1" alt="Knightdale area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">KNIGHTDALE</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/wendell/">
+              <img src="/assets/images/communities/wendell.jpg?v=20260316-communities1" alt="Wendell area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">WENDELL</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/zebulon/">
+              <img src="/assets/images/communities/zebulon.jpg?v=20260316-communities1" alt="Zebulon area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">ZEBULON</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/raleigh/">
+              <img src="/assets/images/communities/north-raleigh.jpg?v=20260316-communities1" alt="Raleigh area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">RALEIGH</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/rolesville/">
+              <img src="/assets/images/communities/rolesville.jpg?v=20260316-communities1" alt="Rolesville area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">ROLESVILLE</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/wake-forest/">
+              <img src="/assets/images/communities/wake-forest.jpg?v=20260316-communities1" alt="Wake Forest area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">WAKE FOREST</span>
+            </a>
+            <a class="home-community-card" href="/explore-the-area/youngsville/">
+              <img src="/assets/images/communities/youngsville.jpg?v=20260316-communities1" alt="Youngsville area">
+              <span class="home-community-overlay" aria-hidden="true"></span>
+              <span class="home-community-name">YOUNGSVILLE</span>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section template-band home-final-cta">
+        <div class="container home-final-cta-inner">
+          <p class="home-final-cta-script">Connect with Us</p>
+          <h2>READY TO TAKE THE NEXT STEP?</h2>
+          <p>Let's schedule a meeting! During this initial consultation, we'll learn more about your buying or selling goals, walk through your options, and build a clear game plan for your move in Raleigh and the Triangle.</p>
+          <a class="home-final-cta-btn" href="tel:+19197377896">CALL OR TEXT US</a>
+          <a class="home-final-cta-email" href="mailto:livinginraleighteam@gmail.com">livinginraleighteam@gmail.com</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="home-final-footer">
+      <div class="container home-final-footer-inner">
+        <div class="home-final-team">
+          <img src="/assets/images/banner-image-2.png" alt="The Living in Raleigh NC Team logo" class="home-final-team-logo">
+          <p class="home-final-team-name">THE LIVING IN RALEIGH NC TEAM</p>
+          <a href="tel:+19197377896" class="home-final-contact-link">919-737-7896</a>
+          <a href="mailto:livinginraleighteam@gmail.com" class="home-final-contact-link">LIVINGINRALEIGHTEAM@GMAIL.COM</a>
+        </div>
+        <div class="home-final-brokerage">
+          <a href="https://www.exprealty.com/" target="_blank" rel="noopener noreferrer" aria-label="Visit eXp Realty website">
+            <img src="/assets/images/brand/exp-realty-logo.png" alt="eXp Realty logo" class="home-final-exp-logo">
+          </a>
+          <p class="home-final-brokerage-line">Proudly brokered by eXp Realty.</p>
+          <a
+            class="home-final-youtube"
+            href="https://www.youtube.com/@living-in-raleigh-nc"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Visit our YouTube channel"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path fill="currentColor" d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.6 3.5 12 3.5 12 3.5s-7.6 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.8.6 9.4.6 9.4.6s7.6 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L16 12l-6.4 3.6Z"/>
+            </svg>
+          </a>
+        </div>
+        <div class="home-final-badges" aria-label="Compliance logos">
+          <img src="/assets/images/brand/equal-housing-logo.svg" alt="Equal housing opportunity logo">
+          <img src="/assets/images/brand/realtor-logo.jpg" alt="Realtor logo">
+        </div>
+        <p class="home-final-disclaimer">All information provided is deemed reliable but not guaranteed and should be independently verified. This website and its affiliates make no representation, warranty, or guarantee as to the accuracy of any information contained herein.</p>
+        <div class="home-final-bottom-row">
+          <span>&copy; <span data-year></span> The Living in Raleigh NC Team</span>
+          <span><a href="/contact/">Contact</a> | <a href="/relocation/">Relocation</a> | <a href="/learning-center/">Learning Center</a></span>
+        </div>
+      </div>
+    </footer>
+  </div>
+  <script src="assets/js/script.js?v=20260327-popup9" defer></script>
 </body>
 </html>
+
+
+
+
+
