@@ -3714,7 +3714,7 @@
     var legalDisplayName = legalBusinessName + " d/b/a " + legalTeamName;
     var legalEffectiveDate = "April 2, 2026";
     var legalContactEmail = "livinginraleighteam@gmail.com";
-    var legalPrivacyPolicyUrl = "/privacy-policy/";
+    var legalPrivacyPolicyUrl = "https://raleighncguide.com/privacy-policy/";
     var legalTermsOfServiceUrl = "/terms-of-service/";
     var legalLinksMarkup = "<a href='" + legalPrivacyPolicyUrl + "'>Privacy Policy</a> | <a href='" + legalTermsOfServiceUrl + "'>Terms of Service</a>";
     var legalModal = null;
@@ -3859,11 +3859,11 @@
         "<h4>SMS Terms and Conditions</h4>",
         "<ol>",
         "<li>We use SMS to confirm appointments, send reminders, and notify clients of schedule updates or important changes.</li>",
-        "<li>You can cancel the SMS service at any time. Just text STOP. After you send the SMS message STOP to us, we will send you an SMS message to confirm that you have been unsubscribed. After this, you will no longer receive SMS messages from us. If you want to join again, just sign up as you did the first time, and we will start sending SMS messages to you again.</li>",
-        "<li>If you are experiencing issues with the messaging program you can reply with the keyword HELP for more assistance, or you can get help directly at <a href='mailto:" + legalContactEmail + "'>" + legalContactEmail + "</a>.</li>",
+        "<li>You can cancel the SMS service at any time. Just text \"STOP\". After you send the SMS message \"STOP\" to us, we will send you an SMS message to confirm that you have been unsubscribed. After this, you will no longer receive SMS messages from us. If you want to join again, just sign up as you did the first time, and we will start sending SMS messages to you again.</li>",
+        "<li>If you are experiencing issues with the messaging program you can reply with the keyword \"HELP\" for more assistance, or you can get help directly at <a href='mailto:" + legalContactEmail + "'>" + legalContactEmail + "</a>.</li>",
         "<li>Carriers are not liable for delayed or undelivered messages.</li>",
-        "<li>Message and data rates may apply for any messages sent to you from us and to us from you. Message frequency may vary. If you have any questions about your text plan or data plan, it is best to contact your wireless provider.</li>",
-        "<li>If you have any questions regarding privacy, please review our Privacy Policy at <a href='" + legalPrivacyPolicyUrl + "'>" + legalPrivacyPolicyUrl + "</a>.</li>",
+        "<li>As always, message and data rates may apply for any messages sent to you from us and to us from you. Message frequency may vary. If you have any questions about your text plan or data plan, it is best to contact your wireless provider.</li>",
+        "<li>If you have any questions regarding privacy, please read our privacy policy: <a href='" + legalPrivacyPolicyUrl + "'>" + legalPrivacyPolicyUrl + "</a>.</li>",
         "</ol>",
         "<h4>Sharing</h4>",
           "<p>We do not sell personal data. Data will not be sold or shared with third parties for marketing or promotional purposes, including phone numbers.</p>",
