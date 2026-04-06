@@ -1752,7 +1752,7 @@
       "</div>",
       "<div class='lead-popup-consent-meta'>",
       "<p class='lead-popup-consent-note'>" + smsConsentOptionalNoteText + "</p>",
-      "<p class='lead-popup-consent-links'>Review our <a href='/privacy-policy/' target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href='/terms-of-service/' target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>",
+      "<p class='lead-popup-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>",
       "</div>",
       "<p class='lead-popup-step-error' data-lead-step-error></p>",
       "</section>",
@@ -3250,7 +3250,7 @@
       "</div>",
       "<div class='call-contact-consent-meta'>",
       "<p class='call-contact-consent-note'>" + smsConsentOptionalNoteText + "</p>",
-      "<p class='call-contact-consent-links'>Review our <a href='/privacy-policy/' target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href='/terms-of-service/' target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>",
+      "<p class='call-contact-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>",
       "</div>",
       "<p class='call-contact-status' data-call-contact-status aria-live='polite'></p>",
       "</form>",
@@ -3721,9 +3721,9 @@
     var legalDisplayName = legalBusinessName + " d/b/a " + legalTeamName;
     var legalEffectiveDate = "April 2, 2026";
     var legalContactEmail = "livinginraleighteam@gmail.com";
-    var legalPrivacyPolicyUrl = "https://raleighncguide.com/privacy-policy/";
+    var legalPrivacyPolicyUrl = "/privacy-policy/";
     var legalTermsOfServiceUrl = "/terms-of-service/";
-    var legalLinksMarkup = "<a href='" + legalPrivacyPolicyUrl + "'>Privacy Policy</a> | <a href='" + legalTermsOfServiceUrl + "'>Terms of Service</a>";
+    var legalLinksMarkup = "<a href='" + legalPrivacyPolicyUrl + "' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> | <a href='" + legalTermsOfServiceUrl + "' target='_blank' rel='noopener noreferrer'>Terms of Service</a>";
     var legalModal = null;
 
     var injectLegalStyles = function () {
@@ -3870,7 +3870,7 @@
         "<li>If you are experiencing issues with the messaging program you can reply with the keyword \"HELP\" for more assistance, or you can get help directly at <a href='mailto:" + legalContactEmail + "'>" + legalContactEmail + "</a>.</li>",
         "<li>Carriers are not liable for delayed or undelivered messages.</li>",
         "<li>As always, message and data rates may apply for any messages sent to you from us and to us from you. Message frequency may vary. If you have any questions about your text plan or data plan, it is best to contact your wireless provider.</li>",
-        "<li>If you have any questions regarding privacy, please read our privacy policy: <a href='" + legalPrivacyPolicyUrl + "'>" + legalPrivacyPolicyUrl + "</a>.</li>",
+        "<li>If you have any questions regarding privacy, please read our privacy policy: <a href='" + legalPrivacyPolicyUrl + "' target='_blank' rel='noopener noreferrer'>" + legalPrivacyPolicyUrl + "</a>.</li>",
         "</ol>",
         "<h4>Sharing</h4>",
           "<p>We do not sell personal data. Data will not be sold or shared with third parties for marketing or promotional purposes, including phone numbers.</p>",
@@ -3967,10 +3967,10 @@
 
       if (hasPhoneInput) {
         consentNode.innerHTML = "<label class='legal-consent-checkbox'><input type='checkbox' name='sms_opt_in'><span>" + smsConsentDisclosureText + "</span></label>";
-        consentMetaNode.innerHTML = "<p class='legal-consent-note'>" + smsConsentOptionalNoteText + "</p><p class='legal-consent-links'>Review our <a href='/privacy-policy/' target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href='/terms-of-service/' target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>";
+        consentMetaNode.innerHTML = "<p class='legal-consent-note'>" + smsConsentOptionalNoteText + "</p><p class='legal-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>";
       } else {
         consentNode.innerHTML = "<p class='legal-consent-note'>By submitting this form, you consent to call and email communications from " + legalDisplayName + " related to your request.</p>";
-        consentMetaNode.innerHTML = "<p class='legal-consent-links'>Review our <a href='/privacy-policy/' target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href='/terms-of-service/' target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>";
+        consentMetaNode.innerHTML = "<p class='legal-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>";
       }
 
       var submitGroupNode = submitButton.closest("p, div") || submitButton;
