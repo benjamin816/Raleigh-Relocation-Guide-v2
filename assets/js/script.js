@@ -262,16 +262,16 @@
 
     var enabledStorageKey = "livrMapTunerEnabled";
     var stateStorageKey = "livrMapTunerStateV3";
-    if (storage) {
-      if (rawToggle === "1") {
-        storage.setItem(enabledStorageKey, "1");
-      } else if (rawToggle === "0") {
+    if (storage && rawToggle !== "1") {
+      try {
         storage.removeItem(enabledStorageKey);
+      } catch (error) {
+        // ignore storage access errors in restricted browsing contexts
       }
     }
 
-    var isEnabled = rawToggle === "1" || Boolean(storage && storage.getItem(enabledStorageKey) === "1");
-    if (!isEnabled || rawToggle === "0") {
+    var isEnabled = rawToggle === "1";
+    if (!isEnabled) {
       return;
     }
 
@@ -1790,7 +1790,14 @@
     });
 
     var devTrigger = null;
-    if (isHomePage && !useInlinePopup) {
+    var popupDevMode = false;
+    try {
+      popupDevMode = (new URLSearchParams(window.location.search || "")).get("popup_dev") === "1";
+    } catch (error) {
+      popupDevMode = false;
+    }
+
+    if (popupDevMode && isHomePage && !useInlinePopup) {
       devTrigger = document.createElement("button");
       devTrigger.type = "button";
       devTrigger.className = "lead-popup-dev-trigger";
