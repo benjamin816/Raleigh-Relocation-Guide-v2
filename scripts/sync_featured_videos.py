@@ -31,10 +31,27 @@ OUT_SUBURB_DIR = ROOT / "assets" / "data" / "featured-videos"
 # Manual overrides let us support unlisted playlists that do not appear on the
 # channel's public /playlists page.
 MANUAL_SUBURB_PLAYLIST_IDS: dict[str, str] = {
-    "cary": "PLybPdL80h3XvFJRDLowLXaP_uDoibfaHt",
-    "raleigh": "PLybPdL80h3XsclSgZPVBPCZX2LW9HhH0-",
     "apex": "PLybPdL80h3XuWZB95BbC2pe-wspLWO0pv",
+    "cary": "PLybPdL80h3XvFJRDLowLXaP_uDoibfaHt",
+    "clayton": "PLybPdL80h3Xv1747TKhRdDERiPsvKUyjh",
+    "durham": "PLybPdL80h3Xvrb15HTbQegtAtRUT1O6x3",
+    "knightdale": "PLybPdL80h3XsHfOHTaRJeovlgQ9orDz0r",
+    "raleigh": "PLybPdL80h3XvCV-Hi72FLN48lgRlYju3t",
     "wake-forest": "PLybPdL80h3XtKnazS__YppgjwM6W2FZzz",
+    "wendell": "PLybPdL80h3Xt2uL8xk-1TNhShlq2Ry4km",
+}
+
+# These feeds are not tied to explore-the-area slugs, but power sections on
+# the Learning Center page and must stay in sync with specific playlists.
+MANUAL_ADDITIONAL_FEEDS: dict[str, dict[str, str]] = {
+    "raleigh-hottest-deals": {
+        "playlist_id": "PLybPdL80h3Xucfh6cneUi5n2Yd-7ZReY_",
+        "playlist_title": "Raleigh's Hottest Deals",
+    },
+    "raleigh-vlog-tours": {
+        "playlist_id": "PLybPdL80h3XtOmkj8Voe_Qlx_LraqJA_t",
+        "playlist_title": "Full Suburb Tours",
+    },
 }
 
 NS = {
@@ -132,7 +149,17 @@ def parse_entries(xml_bytes: bytes) -> list[dict[str, str]]:
         )
 
     videos.sort(key=lambda item: item.get("published", ""), reverse=True)
-    return videos
+
+    deduped: list[dict[str, str]] = []
+    seen_video_ids: set[str] = set()
+    for video in videos:
+        video_id = video.get("video_id", "")
+        if not video_id or video_id in seen_video_ids:
+            continue
+        seen_video_ids.add(video_id)
+        deduped.append(video)
+
+    return deduped
 
 
 def parse_yt_initial_data(html: str) -> dict[str, Any]:
@@ -331,6 +358,42 @@ def main() -> int:
         )
         write_json(output_path, payload)
         print(f"Wrote {len(videos)} videos for '{slug}' to {output_path}")
+
+    for feed_slug, feed_config in MANUAL_ADDITIONAL_FEEDS.items():
+        output_path = OUT_SUBURB_DIR / f"{feed_slug}.json"
+        playlist_id = str(feed_config.get("playlist_id", "")).strip()
+        playlist_title = str(feed_config.get("playlist_title", feed_slug)).strip() or feed_slug
+
+        if not playlist_id:
+            empty_payload = make_payload(
+                playlist_id="",
+                watch_more_url=WATCH_MORE_URL,
+                videos=[],
+                generated_at=generated_at,
+                playlist_title=playlist_title,
+                slug=feed_slug,
+            )
+            write_json(output_path, empty_payload)
+            print(f"No playlist configured for '{feed_slug}' -> wrote empty feed")
+            continue
+
+        playlist_url = f"https://www.youtube.com/playlist?list={playlist_id}"
+        try:
+            videos = parse_entries(fetch_feed_for_playlist(playlist_id))
+        except Exception as exc:
+            print(f"Warning: failed to fetch playlist '{playlist_title}' ({playlist_id}): {exc}")
+            videos = []
+
+        payload = make_payload(
+            playlist_id=playlist_id,
+            watch_more_url=playlist_url,
+            videos=videos,
+            generated_at=generated_at,
+            playlist_title=playlist_title,
+            slug=feed_slug,
+        )
+        write_json(output_path, payload)
+        print(f"Wrote {len(videos)} videos for '{feed_slug}' to {output_path}")
 
     return 0
 

@@ -1,7 +1,23 @@
 {
-  "playlist_id": "",
-  "watch_more_url": "https://www.youtube.com/@living-in-raleigh-nc",
-  "generated_at": "2026-03-24T19:58:21.331373+00:00",
-  "videos": [],
+  "playlist_id": "PLybPdL80h3Xvrb15HTbQegtAtRUT1O6x3",
+  "watch_more_url": "https://www.youtube.com/playlist?list=PLybPdL80h3Xvrb15HTbQegtAtRUT1O6x3",
+  "generated_at": "2026-04-06T20:27:49.312099+00:00",
+  "videos": [
+    {
+      "video_id": "HRygIJl3zzQ",
+      "title": "LUXURY $1.1M Townhome Tour in Downtown Durham NC (PRIVATE ELEVATOR!)",
+      "thumbnail_url": "https://i.ytimg.com/vi/HRygIJl3zzQ/hqdefault.jpg",
+      "subtext": "What does $1.1 Million buy you in Downtown Durham North Carolina?! 🏡",
+      "published": "2025-02-22T17:00:17+00:00"
+    },
+    {
+      "video_id": "ea7E1aVD2QE",
+      "title": "Raleigh vs Durham | The Differences Between Raleigh and Durham North Carolina | Raleigh NC Suburbs",
+      "thumbnail_url": "https://i.ytimg.com/vi/ea7E1aVD2QE/hqdefault.jpg",
+      "subtext": "Raleigh v Durham. Let's compare these two North Carolina Cities and see which one wins head-to-head. 🤜🏼🤛🏼",
+      "published": "2023-11-15T17:00:36+00:00"
+    }
+  ],
+  "playlist_title": "durham",
   "slug": "durham"
 }
