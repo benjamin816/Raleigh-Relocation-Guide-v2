@@ -1752,7 +1752,7 @@
       "</div>",
       "<div class='lead-popup-consent-meta'>",
       "<p class='lead-popup-consent-note'>" + smsConsentOptionalNoteText + "</p>",
-      "<p class='lead-popup-consent-links'>Review our <a href='/privacy-policy/'>Privacy Policy</a> and <a href='/terms-of-service/'>Terms of Service</a>.</p>",
+      "<p class='lead-popup-consent-links'>Review our <a href='/privacy-policy/' target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href='/terms-of-service/' target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>",
       "</div>",
       "<p class='lead-popup-step-error' data-lead-step-error></p>",
       "</section>",
@@ -3243,7 +3243,7 @@
       "</div>",
       "<div class='call-contact-consent-meta'>",
       "<p class='call-contact-consent-note'>" + smsConsentOptionalNoteText + "</p>",
-      "<p class='call-contact-consent-links'>Review our <a href='/privacy-policy/'>Privacy Policy</a> and <a href='/terms-of-service/'>Terms of Service</a>.</p>",
+      "<p class='call-contact-consent-links'>Review our <a href='/privacy-policy/' target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href='/terms-of-service/' target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>",
       "</div>",
       "<p class='call-contact-status' data-call-contact-status aria-live='polite'></p>",
       "</form>",
@@ -3960,10 +3960,10 @@
 
       if (hasPhoneInput) {
         consentNode.innerHTML = "<label class='legal-consent-checkbox'><input type='checkbox' name='sms_opt_in'><span>" + smsConsentDisclosureText + "</span></label>";
-        consentMetaNode.innerHTML = "<p class='legal-consent-note'>" + smsConsentOptionalNoteText + "</p><p class='legal-consent-links'>Review our <a href='/privacy-policy/'>Privacy Policy</a> and <a href='/terms-of-service/'>Terms of Service</a>.</p>";
+        consentMetaNode.innerHTML = "<p class='legal-consent-note'>" + smsConsentOptionalNoteText + "</p><p class='legal-consent-links'>Review our <a href='/privacy-policy/' target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href='/terms-of-service/' target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>";
       } else {
         consentNode.innerHTML = "<p class='legal-consent-note'>By submitting this form, you consent to call and email communications from " + legalDisplayName + " related to your request.</p>";
-        consentMetaNode.innerHTML = "<p class='legal-consent-links'>Review our <a href='/privacy-policy/'>Privacy Policy</a> and <a href='/terms-of-service/'>Terms of Service</a>.</p>";
+        consentMetaNode.innerHTML = "<p class='legal-consent-links'>Review our <a href='/privacy-policy/' target="_blank" rel="noopener noreferrer">Privacy Policy</a> and <a href='/terms-of-service/' target="_blank" rel="noopener noreferrer">Terms of Service</a>.</p>";
       }
 
       var submitGroupNode = submitButton.closest("p, div") || submitButton;
