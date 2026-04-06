@@ -1060,25 +1060,25 @@
   var mapObject = document.querySelector(".map-hit");
   if (mapObject) {
     var orderedSuburbRoutes = [
-      "/explore-the-area/durham/",
-      "/explore-the-area/chapel-hill/",
-      "/explore-the-area/morrisville/",
-      "/explore-the-area/cary/",
-      "/explore-the-area/apex/",
-      "/explore-the-area/holly-springs/",
-      "/explore-the-area/fuquay-varina/",
-      "/explore-the-area/garner/",
-      "/explore-the-area/clayton/",
-      "/explore-the-area/south-raleigh/",
-      "/explore-the-area/east-raleigh/",
-      "/explore-the-area/knightdale/",
-      "/explore-the-area/wendell/",
-      "/explore-the-area/zebulon/",
-      "/explore-the-area/raleigh/",
-      "/explore-the-area/rolesville/",
-      "/explore-the-area/wake-forest/",
-      "/explore-the-area/youngsville/",
-      "/explore-the-area/raleigh/"
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/",
+      "/consult/"
     ];
 
     // Authoritative one-based mapping from user-confirmed region IDs.
@@ -1088,29 +1088,29 @@
     });
 
     var suburbRouteMap = {
-      "durham": "/explore-the-area/durham/",
-      "chapel hill": "/explore-the-area/chapel-hill/",
-      "morrisville": "/explore-the-area/morrisville/",
-      "cary": "/explore-the-area/cary/",
-      "apex": "/explore-the-area/apex/",
-      "holly springs": "/explore-the-area/holly-springs/",
-      "fuquay varina": "/explore-the-area/fuquay-varina/",
-      "garner": "/explore-the-area/garner/",
-      "clayton": "/explore-the-area/clayton/",
-      "south raleigh": "/explore-the-area/south-raleigh/",
-      "east raleigh": "/explore-the-area/east-raleigh/",
-      "knightdale": "/explore-the-area/knightdale/",
-      "wendell": "/explore-the-area/wendell/",
-      "zebulon": "/explore-the-area/zebulon/",
-      "raleigh": "/explore-the-area/raleigh/",
-      "north raleigh": "/explore-the-area/raleigh/",
-      "rolesville": "/explore-the-area/rolesville/",
-      "wake forest": "/explore-the-area/wake-forest/",
-      "youngsville": "/explore-the-area/youngsville/",
-      "itb": "/explore-the-area/raleigh/",
-      "inside the beltline": "/explore-the-area/raleigh/",
-      "raleigh inside the beltline": "/explore-the-area/raleigh/",
-      "raleigh (inside the beltline itb)": "/explore-the-area/raleigh/"
+      "durham": "/consult/",
+      "chapel hill": "/consult/",
+      "morrisville": "/consult/",
+      "cary": "/consult/",
+      "apex": "/consult/",
+      "holly springs": "/consult/",
+      "fuquay varina": "/consult/",
+      "garner": "/consult/",
+      "clayton": "/consult/",
+      "south raleigh": "/consult/",
+      "east raleigh": "/consult/",
+      "knightdale": "/consult/",
+      "wendell": "/consult/",
+      "zebulon": "/consult/",
+      "raleigh": "/consult/",
+      "north raleigh": "/consult/",
+      "rolesville": "/consult/",
+      "wake forest": "/consult/",
+      "youngsville": "/consult/",
+      "itb": "/consult/",
+      "inside the beltline": "/consult/",
+      "raleigh inside the beltline": "/consult/",
+      "raleigh (inside the beltline itb)": "/consult/"
     };
 
     var latestSuburbOrder = [
@@ -1136,25 +1136,25 @@
     ];
 
     var pointCountRouteMap = {
-      "831": "/explore-the-area/durham/",
-      "342": "/explore-the-area/chapel-hill/",
-      "393": "/explore-the-area/morrisville/",
-      "559": "/explore-the-area/cary/",
-      "416": "/explore-the-area/apex/",
-      "482": "/explore-the-area/holly-springs/",
-      "546": "/explore-the-area/fuquay-varina/",
-      "486": "/explore-the-area/garner/",
-      "426": "/explore-the-area/clayton/",
-      "573": "/explore-the-area/south-raleigh/",
-      "401": "/explore-the-area/east-raleigh/",
-      "499": "/explore-the-area/knightdale/",
-      "432": "/explore-the-area/wendell/",
-      "349": "/explore-the-area/zebulon/",
-      "1169": "/explore-the-area/raleigh/",
-      "293": "/explore-the-area/rolesville/",
-      "598": "/explore-the-area/wake-forest/",
-      "493": "/explore-the-area/youngsville/",
-      "423": "/explore-the-area/raleigh/"
+      "831": "/consult/",
+      "342": "/consult/",
+      "393": "/consult/",
+      "559": "/consult/",
+      "416": "/consult/",
+      "482": "/consult/",
+      "546": "/consult/",
+      "486": "/consult/",
+      "426": "/consult/",
+      "573": "/consult/",
+      "401": "/consult/",
+      "499": "/consult/",
+      "432": "/consult/",
+      "349": "/consult/",
+      "1169": "/consult/",
+      "293": "/consult/",
+      "598": "/consult/",
+      "493": "/consult/",
+      "423": "/consult/"
     };
 
     var normalizeSuburbKey = function (value) {
@@ -1752,7 +1752,7 @@
       "</div>",
       "<div class='lead-popup-consent-meta'>",
       "<p class='lead-popup-consent-note'>" + smsConsentOptionalNoteText + "</p>",
-      "<p class='lead-popup-consent-links'>Review our <a href='/privacy-policy/'>Privacy Policy</a> and <a href='/terms-of-service/'>Terms of Service</a>.</p>",
+      "<p class='lead-popup-consent-links'>Review our <a href='#privacy-policy'>Privacy Policy</a> and <a href='#terms-of-service'>Terms of Service</a>.</p>",
       "</div>",
       "<p class='lead-popup-step-error' data-lead-step-error></p>",
       "</section>",
@@ -3243,7 +3243,7 @@
       "</div>",
       "<div class='call-contact-consent-meta'>",
       "<p class='call-contact-consent-note'>" + smsConsentOptionalNoteText + "</p>",
-      "<p class='call-contact-consent-links'>Review our <a href='/privacy-policy/'>Privacy Policy</a> and <a href='/terms-of-service/'>Terms of Service</a>.</p>",
+      "<p class='call-contact-consent-links'>Review our <a href='#privacy-policy'>Privacy Policy</a> and <a href='#terms-of-service'>Terms of Service</a>.</p>",
       "</div>",
       "<p class='call-contact-status' data-call-contact-status aria-live='polite'></p>",
       "</form>",
@@ -3714,8 +3714,8 @@
     var legalDisplayName = legalBusinessName + " d/b/a " + legalTeamName;
     var legalEffectiveDate = "April 2, 2026";
     var legalContactEmail = "livinginraleighteam@gmail.com";
-    var legalPrivacyPolicyUrl = "https://raleighncguide.com/privacy-policy/";
-    var legalTermsOfServiceUrl = "/terms-of-service/";
+    var legalPrivacyPolicyUrl = "#privacy-policy";
+    var legalTermsOfServiceUrl = "#terms-of-service";
     var legalLinksMarkup = "<a href='" + legalPrivacyPolicyUrl + "'>Privacy Policy</a> | <a href='" + legalTermsOfServiceUrl + "'>Terms of Service</a>";
     var legalModal = null;
 
@@ -3771,7 +3771,7 @@
       footer.innerHTML = [
         "<div class='legal-auto-footer-inner'>",
         "<span>&copy; " + String(new Date().getFullYear()) + " " + legalBusinessName + "</span>",
-        "<span><a href='/contact/'>Contact</a> | <a href='/relocation/'>Relocation</a> | <a href='/learning-center/'>Learning Center</a></span>",
+        "<span><a href='/consult/'>Consultation</a> | <a href='/2026/'>Relocation Guide</a> | <a href='/buy/'>Buy</a></span>",
         "</div>"
       ].join("");
       var appendTarget = document.querySelector(".site-shell") || document.body;
@@ -3859,11 +3859,11 @@
         "<h4>SMS Terms and Conditions</h4>",
         "<ol>",
         "<li>We use SMS to confirm appointments, send reminders, and notify clients of schedule updates or important changes.</li>",
-        "<li>You can cancel the SMS service at any time. Just text \"STOP\". After you send the SMS message \"STOP\" to us, we will send you an SMS message to confirm that you have been unsubscribed. After this, you will no longer receive SMS messages from us. If you want to join again, just sign up as you did the first time, and we will start sending SMS messages to you again.</li>",
-        "<li>If you are experiencing issues with the messaging program you can reply with the keyword \"HELP\" for more assistance, or you can get help directly at <a href='mailto:" + legalContactEmail + "'>" + legalContactEmail + "</a>.</li>",
+        "<li>You can cancel the SMS service at any time. Just text STOP. After you send the SMS message STOP to us, we will send you an SMS message to confirm that you have been unsubscribed. After this, you will no longer receive SMS messages from us. If you want to join again, just sign up as you did the first time, and we will start sending SMS messages to you again.</li>",
+        "<li>If you are experiencing issues with the messaging program you can reply with the keyword HELP for more assistance, or you can get help directly at <a href='mailto:" + legalContactEmail + "'>" + legalContactEmail + "</a>.</li>",
         "<li>Carriers are not liable for delayed or undelivered messages.</li>",
-        "<li>As always, message and data rates may apply for any messages sent to you from us and to us from you. Message frequency may vary. If you have any questions about your text plan or data plan, it is best to contact your wireless provider.</li>",
-        "<li>If you have any questions regarding privacy, please read our privacy policy: <a href='" + legalPrivacyPolicyUrl + "'>" + legalPrivacyPolicyUrl + "</a>.</li>",
+        "<li>Message and data rates may apply for any messages sent to you from us and to us from you. Message frequency may vary. If you have any questions about your text plan or data plan, it is best to contact your wireless provider.</li>",
+        "<li>If you have any questions regarding privacy, please review our Privacy Policy at <a href='" + legalPrivacyPolicyUrl + "'>" + legalPrivacyPolicyUrl + "</a>.</li>",
         "</ol>",
         "<h4>Sharing</h4>",
           "<p>We do not sell personal data. Data will not be sold or shared with third parties for marketing or promotional purposes, including phone numbers.</p>",
@@ -3960,10 +3960,10 @@
 
       if (hasPhoneInput) {
         consentNode.innerHTML = "<label class='legal-consent-checkbox'><input type='checkbox' name='sms_opt_in'><span>" + smsConsentDisclosureText + "</span></label>";
-        consentMetaNode.innerHTML = "<p class='legal-consent-note'>" + smsConsentOptionalNoteText + "</p><p class='legal-consent-links'>Review our <a href='/privacy-policy/'>Privacy Policy</a> and <a href='/terms-of-service/'>Terms of Service</a>.</p>";
+        consentMetaNode.innerHTML = "<p class='legal-consent-note'>" + smsConsentOptionalNoteText + "</p><p class='legal-consent-links'>Review our <a href='#privacy-policy'>Privacy Policy</a> and <a href='#terms-of-service'>Terms of Service</a>.</p>";
       } else {
         consentNode.innerHTML = "<p class='legal-consent-note'>By submitting this form, you consent to call and email communications from " + legalDisplayName + " related to your request.</p>";
-        consentMetaNode.innerHTML = "<p class='legal-consent-links'>Review our <a href='/privacy-policy/'>Privacy Policy</a> and <a href='/terms-of-service/'>Terms of Service</a>.</p>";
+        consentMetaNode.innerHTML = "<p class='legal-consent-links'>Review our <a href='#privacy-policy'>Privacy Policy</a> and <a href='#terms-of-service'>Terms of Service</a>.</p>";
       }
 
       var submitGroupNode = submitButton.closest("p, div") || submitButton;
