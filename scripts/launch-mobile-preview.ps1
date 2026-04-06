@@ -1,6 +1,8 @@
 param(
   [string]$Path = "/raleighs-hottest-deals/new-construction-process/",
   [int]$Port = 4173,
+  [string]$Device = "iPhone 15 Pro",
+  [switch]$CompareCommonDevices,
   [switch]$IncludeChromium
 )
 
@@ -8,6 +10,15 @@ $ErrorActionPreference = "Stop"
 
 $root = Split-Path -Parent $PSScriptRoot
 $url = "http://127.0.0.1:$Port$Path"
+
+function Get-PlaywrightDeviceNames {
+  try {
+    $json = node -e "const { devices } = require('playwright'); console.log(JSON.stringify(Object.keys(devices)));"
+    return @($json | ConvertFrom-Json)
+  } catch {
+    return @()
+  }
+}
 
 # Always close stale Playwright preview windows before launching a fresh one.
 function Get-DescendantProcessIds {
@@ -96,16 +107,42 @@ if (-not $serverRunning) {
   Start-Sleep -Milliseconds 700
 }
 
-# iOS-style preview using WebKit (closest runtime to Chrome on iOS).
-Start-Process -FilePath "npx.cmd" -ArgumentList "playwright open -b webkit --device `"iPhone 14`" `"$url`"" -WorkingDirectory $root | Out-Null
+$availableDevices = @(Get-PlaywrightDeviceNames)
+$effectiveDevice = $Device
+$fallbacks = @("iPhone 15 Pro", "iPhone 14", "iPhone 13 Pro")
+
+if ($availableDevices.Count -gt 0 -and -not ($availableDevices -contains $effectiveDevice)) {
+  foreach ($fallback in $fallbacks) {
+    if ($availableDevices -contains $fallback) {
+      Write-Warning "Playwright device '$Device' was not found. Using '$fallback' instead."
+      $effectiveDevice = $fallback
+      break
+    }
+  }
+}
+
+# iOS-style preview using WebKit (closest runtime to Safari on iOS).
+Start-Process -FilePath "npx.cmd" -ArgumentList "playwright open -b webkit --device `"$effectiveDevice`" `"$url`"" -WorkingDirectory $root | Out-Null
+
+if ($CompareCommonDevices) {
+  $compareDevices = @("iPhone SE (3rd gen)", "iPhone 14", "iPhone 15 Pro Max")
+  foreach ($compareDevice in $compareDevices) {
+    if ($compareDevice -eq $effectiveDevice) {
+      continue
+    }
+    if ($availableDevices.Count -eq 0 -or ($availableDevices -contains $compareDevice)) {
+      Start-Process -FilePath "npx.cmd" -ArgumentList "playwright open -b webkit --device `"$compareDevice`" `"$url`"" -WorkingDirectory $root | Out-Null
+    }
+  }
+}
 
 if ($IncludeChromium) {
   # Optional Chromium preview using desktop Chrome channel if available.
   try {
-    Start-Process -FilePath "npx.cmd" -ArgumentList "playwright open -b chromium --channel=chrome --device `"iPhone 14`" `"$url`"" -WorkingDirectory $root | Out-Null
+    Start-Process -FilePath "npx.cmd" -ArgumentList "playwright open -b chromium --channel=chrome --device `"$effectiveDevice`" `"$url`"" -WorkingDirectory $root | Out-Null
   } catch {
     # Ignore if Chrome channel is unavailable on this machine.
   }
 }
 
-Write-Host "Mobile previews launched at $url"
+Write-Host "Mobile previews launched at $url using device '$effectiveDevice'"
