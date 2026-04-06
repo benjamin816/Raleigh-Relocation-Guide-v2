@@ -1,0 +1,9 @@
+.home-map-shell .map-composite {
+  inset: 0 0 0 auto;
+  width: 150.0%;
+  height: 100%;
+  left: auto;
+  right: 0;
+  transform: translate(-12.0px, 5.0px);
+  transform-origin: top right;
+}

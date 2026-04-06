@@ -1,0 +1,16 @@
+{
+  "overflowX": 0,
+  "map": {
+    "y": -14,
+    "w": 390,
+    "h": 260
+  },
+  "video": {
+    "y": 267,
+    "w": 374,
+    "h": 210
+  },
+  "mapAboveVideo": true,
+  "pFont": "14.72px",
+  "legendFont": "7.2px"
+}

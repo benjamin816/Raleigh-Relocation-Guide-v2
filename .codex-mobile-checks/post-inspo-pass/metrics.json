@@ -1,0 +1,74 @@
+[
+  {
+    "route": "/",
+    "url": "http://127.0.0.1:4173/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  },
+  {
+    "route": "/about/",
+    "url": "http://127.0.0.1:4173/about/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  },
+  {
+    "route": "/buy/",
+    "url": "http://127.0.0.1:4173/buy/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  },
+  {
+    "route": "/sell/",
+    "url": "http://127.0.0.1:4173/sell/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  },
+  {
+    "route": "/relocation/",
+    "url": "http://127.0.0.1:4173/relocation/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  },
+  {
+    "route": "/learning-center/",
+    "url": "http://127.0.0.1:4173/learning-center/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  },
+  {
+    "route": "/raleighs-hottest-deals/new-construction-process/",
+    "url": "http://127.0.0.1:4173/raleighs-hottest-deals/new-construction-process/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  },
+  {
+    "route": "/privacy-policy/",
+    "url": "http://127.0.0.1:4173/privacy-policy/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  },
+  {
+    "route": "/terms-of-service/",
+    "url": "http://127.0.0.1:4173/terms-of-service/",
+    "innerWidth": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "hasNavOpen": false
+  }
+]

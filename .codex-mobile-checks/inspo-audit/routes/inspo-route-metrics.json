@@ -1,0 +1,100 @@
+[
+  {
+    "route": "/",
+    "url": "https://www.originalhoustontexas.com/",
+    "title": "Living in Houston TX Team - The Original",
+    "width": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "headerHeight": null,
+    "menuControl": {
+      "tag": "div",
+      "aria": "",
+      "text": "Buy Sell Explore The Area Abou"
+    }
+  },
+  {
+    "route": "/about",
+    "url": "https://www.originalhoustontexas.com/about",
+    "title": "The Original Living in Houston TX Team",
+    "width": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "headerHeight": null,
+    "menuControl": {
+      "tag": "div",
+      "aria": "",
+      "text": "Buy Sell Explore The Area Abou"
+    }
+  },
+  {
+    "route": "/buy",
+    "url": "https://www.originalhoustontexas.com/buy",
+    "title": "Buy A Home | Living in Houston TX Team - The Original",
+    "width": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "headerHeight": null,
+    "menuControl": {
+      "tag": "div",
+      "aria": "",
+      "text": "Buy Sell Explore The Area Abou"
+    }
+  },
+  {
+    "route": "/sell",
+    "url": "https://www.originalhoustontexas.com/sell",
+    "title": "Sell Your Home | Living in Houston TX Team",
+    "width": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "headerHeight": null,
+    "menuControl": {
+      "tag": "div",
+      "aria": "",
+      "text": "Buy Sell Explore The Area Abou"
+    }
+  },
+  {
+    "route": "/relocation",
+    "url": "https://www.originalhoustontexas.com/relocation",
+    "title": "Relocation | Living in Houston TX Team - The Original",
+    "width": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "headerHeight": null,
+    "menuControl": {
+      "tag": "div",
+      "aria": "",
+      "text": "Buy Sell Explore The Area Abou"
+    }
+  },
+  {
+    "route": "/learning-center",
+    "url": "https://www.originalhoustontexas.com/learning-center",
+    "title": "Learning Center | Living in Houston TX Team",
+    "width": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "headerHeight": null,
+    "menuControl": {
+      "tag": "div",
+      "aria": "",
+      "text": "Buy Sell Explore The Area Abou"
+    }
+  },
+  {
+    "route": "/hot-deals-in-new-construction",
+    "url": "https://www.originalhoustontexas.com/hot-deals-in-new-construction",
+    "title": "Houston's Hottest Deals | Living in Houston TX Team",
+    "width": 390,
+    "scrollWidth": 390,
+    "overflowX": 0,
+    "headerHeight": null,
+    "menuControl": {
+      "tag": "div",
+      "aria": "",
+      "text": "Buy Sell Explore The Area Abou"
+    }
+  }
+]

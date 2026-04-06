@@ -1,0 +1,51 @@
+{
+  "viewportWidth": 390,
+  "hasOverflow": false,
+  "shellRect": {
+    "left": 0,
+    "right": 390,
+    "width": 390,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "compositeRect": {
+    "left": -415.34,
+    "right": 391.17,
+    "width": 806.52,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "hitRect": {
+    "left": -415.34,
+    "right": 391.17,
+    "width": 806.52,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "labelsRect": {
+    "left": -415.34,
+    "right": 391.17,
+    "width": 806.52,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "legendRect": {
+    "left": 228.59,
+    "right": 380.59,
+    "width": 152,
+    "top": 168.13,
+    "bottom": 201.58,
+    "height": 33.45
+  },
+  "alignmentDelta": {
+    "left": 0,
+    "right": 0,
+    "width": 0,
+    "top": 0,
+    "height": 0
+  }
+}

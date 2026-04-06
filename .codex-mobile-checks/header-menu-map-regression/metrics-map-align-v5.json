@@ -1,0 +1,57 @@
+{
+  "viewportWidth": 390,
+  "scrollWidth": 390,
+  "hasHorizontalOverflow": false,
+  "shellRect": {
+    "left": 0,
+    "right": 390,
+    "width": 390,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "compositeRect": {
+    "left": -421.19,
+    "right": 392.73,
+    "width": 813.92,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "hitRect": {
+    "left": -421.19,
+    "right": 392.73,
+    "width": 813.92,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "labelsRect": {
+    "left": -421.19,
+    "right": 392.73,
+    "width": 813.92,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "legendRect": {
+    "left": 231.33,
+    "right": 383.33,
+    "width": 152,
+    "top": 168.13,
+    "bottom": 201.58,
+    "height": 33.45
+  },
+  "hitVsLabelsDelta": {
+    "left": 0,
+    "right": 0,
+    "width": 0,
+    "top": 0,
+    "height": 0
+  },
+  "layerStyles": {
+    "transform": "none",
+    "width": "813.921875px",
+    "height": "339.125px"
+  }
+}

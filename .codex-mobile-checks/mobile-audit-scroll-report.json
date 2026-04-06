@@ -1,0 +1,245 @@
+[
+  {
+    "route": "/",
+    "maxOverflow": 0,
+    "offenders": [
+      {
+        "outside": 156,
+        "tag": "img",
+        "cls": "home-guide-download-book",
+        "width": 702
+      }
+    ]
+  },
+  {
+    "route": "/2026/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/about/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/areas/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/buy/",
+    "maxOverflow": 0,
+    "offenders": [
+      {
+        "outside": 156,
+        "tag": "img",
+        "cls": "home-guide-download-book",
+        "width": 702
+      }
+    ]
+  },
+  {
+    "route": "/consult/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/contact/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/apex/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/cary/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/chapel-hill/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/clayton/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/durham/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/east-raleigh/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/fuquay-varina/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/garner/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/holly-springs/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/itb/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/knightdale/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/morrisville/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/north-raleigh/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/raleigh/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/rolesville/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/south-raleigh/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/wake-forest/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/wendell/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/youngsville/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/zebulon/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/blog/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/blog/best-raleigh-suburbs-for-relocating-families/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/blog/new-construction-in-raleigh-what-to-know-first/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/blog/raleigh-market-snapshot-april-2026/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/privacy-policy/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/builders/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/hottest-deals/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/new-construction-process/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/relocation/",
+    "maxOverflow": 0,
+    "offenders": [
+      {
+        "outside": 156,
+        "tag": "img",
+        "cls": "home-guide-download-book",
+        "width": 702
+      }
+    ]
+  },
+  {
+    "route": "/sell/",
+    "maxOverflow": 0,
+    "offenders": [
+      {
+        "outside": 156,
+        "tag": "img",
+        "cls": "home-guide-download-book",
+        "width": 702
+      }
+    ]
+  },
+  {
+    "route": "/terms-of-service/",
+    "maxOverflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/videos/",
+    "maxOverflow": 0,
+    "offenders": []
+  }
+]

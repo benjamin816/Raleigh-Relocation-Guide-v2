@@ -1,0 +1,8 @@
+{
+  "inspo-home": {
+    "clicked": "button[aria-label*=\"menu\" i]"
+  },
+  "local-home": {
+    "clicked": "button:has-text(\"MENU\")"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "shell": {
+    "left": 0,
+    "right": 390,
+    "width": 390,
+    "height": 339.125
+  },
+  "layer": {
+    "left": -163.8000030517578,
+    "right": 226.1999969482422,
+    "width": 390,
+    "height": 339.125
+  },
+  "layerTransform": "matrix(1, 0, 0, 1, -163.800003, 0)"
+}

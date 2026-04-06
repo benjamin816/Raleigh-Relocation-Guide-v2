@@ -1,0 +1,34 @@
+{
+  "arrowMetrics": {
+    "rect": {
+      "x": 346.484375,
+      "y": 620.171875,
+      "width": 32,
+      "height": 32,
+      "top": 620.171875,
+      "right": 378.484375,
+      "bottom": 652.171875,
+      "left": 346.484375
+    },
+    "rightGap": 11.515625,
+    "bottomGap": 11.828125
+  },
+  "popupMetrics": {
+    "lead": {
+      "leftGap": 9.75,
+      "rightGap": 9.75,
+      "centerDelta": 0
+    },
+    "call": {
+      "leftGap": 9.713546752929688,
+      "rightGap": 9.786453247070312,
+      "centerDelta": -0.0364532470703125
+    }
+  },
+  "mapMetrics": {
+    "overLeft": 366.59375,
+    "overRight": -39,
+    "shellW": 390,
+    "compW": 717.59375
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "viewportWidth": 390,
+  "popupVisible": true,
+  "headerZ": "1700",
+  "popupZ": "5600",
+  "backdrop": {
+    "background": "rgba(8, 20, 30, 0.72)",
+    "backdropFilter": "blur(14px) saturate(0.95)"
+  },
+  "dialogWidth": 371,
+  "dialogWidthPct": 95,
+  "scrollBeforeAttempt": 0,
+  "scrollAfterAttempt": 0,
+  "scrollLocked": true
+}

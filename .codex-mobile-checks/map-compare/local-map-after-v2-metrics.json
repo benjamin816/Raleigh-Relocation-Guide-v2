@@ -1,0 +1,17 @@
+{
+  "viewportWidth": 390,
+  "shellRect": {
+    "left": 0,
+    "width": 390,
+    "height": 339
+  },
+  "legendRect": {
+    "left": 217,
+    "width": 168,
+    "top": 184
+  },
+  "shellAspect": "1.15 / 1",
+  "layerTransform": "matrix(1.12, 0, 0, 1.12, -101.400002, 0)",
+  "bodyScrollWidth": 390,
+  "docScrollWidth": 390
+}

@@ -1,0 +1,15 @@
+{
+  "mobile": {
+    "triggerHref": "/raleighs-hottest-deals/hottest-deals/",
+    "submenuCount": 4,
+    "submenuLinks": [
+      "/raleighs-hottest-deals/hottest-deals/",
+      "/raleighs-hottest-deals/new-construction-process/",
+      "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+      "/raleighs-hottest-deals/builders/"
+    ]
+  },
+  "desktop": {
+    "triggerHref": "/raleighs-hottest-deals/hottest-deals/"
+  }
+}

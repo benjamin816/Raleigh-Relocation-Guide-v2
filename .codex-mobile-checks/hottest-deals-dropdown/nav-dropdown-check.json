@@ -1,0 +1,308 @@
+[
+  {
+    "route": "/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/about/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/buy/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/sell/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/relocation/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/learning-center/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/raleighs-hottest-deals/new-construction-process/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/privacy-policy/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  },
+  {
+    "route": "/terms-of-service/",
+    "before": {
+      "exists": true,
+      "open": false,
+      "linkCount": 5
+    },
+    "after": {
+      "open": true,
+      "ariaExpanded": "true",
+      "links": [
+        {
+          "href": "/raleighs-hottest-deals/",
+          "text": "OVERVIEW"
+        },
+        {
+          "href": "/raleighs-hottest-deals/hottest-deals/",
+          "text": "HOTTEST DEALS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/new-construction-process/",
+          "text": "NEW CONSTRUCTION PROCESS"
+        },
+        {
+          "href": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+          "text": "AFFORDABLE NEW CONSTRUCTION HOTLIST"
+        },
+        {
+          "href": "/raleighs-hottest-deals/builders/",
+          "text": "BUILDERS"
+        }
+      ]
+    }
+  }
+]

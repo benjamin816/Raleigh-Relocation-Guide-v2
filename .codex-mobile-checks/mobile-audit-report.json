@@ -1,0 +1,549 @@
+[
+  {
+    "route": "/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 450,
+    "overflow": 60,
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "home-map-left-column",
+        "id": "",
+        "left": 8,
+        "right": 449.92,
+        "width": 441.92,
+        "outside": 59.92
+      },
+      {
+        "tag": "div",
+        "cls": "home-map-copy",
+        "id": "",
+        "left": 8,
+        "right": 449.92,
+        "width": 441.92,
+        "outside": 59.92
+      },
+      {
+        "tag": "p",
+        "cls": "home-map-kicker",
+        "id": "",
+        "left": 8,
+        "right": 449.92,
+        "width": 441.92,
+        "outside": 59.92
+      },
+      {
+        "tag": "h2",
+        "cls": "",
+        "id": "",
+        "left": 8,
+        "right": 449.92,
+        "width": 441.92,
+        "outside": 59.92
+      },
+      {
+        "tag": "p",
+        "cls": "",
+        "id": "",
+        "left": 8,
+        "right": 449.92,
+        "width": 441.92,
+        "outside": 59.92
+      }
+    ]
+  },
+  {
+    "route": "/2026/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/about/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/areas/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/buy/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/consult/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/contact/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 450,
+    "overflow": 60,
+    "offenders": [
+      {
+        "tag": "div",
+        "cls": "home-map-left-column",
+        "id": "",
+        "left": 8,
+        "right": 449.92,
+        "width": 441.92,
+        "outside": 59.92
+      },
+      {
+        "tag": "div",
+        "cls": "home-map-copy",
+        "id": "",
+        "left": 8,
+        "right": 449.92,
+        "width": 441.92,
+        "outside": 59.92
+      },
+      {
+        "tag": "p",
+        "cls": "home-map-kicker",
+        "id": "",
+        "left": 8,
+        "right": 449.92,
+        "width": 441.92,
+        "outside": 59.92
+      }
+    ]
+  },
+  {
+    "route": "/explore-the-area/apex/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/cary/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/chapel-hill/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/clayton/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/durham/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/east-raleigh/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/fuquay-varina/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/garner/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/holly-springs/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/itb/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/knightdale/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/morrisville/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/north-raleigh/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/raleigh/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/rolesville/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/south-raleigh/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/wake-forest/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/wendell/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/youngsville/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/explore-the-area/zebulon/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/blog/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/blog/best-raleigh-suburbs-for-relocating-families/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/blog/new-construction-in-raleigh-what-to-know-first/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/learning-center/blog/raleigh-market-snapshot-april-2026/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/privacy-policy/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/affordable-new-construction-hotlist/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/builders/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/hottest-deals/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/raleighs-hottest-deals/new-construction-process/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/relocation/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 450,
+    "overflow": 60,
+    "offenders": []
+  },
+  {
+    "route": "/sell/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/terms-of-service/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  },
+  {
+    "route": "/videos/",
+    "viewport": {
+      "vw": 390,
+      "vh": 664
+    },
+    "scrollWidth": 390,
+    "bodyScrollWidth": 390,
+    "overflow": 0,
+    "offenders": []
+  }
+]

@@ -1,0 +1,25 @@
+{
+  "overflowX": 0,
+  "viewportWidth": 390,
+  "wrap": {
+    "x": 6,
+    "y": -393,
+    "w": 377,
+    "h": 882
+  },
+  "head": {
+    "x": 6,
+    "y": -393,
+    "w": 377,
+    "h": 239
+  },
+  "copy": {
+    "x": 24,
+    "y": -259,
+    "w": 341,
+    "h": 105
+  },
+  "headTextAlign": "center",
+  "copyTextAlign": "center",
+  "sideGutterEach": 6
+}

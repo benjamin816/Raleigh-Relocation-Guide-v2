@@ -1,0 +1,52 @@
+{
+  "viewport": {
+    "w": 390,
+    "h": 664
+  },
+  "overflow": false,
+  "headRect": {
+    "left": 12,
+    "right": 378,
+    "width": 366,
+    "top": 61.78,
+    "bottom": 288.58,
+    "height": 226.8
+  },
+  "scriptRect": {
+    "left": 29.94,
+    "right": 360.06,
+    "width": 330.13,
+    "top": 61.78,
+    "bottom": 90.78,
+    "height": 29
+  },
+  "titleRect": {
+    "left": 29.94,
+    "right": 360.06,
+    "width": 330.13,
+    "top": 95.58,
+    "bottom": 157.58,
+    "height": 62
+  },
+  "copyRect": {
+    "left": 32.5,
+    "right": 357.5,
+    "width": 325,
+    "top": 173.58,
+    "bottom": 288.58,
+    "height": 115
+  },
+  "sideDiff": {
+    "leftGap": 20.5,
+    "rightGap": 20.5,
+    "absGapDiff": 0
+  },
+  "computed": {
+    "headTextAlign": "center",
+    "copyTextAlign": "center",
+    "titleTextAlign": "center",
+    "scriptTextAlign": "center",
+    "headPaddingInlineStart": "17.940001px",
+    "headPaddingInlineEnd": "17.940001px"
+  }
+}

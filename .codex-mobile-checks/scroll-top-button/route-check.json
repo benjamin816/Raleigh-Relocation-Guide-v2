@@ -1,0 +1,146 @@
+[
+  {
+    "route": "/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 12870
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 500
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  },
+  {
+    "route": "/about/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 5610
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 500
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  },
+  {
+    "route": "/buy/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 4464
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 493
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  },
+  {
+    "route": "/sell/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 4488
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 402
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  },
+  {
+    "route": "/relocation/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 10377
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 500
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  },
+  {
+    "route": "/learning-center/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 8518
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 499
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  },
+  {
+    "route": "/raleighs-hottest-deals/new-construction-process/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 3257
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 480
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  },
+  {
+    "route": "/privacy-policy/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 1539
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 500
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  },
+  {
+    "route": "/terms-of-service/",
+    "before": {
+      "exists": true,
+      "visibleClass": false,
+      "scrollY": 0,
+      "maxScroll": 996
+    },
+    "afterScroll": {
+      "visibleClass": true,
+      "ariaHidden": "false",
+      "scrollY": 500
+    },
+    "afterClickY": 0,
+    "clickWorked": true
+  }
+]

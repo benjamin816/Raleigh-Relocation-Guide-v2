@@ -1,0 +1,146 @@
+[
+  {
+    "page": "home",
+    "url": "http://127.0.0.1:4173/",
+    "hasMap": true,
+    "screenshot": ".codex-mobile-checks\\map-lock-home-ios14.png",
+    "metrics": {
+      "shellRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "compositeRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "layerRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "legendRect": {
+        "x": 227.421875,
+        "y": 169.125,
+        "width": 152,
+        "height": 33.453125,
+        "right": 379.421875,
+        "bottom": 202.578125
+      },
+      "shellVars": {
+        "zoom": "1",
+        "x": "0px",
+        "y": "0px"
+      },
+      "layerTransform": "matrix(1, 0, 0, 1, -195, 0)",
+      "layerObjectFit": "contain",
+      "layerObjectPosition": "50% 50%"
+    }
+  },
+  {
+    "page": "explore-the-area",
+    "url": "http://127.0.0.1:4173/explore-the-area/",
+    "hasMap": true,
+    "screenshot": ".codex-mobile-checks\\map-lock-explore-the-area-ios14.png",
+    "metrics": {
+      "shellRect": {
+        "x": 0,
+        "y": 162.328125,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.453125
+      },
+      "compositeRect": {
+        "x": 0,
+        "y": 162.328125,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.453125
+      },
+      "layerRect": {
+        "x": 0,
+        "y": 162.328125,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.453125
+      },
+      "legendRect": {
+        "x": 227.421875,
+        "y": 168.71875,
+        "width": 152,
+        "height": 33.453125,
+        "right": 379.421875,
+        "bottom": 202.171875
+      },
+      "shellVars": {
+        "zoom": "1",
+        "x": "0px",
+        "y": "0px"
+      },
+      "layerTransform": "matrix(1, 0, 0, 1, -195, 0)",
+      "layerObjectFit": "contain",
+      "layerObjectPosition": "50% 50%"
+    }
+  },
+  {
+    "page": "relocation",
+    "url": "http://127.0.0.1:4173/relocation/",
+    "hasMap": true,
+    "screenshot": ".codex-mobile-checks\\map-lock-relocation-ios14.png",
+    "metrics": {
+      "shellRect": {
+        "x": 0,
+        "y": 162.515625,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.640625
+      },
+      "compositeRect": {
+        "x": 0,
+        "y": 162.515625,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.640625
+      },
+      "layerRect": {
+        "x": 0,
+        "y": 162.515625,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.640625
+      },
+      "legendRect": {
+        "x": 227.421875,
+        "y": 168.90625,
+        "width": 152,
+        "height": 33.453125,
+        "right": 379.421875,
+        "bottom": 202.359375
+      },
+      "shellVars": {
+        "zoom": "1",
+        "x": "0px",
+        "y": "0px"
+      },
+      "layerTransform": "matrix(1, 0, 0, 1, -195, 0)",
+      "layerObjectFit": "contain",
+      "layerObjectPosition": "50% 50%"
+    }
+  }
+]

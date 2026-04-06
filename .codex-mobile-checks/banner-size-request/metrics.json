@@ -1,0 +1,22 @@
+{
+  "overflowX": 0,
+  "viewportWidth": 390,
+  "headerPos": "fixed",
+  "stripDisplay": "none",
+  "headerRect": {
+    "y": 0,
+    "h": 98,
+    "w": 390
+  },
+  "navRect": {
+    "y": 0,
+    "h": 98,
+    "w": 390
+  },
+  "logoRect": {
+    "y": 6,
+    "h": 86,
+    "w": 153
+  },
+  "pageHomePaddingTop": "98px"
+}

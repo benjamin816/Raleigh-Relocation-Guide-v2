@@ -1,0 +1,73 @@
+{
+  "mapMetrics": {
+    "viewport": {
+      "width": 390,
+      "height": 664
+    },
+    "shellRect": {
+      "x": 0,
+      "y": 162.734375,
+      "width": 390,
+      "height": 339.125,
+      "top": 162.734375,
+      "right": 390,
+      "bottom": 501.859375,
+      "left": 0
+    },
+    "compositeRect": {
+      "x": -407.15625,
+      "y": 162.734375,
+      "width": 798.328125,
+      "height": 339.125,
+      "top": 162.734375,
+      "right": 391.171875,
+      "bottom": 501.859375,
+      "left": -407.15625
+    },
+    "legendRect": {
+      "x": 228.59375,
+      "y": 169.125,
+      "width": 152,
+      "height": 33.453125,
+      "top": 169.125,
+      "right": 380.59375,
+      "bottom": 202.578125,
+      "left": 228.59375
+    },
+    "compositeOverflowLeft": 407.15625,
+    "compositeOverflowRight": 1.171875,
+    "shellGutterLeft": 0,
+    "shellGutterRight": 0
+  },
+  "popupMetrics": {
+    "viewport": {
+      "width": 390,
+      "height": 664
+    },
+    "popupRect": {
+      "x": 0,
+      "y": 0,
+      "width": 390,
+      "height": 664,
+      "top": 0,
+      "right": 390,
+      "bottom": 664,
+      "left": 0
+    },
+    "dialogRect": {
+      "x": 9.75,
+      "y": 19.921875,
+      "width": 370.5,
+      "height": 624.15625,
+      "top": 19.921875,
+      "right": 380.25,
+      "bottom": 644.078125,
+      "left": 9.75
+    },
+    "dialogCenter": 195,
+    "viewportCenter": 195,
+    "centerDelta": 0,
+    "leftGap": 9.75,
+    "rightGap": 9.75
+  }
+}

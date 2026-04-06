@@ -1,0 +1,30 @@
+{
+  "viewport": {
+    "width": 390,
+    "height": 664
+  },
+  "navRect": {
+    "x": 62.40625,
+    "y": 0,
+    "width": 327.59375,
+    "height": 664,
+    "top": 0,
+    "right": 390,
+    "bottom": 664,
+    "left": 62.40625
+  },
+  "buttonRect": {
+    "x": 325.734375,
+    "y": 25.5,
+    "width": 44,
+    "height": 44,
+    "top": 25.5,
+    "right": 369.734375,
+    "bottom": 69.5,
+    "left": 325.734375
+  },
+  "navTransform": "matrix(1, 0, 0, 1, 0, 0)",
+  "navRightCss": "0px",
+  "navWidthCss": "327.59375px",
+  "navOpenClass": true
+}

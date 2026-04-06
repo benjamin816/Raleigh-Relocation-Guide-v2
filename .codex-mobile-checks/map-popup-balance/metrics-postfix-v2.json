@@ -1,0 +1,30 @@
+{
+  "mapMetrics": {
+    "viewport": {
+      "width": 390,
+      "height": 664
+    },
+    "shellRect": {
+      "x": 0,
+      "y": 162.734375,
+      "width": 390,
+      "height": 339.125,
+      "top": 162.734375,
+      "right": 390,
+      "bottom": 501.859375,
+      "left": 0
+    },
+    "compositeRect": {
+      "x": -361.90625,
+      "y": 162.734375,
+      "width": 753.078125,
+      "height": 339.125,
+      "top": 162.734375,
+      "right": 391.171875,
+      "bottom": 501.859375,
+      "left": -361.90625
+    },
+    "compositeOverflowLeft": 361.90625,
+    "compositeOverflowRight": 1.171875
+  }
+}

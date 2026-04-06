@@ -1,0 +1,56 @@
+[
+  {
+    "route": "/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  },
+  {
+    "route": "/about/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  },
+  {
+    "route": "/buy/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  },
+  {
+    "route": "/sell/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  },
+  {
+    "route": "/relocation/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  },
+  {
+    "route": "/learning-center/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  },
+  {
+    "route": "/raleighs-hottest-deals/new-construction-process/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  },
+  {
+    "route": "/privacy-policy/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  },
+  {
+    "route": "/terms-of-service/",
+    "vw": 390,
+    "maxW": 390,
+    "overflow": 0
+  }
+]

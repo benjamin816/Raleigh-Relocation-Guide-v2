@@ -1,0 +1,32 @@
+{
+  "viewport": {
+    "w": 390,
+    "h": 664
+  },
+  "exists": {
+    "section": false,
+    "inner": false,
+    "shell": false,
+    "legend": false,
+    "copy": false,
+    "videoShell": false
+  },
+  "rects": {
+    "section": null,
+    "inner": null,
+    "shell": null,
+    "legend": null,
+    "copy": null,
+    "videoShell": null
+  },
+  "styles": {
+    "shellWidth": null,
+    "shellMaxWidth": null,
+    "shellTransform": null,
+    "shellAspectRatio": null,
+    "legendRight": null,
+    "legendTop": null,
+    "legendMaxWidth": null,
+    "legendFontSize": null
+  }
+}

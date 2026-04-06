@@ -1,0 +1,56 @@
+{
+  "viewport": {
+    "w": 390,
+    "h": 664
+  },
+  "cardRect": {
+    "left": 6.41,
+    "right": 383.59,
+    "top": 293.05,
+    "bottom": 597.23,
+    "width": 377.19,
+    "height": 304.19
+  },
+  "contentRect": {
+    "left": 7.41,
+    "right": 382.59,
+    "top": 294.05,
+    "bottom": 596.23,
+    "width": 375.19,
+    "height": 302.19
+  },
+  "titleRect": {
+    "left": 162.44,
+    "right": 227.55,
+    "top": 389.31,
+    "bottom": 420.58,
+    "width": 65.11,
+    "height": 31.27
+  },
+  "copyRect": {
+    "left": 38.09,
+    "right": 351.91,
+    "top": 433.38,
+    "bottom": 499.38,
+    "width": 313.81,
+    "height": 66
+  },
+  "content": {
+    "justifyContent": "center",
+    "alignItems": "center",
+    "textAlign": "center",
+    "gap": "12.8px"
+  },
+  "title": {
+    "fontSize": "21.120001px",
+    "textAlign": "center",
+    "lineHeight": "22.387199px"
+  },
+  "copy": {
+    "color": "rgb(255, 255, 255)",
+    "fontSize": "15.52px",
+    "textAlign": "center",
+    "fontWeight": "800"
+  },
+  "hasOverflow": false
+}

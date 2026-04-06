@@ -1,0 +1,61 @@
+{
+  "mapMetrics": {
+    "viewport": {
+      "w": 390,
+      "h": 664
+    },
+    "shellRect": {
+      "x": 0,
+      "y": 162.734375,
+      "width": 390,
+      "height": 339.125,
+      "top": 162.734375,
+      "right": 390,
+      "bottom": 501.859375,
+      "left": 0
+    },
+    "compRect": {
+      "x": -363.078125,
+      "y": 162.734375,
+      "width": 753.078125,
+      "height": 339.125,
+      "top": 162.734375,
+      "right": 390,
+      "bottom": 501.859375,
+      "left": -363.078125
+    },
+    "overLeft": 363.078125,
+    "overRight": 0,
+    "docScrollW": 390,
+    "bodyScrollW": 390
+  },
+  "menuMetrics": {
+    "viewport": {
+      "w": 390,
+      "h": 664
+    },
+    "btnRect": {
+      "x": 325.734375,
+      "y": 25.5,
+      "width": 44,
+      "height": 44,
+      "top": 25.5,
+      "right": 369.734375,
+      "bottom": 69.5,
+      "left": 325.734375
+    },
+    "navRect": {
+      "x": 59.6875,
+      "y": 0,
+      "width": 327.59375,
+      "height": 664,
+      "top": 0,
+      "right": 387.28125,
+      "bottom": 664,
+      "left": 59.6875
+    },
+    "navRightCss": "2.73px",
+    "docScrollW": 390,
+    "bodyScrollW": 390
+  }
+}

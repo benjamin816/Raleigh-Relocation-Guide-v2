@@ -1,0 +1,74 @@
+[
+  {
+    "route": "/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  },
+  {
+    "route": "/about/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  },
+  {
+    "route": "/buy/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  },
+  {
+    "route": "/sell/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  },
+  {
+    "route": "/relocation/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  },
+  {
+    "route": "/learning-center/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  },
+  {
+    "route": "/raleighs-hottest-deals/new-construction-process/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  },
+  {
+    "route": "/privacy-policy/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  },
+  {
+    "route": "/terms-of-service/",
+    "viewportWidth": 390,
+    "bodyScrollWidth": 390,
+    "docScrollWidth": 390,
+    "maxScrollWidth": 390,
+    "overflowPx": 0
+  }
+]

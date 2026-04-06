@@ -1,0 +1,39 @@
+{
+  "viewportWidth": 390,
+  "navRect": {
+    "left": 67.62,
+    "right": 395.21,
+    "top": 0,
+    "bottom": 664,
+    "width": 327.59,
+    "height": 664
+  },
+  "innerRect": {
+    "left": 0,
+    "right": 390,
+    "top": 0,
+    "bottom": 95,
+    "width": 390,
+    "height": 95
+  },
+  "headerRect": {
+    "left": 0,
+    "right": 390,
+    "top": 0,
+    "bottom": 95,
+    "width": 390,
+    "height": 95
+  },
+  "panelFullyOnscreen": false,
+  "navStyles": {
+    "position": "fixed",
+    "left": "62.40625px",
+    "right": "0px",
+    "width": "327.59375px",
+    "maxWidth": "none",
+    "transform": "matrix(1, 0, 0, 1, 5.213394, 0)",
+    "boxSizing": "border-box",
+    "borderRightWidth": "0px",
+    "marginRight": "0px"
+  }
+}

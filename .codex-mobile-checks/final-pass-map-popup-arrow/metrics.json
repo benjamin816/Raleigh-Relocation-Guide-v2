@@ -1,0 +1,57 @@
+{
+  "arrowMetrics": {
+    "viewport": {
+      "w": 390,
+      "h": 664
+    },
+    "rect": {
+      "x": 346.484375,
+      "y": 620.171875,
+      "width": 32,
+      "height": 32,
+      "top": 620.171875,
+      "right": 378.484375,
+      "bottom": 652.171875,
+      "left": 346.484375
+    },
+    "rightGap": 11.515625,
+    "bottomGap": 11.828125,
+    "isVisibleClass": true
+  },
+  "popupMetrics": {
+    "lead": {
+      "leftGap": 9.75,
+      "rightGap": 9.75,
+      "centerDelta": 0
+    },
+    "callContact": {
+      "leftGap": 12.796875,
+      "rightGap": 6.703125,
+      "centerDelta": 3.046875
+    }
+  },
+  "mapMetrics": {
+    "shell": {
+      "x": 0,
+      "y": -11750.265625,
+      "width": 390,
+      "height": 339.125,
+      "top": -11750.265625,
+      "right": 390,
+      "bottom": -11411.140625,
+      "left": 0
+    },
+    "composite": {
+      "x": -375.15625,
+      "y": -11750.265625,
+      "width": 733.1875,
+      "height": 339.125,
+      "top": -11750.265625,
+      "right": 358.03125,
+      "bottom": -11411.140625,
+      "left": -375.15625
+    },
+    "overLeft": 375.15625,
+    "overRight": -31.96875
+  }
+}

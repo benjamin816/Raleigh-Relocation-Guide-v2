@@ -1,0 +1,35 @@
+{
+  "overflowX": 0,
+  "viewportWidth": 390,
+  "mapShell": {
+    "x": 0,
+    "y": -424,
+    "w": 390,
+    "h": 220,
+    "bottom": -204
+  },
+  "video": {
+    "x": 8,
+    "y": -183,
+    "w": 374,
+    "h": 210,
+    "bottom": 27
+  },
+  "copy": {
+    "x": 0,
+    "y": -853,
+    "w": 390,
+    "h": 414,
+    "bottom": -439
+  },
+  "legend": {
+    "x": 218,
+    "y": -419,
+    "w": 168,
+    "h": 33,
+    "bottom": -387
+  },
+  "mapBeforeVideo": false,
+  "copyParagraphFont": "22.386px",
+  "legendFont": "7.2px"
+}

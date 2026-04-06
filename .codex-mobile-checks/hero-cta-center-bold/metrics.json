@@ -1,0 +1,27 @@
+{
+  "overflowX": 0,
+  "band": {
+    "y": 98,
+    "h": 491,
+    "center": 344,
+    "x": 0,
+    "w": 390
+  },
+  "overlay": {
+    "y": 175,
+    "h": 193,
+    "center": 271,
+    "x": 24,
+    "w": 343
+  },
+  "cta": {
+    "y": 379,
+    "h": 146,
+    "center": 452,
+    "x": 29,
+    "w": 332
+  },
+  "groupCenter": 362,
+  "bandCenter": 344,
+  "buttonFontWeight": "900"
+}

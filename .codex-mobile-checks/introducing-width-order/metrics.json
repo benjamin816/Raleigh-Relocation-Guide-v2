@@ -1,0 +1,28 @@
+{
+  "overflowX": 0,
+  "viewportWidth": 390,
+  "splitWidth": 377,
+  "sideGutterEach": 6,
+  "sequence": [
+    {
+      "idx": 1,
+      "classes": "local-card local-intro-card",
+      "order": "1"
+    },
+    {
+      "idx": 2,
+      "classes": "local-card local-image-card",
+      "order": "2"
+    },
+    {
+      "idx": 3,
+      "classes": "local-card local-brand-image-card",
+      "order": "4"
+    },
+    {
+      "idx": 4,
+      "classes": "local-card local-intro-card local-intro-duplicate-card",
+      "order": "3"
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "arrowMetrics": {
+    "viewport": {
+      "w": 390,
+      "h": 664
+    },
+    "rect": {
+      "x": 346.484375,
+      "y": 620.171875,
+      "width": 32,
+      "height": 32,
+      "top": 620.171875,
+      "right": 378.484375,
+      "bottom": 652.171875,
+      "left": 346.484375
+    },
+    "rightGap": 11.515625,
+    "bottomGap": 11.828125,
+    "isVisibleClass": true
+  },
+  "popupMetrics": {
+    "lead": {
+      "leftGap": 9.75,
+      "rightGap": 9.75,
+      "centerDelta": 0
+    },
+    "callContact": {
+      "leftGap": 12.71356201171875,
+      "rightGap": 6.78643798828125,
+      "centerDelta": 2.96356201171875
+    },
+    "map": {
+      "overLeft": 359.5625,
+      "overRight": -31.96875,
+      "shellW": 390,
+      "compW": 717.59375
+    }
+  }
+}

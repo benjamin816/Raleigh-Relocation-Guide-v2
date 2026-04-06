@@ -1,0 +1,86 @@
+[
+  {
+    "url": "http://127.0.0.1:4173/",
+    "outPath": "C:\\Users\\benja\\OneDrive\\Documents\\GitHub\\Raleigh-Relocation-Guide-v2\\.codex-mobile-checks\\home-map-shell-ios14-normal-after-mapfix.png",
+    "metrics": {
+      "shellRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "compositeRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "layerRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "legendRect": {
+        "x": 227.421875,
+        "y": 169.125,
+        "width": 152,
+        "height": 33.453125,
+        "right": 379.421875,
+        "bottom": 202.578125
+      },
+      "layerObjectFit": "contain",
+      "layerObjectPosition": "50% 50%",
+      "layerTransform": "matrix(1, 0, 0, 1, -195, 0)",
+      "compositeInset": "0px 0px 0px 0px"
+    }
+  },
+  {
+    "url": "http://127.0.0.1:4173/?map_tuner=1",
+    "outPath": "C:\\Users\\benja\\OneDrive\\Documents\\GitHub\\Raleigh-Relocation-Guide-v2\\.codex-mobile-checks\\home-map-shell-ios14-tuner-after-mapfix.png",
+    "metrics": {
+      "shellRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "compositeRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "layerRect": {
+        "x": 0,
+        "y": 162.734375,
+        "width": 390,
+        "height": 339.125,
+        "right": 390,
+        "bottom": 501.859375
+      },
+      "legendRect": {
+        "x": 227.421875,
+        "y": 169.125,
+        "width": 152,
+        "height": 33.453125,
+        "right": 379.421875,
+        "bottom": 202.578125
+      },
+      "layerObjectFit": "contain",
+      "layerObjectPosition": "50% 50%",
+      "layerTransform": "matrix(1, 0, 0, 1, -195, 0)",
+      "compositeInset": "0px 0px 0px 0px"
+    }
+  }
+]

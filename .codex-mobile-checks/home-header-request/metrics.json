@@ -1,0 +1,14 @@
+{
+  "scrollY": 700,
+  "overflowX": 0,
+  "header": {
+    "x": 0,
+    "y": -700,
+    "h": 99
+  },
+  "callDisplay": "none",
+  "menuWidth": "44px",
+  "menuText": "Menu",
+  "menuBefore": "\"☰\"",
+  "logoHeight": "35.875px"
+}

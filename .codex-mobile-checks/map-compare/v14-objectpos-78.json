@@ -1,0 +1,29 @@
+{
+  "shell": {
+    "left": 0,
+    "right": 390,
+    "width": 390,
+    "height": 339.125,
+    "top": 161.734375,
+    "bottom": 500.859375
+  },
+  "layer": {
+    "left": 0,
+    "right": 390,
+    "width": 390,
+    "height": 339.125,
+    "top": 161.734375,
+    "bottom": 500.859375
+  },
+  "legend": {
+    "left": 232.890625,
+    "right": 384.890625,
+    "width": 152,
+    "height": 33.453125,
+    "top": 168.125,
+    "bottom": 201.578125
+  },
+  "layerTransform": "none",
+  "objectPosition": "78% 50%",
+  "objectFit": "cover"
+}

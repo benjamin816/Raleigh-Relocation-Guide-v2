@@ -1,0 +1,34 @@
+{
+  "found": true,
+  "rowRect": {
+    "top": 862,
+    "left": 0,
+    "width": 390,
+    "height": 1125
+  },
+  "rowClass": "u_1571085042 dmRespRow hide-for-large",
+  "mapCandidates": [
+    {
+      "tag": "svg",
+      "id": "1336452988",
+      "className": "[object SVGAnimatedString]",
+      "src": null,
+      "width": 360,
+      "height": 437,
+      "top": 472,
+      "left": 15,
+      "display": "block"
+    },
+    {
+      "tag": "IFRAME",
+      "id": "1628256974",
+      "className": "",
+      "src": "https://www.youtube.com/embed/X_x9_8TMDbU",
+      "width": 360,
+      "height": 222,
+      "top": 918,
+      "left": 15,
+      "display": "block"
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+{
+  "viewport": {
+    "w": 390,
+    "h": 664
+  },
+  "exists": {
+    "section": true,
+    "inner": true,
+    "shell": true,
+    "legend": true,
+    "copy": true,
+    "videoShell": true
+  },
+  "rects": {
+    "section": {
+      "top": 40,
+      "left": 0,
+      "width": 390,
+      "height": 940
+    },
+    "inner": {
+      "top": 49,
+      "left": 0,
+      "width": 390,
+      "height": 920
+    },
+    "shell": {
+      "top": 478,
+      "left": 0,
+      "width": 390,
+      "height": 260
+    },
+    "legend": {
+      "top": 483,
+      "left": 218,
+      "width": 168,
+      "height": 33
+    },
+    "copy": {
+      "top": 49,
+      "left": 0,
+      "width": 390,
+      "height": 414
+    },
+    "videoShell": {
+      "top": 759,
+      "left": 8,
+      "width": 374,
+      "height": 210
+    }
+  },
+  "styles": {
+    "shellWidth": "390px",
+    "shellMaxWidth": "390px",
+    "shellTransform": "none",
+    "shellAspectRatio": "3 / 2",
+    "legendRight": "4.16px",
+    "legendTop": "4.8px",
+    "legendMaxWidth": "170px",
+    "legendFontSize": "16px"
+  }
+}

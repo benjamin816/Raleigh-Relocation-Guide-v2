@@ -1,0 +1,30 @@
+[
+  {
+    "route": "/",
+    "navOpen": true,
+    "contactExists": true,
+    "phoneExists": true,
+    "emailExists": true,
+    "phoneText": "919-737-7896",
+    "emailText": "LIVINGINRALEIGHTEAM@GMAIL.COM",
+    "gapAfterLearning": 22,
+    "phoneBg": "rgb(196, 154, 52)",
+    "phoneColor": "rgb(255, 255, 255)",
+    "emailColor": "rgb(244, 248, 245)",
+    "closeColor": "rgb(182, 190, 185)"
+  },
+  {
+    "route": "/about/",
+    "navOpen": true,
+    "contactExists": true,
+    "phoneExists": true,
+    "emailExists": true,
+    "phoneText": "919-737-7896",
+    "emailText": "LIVINGINRALEIGHTEAM@GMAIL.COM",
+    "gapAfterLearning": 22,
+    "phoneBg": "rgb(196, 154, 52)",
+    "phoneColor": "rgb(255, 255, 255)",
+    "emailColor": "rgb(244, 248, 245)",
+    "closeColor": "rgb(182, 190, 185)"
+  }
+]

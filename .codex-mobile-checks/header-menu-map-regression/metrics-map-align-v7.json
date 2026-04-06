@@ -1,0 +1,48 @@
+{
+  "overflow": false,
+  "shellRect": {
+    "left": 0,
+    "right": 390,
+    "width": 390,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "compositeRect": {
+    "left": -412.61,
+    "right": 391.17,
+    "width": 803.78,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "legendRect": {
+    "left": 228.59,
+    "right": 380.59,
+    "width": 152,
+    "top": 168.13,
+    "bottom": 201.58,
+    "height": 33.45
+  },
+  "hitRect": {
+    "left": -412.61,
+    "right": 391.17,
+    "width": 803.78,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "labelsRect": {
+    "left": -412.61,
+    "right": 391.17,
+    "width": 803.78,
+    "top": 161.73,
+    "bottom": 500.86,
+    "height": 339.13
+  },
+  "delta": {
+    "left": 0,
+    "right": 0,
+    "width": 0
+  }
+}

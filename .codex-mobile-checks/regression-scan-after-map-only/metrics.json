@@ -1,0 +1,150 @@
+{
+  "/": {
+    "base": {
+      "viewport": {
+        "w": 390,
+        "h": 664
+      },
+      "scrollW": 390,
+      "bodyScrollW": 390,
+      "overflowX": "hidden",
+      "navBtnRect": {
+        "x": 325.734375,
+        "y": 25.5,
+        "width": 44,
+        "height": 44,
+        "top": 25.5,
+        "right": 369.734375,
+        "bottom": 69.5,
+        "left": 325.734375
+      }
+    },
+    "openState": {
+      "panelRect": {
+        "x": 59.6875,
+        "y": 0,
+        "width": 327.59375,
+        "height": 664,
+        "top": 0,
+        "right": 387.28125,
+        "bottom": 664,
+        "left": 59.6875
+      },
+      "panelTransform": "matrix(1, 0, 0, 1, 0, 0)",
+      "panelRightCss": "2.73px",
+      "panelWidthCss": "327.59375px",
+      "scrollW": 390
+    }
+  },
+  "/about/": {
+    "base": {
+      "viewport": {
+        "w": 390,
+        "h": 664
+      },
+      "scrollW": 390,
+      "bodyScrollW": 390,
+      "overflowX": "hidden",
+      "navBtnRect": {
+        "x": 325.734375,
+        "y": 25.5,
+        "width": 44,
+        "height": 44,
+        "top": 25.5,
+        "right": 369.734375,
+        "bottom": 69.5,
+        "left": 325.734375
+      }
+    },
+    "openState": {
+      "panelRect": {
+        "x": 59.6875,
+        "y": 0,
+        "width": 327.59375,
+        "height": 664,
+        "top": 0,
+        "right": 387.28125,
+        "bottom": 664,
+        "left": 59.6875
+      },
+      "panelTransform": "matrix(1, 0, 0, 1, 0, 0)",
+      "panelRightCss": "2.73px",
+      "panelWidthCss": "327.59375px",
+      "scrollW": 390
+    }
+  },
+  "/buy/": {
+    "base": {
+      "viewport": {
+        "w": 390,
+        "h": 664
+      },
+      "scrollW": 390,
+      "bodyScrollW": 390,
+      "overflowX": "hidden",
+      "navBtnRect": {
+        "x": 325.734375,
+        "y": 25.5,
+        "width": 44,
+        "height": 44,
+        "top": 25.5,
+        "right": 369.734375,
+        "bottom": 69.5,
+        "left": 325.734375
+      }
+    },
+    "openState": {
+      "panelRect": {
+        "x": 59.6875,
+        "y": 0,
+        "width": 327.59375,
+        "height": 664,
+        "top": 0,
+        "right": 387.28125,
+        "bottom": 664,
+        "left": 59.6875
+      },
+      "panelTransform": "matrix(1, 0, 0, 1, 0, 0)",
+      "panelRightCss": "2.73px",
+      "panelWidthCss": "327.59375px",
+      "scrollW": 390
+    }
+  },
+  "/relocation/": {
+    "base": {
+      "viewport": {
+        "w": 390,
+        "h": 664
+      },
+      "scrollW": 390,
+      "bodyScrollW": 390,
+      "overflowX": "hidden",
+      "navBtnRect": {
+        "x": 325.734375,
+        "y": 25.5,
+        "width": 44,
+        "height": 44,
+        "top": 25.5,
+        "right": 369.734375,
+        "bottom": 69.5,
+        "left": 325.734375
+      }
+    },
+    "openState": {
+      "panelRect": {
+        "x": 59.6875,
+        "y": 0,
+        "width": 327.59375,
+        "height": 664,
+        "top": 0,
+        "right": 387.28125,
+        "bottom": 664,
+        "left": 59.6875
+      },
+      "panelTransform": "matrix(1, 0, 0, 1, 0, 0)",
+      "panelRightCss": "2.73px",
+      "panelWidthCss": "327.59375px",
+      "scrollW": 390
+    }
+  }
+}
