@@ -1,6 +1,20 @@
 :root {
+  --color-white: #ffffff;
+  --color-black: #000000;
+  --color-gray-900: #1f1f1f;
+  --color-gray-500: #a7a7a7;
+  --brand-green-900: #244021;
+  --brand-green-800: #2f5233;
+  --brand-green-700: #2f7f53;
+  --brand-blue-900: #1f4b5e;
+  --brand-blue-800: #1f4f67;
+  --brand-gold-600: #b68b24;
+  --brand-gold-500: #c49a34;
+  --brand-gold-450: #d1ac3f;
+  --brand-error: #b44141;
+
   --bg: #f7f7f4;
-  --surface: #ffffff;
+  --surface: var(--color-white);
   --surface-alt: #f0f4ee;
   --text: #142118;
   --muted: #4d5f52;
@@ -83,7 +97,7 @@ a {
 .hero-container {
   width: 100%;
   position: relative;
-  background-color: #2f5233;
+  background-color: var(--brand-green-800);
   line-height: 0;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
   cursor: pointer;
@@ -112,7 +126,7 @@ a {
 
 .team-strip {
   width: 100%;
-  background: #ffffff;
+  background: var(--color-white);
   border-bottom: 1px solid rgba(20, 33, 24, 0.08);
 }
 
@@ -132,7 +146,7 @@ a {
   z-index: 1200;
   isolation: isolate;
   width: 100%;
-  background: #244021;
+  background: var(--brand-green-900);
 }
 
 .utility-inner {
@@ -180,7 +194,7 @@ a {
 
 .utility-links a:hover,
 .utility-links a:focus-visible {
-  color: #d3a63f;
+  color: var(--brand-gold-450);
   text-decoration: underline;
   text-underline-offset: 4px;
 }
@@ -188,7 +202,7 @@ a {
 .menu-dropdown:hover > .menu-trigger,
 .menu-dropdown:focus-within > .menu-trigger,
 .menu-dropdown.open > .menu-trigger {
-  color: #d3a63f;
+  color: var(--brand-gold-450);
 }
 
 .utility-links .sep {
@@ -259,8 +273,8 @@ a {
   text-decoration: none;
   font-weight: 800;
   font-size: clamp(1rem, 1.35vw, 1.16rem);
-  color: #ffffff;
-  background: #c49a34;
+  color: var(--color-white);
+  background: var(--brand-gold-500);
   border: 1px solid rgba(255, 255, 255, 0.42);
   padding: 0.78rem 2rem;
   border-radius: 4px;
@@ -270,20 +284,20 @@ a {
 }
 
 .call-link:visited {
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .call-link:hover,
 .call-link:focus-visible {
-  color: #ffffff;
-  background: #b68b24;
+  color: var(--color-white);
+  background: var(--brand-gold-600);
 }
 
 .home-promo-band {
   position: relative;
   width: 100%;
   overflow: hidden;
-  background: #000000;
+  background: var(--color-black);
   line-height: 0;
 }
 
@@ -366,7 +380,7 @@ a {
 }
 
 .home-stack-overlay-link:focus-visible .home-stack-overlay {
-  outline: 2px solid #ffffff;
+  outline: 2px solid var(--color-white);
   outline-offset: 2px;
 }
 
@@ -409,8 +423,8 @@ a {
   align-items: center;
   justify-content: center;
   min-height: clamp(46px, 4.37vw, 60px);
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   font-weight: 800;
   letter-spacing: 0.01em;
   font-size: clamp(1.09rem, 1.61vw, 1.27rem);
@@ -426,17 +440,17 @@ a {
 .home-promo-cta a:hover,
 .home-promo-cta a:focus-visible,
 .home-promo-cta a:visited {
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .home-promo-cta a:hover,
 .home-promo-cta a:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .home-contact-strip {
   width: 100%;
-  background: #2f7f53;
+  background: var(--brand-green-700);
   border-top: 0;
   border-bottom: 0;
   position: relative;
@@ -487,14 +501,14 @@ a {
 .home-contact-inner .contact-item svg {
   width: 1.05em;
   height: 1.05em;
-  color: #d1ac3f;
+  color: var(--brand-gold-450);
 }
 
 .home-contact-inner .youtube-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #d1ac3f;
+  color: var(--brand-gold-450);
 }
 
 .home-contact-inner .youtube-link svg {
@@ -504,7 +518,7 @@ a {
 
 .home-map-stage {
   width: 100%;
-  background: #244021;
+  background: var(--brand-green-900);
   border-bottom: 0;
   padding: clamp(0.9rem, 1.5vw, 1.5rem) 0;
 }
@@ -516,7 +530,7 @@ a {
   display: grid;
   place-items: center;
   text-align: center;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-explore-area .explore-area-hero::before {
@@ -545,7 +559,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.7rem, 3.8vw, 4rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .page-explore-area .explore-area-hero h1 {
@@ -554,7 +568,7 @@ a {
   font-size: clamp(2.7rem, 5.3vw, 5.4rem);
   line-height: 0.9;
   letter-spacing: 0.01em;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-explore-area .explore-area-hero p {
@@ -573,8 +587,8 @@ a {
   min-width: clamp(260px, 29vw, 370px);
   min-height: 62px;
   padding: 0.85rem 1.5rem;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   text-decoration: none;
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.3rem, 1.9vw, 2rem);
@@ -585,13 +599,13 @@ a {
 
 .page-explore-area .explore-area-hero-btn:hover,
 .page-explore-area .explore-area-hero-btn:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .page-about .about-hero {
   position: relative;
   overflow: hidden;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-about .about-hero::before {
@@ -631,7 +645,7 @@ a {
   line-height: 0.95;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-white);
   text-transform: uppercase;
 }
 
@@ -677,7 +691,7 @@ a {
   padding: clamp(3.2rem, 8vw, 5.5rem) 0 clamp(3rem, 7vw, 4.8rem);
   background:
     radial-gradient(circle at 88% 10%, rgba(198, 156, 44, 0.2) 0%, rgba(198, 156, 44, 0) 45%),
-    linear-gradient(150deg, #1f4b5e 0%, #1a4254 52%, #183b4c 100%);
+    linear-gradient(150deg, var(--brand-blue-900) 0%, #1a4254 52%, #183b4c 100%);
   border-top: 1px solid rgba(255, 255, 255, 0.12);
   border-bottom: 1px solid rgba(8, 31, 41, 0.5);
   color: #f3f8fa;
@@ -794,13 +808,13 @@ a {
 }
 
 .page-about .home-template .about-partner-showcase {
-  background: #244021;
+  background: var(--brand-green-900);
   border-top: 1px solid rgba(255, 255, 255, 0.16);
   border-bottom: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .page-about .about-partner-showcase .home-partner-showcase-head h2 {
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-about .about-partner-showcase .home-partner-showcase-head .section-copy {
@@ -833,7 +847,7 @@ a {
 
 .page-about .about-partner-showcase .home-partner-copy {
   max-width: 31ch;
-  color: #ffffff;
+  color: var(--color-white);
   font-weight: 700;
   text-shadow: 0 2px 9px rgba(0, 0, 0, 0.78);
 }
@@ -850,7 +864,7 @@ a {
 .page-relocation .relocation-hero {
   position: relative;
   overflow: hidden;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-relocation .relocation-hero::before {
@@ -880,7 +894,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.08rem, 3.5vw, 3.4rem);
   line-height: 0.94;
-  color: #d3a63f;
+  color: var(--brand-gold-450);
 }
 
 .page-relocation .relocation-hero h1 {
@@ -890,7 +904,7 @@ a {
   line-height: 0.92;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-white);
   text-transform: uppercase;
 }
 
@@ -911,7 +925,7 @@ a {
   justify-content: space-between;
   align-items: center;
   gap: 0.9rem 1rem;
-  background: #2f7f53;
+  background: var(--brand-green-700);
   border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -940,7 +954,7 @@ a {
 }
 
 .page-relocation .relocation-hero-contact-icon {
-  color: #d3a63f;
+  color: var(--brand-gold-450);
   font-size: 1.08em;
   line-height: 1;
 }
@@ -949,8 +963,8 @@ a {
   width: 28px;
   height: 20px;
   border-radius: 6px;
-  background: #ffffff;
-  color: #2f7f53;
+  background: var(--color-white);
+  color: var(--brand-green-700);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -970,7 +984,7 @@ a {
 .page-learning-center .learning-center-hero {
   position: relative;
   overflow: hidden;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-learning-center .learning-center-hero::before {
@@ -1000,7 +1014,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.2rem, 4vw, 4rem);
   line-height: 0.9;
-  color: #d3a63f;
+  color: var(--brand-gold-450);
 }
 
 .page-learning-center .learning-center-hero h1 {
@@ -1010,7 +1024,7 @@ a {
   line-height: 0.92;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-white);
   text-transform: uppercase;
 }
 
@@ -1052,7 +1066,7 @@ a {
 }
 
 .page-learning-center .learning-center-hero-contact-icon {
-  color: #d3a63f;
+  color: var(--brand-gold-450);
   font-size: 1.08em;
   line-height: 1;
 }
@@ -1061,7 +1075,7 @@ a {
   width: 28px;
   height: 20px;
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--color-white);
   color: #1a4f65;
   display: inline-flex;
   align-items: center;
@@ -1282,7 +1296,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.45rem, 3.9vw, 3.9rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .page-learning-center .learning-blog-playlist-copy h2 {
@@ -1292,7 +1306,7 @@ a {
   line-height: 0.94;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .page-learning-center .learning-blog-playlist-more {
@@ -1304,8 +1318,8 @@ a {
   min-width: clamp(220px, 22vw, 380px);
   min-height: 76px;
   padding: 0.6rem 1.3rem;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   text-decoration: none;
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.05rem, 1.45vw, 2rem);
@@ -1316,7 +1330,7 @@ a {
 
 .page-learning-center .learning-blog-playlist-more:hover,
 .page-learning-center .learning-blog-playlist-more:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .page-learning-center .learning-blog-playlist-grid {
@@ -1335,8 +1349,8 @@ a {
   flex-direction: column;
   height: 100%;
   text-decoration: none;
-  background: #1f4f67;
-  color: #ffffff;
+  background: var(--brand-blue-800);
+  color: var(--color-white);
   border: 1px solid rgba(17, 44, 54, 0.16);
   overflow: hidden;
   box-shadow: 0 14px 30px rgba(9, 27, 34, 0.16);
@@ -1389,7 +1403,7 @@ a {
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #d3a63f;
+  color: var(--brand-gold-450);
 }
 
 .page-learning-center .learning-blog-playlist-content h3 {
@@ -1399,7 +1413,7 @@ a {
   line-height: 1.2;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-learning-center .learning-blog-playlist-content p {
@@ -1415,7 +1429,7 @@ a {
   font-weight: 800;
   letter-spacing: 0.07em;
   text-transform: uppercase;
-  color: #d3a63f;
+  color: var(--brand-gold-450);
 }
 
 .page-learning-center .learning-article-band {
@@ -1434,7 +1448,7 @@ a {
 }
 
 .page-learning-center .learning-article-main {
-  background: #ffffff;
+  background: var(--color-white);
   border: 1px solid rgba(16, 49, 61, 0.14);
   box-shadow: 0 18px 38px rgba(8, 27, 37, 0.08);
   padding: clamp(1.2rem, 2.2vw, 2rem);
@@ -1527,7 +1541,7 @@ a {
 .page-learning-center .learning-article-note {
   margin: 1rem 0 0;
   padding: 0.82rem 0.86rem;
-  border-left: 4px solid #c49a34;
+  border-left: 4px solid var(--brand-gold-500);
   background: rgba(196, 154, 52, 0.09);
   font-size: clamp(0.92rem, 1vw, 1rem);
   line-height: 1.58;
@@ -1537,7 +1551,7 @@ a {
 .page-learning-center .learning-article-aside {
   position: sticky;
   top: 1.2rem;
-  background: linear-gradient(180deg, #1f4f67 0%, #19475d 100%);
+  background: linear-gradient(180deg, var(--brand-blue-800) 0%, #19475d 100%);
   border: 1px solid rgba(14, 42, 55, 0.3);
   color: #eef5f7;
   padding: clamp(1rem, 1.45vw, 1.25rem);
@@ -1550,7 +1564,7 @@ a {
   line-height: 1.15;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-learning-center .learning-article-aside p {
@@ -1581,8 +1595,8 @@ a {
   min-height: 44px;
   width: 100%;
   padding: 0.55rem 0.92rem;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   text-decoration: none;
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: 0.92rem;
@@ -1592,7 +1606,7 @@ a {
 
 .page-learning-center .learning-article-cta:hover,
 .page-learning-center .learning-article-cta:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .page-learning-center .learning-related-video-embed {
@@ -1620,7 +1634,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(1.8rem, 2.5vw, 2.5rem);
   line-height: 0.94;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .page-learning-center .learning-related-video-embed-head h2 {
@@ -1630,7 +1644,7 @@ a {
   line-height: 0.95;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .page-learning-center .learning-related-video-embed-link {
@@ -1642,8 +1656,8 @@ a {
   min-width: clamp(190px, 18vw, 250px);
   min-height: 52px;
   padding: 0.6rem 1.1rem;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   text-decoration: none;
   font-size: clamp(0.96rem, 1.05vw, 1.08rem);
   font-weight: 800;
@@ -1652,7 +1666,7 @@ a {
 
 .page-learning-center .learning-related-video-embed-link:hover,
 .page-learning-center .learning-related-video-embed-link:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .page-learning-center .learning-related-video-embed-frame {
@@ -1660,7 +1674,7 @@ a {
   justify-self: center;
   border: 1px solid rgba(17, 44, 54, 0.16);
   box-shadow: 0 18px 38px rgba(8, 27, 37, 0.16);
-  background: #000000;
+  background: var(--color-black);
 }
 
 .page-learning-center .learning-related-video-embed-frame iframe {
@@ -1729,7 +1743,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2rem, 3.1vw, 3.05rem);
   line-height: 0.95;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .page-relocation .relocation-plan-head h2 {
@@ -1739,7 +1753,7 @@ a {
   line-height: 0.94;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .page-relocation .relocation-plan-head > p:not(.relocation-plan-script) {
@@ -1766,7 +1780,7 @@ a {
 .page-relocation .relocation-plan-icon {
   width: 52px;
   height: 52px;
-  color: #c49a34;
+  color: var(--brand-gold-500);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1813,7 +1827,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(1.95rem, 3.1vw, 3rem);
   line-height: 0.95;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .page-relocation .relocation-program-copy h2 {
@@ -1823,14 +1837,14 @@ a {
   line-height: 0.94;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
   text-transform: uppercase;
   max-width: 12ch;
 }
 
 .page-relocation .relocation-program-lead {
   margin: clamp(1rem, 1.8vw, 1.5rem) 0 0;
-  color: #c49a34;
+  color: var(--brand-gold-500);
   font-size: clamp(0.98rem, 1.2vw, 1.3rem);
   line-height: 1.45;
   max-width: 56ch;
@@ -1871,7 +1885,7 @@ a {
 .page-buy .buy-hero {
   position: relative;
   overflow: hidden;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-buy .buy-hero::before {
@@ -1901,7 +1915,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.16rem, 3.87vw, 3.83rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .page-buy .buy-hero h1 {
@@ -1911,7 +1925,7 @@ a {
   line-height: 0.92;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-white);
   text-transform: uppercase;
 }
 
@@ -1978,7 +1992,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.2rem, 3.65vw, 4rem);
   line-height: 0.92;
-  color: #b88d28;
+  color: var(--brand-gold-600);
 }
 
 .page-buy .buy-search-intro h2 {
@@ -1989,7 +2003,7 @@ a {
   letter-spacing: 0.01em;
   font-weight: 800;
   text-transform: uppercase;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .page-buy .buy-search-intro p:not(.buy-search-intro-script) {
@@ -2008,7 +2022,7 @@ a {
 }
 
 .page-buy .buy-search-embed-shell {
-  background: #ffffff;
+  background: var(--color-white);
   border: 1px solid rgba(16, 55, 42, 0.14);
   border-radius: 18px;
   overflow: hidden;
@@ -2020,13 +2034,13 @@ a {
   min-height: clamp(660px, 78vh, 940px);
   border: 0;
   display: block;
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 .page-new-construction-process .new-construction-hero {
   position: relative;
   overflow: hidden;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-new-construction-process .new-construction-hero::before {
@@ -2056,7 +2070,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.3rem, 4vw, 4rem);
   line-height: 0.92;
-  color: #d1ac3f;
+  color: var(--brand-gold-450);
 }
 
 .page-new-construction-process .new-construction-hero h1 {
@@ -2067,7 +2081,7 @@ a {
   letter-spacing: 0.01em;
   font-weight: 800;
   text-transform: uppercase;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-new-construction-process .new-construction-discover {
@@ -2105,7 +2119,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.25rem, 3.7vw, 3.9rem);
   line-height: 0.92;
-  color: #d1ac3f;
+  color: var(--brand-gold-450);
 }
 
 .page-new-construction-process .new-construction-discover-copy h2 {
@@ -2116,7 +2130,7 @@ a {
   letter-spacing: 0.01em;
   font-weight: 800;
   text-transform: uppercase;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-new-construction-process .new-construction-discover-copy p {
@@ -2169,7 +2183,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2rem, 3.6vw, 3.7rem);
   line-height: 0.92;
-  color: #c39a34;
+  color: var(--brand-gold-500);
 }
 
 .page-new-construction-process .new-construction-compare-copy h2 {
@@ -2217,8 +2231,8 @@ a {
   width: 1.04rem;
   height: 1.04rem;
   border-radius: 2px;
-  background: #c39a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   font-size: 0.71rem;
   font-weight: 800;
   line-height: 1.04rem;
@@ -2258,7 +2272,7 @@ a {
 .page-new-construction-process .new-construction-intake-form-panel {
   position: relative;
   background: #1f5369;
-  color: #ffffff;
+  color: var(--color-white);
   transition: background-color 1s ease;
 }
 
@@ -2275,7 +2289,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.2rem, 3.9vw, 4rem);
   line-height: 0.92;
-  color: #d1ac3f;
+  color: var(--brand-gold-450);
   text-align: center;
 }
 
@@ -2287,7 +2301,7 @@ a {
   letter-spacing: 0.01em;
   font-weight: 800;
   text-transform: uppercase;
-  color: #ffffff;
+  color: var(--color-white);
   text-align: center;
 }
 
@@ -2358,7 +2372,7 @@ a {
 
 .page-new-construction-process .new-construction-intake-input:focus-visible {
   outline: none;
-  border-color: #d1ac3f;
+  border-color: var(--brand-gold-450);
   box-shadow: 0 0 0 3px rgba(209, 172, 63, 0.24);
 }
 
@@ -2374,8 +2388,8 @@ a {
 .page-new-construction-process .new-construction-intake-submit {
   width: 100%;
   border: 0;
-  background: #c79d2c;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.28vw, 1.34rem);
   font-weight: 800;
@@ -2388,7 +2402,7 @@ a {
 
 .page-new-construction-process .new-construction-intake-submit:hover,
 .page-new-construction-process .new-construction-intake-submit:focus-visible {
-  background: #af8926;
+  background: var(--brand-gold-600);
 }
 
 .page-new-construction-process .new-construction-intake-submit[disabled] {
@@ -2435,7 +2449,7 @@ a {
 }
 
 .page-new-construction-process .new-construction-intake .legal-consent-links a {
-  color: #d1ac3f;
+  color: var(--brand-gold-450);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
@@ -2465,7 +2479,7 @@ a {
 
 .page-new-construction-process .new-construction-intake-success p {
   margin: 0;
-  color: #d1ac3f;
+  color: var(--brand-gold-450);
   font-size: clamp(1.35rem, 2.55vw, 2.08rem);
   line-height: 1.34;
   font-weight: 800;
@@ -2613,7 +2627,7 @@ a {
 }
 
 .page-new-construction-process .new-construction-intake .legal-consent-links a {
-  color: #ffffff !important;
+  color: var(--color-white) !important;
   font-weight: 800;
   text-decoration: underline;
   text-decoration-thickness: 2px;
@@ -2661,7 +2675,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.05rem, 3.4vw, 3.4rem);
   line-height: 0.92;
-  color: #b88d28;
+  color: var(--brand-gold-600);
 }
 
 .page-new-construction-process .new-construction-search-embed-section .buy-search-intro h2 {
@@ -2672,7 +2686,7 @@ a {
   letter-spacing: 0.01em;
   font-weight: 800;
   text-transform: uppercase;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .page-new-construction-process .new-construction-search-embed-section .buy-search-intro p:not(.buy-search-intro-script) {
@@ -2691,7 +2705,7 @@ a {
 }
 
 .page-new-construction-process .new-construction-search-embed-section .buy-search-embed-shell {
-  background: #ffffff;
+  background: var(--color-white);
   border: 1px solid rgba(16, 55, 42, 0.14);
   border-radius: 18px;
   overflow: hidden;
@@ -2703,7 +2717,7 @@ a {
   min-height: clamp(600px, 73vh, 860px);
   border: 0;
   display: block;
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 .page-affordable-hotlist .buy-hero-inner {
@@ -2715,7 +2729,7 @@ a {
 }
 
 .page-affordable-hotlist .affordable-hotlist-overview {
-  background: #2f7f53;
+  background: var(--brand-green-700);
   padding: clamp(1.4rem, 2.7vw, 2.4rem) 0 clamp(1.7rem, 3.1vw, 2.8rem);
   border-top: 0;
   border-bottom: 0;
@@ -2731,7 +2745,7 @@ a {
 }
 
 .page-affordable-hotlist .affordable-hotlist-overview-copy {
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-affordable-hotlist .affordable-hotlist-overview-script {
@@ -2739,7 +2753,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2rem, 3.2vw, 3.4rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .page-affordable-hotlist .affordable-hotlist-overview-copy h2 {
@@ -2750,7 +2764,7 @@ a {
   letter-spacing: 0.01em;
   font-weight: 800;
   text-transform: uppercase;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .page-affordable-hotlist .affordable-hotlist-overview-copy p:not(.affordable-hotlist-overview-script) {
@@ -2964,7 +2978,7 @@ a {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.1rem, 3.5vw, 3.65rem);
   line-height: 0.9;
-  color: #b88d28;
+  color: var(--brand-gold-600);
 }
 
 .page-sell .sell-home-eval-inner h2 {
@@ -2975,7 +2989,7 @@ a {
   letter-spacing: 0.01em;
   text-transform: uppercase;
   font-weight: 800;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .page-sell .sell-home-eval-copy {
@@ -3025,11 +3039,11 @@ a {
 
 .page-sell .sell-home-eval-input:focus-visible {
   outline: none;
-  border-bottom-color: #1f4b5e;
+  border-bottom-color: var(--brand-blue-900);
 }
 
 .page-sell .sell-home-eval-input.is-invalid {
-  border-bottom-color: #b44141;
+  border-bottom-color: var(--brand-error);
 }
 
 .page-sell .sell-home-eval-legal {
@@ -3043,8 +3057,8 @@ a {
   margin-top: 0.85rem;
   border: 0;
   border-radius: 0;
-  background: #c79d2c;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: 0.95rem;
   font-weight: 800;
@@ -3058,7 +3072,7 @@ a {
 
 .page-sell .sell-home-eval-submit:hover,
 .page-sell .sell-home-eval-submit:focus-visible {
-  background: #af8926;
+  background: var(--brand-gold-600);
 }
 
 .page-sell .sell-home-eval-submit[disabled] {
@@ -3075,7 +3089,7 @@ a {
 }
 
 .page-sell .sell-home-eval-status.is-error {
-  color: #b44141;
+  color: var(--brand-error);
 }
 
 .raleigh-spotlight {
@@ -3110,7 +3124,7 @@ a {
   line-height: 0.88;
   letter-spacing: 0.02em;
   font-weight: 800;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .raleigh-spotlight-copy p {
@@ -3182,7 +3196,7 @@ a {
   font-style: normal;
   font-weight: 700;
   line-height: 1.02;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-map-copy h2 {
@@ -3215,7 +3229,7 @@ a {
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 9;
-  background: #000000;
+  background: var(--color-black);
   overflow: hidden;
 }
 
@@ -3240,7 +3254,7 @@ a {
   border-radius: 0;
   overflow: hidden;
   box-shadow: none;
-  background: #244021;
+  background: var(--brand-green-900);
 }
 
 .map-composite {
@@ -3387,7 +3401,7 @@ a {
 
 .btn-primary {
   background: linear-gradient(120deg, var(--accent) 0%, #2f7046 100%);
-  color: #ffffff;
+  color: var(--color-white);
   box-shadow: 0 10px 28px rgba(37, 93, 58, 0.24);
 }
 
@@ -3496,7 +3510,7 @@ main {
   left: 1.1rem;
   right: 1.1rem;
   bottom: 1.1rem;
-  color: #ffffff;
+  color: var(--color-white);
   font-weight: 600;
 }
 
@@ -3573,7 +3587,7 @@ main {
 }
 
 .home-template .local-area-banner {
-  background: #ffffff;
+  background: var(--color-white);
   border-top: 1px solid rgba(17, 44, 54, 0.08);
   border-bottom: 1px solid rgba(17, 44, 54, 0.08);
   padding: clamp(2rem, 3vw, 2.7rem) 0;
@@ -3590,7 +3604,7 @@ main {
   margin-inline: auto;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  background: #ffffff;
+  background: var(--color-white);
   border: 1px solid rgba(16, 49, 61, 0.12);
 }
 
@@ -3601,7 +3615,7 @@ main {
 
 .home-template .local-intro-card,
 .home-template .local-detail-card {
-  background: #ffffff;
+  background: var(--color-white);
   padding: clamp(1.3rem, 2.2vw, 2.2rem);
 }
 
@@ -3614,12 +3628,12 @@ main {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2rem, 2.9vw, 2.85rem);
   line-height: 0.95;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .local-intro-card .local-script {
   font-size: calc(var(--local-intro-heading-size) * 0.8);
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .local-intro-card h2 {
@@ -3646,7 +3660,7 @@ main {
 }
 
 .home-template .local-intro-card .local-highlight-line {
-  color: #c49a34;
+  color: var(--brand-gold-500);
   font-weight: 400;
 }
 
@@ -3656,7 +3670,7 @@ main {
   height: var(--local-image-height);
   margin: 0;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 .home-template .local-brand-image-card,
@@ -3705,7 +3719,7 @@ main {
 }
 
 .home-template .home-client-voices {
-  background: #244021;
+  background: var(--brand-green-900);
   border-top: 0;
   border-bottom: 0;
 }
@@ -3724,7 +3738,7 @@ main {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(1.57rem, 2.04vw, 2.21rem);
   line-height: 0.9;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .home-client-voices-head h2 {
@@ -3763,7 +3777,7 @@ main {
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(3.23rem, 4.68vw, 4.76rem);
   line-height: 0.72;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .home-client-voice > p:not(.home-client-voice-mark) {
@@ -3783,13 +3797,13 @@ main {
 }
 
 .page-buy .buy-home-sections .home-client-voices {
-  background: #ffffff;
+  background: var(--color-white);
   border-top: 1px solid rgba(17, 44, 54, 0.08);
   border-bottom: 1px solid rgba(17, 44, 54, 0.08);
 }
 
 .page-buy .buy-home-sections .home-client-voices-head h2 {
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .page-buy .buy-home-sections .home-client-voices-head .section-copy {
@@ -3801,11 +3815,11 @@ main {
 }
 
 .page-buy .buy-home-sections .home-client-voice strong {
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .home-template .home-partner-showcase {
-  background: #ffffff;
+  background: var(--color-white);
   border-top: 1px solid rgba(17, 44, 54, 0.08);
   border-bottom: 1px solid rgba(17, 44, 54, 0.08);
 }
@@ -3826,7 +3840,7 @@ main {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2rem, 2.85vw, 3rem);
   line-height: 0.9;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .home-partner-showcase-head h2 {
@@ -3836,7 +3850,7 @@ main {
   line-height: 0.94;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .home-template .home-partner-showcase-head .section-copy {
@@ -3910,8 +3924,8 @@ main {
 .home-template .home-partner-title {
   display: inline-block;
   padding: 0.18rem 0.65rem 0.24rem;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.15rem, 1.85vw, 2rem);
   line-height: 1;
@@ -3939,7 +3953,7 @@ main {
 
 .home-template .home-guide-download {
   padding: 0;
-  background: #244021;
+  background: var(--brand-green-900);
 }
 
 .home-template .home-guide-download-grid {
@@ -3949,8 +3963,8 @@ main {
 }
 
 .home-template .home-guide-download-copy {
-  background: #244021;
-  color: #ffffff;
+  background: var(--brand-green-900);
+  color: var(--color-white);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -3964,7 +3978,7 @@ main {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.8rem, 4.2vw, 4.4rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .home-guide-download-copy h2 {
@@ -3974,7 +3988,7 @@ main {
   line-height: 0.96;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .home-template .home-guide-download-copy > p:not(.home-guide-download-script) {
@@ -3993,8 +4007,8 @@ main {
   min-height: 64px;
   min-width: clamp(260px, 27vw, 380px);
   padding: 0.85rem 1.4rem;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   text-decoration: none;
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1.12rem, 1.3vw, 1.95rem);
@@ -4005,7 +4019,7 @@ main {
 
 .home-template .home-guide-download-btn:hover,
 .home-template .home-guide-download-btn:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .home-template .home-guide-download-media {
@@ -4089,7 +4103,7 @@ main {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.3rem, 3.1vw, 3.25rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .home-communities-head h2 {
@@ -4099,7 +4113,7 @@ main {
   line-height: 0.95;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .home-template .home-communities-grid {
@@ -4191,7 +4205,7 @@ main {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2rem, 2.85vw, 3rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .home-featured-videos-copy h2 {
@@ -4201,7 +4215,7 @@ main {
   line-height: 0.94;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
 }
 
 .home-template .home-featured-videos-copy .section-copy {
@@ -4222,8 +4236,8 @@ main {
   min-width: clamp(200px, 20vw, 280px);
   min-height: 54px;
   padding: 0.6rem 1.3rem;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   text-decoration: none;
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: clamp(1rem, 1.2vw, 1.25rem);
@@ -4234,7 +4248,7 @@ main {
 
 .home-template .home-featured-videos-more:hover,
 .home-template .home-featured-videos-more:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .home-template .home-video-grid {
@@ -4298,8 +4312,8 @@ main {
   border: 0;
   padding: 0;
   text-align: left;
-  background: #1f4f67;
-  color: #ffffff;
+  background: var(--brand-blue-800);
+  color: var(--color-white);
   cursor: pointer;
   overflow: hidden;
 }
@@ -4347,7 +4361,7 @@ main {
   position: absolute;
   left: 24px;
   top: 13px;
-  border-left: 16px solid #ffffff;
+  border-left: 16px solid var(--color-white);
   border-top: 10px solid transparent;
   border-bottom: 10px solid transparent;
 }
@@ -4360,7 +4374,7 @@ main {
 
 .home-template .home-video-title {
   display: block;
-  color: #ffffff;
+  color: var(--color-white);
   font-size: clamp(1rem, 1.1vw, 1.3rem);
   line-height: 1.24;
   font-weight: 700;
@@ -4405,13 +4419,13 @@ main {
 }
 
 .home-template .home-video-page-btn.is-active {
-  background: #1f4b5e;
-  border-color: #1f4b5e;
-  color: #ffffff;
+  background: var(--brand-blue-900);
+  border-color: var(--brand-blue-900);
+  color: var(--color-white);
 }
 
 .home-template .suburb-school-stats {
-  background: linear-gradient(180deg, #1f4f67 0%, #153f52 100%);
+  background: linear-gradient(180deg, var(--brand-blue-800) 0%, #153f52 100%);
   border-top: 1px solid rgba(12, 36, 48, 0.32);
   border-bottom: 1px solid rgba(12, 36, 48, 0.42);
   color: #edf5f7;
@@ -4434,7 +4448,7 @@ main {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2rem, 2.8vw, 3rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .suburb-school-stats-copy h2 {
@@ -4456,7 +4470,7 @@ main {
   min-width: clamp(210px, 21vw, 292px);
   min-height: 54px;
   padding: 0.6rem 1.25rem;
-  background: #c49a34;
+  background: var(--brand-gold-500);
   color: #163b4b;
   text-decoration: none;
   font-family: "Manrope", "Segoe UI", sans-serif;
@@ -4468,7 +4482,7 @@ main {
 
 .home-template .suburb-school-stats-link:hover,
 .home-template .suburb-school-stats-link:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .home-template .suburb-school-stats-subhead {
@@ -4501,7 +4515,7 @@ main {
   align-items: center;
   gap: 0.8rem;
   padding: 0.7rem 0.85rem;
-  background: #ffffff;
+  background: var(--color-white);
   border-bottom: 1px solid rgba(17, 44, 54, 0.16);
 }
 
@@ -4511,8 +4525,8 @@ main {
   min-height: 42px;
   padding: 0.35rem 0.45rem;
   border-radius: 6px;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -4629,7 +4643,7 @@ main {
 }
 
 .home-template .suburb-local-highlights {
-  background: linear-gradient(180deg, #1f4f67 0%, #153f52 100%);
+  background: linear-gradient(180deg, var(--brand-blue-800) 0%, #153f52 100%);
   border-top: 1px solid rgba(12, 36, 48, 0.34);
   border-bottom: 1px solid rgba(12, 36, 48, 0.44);
   color: #edf5f7;
@@ -4652,7 +4666,7 @@ main {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2rem, 2.8vw, 3rem);
   line-height: 0.92;
-  color: #c49a34;
+  color: var(--brand-gold-500);
 }
 
 .home-template .suburb-local-highlights-copy h2 {
@@ -4683,7 +4697,7 @@ main {
   min-width: 1.1rem;
   font-size: 1rem;
   line-height: 1;
-  color: #ffffff;
+  color: var(--color-white);
   text-shadow: 0 2px 5px rgba(0, 0, 0, 0.32);
 }
 
@@ -4692,8 +4706,8 @@ main {
   min-height: 50px;
   border: 1px solid rgba(255, 255, 255, 0.34);
   border-radius: 4px;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-size: 1rem;
   font-weight: 800;
@@ -4702,8 +4716,8 @@ main {
   appearance: none;
   cursor: pointer;
   background-image:
-    linear-gradient(45deg, transparent 50%, #ffffff 50%),
-    linear-gradient(135deg, #ffffff 50%, transparent 50%);
+    linear-gradient(45deg, transparent 50%, var(--color-white) 50%),
+    linear-gradient(135deg, var(--color-white) 50%, transparent 50%);
   background-position:
     calc(100% - 18px) calc(50% - 2px),
     calc(100% - 12px) calc(50% - 2px);
@@ -4733,7 +4747,7 @@ main {
   border-radius: 6px;
   overflow: hidden;
   text-decoration: none;
-  color: #ffffff;
+  color: var(--color-white);
   background-image:
     linear-gradient(180deg, rgba(9, 27, 35, 0.16) 0%, rgba(8, 21, 28, 0.76) 100%),
     var(--suburb-local-highlight-image);
@@ -4906,7 +4920,7 @@ main {
   width: 100%;
   aspect-ratio: 16 / 9;
   border: 0;
-  background: #000000;
+  background: var(--color-black);
   display: block;
 }
 
@@ -4916,7 +4930,7 @@ main {
   right: 0;
   border: 0;
   background: rgba(0, 0, 0, 0.7);
-  color: #ffffff;
+  color: var(--color-white);
   width: 36px;
   height: 36px;
   font-size: 1.7rem;
@@ -5013,7 +5027,7 @@ body.lead-popup-open {
   border: 1px solid rgba(11, 29, 40, 0.18);
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.94);
-  color: #1f4b5f;
+  color: var(--brand-blue-900);
   font-size: 0.76rem;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -5025,7 +5039,7 @@ body.lead-popup-open {
 
 .lead-popup-dev-trigger:hover,
 .lead-popup-dev-trigger:focus-visible {
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 body.lead-popup-open .lead-popup-dev-trigger {
@@ -5070,7 +5084,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-intro-content h2 {
   margin: 0;
-  color: #1f4b5f;
+  color: var(--brand-blue-900);
   font-size: clamp(1.45rem, 3vw, 2.25rem);
   line-height: 1.08;
   text-transform: uppercase;
@@ -5081,8 +5095,8 @@ body.lead-popup-open .lead-popup-dev-trigger {
   margin-top: 1.55rem;
   border: 0;
   border-radius: 8px;
-  background: #c79d2c;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   font-weight: 800;
   font-size: 1rem;
   letter-spacing: 0.01em;
@@ -5093,7 +5107,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-button:hover,
 .lead-popup-button:focus-visible {
-  background: #af8926;
+  background: var(--brand-gold-600);
 }
 
 .lead-popup-intro-time {
@@ -5143,7 +5157,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-step-heading {
   margin: 0;
-  color: #1f4b5f;
+  color: var(--brand-blue-900);
   text-transform: uppercase;
   font-size: clamp(1.36rem, 2.5vw, 2.1rem);
   line-height: 1.08;
@@ -5158,7 +5172,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
   margin-right: 0.4rem;
   border-radius: 4px;
   background: #040404;
-  color: #ffffff;
+  color: var(--color-white);
   font-size: 0.68rem;
   font-weight: 800;
   vertical-align: middle;
@@ -5175,7 +5189,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
   width: 100%;
   border: 1px solid #d2d2d2;
   border-radius: 8px;
-  background: #ffffff;
+  background: var(--color-white);
   color: #161616;
   text-align: center;
   padding: 0.42rem;
@@ -5195,7 +5209,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-choice-card-face {
   border: 1px solid #9f9f9f;
-  background: #ffffff;
+  background: var(--color-white);
   min-height: 170px;
   display: flex;
   align-items: center;
@@ -5217,12 +5231,12 @@ body.lead-popup-open .lead-popup-dev-trigger {
 }
 
 .lead-popup-choice-card.is-selected {
-  border-color: #c79d2c;
+  border-color: var(--brand-gold-500);
   background: #f8f2e3;
 }
 
 .lead-popup-choice-card.is-selected .lead-popup-choice-card-face {
-  border-color: #c79d2c;
+  border-color: var(--brand-gold-500);
   background: #fff9ec;
 }
 
@@ -5254,7 +5268,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 }
 
 .lead-popup-pill-option.is-selected {
-  border-color: #c79d2c;
+  border-color: var(--brand-gold-500);
   background: #f0e7d2;
 }
 
@@ -5270,7 +5284,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-sell-example-list p {
   margin: 0;
-  color: #1f4b5f;
+  color: var(--brand-blue-900);
   font-size: clamp(1.35rem, 2.2vw, 1.82rem);
   line-height: 1.12;
   font-weight: 800;
@@ -5285,9 +5299,9 @@ body.lead-popup-open .lead-popup-dev-trigger {
 .lead-popup-field-input {
   width: 100%;
   border: 0;
-  border-bottom: 1px solid #a7a7a7;
+  border-bottom: 1px solid var(--color-gray-500);
   background: transparent;
-  color: #1f1f1f;
+  color: var(--color-gray-900);
   font-size: clamp(1.02rem, 1.9vw, 1.32rem);
   font-weight: 700;
   font-family: "Manrope", "Segoe UI", sans-serif;
@@ -5296,10 +5310,10 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-area-textarea {
   width: 100%;
-  border: 1px solid #a7a7a7;
+  border: 1px solid var(--color-gray-500);
   border-radius: 8px;
-  background: #ffffff;
-  color: #1f1f1f;
+  background: var(--color-white);
+  color: var(--color-gray-900);
   font-size: clamp(1.02rem, 1.9vw, 1.32rem);
   font-weight: 700;
   font-family: "Manrope", "Segoe UI", sans-serif;
@@ -5322,12 +5336,12 @@ body.lead-popup-open .lead-popup-dev-trigger {
 .lead-popup-area-input:focus-visible,
 .lead-popup-field-input:focus-visible {
   outline: none;
-  border-bottom-color: #1f4b5f;
+  border-bottom-color: var(--brand-blue-900);
 }
 
 .lead-popup-area-textarea:focus-visible {
   outline: none;
-  border-color: #1f4b5f;
+  border-color: var(--brand-blue-900);
 }
 
 .lead-popup-contact-grid {
@@ -5340,7 +5354,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 .lead-popup-field-label {
   display: block;
   margin-bottom: 0.26rem;
-  color: #1f4b5f;
+  color: var(--brand-blue-900);
   font-weight: 800;
   text-transform: uppercase;
   font-size: 0.96rem;
@@ -5354,9 +5368,9 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-country-code {
   border: 0;
-  border-bottom: 1px solid #a7a7a7;
+  border-bottom: 1px solid var(--color-gray-500);
   background: transparent;
-  color: #1f1f1f;
+  color: var(--color-gray-900);
   font-size: 1rem;
   font-weight: 700;
   padding: 0.4rem 0;
@@ -5364,14 +5378,14 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-country-code:focus-visible {
   outline: none;
-  border-bottom-color: #1f4b5f;
+  border-bottom-color: var(--brand-blue-900);
 }
 
 .lead-popup-field-input.is-invalid,
 .lead-popup-area-input.is-invalid,
 .lead-popup-area-textarea.is-invalid,
 .lead-popup-country-code.is-invalid {
-  border-color: #b44141;
+  border-color: var(--brand-error);
 }
 
 .lead-popup-step-actions {
@@ -5391,7 +5405,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 .lead-popup-step-error {
   margin-top: 0.65rem;
   min-height: 1.2rem;
-  color: #b44141;
+  color: var(--brand-error);
   font-size: 0.92rem;
   font-weight: 700;
 }
@@ -5410,8 +5424,8 @@ body.lead-popup-open .lead-popup-dev-trigger {
   height: 34px;
   border: 1px solid rgba(255, 255, 255, 0.55);
   border-radius: 6px;
-  background: #c79d2c;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   cursor: pointer;
   font-size: 1.2rem;
   line-height: 1;
@@ -5427,7 +5441,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-corner-btn:hover:not([disabled]),
 .lead-popup-corner-btn:focus-visible:not([disabled]) {
-  background: #af8926;
+  background: var(--brand-gold-600);
   transform: translateY(-1px);
 }
 
@@ -5446,7 +5460,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-thanks-copy h3 {
   margin: 0;
-  color: #1f4b5f;
+  color: var(--brand-blue-900);
   font-size: clamp(1.06rem, 1.86vw, 1.56rem);
   line-height: 1.2;
 }
@@ -5459,12 +5473,12 @@ body.lead-popup-open .lead-popup-dev-trigger {
   border: 1px solid #d5d5d5;
   border-radius: 10px;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 .lead-popup-booking-head {
   background: #16974a;
-  color: #ffffff;
+  color: var(--color-white);
   padding: 0.58rem 0.78rem;
   font-size: 0.82rem;
   font-weight: 600;
@@ -5474,7 +5488,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 .lead-popup-booking-frame-wrap {
   height: var(--lead-booking-height);
   overflow: hidden;
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 .lead-popup-booking-frame {
@@ -5482,7 +5496,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
   height: calc(var(--lead-booking-height) / var(--lead-booking-scale));
   border: 0;
   display: block;
-  background: #ffffff;
+  background: var(--color-white);
   transform: scale(var(--lead-booking-scale));
   transform-origin: top left;
 }
@@ -5673,7 +5687,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
   font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
   font-size: clamp(2.7rem, 3.85vw, 3.9rem);
   line-height: 0.9;
-  color: #c49a34 !important;
+  color: var(--brand-gold-500) !important;
 }
 
 .home-template .home-final-cta h2 {
@@ -5682,7 +5696,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
   font-size: clamp(2.3rem, 4.5vw, 4.05rem);
   line-height: 0.94;
   letter-spacing: 0.01em;
-  color: #ffffff;
+  color: var(--color-white);
 }
 
 .home-template .home-final-cta p {
@@ -5701,8 +5715,8 @@ body.lead-popup-open .lead-popup-dev-trigger {
   min-width: clamp(230px, 23vw, 310px);
   min-height: 52px;
   padding: 0.65rem 1.2rem;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   text-decoration: none;
   font-family: "Manrope", "Segoe UI", sans-serif;
   font-weight: 800;
@@ -5713,12 +5727,12 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .home-template .home-final-cta-btn:hover,
 .home-template .home-final-cta-btn:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .home-template .home-final-cta-email {
   margin-top: -0.05rem;
-  color: #ffffff;
+  color: var(--color-white);
   text-decoration: none;
   font-size: 1.08rem;
   font-weight: 600;
@@ -5734,7 +5748,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 .home-final-footer {
   position: relative;
   overflow: hidden;
-  color: #ffffff;
+  color: var(--color-white);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -5781,12 +5795,12 @@ body.lead-popup-open .lead-popup-dev-trigger {
   line-height: 1.15;
   letter-spacing: 0.01em;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--color-white);
   text-transform: uppercase;
 }
 
 .home-final-contact-link {
-  color: #ffffff;
+  color: var(--color-white);
   text-decoration: none;
   font-size: clamp(0.92rem, 0.95vw, 1rem);
   font-weight: 700;
@@ -5828,14 +5842,14 @@ body.lead-popup-open .lead-popup-dev-trigger {
   width: 32px;
   height: 32px;
   border-radius: 999px;
-  background: #c49a34;
-  color: #ffffff;
+  background: var(--brand-gold-500);
+  color: var(--color-white);
   transition: background 0.2s ease;
 }
 
 .home-final-youtube:hover,
 .home-final-youtube:focus-visible {
-  background: #b68b24;
+  background: var(--brand-gold-600);
 }
 
 .home-final-youtube svg {
@@ -5884,7 +5898,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 }
 
 .home-final-bottom-row a {
-  color: #ffffff;
+  color: var(--color-white);
   text-decoration: none;
   font-weight: 700;
 }
@@ -5896,7 +5910,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 }
 
 .panel {
-  background: linear-gradient(160deg, #ffffff 0%, #f1f6f2 100%);
+  background: linear-gradient(160deg, var(--color-white) 0%, #f1f6f2 100%);
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
@@ -5947,7 +5961,7 @@ select {
   border-radius: 10px;
   padding: 0.68rem 0.75rem;
   font: inherit;
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 textarea {
@@ -5981,13 +5995,13 @@ textarea {
   border-radius: var(--radius-md);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
-  background: #ffffff;
+  background: var(--color-white);
 }
 
 .calendar-head {
   padding: 0.95rem 1rem;
   background: var(--accent);
-  color: #ffffff;
+  color: var(--color-white);
   font-size: 0.95rem;
 }
 
@@ -6025,7 +6039,7 @@ textarea {
   left: 1rem;
   padding: 0.65rem 0.75rem;
   background: #111;
-  color: #fff;
+  color: var(--color-white);
   border-radius: 8px;
   z-index: 999;
 }
@@ -6751,8 +6765,8 @@ textarea {
     font-size: clamp(0.97rem, 3.85vw, 1.14rem);
     font-weight: 800;
     opacity: 1;
-    color: #ffffff;
-    -webkit-text-fill-color: #ffffff;
+    color: var(--color-white);
+    -webkit-text-fill-color: var(--color-white);
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.86);
   }
 
@@ -7365,7 +7379,7 @@ textarea {
 .legal-policy-container {
   width: min(100% - 2rem, 980px);
   margin-inline: auto;
-  background: #ffffff;
+  background: var(--color-white);
   border: 1px solid rgba(24, 69, 43, 0.14);
   border-radius: 14px;
   box-shadow: 0 20px 50px rgba(8, 30, 18, 0.09);
@@ -7382,7 +7396,7 @@ textarea {
 
 .legal-policy-container h1 {
   margin: 0.2rem 0 0;
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
   font-size: clamp(1.85rem, 5vw, 2.9rem);
   letter-spacing: 0.02em;
 }
@@ -7408,7 +7422,7 @@ textarea {
 }
 
 .legal-policy-container a {
-  color: #1f4b5e;
+  color: var(--brand-blue-900);
   text-decoration: underline;
   text-underline-offset: 3px;
 }
@@ -7578,8 +7592,8 @@ textarea {
     margin-inline: 0;
     border: 1px solid rgba(255, 255, 255, 0.52);
     border-radius: 4px;
-    background: #c49a34;
-    color: #ffffff;
+    background: var(--brand-gold-500);
+    color: var(--color-white);
     font-family: "Manrope", "Segoe UI", sans-serif;
     font-weight: 800;
     letter-spacing: 0.08em;
@@ -7599,7 +7613,7 @@ textarea {
 
   .utility-mobile-toggle[aria-expanded="true"],
   .utility-mobile-toggle.is-open {
-    background: #b68b24;
+    background: var(--brand-gold-600);
     color: #c4cbc8;
   }
 
@@ -7743,8 +7757,8 @@ textarea {
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    color: #ffffff;
-    background: #c49a34;
+    color: var(--color-white);
+    background: var(--brand-gold-500);
     border: 1px solid rgba(255, 255, 255, 0.5);
     border-radius: 4px;
     font-size: 0.96rem;
@@ -7755,8 +7769,8 @@ textarea {
   .utility-links.two-row .mobile-menu-contact-phone:hover,
   .utility-links.two-row .mobile-menu-contact-phone:focus-visible,
   .utility-links.two-row .mobile-menu-contact-phone:visited {
-    color: #ffffff;
-    background: #b68b24;
+    color: var(--color-white);
+    background: var(--brand-gold-600);
   }
 
   .utility-links.two-row .mobile-menu-contact-email {
