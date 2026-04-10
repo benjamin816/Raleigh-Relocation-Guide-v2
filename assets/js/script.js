@@ -395,15 +395,15 @@
       "<output data-map-tuner-output='y'></output>",
       "</div>",
       "<div class='map-tuner-pad' aria-label='Nudge controls'>",
-      "<button type='button' data-map-tuner-move='up-left' aria-label='Nudge up left'>↖</button>",
-      "<button type='button' data-map-tuner-move='up' aria-label='Nudge up'>↑</button>",
-      "<button type='button' data-map-tuner-move='up-right' aria-label='Nudge up right'>↗</button>",
-      "<button type='button' data-map-tuner-move='left' aria-label='Nudge left'>←</button>",
-      "<button type='button' data-map-tuner-move='center' aria-label='Center position'>•</button>",
-      "<button type='button' data-map-tuner-move='right' aria-label='Nudge right'>→</button>",
-      "<button type='button' data-map-tuner-move='down-left' aria-label='Nudge down left'>↙</button>",
-      "<button type='button' data-map-tuner-move='down' aria-label='Nudge down'>↓</button>",
-      "<button type='button' data-map-tuner-move='down-right' aria-label='Nudge down right'>↘</button>",
+      "<button type='button' data-map-tuner-move='up-left' aria-label='Nudge up left'>Ã¢â€ â€“</button>",
+      "<button type='button' data-map-tuner-move='up' aria-label='Nudge up'>Ã¢â€ â€˜</button>",
+      "<button type='button' data-map-tuner-move='up-right' aria-label='Nudge up right'>Ã¢â€ â€”</button>",
+      "<button type='button' data-map-tuner-move='left' aria-label='Nudge left'>Ã¢â€ Â</button>",
+      "<button type='button' data-map-tuner-move='center' aria-label='Center position'>Ã¢â‚¬Â¢</button>",
+      "<button type='button' data-map-tuner-move='right' aria-label='Nudge right'>Ã¢â€ â€™</button>",
+      "<button type='button' data-map-tuner-move='down-left' aria-label='Nudge down left'>Ã¢â€ â„¢</button>",
+      "<button type='button' data-map-tuner-move='down' aria-label='Nudge down'>Ã¢â€ â€œ</button>",
+      "<button type='button' data-map-tuner-move='down-right' aria-label='Nudge down right'>Ã¢â€ Ëœ</button>",
       "</div>",
       "<div class='map-tuner-actions'>",
       "<button type='button' data-map-tuner-action='reset'>Reset</button>",
@@ -648,7 +648,9 @@
     });
 
     document.addEventListener("click", function (event) {
-      if (!event.target || !event.target.closest(".menu-dropdown")) {
+      var target = event.target;
+      var targetElement = target instanceof Element ? target : (target && target.parentElement ? target.parentElement : null);
+      if (!targetElement || !targetElement.closest(".menu-dropdown")) {
         closeAllDropdowns();
       }
     });
@@ -1515,6 +1517,246 @@
     });
   }
 
+  var localHighlightsSections = Array.prototype.slice.call(
+    document.querySelectorAll(".suburb-local-highlights[data-local-highlights-key]")
+  );
+  if (localHighlightsSections.length) {
+    localHighlightsSections.forEach(function (localHighlightsSection) {
+      var feedKey = String(localHighlightsSection.getAttribute("data-local-highlights-key") || "")
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, "-")
+        .replace(/-+/g, "-")
+        .replace(/^-|-$/g, "");
+      if (!feedKey) {
+        return;
+      }
+
+      var feedVersion = String(localHighlightsSection.getAttribute("data-local-highlights-version") || "").trim();
+      var grid = localHighlightsSection.querySelector("[data-local-highlights-grid]");
+      var filter = localHighlightsSection.querySelector("[data-local-highlights-filter]");
+      var filterWrap = localHighlightsSection.querySelector(".suburb-local-highlights-filter-wrap");
+      var filterIconNode = localHighlightsSection.querySelector("[data-local-highlights-filter-icon]");
+      var scriptNode = localHighlightsSection.querySelector(".suburb-local-highlights-script");
+      var titleNode = localHighlightsSection.querySelector(".suburb-local-highlights-copy h2");
+      var fallbackImage = "/assets/images/home/services-learning-center.jpg?v=20260316-services2";
+      if (!grid || !filter) {
+        return;
+      }
+
+      var normalizeCategoryKey = function (value) {
+        return String(value || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9-]+/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+      };
+
+      var categoryIconMap = {
+        dining: "\u{1F37D}",
+        bars: "\u{1F378}",
+        coffee: "\u2615",
+        explore: "\u{1F9ED}",
+        shopping: "\u{1F6CD}",
+        fitness: "\u{1F4AA}"
+      };
+
+      var getCategoryIcon = function (key) {
+        return categoryIconMap[normalizeCategoryKey(key)] || "\u{1F4CD}";
+      };
+
+      var setFilterIcon = function (key) {
+        var normalizedKey = normalizeCategoryKey(key);
+        if (filterWrap) {
+          filterWrap.setAttribute("data-local-highlights-active", normalizedKey || "dining");
+        }
+        if (filterIconNode) {
+          filterIconNode.textContent = getCategoryIcon(normalizedKey);
+        }
+      };
+
+      var getCategoryLabel = function (categories, key) {
+        if (!Array.isArray(categories)) {
+          return "";
+        }
+        for (var i = 0; i < categories.length; i += 1) {
+          var category = categories[i];
+          if (normalizeCategoryKey(category && category.key) === key) {
+            return String(category && category.label || "").trim();
+          }
+        }
+        return "";
+      };
+
+      var createEmptyState = function (categoryLabel) {
+        var emptyNode = document.createElement("div");
+        emptyNode.className = "suburb-local-highlights-empty";
+        emptyNode.textContent = "Highlights for " + categoryLabel + " are coming soon.";
+        return emptyNode;
+      };
+
+      var createCard = function (item, categoryLabel) {
+        var card = document.createElement("a");
+        card.className = "suburb-local-highlights-card";
+
+        var mapsUrl = String(item && item.maps_url || "").trim();
+        if (mapsUrl) {
+          card.href = mapsUrl;
+          card.target = "_blank";
+          card.rel = "noopener noreferrer";
+        } else {
+          card.href = "#";
+        }
+
+        var imageUrl = String(item && item.image_url || "").trim() || fallbackImage;
+        card.style.setProperty("--suburb-local-highlight-image", "url(\"" + imageUrl.replace(/"/g, "%22") + "\")");
+        card.setAttribute("aria-label", String(item && item.name || "Local Highlight") + " in " + categoryLabel);
+
+        var content = document.createElement("span");
+        content.className = "suburb-local-highlights-card-content";
+
+        var title = document.createElement("p");
+        title.className = "suburb-local-highlights-card-name";
+        title.textContent = String(item && item.name || "Local Highlight");
+
+        var tagline = document.createElement("p");
+        tagline.className = "suburb-local-highlights-card-tagline";
+        tagline.textContent = String(item && item.tagline || "Local favorite");
+
+        var meta = document.createElement("span");
+        meta.className = "suburb-local-highlights-card-meta";
+
+        var ratingCopy = String(item && item.rating_text || "").trim();
+        if (ratingCopy) {
+          var rating = document.createElement("p");
+          rating.className = "suburb-local-highlights-card-rating";
+
+          var stars = document.createElement("span");
+          stars.className = "suburb-local-highlights-card-stars";
+          stars.setAttribute("aria-hidden", "true");
+          stars.textContent = "\u2605\u2605\u2605\u2605\u2605";
+
+          var ratingText = document.createElement("span");
+          ratingText.textContent = ratingCopy;
+
+          rating.appendChild(stars);
+          rating.appendChild(ratingText);
+          meta.appendChild(rating);
+        }
+
+        var reviewsCopy = String(item && item.reviews_text || "").trim();
+        if (reviewsCopy) {
+          var reviews = document.createElement("p");
+          reviews.className = "suburb-local-highlights-card-reviews";
+          reviews.textContent = reviewsCopy;
+          meta.appendChild(reviews);
+        }
+
+        content.appendChild(title);
+        content.appendChild(tagline);
+        if (meta.childElementCount) {
+          content.appendChild(meta);
+        }
+        card.appendChild(content);
+        return card;
+      };
+
+      var renderCategory = function (payload, categoryKey) {
+        var normalizedKey = normalizeCategoryKey(categoryKey);
+        var categories = Array.isArray(payload && payload.categories) ? payload.categories : [];
+        var itemsMap = payload && typeof payload.items === "object" ? payload.items : {};
+        var categoryItems = Array.isArray(itemsMap[normalizedKey]) ? itemsMap[normalizedKey].slice(0, 4) : [];
+        var categoryLabel = getCategoryLabel(categories, normalizedKey) || "this category";
+
+        grid.innerHTML = "";
+        if (!categoryItems.length) {
+          grid.appendChild(createEmptyState(categoryLabel));
+          return;
+        }
+
+        categoryItems.forEach(function (item) {
+          grid.appendChild(createCard(item, categoryLabel));
+        });
+      };
+
+      var setFilterOptions = function (payload) {
+        var categories = Array.isArray(payload && payload.categories) ? payload.categories : [];
+        var previousValue = normalizeCategoryKey(filter.value);
+
+        if (categories.length) {
+          filter.innerHTML = "";
+          categories.forEach(function (category) {
+            var key = normalizeCategoryKey(category && category.key);
+            if (!key) {
+              return;
+            }
+            var option = document.createElement("option");
+            option.value = key;
+            option.textContent = getCategoryIcon(key) + " " + String(category && category.label || key);
+            filter.appendChild(option);
+          });
+        }
+
+        if (previousValue) {
+          filter.value = previousValue;
+        }
+        if (!filter.value && filter.options.length) {
+          filter.value = filter.options[0].value;
+        }
+      };
+
+      if (typeof window.fetch !== "function") {
+        grid.innerHTML = "";
+        grid.appendChild(createEmptyState("this area"));
+        return;
+      }
+
+      var feedPath = "/assets/data/local-highlights/" + encodeURIComponent(feedKey) + ".json";
+      if (feedVersion) {
+        feedPath += "?v=" + encodeURIComponent(feedVersion);
+      }
+
+      window.fetch(feedPath, { cache: "no-store" })
+        .then(function (response) {
+          if (!response.ok) {
+            throw new Error("Unable to load local highlights JSON");
+          }
+          return response.json();
+        })
+        .then(function (payload) {
+          if (!payload || typeof payload !== "object") {
+            throw new Error("Invalid local highlights payload");
+          }
+
+          if (scriptNode && typeof payload.suburb_label === "string" && payload.suburb_label.trim()) {
+            scriptNode.textContent = payload.suburb_label.trim();
+          }
+          if (titleNode && typeof payload.title === "string" && payload.title.trim()) {
+            titleNode.textContent = payload.title.trim();
+          }
+
+          setFilterOptions(payload);
+          var initialCategory = normalizeCategoryKey(payload.default_category || filter.value);
+          if (initialCategory) {
+            filter.value = initialCategory;
+          }
+          setFilterIcon(filter.value);
+          renderCategory(payload, filter.value);
+
+          if (filter.getAttribute("data-local-highlights-bound") !== "true") {
+            filter.setAttribute("data-local-highlights-bound", "true");
+            filter.addEventListener("change", function () {
+              setFilterIcon(filter.value);
+              renderCategory(payload, filter.value);
+            });
+          }
+        })
+        .catch(function () {
+          grid.innerHTML = "";
+          grid.appendChild(createEmptyState("this area"));
+        });
+    });
+  }
+
   (function () {
     var localStore = null;
     var sessionStore = null;
@@ -1598,8 +1840,8 @@
     var leadPopupSubmittedKey = "livrLeadPopupSubmitted";
     var leadPopupSessionStartKey = "livrLeadPopupSessionStart";
     var leadPopupNextShowKey = "livrLeadPopupNextShowAt";
-    var leadPopupInitialDelayMs = 3 * 60 * 1000;
-    var leadPopupReopenDelayMs = 5 * 60 * 1000;
+    var leadPopupInitialDelayMs = 10 * 1000;
+    var leadPopupReopenDelayMs = 30 * 60 * 1000;
     var leadPopupBookingUrl = "https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true";
     var leadPopupAppsScriptUrl = "https://script.google.com/macros/s/AKfycbwnqkPb6Nkp9owlDv_orcAId7cNHbKuQrf5ENMW4BvbUuaLFNHP-yANDdSwQ6Vjl41v/exec";
     var hasSubmitted = safeGet(localStore, leadPopupSubmittedKey) === "true";
@@ -3121,7 +3363,10 @@
   
   (function () {
     var isHomePage = Boolean(document.body && document.body.classList.contains("page-home"));
-    if (!isHomePage) {
+    var isAboutPage = Boolean(document.body && document.body.classList.contains("page-about"));
+    var isDesktopViewport = !window.matchMedia || window.matchMedia("(min-width: 1025px)").matches;
+    var shouldEnableCallPopup = isHomePage || (isAboutPage && isDesktopViewport);
+    if (!shouldEnableCallPopup) {
       return;
     }
 
@@ -3778,7 +4023,7 @@
       footer.innerHTML = [
         "<div class='legal-auto-footer-inner'>",
         "<span>&copy; " + String(new Date().getFullYear()) + " " + legalBusinessName + "</span>",
-        "<span><a href='/contact/'>Contact</a> | <a href='/relocation/'>Relocation</a> | <a href='/learning-center/'>Learning Center</a></span>",
+        "<span><a href='/consult/'>Contact</a> | <a href='/relocation/'>Relocation</a> | <a href='/learning-center/'>Learning Center</a></span>",
         "</div>"
       ].join("");
       var appendTarget = document.querySelector(".site-shell") || document.body;

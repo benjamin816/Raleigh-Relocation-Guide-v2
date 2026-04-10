@@ -1,0 +1,1389 @@
+const CONFIG = {
+  TZ: Session.getScriptTimeZone() || "America/New_York",
+  MAX_EVENTS_FOR_SUMMARY: 50000,
+  MONTHLY_EMAIL: {
+    TO: "livinginraleighteam@gmail.com",
+    MONTH_DAY: 1,
+    HOUR: 8
+  },
+  SHEETS: {
+    RAW: "Event Log",
+    PAGE: "Page Metrics",
+    FUNNEL: "Popup Funnel",
+    OVERVIEW: "Daily Overview"
+  },
+  RAW_HEADERS: [
+    "received_at",
+    "event_time",
+    "event_date",
+    "event_name",
+    "session_id",
+    "page_view_id",
+    "page_path",
+    "page_url",
+    "page_title",
+    "page_type",
+    "referrer",
+    "popup_lead_type",
+    "popup_variant",
+    "popup_render_mode",
+    "popup_screen",
+    "popup_open_source",
+    "step_number",
+    "step_key",
+    "field_name",
+    "selected_value",
+    "interaction_source",
+    "lead_type",
+    "contact_intent",
+    "form_name",
+    "page_time_ms",
+    "engaged_time_ms",
+    "popup_interacted",
+    "form_interacted",
+    "rescheduled",
+    "close_reason",
+    "exit_trigger",
+    "invalid_fields",
+    "invalid_count",
+    "error_message",
+    "raw_json"
+  ],
+  PAGE_HEADERS: [
+    "date",
+    "page_path",
+    "unique_sessions",
+    "page_views",
+    "avg_engaged_seconds",
+    "avg_time_on_page_seconds",
+    "popup_impression_rate",
+    "popup_interaction_rate",
+    "form_interaction_rate",
+    "popup_submit_rate",
+    "home_eval_submit_rate",
+    "requested_contact_submit_rate",
+    "new_construction_submit_rate"
+  ],
+  FUNNEL_HEADERS: [
+    "date",
+    "popup_lead_type",
+    "popup_variant",
+    "step_number",
+    "step_key",
+    "started_sessions",
+    "viewed_sessions",
+    "completed_sessions",
+    "step_completion_rate",
+    "reach_from_start_rate",
+    "validation_error_sessions",
+    "validation_error_events",
+    "back_click_events",
+    "submit_attempt_sessions",
+    "submit_success_sessions",
+    "submit_success_rate"
+  ],
+  OVERVIEW_HEADERS: [
+    "date",
+    "unique_sessions",
+    "avg_engaged_seconds",
+    "avg_time_on_site_seconds",
+    "popup_impression_rate",
+    "popup_interaction_rate",
+    "form_interaction_rate",
+    "popup_submit_rate",
+    "home_eval_submit_rate",
+    "requested_contact_submit_rate",
+    "new_construction_submit_rate"
+  ]
+};
+
+const RAW_INDEX = makeIndex_(CONFIG.RAW_HEADERS);
+
+function doGet(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    ensureSheets_(ss);
+
+    if (e && e.parameter && e.parameter.refresh === "1") {
+      rebuildSummaries_(ss);
+    }
+
+    return jsonResponse_({
+      ok: true,
+      message: "Analytics endpoint is live.",
+      spreadsheet_id: ss.getId(),
+      timezone: CONFIG.TZ
+    });
+  } catch (error) {
+    return jsonResponse_({
+      ok: false,
+      error: String(error && error.stack ? error.stack : error)
+    });
+  }
+}
+
+function doPost(e) {
+  try {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    ensureSheets_(ss);
+
+    const payload = parseJsonBody_(e);
+    const events = normalizeEvents_(payload);
+
+    if (!events.length) {
+      return jsonResponse_({ ok: false, message: "No events in payload." });
+    }
+
+    const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
+    appendRawEvents_(rawSheet, events);
+    rebuildSummaries_(ss);
+
+    return jsonResponse_({
+      ok: true,
+      received_events: events.length
+    });
+  } catch (error) {
+    return jsonResponse_({
+      ok: false,
+      error: String(error && error.stack ? error.stack : error)
+    });
+  }
+}
+
+function setupAnalyticsSheets() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ensureSheets_(ss);
+  rebuildSummaries_(ss);
+  ensureMonthlyDigestTrigger_();
+}
+
+function refreshAnalyticsSummaries() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ensureSheets_(ss);
+  rebuildSummaries_(ss);
+}
+
+function sendMonthlyAnalyticsEmail() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ensureSheets_(ss);
+
+  const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
+  const allEvents = readRawEvents_(rawSheet);
+  const range = getLastCompleteMonthWindow_();
+  const monthlyEvents = filterEventsByDateRange_(allEvents, range.startDateKey, range.endDateKey);
+
+  const summary = buildMonthlySummary_(monthlyEvents, range);
+  const subject = "Monthly Website Analytics Digest (" + range.label + ")";
+  const body = buildMonthlyDigestEmailBody_(summary, range);
+
+  MailApp.sendEmail({
+    to: CONFIG.MONTHLY_EMAIL.TO,
+    subject: subject,
+    body: body
+  });
+}
+
+function setupMonthlyDigestTrigger() {
+  ensureMonthlyDigestTrigger_();
+}
+
+function removeMonthlyDigestTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  triggers.forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === "sendMonthlyAnalyticsEmail" || trigger.getHandlerFunction() === "sendWeeklyAnalyticsEmail") {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  });
+}
+
+function sendMonthlyAnalyticsEmailNow() {
+  sendMonthlyAnalyticsEmail();
+}
+
+function sendTestMonthlyAndWeeklyDigestEmailsNow() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  ensureSheets_(ss);
+
+  const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
+  const allEvents = readRawEvents_(rawSheet);
+
+  const monthlyRange = getLastCompleteMonthWindow_();
+  const monthlyEvents = filterEventsByDateRange_(allEvents, monthlyRange.startDateKey, monthlyRange.endDateKey);
+  const monthlySummary = buildMonthlySummary_(monthlyEvents, monthlyRange);
+  const monthlySubject = "TEST Monthly Website Analytics Digest (" + monthlyRange.label + ")";
+  const monthlyBody = buildMonthlyDigestEmailBody_(monthlySummary, monthlyRange);
+
+  const weeklyRange = getLastCompleteWeekWindow_();
+  const weeklyEvents = filterEventsByDateRange_(allEvents, weeklyRange.startDateKey, weeklyRange.endDateKey);
+  const weeklySummary = buildMonthlySummary_(weeklyEvents, weeklyRange);
+  const weeklySubject = "TEST Weekly Website Analytics Digest (" + weeklyRange.label + ")";
+  const weeklyBody = buildMonthlyDigestEmailBody_(weeklySummary, weeklyRange)
+    .replace("Monthly Website Analytics Digest", "Weekly Website Analytics Digest")
+    .replace("Total monthly visitors (sessions):", "Total weekly visitors (sessions):");
+
+  MailApp.sendEmail({
+    to: CONFIG.MONTHLY_EMAIL.TO,
+    subject: monthlySubject,
+    body: monthlyBody
+  });
+
+  MailApp.sendEmail({
+    to: CONFIG.MONTHLY_EMAIL.TO,
+    subject: weeklySubject,
+    body: weeklyBody
+  });
+}
+
+function ensureMonthlyDigestTrigger_() {
+  removeMonthlyDigestTriggers();
+
+  const existing = ScriptApp.getProjectTriggers().some(function (trigger) {
+    return trigger.getHandlerFunction() === "sendMonthlyAnalyticsEmail";
+  });
+
+  if (existing) {
+    return;
+  }
+
+  ScriptApp.newTrigger("sendMonthlyAnalyticsEmail")
+    .timeBased()
+    .onMonthDay(CONFIG.MONTHLY_EMAIL.MONTH_DAY)
+    .atHour(CONFIG.MONTHLY_EMAIL.HOUR)
+    .create();
+}
+
+// Backwards-compatible aliases.
+function sendWeeklyAnalyticsEmail() {
+  sendMonthlyAnalyticsEmail();
+}
+
+function setupWeeklyDigestTrigger() {
+  setupMonthlyDigestTrigger();
+}
+
+function removeWeeklyDigestTriggers() {
+  removeMonthlyDigestTriggers();
+}
+
+function sendWeeklyAnalyticsEmailNow() {
+  sendMonthlyAnalyticsEmailNow();
+}
+
+function ensureSheets_(ss) {
+  ensureSheetWithHeaders_(ss, CONFIG.SHEETS.RAW, CONFIG.RAW_HEADERS);
+  ensureSheetWithHeaders_(ss, CONFIG.SHEETS.PAGE, CONFIG.PAGE_HEADERS);
+  ensureSheetWithHeaders_(ss, CONFIG.SHEETS.FUNNEL, CONFIG.FUNNEL_HEADERS);
+  ensureSheetWithHeaders_(ss, CONFIG.SHEETS.OVERVIEW, CONFIG.OVERVIEW_HEADERS);
+}
+
+function ensureSheetWithHeaders_(ss, sheetName, headers) {
+  let sheet = ss.getSheetByName(sheetName);
+  if (!sheet) {
+    sheet = ss.insertSheet(sheetName);
+  }
+
+  const maxCols = sheet.getMaxColumns();
+  if (maxCols < headers.length) {
+    sheet.insertColumnsAfter(maxCols, headers.length - maxCols);
+  }
+
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+  sheet.setFrozenRows(1);
+  return sheet;
+}
+
+function appendRawEvents_(sheet, events) {
+  if (!events.length) {
+    return;
+  }
+
+  const rows = events.map(function (eventObj) {
+    const eventTimeIso = normalizeIso_(eventObj.event_time || eventObj.submitted_at || new Date().toISOString());
+    const eventDate = formatDate_(eventTimeIso, "yyyy-MM-dd");
+
+    return [
+      new Date(),
+      eventTimeIso,
+      eventDate,
+      asString_(eventObj.event_name),
+      asString_(eventObj.session_id),
+      asString_(eventObj.page_view_id),
+      asString_(eventObj.page_path),
+      asString_(eventObj.page_url),
+      asString_(eventObj.page_title),
+      asString_(eventObj.page_type),
+      asString_(eventObj.referrer),
+      asString_(eventObj.popup_lead_type),
+      asString_(eventObj.popup_variant),
+      asString_(eventObj.popup_render_mode),
+      asString_(eventObj.popup_screen),
+      asString_(eventObj.popup_open_source),
+      toInt_(eventObj.step_number),
+      asString_(eventObj.step_key),
+      asString_(eventObj.field_name),
+      asString_(eventObj.selected_value),
+      asString_(eventObj.interaction_source),
+      asString_(eventObj.lead_type),
+      asString_(eventObj.contact_intent),
+      asString_(eventObj.form_name),
+      toNumber_(eventObj.page_time_ms),
+      toNumber_(eventObj.engaged_time_ms),
+      toBoolean_(eventObj.popup_interacted),
+      toBoolean_(eventObj.form_interacted),
+      toBoolean_(eventObj.rescheduled),
+      asString_(eventObj.close_reason),
+      asString_(eventObj.exit_trigger),
+      asString_(eventObj.invalid_fields),
+      toInt_(eventObj.invalid_count),
+      asString_(eventObj.error_message),
+      safeJsonString_(eventObj)
+    ];
+  });
+
+  const startRow = sheet.getLastRow() + 1;
+  sheet.getRange(startRow, 1, rows.length, CONFIG.RAW_HEADERS.length).setValues(rows);
+}
+
+function rebuildSummaries_(ss) {
+  const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
+  const events = readRawEvents_(rawSheet);
+
+  const pageRows = buildPageMetricRows_(events);
+  const funnelRows = buildPopupFunnelRows_(events);
+  const overviewRows = buildDailyOverviewRows_(events);
+
+  const pageSheet = ss.getSheetByName(CONFIG.SHEETS.PAGE);
+  writeTable_(pageSheet, CONFIG.PAGE_HEADERS, pageRows);
+  if (pageRows.length) {
+    pageSheet.getRange(2, 5, pageRows.length, 2).setNumberFormat("0.00");
+    pageSheet.getRange(2, 7, pageRows.length, 7).setNumberFormat("0.00%");
+  }
+
+  const funnelSheet = ss.getSheetByName(CONFIG.SHEETS.FUNNEL);
+  writeTable_(funnelSheet, CONFIG.FUNNEL_HEADERS, funnelRows);
+  if (funnelRows.length) {
+    funnelSheet.getRange(2, 9, funnelRows.length, 2).setNumberFormat("0.00%");
+    funnelSheet.getRange(2, 16, funnelRows.length, 1).setNumberFormat("0.00%");
+  }
+
+  const overviewSheet = ss.getSheetByName(CONFIG.SHEETS.OVERVIEW);
+  writeTable_(overviewSheet, CONFIG.OVERVIEW_HEADERS, overviewRows);
+  if (overviewRows.length) {
+    overviewSheet.getRange(2, 3, overviewRows.length, 2).setNumberFormat("0.00");
+    overviewSheet.getRange(2, 5, overviewRows.length, 7).setNumberFormat("0.00%");
+  }
+}
+
+function readRawEvents_(sheet) {
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return [];
+  }
+
+  const totalDataRows = lastRow - 1;
+  const readRows = Math.min(totalDataRows, CONFIG.MAX_EVENTS_FOR_SUMMARY);
+  const startRow = lastRow - readRows + 1;
+  const values = sheet.getRange(startRow, 1, readRows, CONFIG.RAW_HEADERS.length).getValues();
+
+  return values.map(function (row) {
+    return {
+      received_at: row[RAW_INDEX.received_at],
+      event_time: asString_(row[RAW_INDEX.event_time]),
+      event_date: asString_(row[RAW_INDEX.event_date]),
+      event_name: asString_(row[RAW_INDEX.event_name]),
+      session_id: asString_(row[RAW_INDEX.session_id]),
+      page_view_id: asString_(row[RAW_INDEX.page_view_id]),
+      page_path: asString_(row[RAW_INDEX.page_path]),
+      page_url: asString_(row[RAW_INDEX.page_url]),
+      page_type: asString_(row[RAW_INDEX.page_type]),
+      popup_lead_type: asString_(row[RAW_INDEX.popup_lead_type]),
+      popup_variant: asString_(row[RAW_INDEX.popup_variant]),
+      step_number: toInt_(row[RAW_INDEX.step_number]),
+      step_key: asString_(row[RAW_INDEX.step_key]),
+      lead_type: asString_(row[RAW_INDEX.lead_type]),
+      contact_intent: asString_(row[RAW_INDEX.contact_intent]),
+      form_name: asString_(row[RAW_INDEX.form_name]),
+      page_time_ms: toNumber_(row[RAW_INDEX.page_time_ms]),
+      engaged_time_ms: toNumber_(row[RAW_INDEX.engaged_time_ms])
+    };
+  });
+}
+
+function buildPageMetricRows_(events) {
+  const pageMap = new Map();
+  const exitSeen = new Set();
+
+  events.forEach(function (ev) {
+    const date = asString_(ev.event_date);
+    if (!date) {
+      return;
+    }
+
+    const pagePath = asString_(ev.page_path) || "(unknown)";
+    const sessionId = asString_(ev.session_id);
+    const key = date + "|" + pagePath;
+
+    const agg = getOrCreate_(pageMap, key, function () {
+      return {
+        date: date,
+        page_path: pagePath,
+        sessions: new Set(),
+        page_views: 0,
+        popup_impressions: new Set(),
+        popup_interactions: new Set(),
+        form_interactions: new Set(),
+        popup_submit_success: new Set(),
+        home_eval_submit_success: new Set(),
+        requested_contact_submit_success: new Set(),
+        new_construction_submit_success: new Set(),
+        exit_sessions: new Set(),
+        engaged_ms_total: 0,
+        page_time_ms_total: 0
+      };
+    });
+
+    if (sessionId) {
+      agg.sessions.add(sessionId);
+    }
+
+    if (ev.event_name === "page_view") {
+      agg.page_views += 1;
+    }
+    if (ev.event_name === "popup_impression" && sessionId) {
+      agg.popup_impressions.add(sessionId);
+    }
+    if (ev.event_name === "popup_interaction_started" && sessionId) {
+      agg.popup_interactions.add(sessionId);
+    }
+    if (ev.event_name === "form_interaction_started" && sessionId) {
+      agg.form_interactions.add(sessionId);
+    }
+    if (ev.event_name === "popup_submit_success" && sessionId) {
+      agg.popup_submit_success.add(sessionId);
+    }
+    if (ev.event_name === "home_eval_submit_success" && sessionId) {
+      agg.home_eval_submit_success.add(sessionId);
+    }
+    if (
+      sessionId &&
+      (
+        ev.event_name === "requested_contact_submit_success" ||
+        (ev.event_name === "popup_submit_success" && asString_(ev.popup_variant).toLowerCase() === "call_me_modal")
+      )
+    ) {
+      agg.requested_contact_submit_success.add(sessionId);
+    }
+    if (ev.event_name === "new_construction_form_submit_success" && sessionId) {
+      agg.new_construction_submit_success.add(sessionId);
+    }
+
+    if (ev.event_name === "page_exit" && sessionId) {
+      const exitKey = date + "|" + pagePath + "|" + sessionId;
+      if (!exitSeen.has(exitKey)) {
+        exitSeen.add(exitKey);
+        agg.exit_sessions.add(sessionId);
+        agg.engaged_ms_total += Math.max(0, toNumber_(ev.engaged_time_ms));
+        agg.page_time_ms_total += Math.max(0, toNumber_(ev.page_time_ms));
+      }
+    }
+  });
+
+  const rows = Array.from(pageMap.values()).map(function (agg) {
+    const sessionCount = agg.sessions.size;
+    const exitCount = agg.exit_sessions.size;
+
+    const avgEngagedSeconds = exitCount ? round_(agg.engaged_ms_total / exitCount / 1000, 2) : 0;
+    const avgPageSeconds = exitCount ? round_(agg.page_time_ms_total / exitCount / 1000, 2) : 0;
+
+    return [
+      agg.date,
+      agg.page_path,
+      sessionCount,
+      agg.page_views,
+      avgEngagedSeconds,
+      avgPageSeconds,
+      rate_(agg.popup_impressions.size, sessionCount),
+      rate_(agg.popup_interactions.size, sessionCount),
+      rate_(agg.form_interactions.size, sessionCount),
+      rate_(agg.popup_submit_success.size, sessionCount),
+      rate_(agg.home_eval_submit_success.size, sessionCount),
+      rate_(agg.requested_contact_submit_success.size, sessionCount),
+      rate_(agg.new_construction_submit_success.size, sessionCount)
+    ];
+  });
+
+  rows.sort(function (a, b) {
+    if (a[0] === b[0]) {
+      return String(a[1]).localeCompare(String(b[1]));
+    }
+    return a[0] > b[0] ? -1 : 1;
+  });
+
+  return rows;
+}
+
+function buildPopupFunnelRows_(events) {
+  const groupMap = new Map();
+  const stepMap = new Map();
+
+  events.forEach(function (ev) {
+    const date = asString_(ev.event_date);
+    if (!date) {
+      return;
+    }
+
+    const popupLeadType = asString_(ev.popup_lead_type);
+    if (!popupLeadType) {
+      return;
+    }
+
+    const popupVariant = asString_(ev.popup_variant) || "unknown";
+    const sessionId = asString_(ev.session_id);
+    const groupKey = date + "|" + popupLeadType + "|" + popupVariant;
+
+    const group = getOrCreate_(groupMap, groupKey, function () {
+      return {
+        date: date,
+        popup_lead_type: popupLeadType,
+        popup_variant: popupVariant,
+        started_sessions: new Set(),
+        submit_attempt_sessions: new Set(),
+        submit_success_sessions: new Set()
+      };
+    });
+
+    if (sessionId && ev.event_name === "popup_started") {
+      group.started_sessions.add(sessionId);
+    }
+    if (sessionId && ev.event_name === "popup_submit_attempt") {
+      group.submit_attempt_sessions.add(sessionId);
+    }
+    if (sessionId && ev.event_name === "popup_submit_success") {
+      group.submit_success_sessions.add(sessionId);
+    }
+
+    const stepNumber = toInt_(ev.step_number);
+    if (stepNumber <= 0) {
+      return;
+    }
+
+    const stepKey = asString_(ev.step_key) || ("step_" + stepNumber);
+    const stepAggKey = groupKey + "|" + stepNumber;
+
+    const stepAgg = getOrCreate_(stepMap, stepAggKey, function () {
+      return {
+        date: date,
+        popup_lead_type: popupLeadType,
+        popup_variant: popupVariant,
+        step_number: stepNumber,
+        step_key: stepKey,
+        viewed_sessions: new Set(),
+        completed_sessions: new Set(),
+        validation_error_sessions: new Set(),
+        validation_error_events: 0,
+        back_click_events: 0
+      };
+    });
+
+    if (ev.event_name === "popup_step_viewed" && sessionId) {
+      stepAgg.viewed_sessions.add(sessionId);
+    }
+    if (ev.event_name === "popup_step_completed" && sessionId) {
+      stepAgg.completed_sessions.add(sessionId);
+    }
+    if (ev.event_name === "popup_step_validation_error") {
+      if (sessionId) {
+        stepAgg.validation_error_sessions.add(sessionId);
+      }
+      stepAgg.validation_error_events += 1;
+    }
+    if (ev.event_name === "popup_step_back") {
+      stepAgg.back_click_events += 1;
+    }
+  });
+
+  const rows = Array.from(stepMap.values()).map(function (stepAgg) {
+    const groupKey = stepAgg.date + "|" + stepAgg.popup_lead_type + "|" + stepAgg.popup_variant;
+    const group = groupMap.get(groupKey);
+
+    const startedCount = group ? group.started_sessions.size : 0;
+    const viewedCount = stepAgg.viewed_sessions.size;
+    const completedCount = stepAgg.completed_sessions.size;
+    const submitAttemptCount = group ? group.submit_attempt_sessions.size : 0;
+    const submitSuccessCount = group ? group.submit_success_sessions.size : 0;
+
+    return [
+      stepAgg.date,
+      stepAgg.popup_lead_type,
+      stepAgg.popup_variant,
+      stepAgg.step_number,
+      stepAgg.step_key,
+      startedCount,
+      viewedCount,
+      completedCount,
+      rate_(completedCount, viewedCount),
+      rate_(viewedCount, startedCount),
+      stepAgg.validation_error_sessions.size,
+      stepAgg.validation_error_events,
+      stepAgg.back_click_events,
+      submitAttemptCount,
+      submitSuccessCount,
+      rate_(submitSuccessCount, startedCount)
+    ];
+  });
+
+  rows.sort(function (a, b) {
+    if (a[0] !== b[0]) {
+      return a[0] > b[0] ? -1 : 1;
+    }
+    if (a[1] !== b[1]) {
+      return String(a[1]).localeCompare(String(b[1]));
+    }
+    if (a[2] !== b[2]) {
+      return String(a[2]).localeCompare(String(b[2]));
+    }
+    return toInt_(a[3]) - toInt_(b[3]);
+  });
+
+  return rows;
+}
+
+function buildDailyOverviewRows_(events) {
+  const dayMap = new Map();
+  const exitSeen = new Set();
+
+  events.forEach(function (ev) {
+    const date = asString_(ev.event_date);
+    if (!date) {
+      return;
+    }
+
+    const sessionId = asString_(ev.session_id);
+    const agg = getOrCreate_(dayMap, date, function () {
+      return {
+        date: date,
+        sessions: new Set(),
+        popup_impressions: new Set(),
+        popup_interactions: new Set(),
+        form_interactions: new Set(),
+        popup_submit_success: new Set(),
+        home_eval_submit_success: new Set(),
+        requested_contact_submit_success: new Set(),
+        new_construction_submit_success: new Set(),
+        exit_sessions: new Set(),
+        engaged_ms_total: 0,
+        page_time_ms_total: 0
+      };
+    });
+
+    if (sessionId) {
+      agg.sessions.add(sessionId);
+    }
+
+    if (ev.event_name === "popup_impression" && sessionId) {
+      agg.popup_impressions.add(sessionId);
+    }
+    if (ev.event_name === "popup_interaction_started" && sessionId) {
+      agg.popup_interactions.add(sessionId);
+    }
+    if (ev.event_name === "form_interaction_started" && sessionId) {
+      agg.form_interactions.add(sessionId);
+    }
+    if (ev.event_name === "popup_submit_success" && sessionId) {
+      agg.popup_submit_success.add(sessionId);
+    }
+    if (ev.event_name === "home_eval_submit_success" && sessionId) {
+      agg.home_eval_submit_success.add(sessionId);
+    }
+    if (
+      sessionId &&
+      (
+        ev.event_name === "requested_contact_submit_success" ||
+        (ev.event_name === "popup_submit_success" && asString_(ev.popup_variant).toLowerCase() === "call_me_modal")
+      )
+    ) {
+      agg.requested_contact_submit_success.add(sessionId);
+    }
+    if (ev.event_name === "new_construction_form_submit_success" && sessionId) {
+      agg.new_construction_submit_success.add(sessionId);
+    }
+
+    if (ev.event_name === "page_exit" && sessionId) {
+      const pagePath = asString_(ev.page_path) || "(unknown)";
+      const exitKey = date + "|" + pagePath + "|" + sessionId;
+      if (!exitSeen.has(exitKey)) {
+        exitSeen.add(exitKey);
+        agg.exit_sessions.add(sessionId);
+        agg.engaged_ms_total += Math.max(0, toNumber_(ev.engaged_time_ms));
+        agg.page_time_ms_total += Math.max(0, toNumber_(ev.page_time_ms));
+      }
+    }
+  });
+
+  const rows = Array.from(dayMap.values()).map(function (agg) {
+    const sessionCount = agg.sessions.size;
+    const exitCount = agg.exit_sessions.size;
+
+    const avgEngagedSeconds = exitCount ? round_(agg.engaged_ms_total / exitCount / 1000, 2) : 0;
+    const avgTimeOnSiteSeconds = exitCount ? round_(agg.page_time_ms_total / exitCount / 1000, 2) : 0;
+
+    return [
+      agg.date,
+      sessionCount,
+      avgEngagedSeconds,
+      avgTimeOnSiteSeconds,
+      rate_(agg.popup_impressions.size, sessionCount),
+      rate_(agg.popup_interactions.size, sessionCount),
+      rate_(agg.form_interactions.size, sessionCount),
+      rate_(agg.popup_submit_success.size, sessionCount),
+      rate_(agg.home_eval_submit_success.size, sessionCount),
+      rate_(agg.requested_contact_submit_success.size, sessionCount),
+      rate_(agg.new_construction_submit_success.size, sessionCount)
+    ];
+  });
+
+  rows.sort(function (a, b) {
+    return a[0] > b[0] ? -1 : 1;
+  });
+
+  return rows;
+}
+
+function buildMonthlySummary_(events, range) {
+  const visitors = new Set();
+  const popupImpressions = new Set();
+  const popupInteractions = new Set();
+  const formInteractions = new Set();
+  const buyerStarted = new Set();
+  const sellerStarted = new Set();
+  const buyerCompleted = new Set();
+  const sellerCompleted = new Set();
+  const homeEvalStarted = new Set();
+  const homeEvalCompleted = new Set();
+  const requestedContactStarted = new Set();
+  const requestedContactCompleted = new Set();
+  const newConstructionStarted = new Set();
+  const newConstructionCompleted = new Set();
+  const intakeStartedAny = new Set();
+  const intakeCompletedAny = new Set();
+  const topPagesByView = new Map();
+  const intakeConversions = new Map();
+  const multiStepCompletion = new Map();
+  const exitSeen = new Set();
+
+  let engagedMsTotal = 0;
+  let pageTimeMsTotal = 0;
+  let exitCount = 0;
+  let buyerLeadCount = 0;
+  let sellerLeadCount = 0;
+  let homeEvalLeadCount = 0;
+  let requestedContactLeadCount = 0;
+  let newConstructionLeadCount = 0;
+  let requestedContactBuyerLeadCount = 0;
+  let requestedContactSellerLeadCount = 0;
+  let requestedContactSellerBuyerLeadCount = 0;
+
+  const ensureIntakeConversion = function (intakeLabel) {
+    return getOrCreate_(intakeConversions, intakeLabel, function () {
+      return {
+        intake_label: intakeLabel,
+        started_sessions: new Set(),
+        completed_sessions: new Set()
+      };
+    });
+  };
+
+  events.forEach(function (ev) {
+    const sessionId = asString_(ev.session_id);
+    const popupVariant = asString_(ev.popup_variant).toLowerCase();
+    if (sessionId) {
+      visitors.add(sessionId);
+    }
+
+    if (ev.event_name === "popup_impression" && sessionId) {
+      popupImpressions.add(sessionId);
+    }
+
+    if (ev.event_name === "popup_interaction_started" && sessionId) {
+      popupInteractions.add(sessionId);
+    }
+
+    if (ev.event_name === "form_interaction_started" && sessionId) {
+      formInteractions.add(sessionId);
+    }
+
+    if (ev.event_name === "popup_started" && sessionId) {
+      intakeStartedAny.add(sessionId);
+      if (popupVariant === "call_me_modal") {
+        requestedContactStarted.add(sessionId);
+      } else if (ev.popup_lead_type === "buyer") {
+        buyerStarted.add(sessionId);
+      } else if (ev.popup_lead_type === "seller") {
+        sellerStarted.add(sessionId);
+      }
+      const intakeLabel = formatPopupIntakeLabel_(ev.popup_lead_type, ev.popup_variant);
+      ensureIntakeConversion(intakeLabel).started_sessions.add(sessionId);
+    }
+
+    if (ev.event_name === "popup_submit_success" && sessionId) {
+      intakeCompletedAny.add(sessionId);
+      if (popupVariant === "call_me_modal") {
+        requestedContactCompleted.add(sessionId);
+        requestedContactLeadCount += 1;
+
+        const contactIntent = normalizeRequestedContactIntent_(ev.contact_intent);
+        if (contactIntent === "looking_to_buy") {
+          requestedContactBuyerLeadCount += 1;
+        } else if (contactIntent === "looking_to_sell") {
+          requestedContactSellerLeadCount += 1;
+        } else if (contactIntent === "looking_to_sell_and_buy") {
+          requestedContactSellerBuyerLeadCount += 1;
+        }
+      } else if (ev.popup_lead_type === "buyer") {
+        buyerCompleted.add(sessionId);
+        buyerLeadCount += 1;
+      } else if (ev.popup_lead_type === "seller") {
+        sellerCompleted.add(sessionId);
+        sellerLeadCount += 1;
+      }
+      const intakeLabel = formatPopupIntakeLabel_(ev.popup_lead_type, ev.popup_variant);
+      ensureIntakeConversion(intakeLabel).completed_sessions.add(sessionId);
+    }
+
+    if (ev.event_name === "home_eval_started" && sessionId) {
+      homeEvalStarted.add(sessionId);
+      intakeStartedAny.add(sessionId);
+      ensureIntakeConversion("Home Valuation Form").started_sessions.add(sessionId);
+    }
+
+    if (ev.event_name === "home_eval_submit_success" && sessionId) {
+      homeEvalCompleted.add(sessionId);
+      intakeCompletedAny.add(sessionId);
+      homeEvalLeadCount += 1;
+      ensureIntakeConversion("Home Valuation Form").completed_sessions.add(sessionId);
+    }
+
+    if (ev.event_name === "new_construction_form_started" && sessionId) {
+      newConstructionStarted.add(sessionId);
+      intakeStartedAny.add(sessionId);
+      ensureIntakeConversion("New Construction Form").started_sessions.add(sessionId);
+    }
+
+    if (ev.event_name === "new_construction_form_submit_success" && sessionId) {
+      newConstructionCompleted.add(sessionId);
+      intakeCompletedAny.add(sessionId);
+      newConstructionLeadCount += 1;
+      ensureIntakeConversion("New Construction Form").completed_sessions.add(sessionId);
+    }
+
+    if ((ev.event_name === "popup_step_viewed" || ev.event_name === "popup_step_completed") && sessionId) {
+      const leadType = asString_(ev.popup_lead_type);
+      const stepNumber = toInt_(ev.step_number);
+      if (leadType && stepNumber > 0) {
+        const stepKeyName = asString_(ev.step_key) || ("step_" + stepNumber);
+        const intakeLabel = formatPopupIntakeLabel_(leadType, ev.popup_variant);
+        const aggKey = intakeLabel + "|" + String(stepNumber) + "|" + stepKeyName;
+        const stepAgg = getOrCreate_(multiStepCompletion, aggKey, function () {
+          return {
+            intake_label: intakeLabel,
+            step_number: stepNumber,
+            step_key: stepKeyName,
+            viewed_sessions: new Set(),
+            completed_sessions: new Set()
+          };
+        });
+
+        if (ev.event_name === "popup_step_viewed") {
+          stepAgg.viewed_sessions.add(sessionId);
+        } else if (ev.event_name === "popup_step_completed") {
+          stepAgg.completed_sessions.add(sessionId);
+        }
+      }
+    }
+
+    if (ev.event_name === "page_view") {
+      const pagePath = asString_(ev.page_path) || "(unknown)";
+      const entry = getOrCreate_(topPagesByView, pagePath, function () {
+        return { views: 0, sessions: new Set() };
+      });
+      entry.views += 1;
+      if (sessionId) {
+        entry.sessions.add(sessionId);
+      }
+    }
+
+    if (ev.event_name === "page_exit" && sessionId) {
+      const pagePath = asString_(ev.page_path) || "(unknown)";
+      const dateKey = asString_(ev.event_date);
+      const dedupeKey = dateKey + "|" + pagePath + "|" + sessionId;
+      if (!exitSeen.has(dedupeKey)) {
+        exitSeen.add(dedupeKey);
+        engagedMsTotal += Math.max(0, toNumber_(ev.engaged_time_ms));
+        pageTimeMsTotal += Math.max(0, toNumber_(ev.page_time_ms));
+        exitCount += 1;
+      }
+    }
+  });
+
+  const totalLeads = buyerLeadCount + sellerLeadCount + homeEvalLeadCount + requestedContactLeadCount + newConstructionLeadCount;
+  const visitorCount = visitors.size;
+
+  const topConvertingIntakes = Array.from(intakeConversions.values())
+    .map(function (entry) {
+      const startedCount = entry.started_sessions.size;
+      const completedCount = entry.completed_sessions.size;
+      return {
+        intake_label: entry.intake_label,
+        started_count: startedCount,
+        completed_count: completedCount,
+        completion_rate: rate_(completedCount, startedCount)
+      };
+    })
+    .filter(function (entry) {
+      return entry.started_count > 0;
+    })
+    .sort(function (a, b) {
+      if (a.completion_rate === b.completion_rate) {
+        return b.completed_count - a.completed_count;
+      }
+      return b.completion_rate - a.completion_rate;
+    });
+
+  const stepCompletionRows = Array.from(multiStepCompletion.values())
+    .map(function (entry) {
+      const viewedCount = entry.viewed_sessions.size;
+      const completedCount = entry.completed_sessions.size;
+      return {
+        intake_label: entry.intake_label,
+        step_number: entry.step_number,
+        step_key: entry.step_key,
+        viewed_count: viewedCount,
+        completed_count: completedCount,
+        completion_rate: rate_(completedCount, viewedCount),
+        dropoff_rate: viewedCount ? 1 - rate_(completedCount, viewedCount) : 0
+      };
+    })
+    .sort(function (a, b) {
+      if (a.intake_label !== b.intake_label) {
+        return String(a.intake_label).localeCompare(String(b.intake_label));
+      }
+      return a.step_number - b.step_number;
+    });
+
+  const topPages = Array.from(topPagesByView.entries())
+    .map(function (entry) {
+      return {
+        page_path: entry[0],
+        views: entry[1].views,
+        unique_sessions: entry[1].sessions.size
+      };
+    })
+    .sort(function (a, b) {
+      if (a.views === b.views) {
+        return b.unique_sessions - a.unique_sessions;
+      }
+      return b.views - a.views;
+    })
+    .slice(0, 5);
+
+  return {
+    range_label: range.label,
+    visitors: visitorCount,
+    total_leads: totalLeads,
+    buyer_leads: buyerLeadCount,
+    seller_leads: sellerLeadCount,
+    home_eval_leads: homeEvalLeadCount,
+    requested_contact_leads: requestedContactLeadCount,
+    new_construction_leads: newConstructionLeadCount,
+    requested_contact_buyer_leads: requestedContactBuyerLeadCount,
+    requested_contact_seller_leads: requestedContactSellerLeadCount,
+    requested_contact_seller_and_buyer_leads: requestedContactSellerBuyerLeadCount,
+    popup_impression_rate: rate_(popupImpressions.size, visitorCount),
+    popup_interaction_rate: rate_(popupInteractions.size, visitorCount),
+    form_interaction_rate: rate_(formInteractions.size, visitorCount),
+    buyer_popup_completion_rate: rate_(buyerCompleted.size, buyerStarted.size),
+    seller_popup_completion_rate: rate_(sellerCompleted.size, sellerStarted.size),
+    home_eval_completion_rate: rate_(homeEvalCompleted.size, homeEvalStarted.size),
+    requested_contact_completion_rate: rate_(requestedContactCompleted.size, requestedContactStarted.size),
+    new_construction_completion_rate: rate_(newConstructionCompleted.size, newConstructionStarted.size),
+    percent_visitors_started_any_intake: rate_(intakeStartedAny.size, visitorCount),
+    percent_visitors_completed_any_intake: rate_(intakeCompletedAny.size, visitorCount),
+    avg_engaged_seconds: exitCount ? round_(engagedMsTotal / exitCount / 1000, 2) : 0,
+    avg_time_on_site_seconds: exitCount ? round_(pageTimeMsTotal / exitCount / 1000, 2) : 0,
+    top_pages: topPages,
+    top_converting_intakes: topConvertingIntakes,
+    step_completion_rows: stepCompletionRows
+  };
+}
+
+function buildMonthlyDigestEmailBody_(summary, range) {
+  const lines = [];
+
+  lines.push("Monthly Website Analytics Digest");
+  lines.push("Date range: " + range.label);
+  lines.push("");
+  lines.push("1) Traffic Snapshot");
+  lines.push("- Total monthly visitors (sessions): " + summary.visitors);
+  lines.push("- Avg engaged time per user: " + summary.avg_engaged_seconds + " sec");
+  lines.push("- Avg time on site per user: " + summary.avg_time_on_site_seconds + " sec");
+  lines.push("");
+  lines.push("2) Lead Collection");
+  lines.push("- Total leads collected: " + summary.total_leads);
+  lines.push("- Buyer popup leads: " + summary.buyer_leads);
+  lines.push("- Seller popup leads: " + summary.seller_leads);
+  lines.push("- Requested contact popup leads: " + summary.requested_contact_leads);
+  lines.push("- Requested contact (buy intent): " + summary.requested_contact_buyer_leads);
+  lines.push("- Requested contact (sell intent): " + summary.requested_contact_seller_leads);
+  lines.push("- Requested contact (sell and buy intent): " + summary.requested_contact_seller_and_buyer_leads);
+  lines.push("- Home valuation leads: " + summary.home_eval_leads);
+  lines.push("- New construction form leads: " + summary.new_construction_leads);
+  lines.push("");
+  lines.push("3) Conversion + Engagement Rates");
+  lines.push("- Popup impression rate: " + asPercent_(summary.popup_impression_rate));
+  lines.push("- Popup interaction rate: " + asPercent_(summary.popup_interaction_rate));
+  lines.push("- Form interaction rate: " + asPercent_(summary.form_interaction_rate));
+  lines.push("- % of visitors who started any popup/form intake: " + asPercent_(summary.percent_visitors_started_any_intake));
+  lines.push("- % of visitors who completed any popup/form intake: " + asPercent_(summary.percent_visitors_completed_any_intake));
+  lines.push("- Buyer popup completion rate: " + asPercent_(summary.buyer_popup_completion_rate));
+  lines.push("- Seller popup completion rate: " + asPercent_(summary.seller_popup_completion_rate));
+  lines.push("- Requested contact popup completion rate: " + asPercent_(summary.requested_contact_completion_rate));
+  lines.push("- Home valuation completion rate: " + asPercent_(summary.home_eval_completion_rate));
+  lines.push("- New construction form completion rate: " + asPercent_(summary.new_construction_completion_rate));
+  lines.push("");
+  lines.push("4) Top Pages by Views");
+
+  if (!summary.top_pages.length) {
+    lines.push("- No page view data captured in this period.");
+  } else {
+    summary.top_pages.forEach(function (row, index) {
+      lines.push(
+        String(index + 1) + ". " + row.page_path +
+        " | views: " + row.views +
+        " | unique sessions: " + row.unique_sessions
+      );
+    });
+  }
+
+  lines.push("");
+  lines.push("5) Top Converting Intake Funnels");
+  if (!summary.top_converting_intakes.length) {
+    lines.push("- No intake conversion data captured in this period.");
+  } else {
+    summary.top_converting_intakes.forEach(function (row, index) {
+      lines.push(
+        String(index + 1) + ". " + row.intake_label +
+        " | started: " + row.started_count +
+        " | completed: " + row.completed_count +
+        " | conversion: " + asPercent_(row.completion_rate)
+      );
+    });
+  }
+
+  lines.push("");
+  lines.push("6) Multi-Page Intake Completion by Step (Dropoff View)");
+  if (!summary.step_completion_rows.length) {
+    lines.push("- No multi-step completion data captured in this period.");
+  } else {
+    summary.step_completion_rows.forEach(function (row) {
+      lines.push(
+        "- " + row.intake_label +
+        " | Step " + row.step_number + " (" + row.step_key + ")" +
+        " | viewed: " + row.viewed_count +
+        " | completed: " + row.completed_count +
+        " | completion: " + asPercent_(row.completion_rate) +
+        " | dropoff: " + asPercent_(row.dropoff_rate)
+      );
+    });
+  }
+
+  lines.push("");
+  lines.push("Automated report sent to " + CONFIG.MONTHLY_EMAIL.TO + ".");
+
+  return lines.join("\n");
+}
+
+function getLastCompleteMonthWindow_() {
+  const now = new Date();
+  const firstOfCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const end = new Date(firstOfCurrentMonth.getTime() - 24 * 60 * 60 * 1000);
+  const start = new Date(end.getFullYear(), end.getMonth(), 1);
+  const startDateKey = Utilities.formatDate(start, CONFIG.TZ, "yyyy-MM-dd");
+  const endDateKey = Utilities.formatDate(end, CONFIG.TZ, "yyyy-MM-dd");
+  const label =
+    Utilities.formatDate(start, CONFIG.TZ, "MMM d, yyyy") +
+    " - " +
+    Utilities.formatDate(end, CONFIG.TZ, "MMM d, yyyy");
+
+  return {
+    startDateKey: startDateKey,
+    endDateKey: endDateKey,
+    label: label
+  };
+}
+
+function getLastCompleteWeekWindow_() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon, ... 6=Sat
+  const daysSinceMonday = (dayOfWeek + 6) % 7;
+  const startOfCurrentWeek = new Date(today.getTime() - daysSinceMonday * 24 * 60 * 60 * 1000);
+  const end = new Date(startOfCurrentWeek.getTime() - 24 * 60 * 60 * 1000);
+  const start = new Date(end.getTime() - 6 * 24 * 60 * 60 * 1000);
+  const startDateKey = Utilities.formatDate(start, CONFIG.TZ, "yyyy-MM-dd");
+  const endDateKey = Utilities.formatDate(end, CONFIG.TZ, "yyyy-MM-dd");
+  const label =
+    Utilities.formatDate(start, CONFIG.TZ, "MMM d, yyyy") +
+    " - " +
+    Utilities.formatDate(end, CONFIG.TZ, "MMM d, yyyy");
+
+  return {
+    startDateKey: startDateKey,
+    endDateKey: endDateKey,
+    label: label
+  };
+}
+
+function filterEventsByDateRange_(events, startDateKey, endDateKey) {
+  return events.filter(function (ev) {
+    const dateKey = asString_(ev.event_date);
+    return dateKey && dateKey >= startDateKey && dateKey <= endDateKey;
+  });
+}
+
+function formatPopupIntakeLabel_(leadType, variant) {
+  const normalizedLeadType = asString_(leadType).toLowerCase();
+  const normalizedVariant = asString_(variant).toLowerCase();
+  const leadLabelMap = {
+    buyer: "Buyer",
+    seller: "Seller",
+    requested_contact: "Requested Contact",
+    seller_and_buyer: "Seller and Buyer"
+  };
+  const leadLabel = leadLabelMap[normalizedLeadType] ||
+    (normalizedLeadType ? normalizedLeadType.replace(/_/g, " ").replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) : "Unknown");
+  const variantLabelMap = {
+    inline: "Embedded Inline",
+    timed_modal: "Timed Modal",
+    call_me_modal: "Call Me Modal"
+  };
+  const variantLabel = variantLabelMap[normalizedVariant] || "Unknown Variant";
+  return leadLabel + " Popup (" + variantLabel + ")";
+}
+
+function normalizeRequestedContactIntent_(value) {
+  const normalized = asString_(value).toLowerCase();
+  if (!normalized) {
+    return "";
+  }
+  if (
+    normalized === "looking to buy" ||
+    normalized === "looking_to_buy" ||
+    normalized === "buyer"
+  ) {
+    return "looking_to_buy";
+  }
+  if (
+    normalized === "looking to sell" ||
+    normalized === "looking_to_sell" ||
+    normalized === "seller"
+  ) {
+    return "looking_to_sell";
+  }
+  if (
+    normalized === "looking to sell and purchase a home" ||
+    normalized === "looking_to_sell_and_buy" ||
+    normalized === "looking to sell and buy" ||
+    normalized === "seller_and_buyer" ||
+    normalized === "sell_and_buy"
+  ) {
+    return "looking_to_sell_and_buy";
+  }
+  return normalized.replace(/\s+/g, "_");
+}
+
+function writeTable_(sheet, headers, rows) {
+  const maxCols = sheet.getMaxColumns();
+  if (maxCols < headers.length) {
+    sheet.insertColumnsAfter(maxCols, headers.length - maxCols);
+  }
+
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+
+  if (rows.length) {
+    sheet.getRange(2, 1, rows.length, headers.length).setValues(rows);
+  }
+
+  sheet.setFrozenRows(1);
+}
+
+function normalizeEvents_(payload) {
+  if (!payload || typeof payload !== "object") {
+    return [];
+  }
+
+  const defaults = {
+    session_id: asString_(payload.session_id),
+    page_view_id: asString_(payload.page_view_id),
+    page_path: asString_(payload.page_path),
+    page_url: asString_(payload.page_url),
+    page_title: asString_(payload.page_title),
+    page_type: asString_(payload.page_type),
+    referrer: asString_(payload.referrer)
+  };
+
+  let events = [];
+  if (Array.isArray(payload.events)) {
+    events = payload.events;
+  } else if (payload.event_name) {
+    events = [payload];
+  }
+
+  return events
+    .filter(function (ev) {
+      return ev && typeof ev === "object" && !Array.isArray(ev);
+    })
+    .map(function (ev) {
+      const normalized = {};
+      Object.keys(defaults).forEach(function (key) {
+        normalized[key] = defaults[key];
+      });
+      Object.keys(ev).forEach(function (key) {
+        normalized[key] = ev[key];
+      });
+      return normalized;
+    });
+}
+
+function parseJsonBody_(e) {
+  const body = e && e.postData && typeof e.postData.contents === "string" ? e.postData.contents : "";
+  if (body) {
+    try {
+      return JSON.parse(body);
+    } catch (error) {}
+  }
+
+  if (e && e.parameter && e.parameter.payload) {
+    try {
+      return JSON.parse(e.parameter.payload);
+    } catch (error) {}
+  }
+
+  return {};
+}
+
+function jsonResponse_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function normalizeIso_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value.toISOString();
+  }
+
+  const parsed = new Date(value);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString();
+  }
+
+  return new Date().toISOString();
+}
+
+function formatDate_(isoString, pattern) {
+  const parsed = new Date(isoString);
+  if (isNaN(parsed.getTime())) {
+    return Utilities.formatDate(new Date(), CONFIG.TZ, pattern);
+  }
+  return Utilities.formatDate(parsed, CONFIG.TZ, pattern);
+}
+
+function makeIndex_(headers) {
+  const out = {};
+  headers.forEach(function (name, i) {
+    out[name] = i;
+  });
+  return out;
+}
+
+function getOrCreate_(map, key, factoryFn) {
+  if (!map.has(key)) {
+    map.set(key, factoryFn());
+  }
+  return map.get(key);
+}
+
+function rate_(numerator, denominator) {
+  const num = toNumber_(numerator);
+  const den = toNumber_(denominator);
+  if (!den) {
+    return 0;
+  }
+  return num / den;
+}
+
+function round_(value, digits) {
+  const places = toInt_(digits || 0);
+  const factor = Math.pow(10, places);
+  return Math.round(toNumber_(value) * factor) / factor;
+}
+
+function asPercent_(value) {
+  return round_(toNumber_(value) * 100, 2) + "%";
+}
+
+function getWeekDayEnum_(name) {
+  const key = asString_(name).toUpperCase();
+  const lookup = {
+    SUNDAY: ScriptApp.WeekDay.SUNDAY,
+    MONDAY: ScriptApp.WeekDay.MONDAY,
+    TUESDAY: ScriptApp.WeekDay.TUESDAY,
+    WEDNESDAY: ScriptApp.WeekDay.WEDNESDAY,
+    THURSDAY: ScriptApp.WeekDay.THURSDAY,
+    FRIDAY: ScriptApp.WeekDay.FRIDAY,
+    SATURDAY: ScriptApp.WeekDay.SATURDAY
+  };
+  return lookup[key] || ScriptApp.WeekDay.MONDAY;
+}
+
+function toNumber_(value) {
+  const n = Number(value);
+  return isFinite(n) ? n : 0;
+}
+
+function toInt_(value) {
+  return Math.round(toNumber_(value));
+}
+
+function toBoolean_(value) {
+  if (typeof value === "boolean") {
+    return value;
+  }
+  const normalized = String(value || "").trim().toLowerCase();
+  return normalized === "true" || normalized === "1" || normalized === "yes";
+}
+
+function asString_(value) {
+  if (value === null || value === undefined) {
+    return "";
+  }
+  return String(value).trim();
+}
+
+function safeJsonString_(obj) {
+  try {
+    return JSON.stringify(obj);
+  } catch (error) {
+    return "{}";
+  }
+}
+
+function authorizeWebsiteAnalyticsScriptScopes() {
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (active) {
+    active.getName();
+  }
+  MailApp.getRemainingDailyQuota();
+  return "Authorization complete. Re-deploy web app after running this once.";
+}

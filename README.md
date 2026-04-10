@@ -8,7 +8,6 @@ This repository is organized for pure static hosting on GitHub Pages using folde
 - `/2026/` 2026 guide lead magnet
 - `/areas/` areas hub
 - `/videos/` videos page
-- `/contact/` contact page
 
 ## Shared assets
 - `/assets/css/styles.css`

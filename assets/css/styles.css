@@ -43,6 +43,18 @@ a {
   color: inherit;
 }
 
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
 .site-shell {
   min-height: 100vh;
   display: flex;
@@ -659,6 +671,128 @@ a {
   text-underline-offset: 3px;
 }
 
+.page-404 .error-hero {
+  position: relative;
+  isolation: isolate;
+  padding: clamp(3.2rem, 8vw, 5.5rem) 0 clamp(3rem, 7vw, 4.8rem);
+  background:
+    radial-gradient(circle at 88% 10%, rgba(198, 156, 44, 0.2) 0%, rgba(198, 156, 44, 0) 45%),
+    linear-gradient(150deg, #1f4b5e 0%, #1a4254 52%, #183b4c 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(8, 31, 41, 0.5);
+  color: #f3f8fa;
+}
+
+.page-404 .error-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(17, 40, 51, 0.1) 0%, rgba(8, 25, 35, 0.52) 100%);
+  z-index: -1;
+}
+
+.page-404 .error-hero-inner {
+  width: min(100% - 3rem, 980px);
+  margin-inline: auto;
+}
+
+.page-404 .error-hero-script {
+  margin: 0;
+  font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
+  font-size: clamp(2.05rem, 3.4vw, 3.1rem);
+  line-height: 0.9;
+  color: #d7af4e;
+}
+
+.page-404 .error-hero h1 {
+  margin: 0.25rem 0 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(2.1rem, 6vw, 4.2rem);
+  line-height: 0.93;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: #f6fbfd;
+}
+
+.page-404 .error-hero-inner > p:not(.error-hero-script):not(.error-hero-path) {
+  margin: 1rem 0 0;
+  max-width: 820px;
+  color: rgba(229, 242, 246, 0.95);
+  font-size: clamp(1rem, 1.5vw, 1.18rem);
+  line-height: 1.65;
+}
+
+.page-404 .error-hero-path {
+  margin: 0.9rem 0 0;
+  color: rgba(206, 227, 234, 0.92);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.page-404 .error-hero-path code {
+  display: inline-block;
+  padding: 0.24rem 0.5rem;
+  border-radius: 7px;
+  background: rgba(8, 31, 41, 0.62);
+  border: 1px solid rgba(169, 197, 207, 0.32);
+  color: #f4f9fb;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+}
+
+.page-404 .error-hero-actions {
+  margin-top: 1.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.page-404 .error-hero-actions .btn {
+  min-width: 210px;
+  text-align: center;
+}
+
+.page-404 .error-hero-meta {
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem 1.2rem;
+}
+
+.page-404 .error-hero-meta p {
+  margin: 0;
+  color: rgba(201, 224, 232, 0.94);
+  font-size: 0.9rem;
+}
+
+.page-404 .error-hero-meta strong {
+  color: #f5d481;
+}
+
+.page-404 .error-cancel-btn {
+  border: 1px solid rgba(203, 224, 231, 0.42);
+  background: rgba(13, 36, 48, 0.44);
+  color: #eff8fb;
+  padding: 0.46rem 0.78rem;
+  border-radius: 999px;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+.page-404 .error-cancel-btn:hover,
+.page-404 .error-cancel-btn:focus-visible {
+  background: rgba(13, 36, 48, 0.7);
+  border-color: rgba(214, 236, 243, 0.75);
+}
+
+.page-404 .error-cancel-btn:disabled {
+  opacity: 0.56;
+  cursor: default;
+}
+
 .page-about .home-template .about-partner-showcase {
   background: #244021;
   border-top: 1px solid rgba(255, 255, 255, 0.16);
@@ -1079,15 +1213,44 @@ a {
 
 .page-learning-center .learning-blog-playlist-section--hero-bg {
   position: relative;
-  overflow: hidden;
-  background-image:
-    linear-gradient(180deg, rgba(12, 34, 47, 0.68), rgba(10, 26, 36, 0.82)),
-    url("/assets/images/buy/downtown-raleigh-buy-hero.jpg?v=20260326a");
+  overflow: visible;
+  background-image: url("/assets/images/buy/downtown-raleigh-buy-hero.jpg?v=20260326a");
   background-size: cover;
   background-position: center 58%;
   background-repeat: no-repeat;
+  background-color: #0c2230;
   border-top: 1px solid rgba(255, 255, 255, 0.14);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+  border-bottom: 0;
+}
+
+.page-learning-center .learning-blog-playlist-section--hero-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(12, 34, 47, 0.72), rgba(10, 26, 36, 0.9));
+}
+
+.page-learning-center .learning-blog-playlist-section--hero-bg::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -82px;
+  height: 104px;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(10, 26, 36, 0.9) 0%, rgba(10, 26, 36, 0.55) 62%, rgba(10, 26, 36, 0) 100%);
+}
+
+.page-learning-center .learning-blog-playlist-section--hero-bg > * {
+  position: relative;
+  z-index: 1;
+}
+
+.page-learning-center .learning-blog-playlist-section--hero-bg + .home-guide-download.template-band {
+  position: relative;
+  z-index: 1;
+  border-top: 0;
 }
 
 .page-learning-center .learning-blog-playlist-section--hero-bg .learning-blog-playlist-head {
@@ -1253,6 +1416,296 @@ a {
   letter-spacing: 0.07em;
   text-transform: uppercase;
   color: #d3a63f;
+}
+
+.page-learning-center .learning-article-band {
+  background: linear-gradient(180deg, #f5f8f9 0%, #edf3f5 100%);
+  border-top: 1px solid rgba(18, 53, 64, 0.1);
+  border-bottom: 1px solid rgba(18, 53, 64, 0.12);
+}
+
+.page-learning-center .learning-article-shell {
+  width: min(100% - 2.5rem, 1240px);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 320px);
+  gap: clamp(1rem, 1.9vw, 1.65rem);
+  align-items: start;
+}
+
+.page-learning-center .learning-article-main {
+  background: #ffffff;
+  border: 1px solid rgba(16, 49, 61, 0.14);
+  box-shadow: 0 18px 38px rgba(8, 27, 37, 0.08);
+  padding: clamp(1.2rem, 2.2vw, 2rem);
+}
+
+.page-learning-center .learning-article-meta {
+  margin: 0;
+  font-size: clamp(0.78rem, 0.9vw, 0.88rem);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #32596c;
+}
+
+.page-learning-center .learning-article-main h2 {
+  margin: clamp(1.3rem, 2vw, 1.65rem) 0 0.75rem;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.45rem, 2.1vw, 2.15rem);
+  line-height: 1.12;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  color: #163d4f;
+}
+
+.page-learning-center .learning-article-main h3 {
+  margin: clamp(1.2rem, 1.85vw, 1.45rem) 0 0.62rem;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.1rem, 1.45vw, 1.34rem);
+  line-height: 1.16;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  color: #1d4558;
+}
+
+.page-learning-center .learning-article-lead {
+  margin: 0.7rem 0 0;
+  font-size: clamp(1rem, 1.15vw, 1.22rem);
+  line-height: 1.58;
+  color: #1c3f4f;
+}
+
+.page-learning-center .learning-article-main p {
+  margin: 0.72rem 0 0;
+  font-size: clamp(0.95rem, 1.04vw, 1.08rem);
+  line-height: 1.62;
+  color: #264857;
+}
+
+.page-learning-center .learning-article-main strong {
+  color: #193d4c;
+  font-weight: 800;
+}
+
+.page-learning-center .learning-article-figure {
+  margin: 1.05rem 0 0;
+  border: 1px solid rgba(19, 54, 68, 0.16);
+  overflow: hidden;
+  background: #f6f8f9;
+  max-width: 860px;
+}
+
+.page-learning-center .learning-article-figure img {
+  width: 100%;
+  height: clamp(200px, 33vw, 340px);
+  object-fit: cover;
+  display: block;
+}
+
+.page-learning-center .learning-article-figure figcaption {
+  margin: 0;
+  padding: 0.68rem 0.78rem 0.76rem;
+  font-size: clamp(0.78rem, 0.9vw, 0.88rem);
+  line-height: 1.4;
+  color: #47606d;
+  background: #f8fafb;
+}
+
+.page-learning-center .learning-article-checklist {
+  margin: 0.88rem 0 0;
+  padding-left: 1.16rem;
+  display: grid;
+  gap: 0.48rem;
+}
+
+.page-learning-center .learning-article-checklist li {
+  color: #214556;
+  line-height: 1.55;
+}
+
+.page-learning-center .learning-article-note {
+  margin: 1rem 0 0;
+  padding: 0.82rem 0.86rem;
+  border-left: 4px solid #c49a34;
+  background: rgba(196, 154, 52, 0.09);
+  font-size: clamp(0.92rem, 1vw, 1rem);
+  line-height: 1.58;
+  color: #234759;
+}
+
+.page-learning-center .learning-article-aside {
+  position: sticky;
+  top: 1.2rem;
+  background: linear-gradient(180deg, #1f4f67 0%, #19475d 100%);
+  border: 1px solid rgba(14, 42, 55, 0.3);
+  color: #eef5f7;
+  padding: clamp(1rem, 1.45vw, 1.25rem);
+}
+
+.page-learning-center .learning-article-aside h3 {
+  margin: 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.18rem, 1.35vw, 1.34rem);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.page-learning-center .learning-article-aside p {
+  margin: 0.7rem 0 0;
+  font-size: clamp(0.9rem, 0.95vw, 0.98rem);
+  line-height: 1.55;
+  color: #d8e8ee;
+}
+
+.page-learning-center .learning-article-aside ul {
+  margin: 0.78rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.42rem;
+}
+
+.page-learning-center .learning-article-aside li {
+  font-size: clamp(0.88rem, 0.92vw, 0.95rem);
+  line-height: 1.45;
+  color: #e5f0f4;
+}
+
+.page-learning-center .learning-article-cta {
+  margin-top: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  width: 100%;
+  padding: 0.55rem 0.92rem;
+  background: #c49a34;
+  color: #ffffff;
+  text-decoration: none;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.page-learning-center .learning-article-cta:hover,
+.page-learning-center .learning-article-cta:focus-visible {
+  background: #b68b24;
+}
+
+.page-learning-center .learning-related-video-embed {
+  background: #e9eff1;
+  border-top: 1px solid rgba(15, 44, 56, 0.12);
+  border-bottom: 1px solid rgba(15, 44, 56, 0.12);
+}
+
+.page-learning-center .learning-related-video-embed-inner {
+  width: min(100% - 2.5rem, 1240px);
+  margin-inline: auto;
+  display: grid;
+  gap: clamp(0.95rem, 1.5vw, 1.35rem);
+}
+
+.page-learning-center .learning-related-video-embed-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem 2rem;
+}
+
+.page-learning-center .learning-related-video-embed-script {
+  margin: 0;
+  font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
+  font-size: clamp(1.8rem, 2.5vw, 2.5rem);
+  line-height: 0.94;
+  color: #c49a34;
+}
+
+.page-learning-center .learning-related-video-embed-head h2 {
+  margin: 0.34rem 0 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.75rem, 2.8vw, 2.7rem);
+  line-height: 0.95;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  color: #1f4b5e;
+}
+
+.page-learning-center .learning-related-video-embed-link {
+  justify-self: end;
+  align-self: start;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(190px, 18vw, 250px);
+  min-height: 52px;
+  padding: 0.6rem 1.1rem;
+  background: #c49a34;
+  color: #ffffff;
+  text-decoration: none;
+  font-size: clamp(0.96rem, 1.05vw, 1.08rem);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.page-learning-center .learning-related-video-embed-link:hover,
+.page-learning-center .learning-related-video-embed-link:focus-visible {
+  background: #b68b24;
+}
+
+.page-learning-center .learning-related-video-embed-frame {
+  width: min(100%, 900px);
+  justify-self: center;
+  border: 1px solid rgba(17, 44, 54, 0.16);
+  box-shadow: 0 18px 38px rgba(8, 27, 37, 0.16);
+  background: #000000;
+}
+
+.page-learning-center .learning-related-video-embed-frame iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 0;
+  display: block;
+}
+
+@media (max-width: 1100px) {
+  .page-learning-center .learning-article-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .page-learning-center .learning-article-aside {
+    position: static;
+  }
+}
+
+@media (max-width: 820px) {
+  .page-learning-center .learning-article-shell,
+  .page-learning-center .learning-related-video-embed-inner {
+    width: min(100% - 2rem, 1240px);
+  }
+
+  .page-learning-center .learning-related-video-embed-head {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .page-learning-center .learning-related-video-embed-link {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .page-learning-center .learning-article-shell,
+  .page-learning-center .learning-related-video-embed-inner {
+    width: min(100% - 1.3rem, 1240px);
+  }
+
+  .page-learning-center .learning-related-video-embed-link {
+    width: min(100%, 320px);
+    min-width: 0;
+  }
 }
 
 .page-relocation .relocation-plan-band {
@@ -2050,6 +2503,362 @@ a {
 
 .page-new-construction-process .new-construction-intake.is-success .new-construction-intake-success {
   opacity: 1;
+}
+
+.page-new-construction-process .new-construction-discover-script {
+  font-size: clamp(3rem, 5vw, 5rem);
+  color: #dfb24b;
+}
+
+.page-new-construction-process .new-construction-compare {
+  padding: clamp(1.25rem, 2.4vw, 2rem) 0;
+}
+
+.page-new-construction-process .new-construction-compare-inner {
+  width: min(100% - 2rem, 1120px);
+  background: #dcdcdc;
+}
+
+.page-new-construction-process .new-construction-compare-copy {
+  padding: clamp(1rem, 2vw, 1.8rem) clamp(1rem, 2.1vw, 2rem);
+}
+
+.page-new-construction-process .new-construction-compare-script {
+  white-space: nowrap;
+  font-size: clamp(1.85rem, 2.65vw, 2.6rem);
+}
+
+.page-new-construction-process .new-construction-compare-copy h2 {
+  font-size: clamp(1.55rem, 2.8vw, 2.45rem);
+  max-width: 19ch;
+}
+
+.page-new-construction-process .new-construction-compare-intro {
+  font-size: clamp(0.95rem, 1.03vw, 1.1rem);
+  line-height: 1.42;
+  color: #d8bb66;
+}
+
+.page-new-construction-process .new-construction-compare-list {
+  gap: 0.58rem;
+}
+
+.page-new-construction-process .new-construction-compare-list li {
+  font-size: clamp(0.92rem, 0.98vw, 1.04rem);
+}
+
+.page-new-construction-process .new-construction-compare-media {
+  min-height: clamp(250px, 30vw, 390px);
+}
+
+.page-new-construction-process .new-construction-intake {
+  background: #1f5369;
+  padding: 0;
+}
+
+.page-new-construction-process .new-construction-intake-inner {
+  width: 100%;
+  max-width: none;
+  grid-template-columns: 1fr;
+}
+
+.page-new-construction-process .new-construction-intake-form-wrap {
+  width: min(100% - 2.4rem, 1160px);
+  padding: clamp(1rem, 2vw, 1.6rem) 0 clamp(1.1rem, 2.2vw, 1.8rem);
+}
+
+.page-new-construction-process .new-construction-intake-script {
+  font-size: clamp(1.9rem, 3vw, 2.9rem);
+}
+
+.page-new-construction-process .new-construction-intake-form-wrap h2 {
+  font-size: clamp(2rem, 3.7vw, 3.4rem);
+}
+
+.page-new-construction-process .new-construction-intake-copy {
+  margin-top: 0.56rem;
+  max-width: 95ch;
+  font-size: clamp(0.94rem, 1.02vw, 1.06rem);
+}
+
+.page-new-construction-process .new-construction-intake-form {
+  margin-top: 0.76rem;
+}
+
+.page-new-construction-process .new-construction-intake-textarea {
+  min-height: 90px;
+}
+
+.page-new-construction-process .new-construction-intake-media {
+  display: none;
+}
+
+.page-new-construction-process .new-construction-intake .legal-consent-copy,
+.page-new-construction-process .new-construction-intake .legal-consent-meta,
+.page-new-construction-process .new-construction-intake .legal-consent-checkbox span {
+  color: #f3fbff !important;
+  font-size: clamp(0.92rem, 0.96vw, 1rem);
+  line-height: 1.56;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.page-new-construction-process .new-construction-intake .legal-consent-note {
+  color: #f3fbff !important;
+  font-weight: 600;
+}
+
+.page-new-construction-process .new-construction-intake .legal-consent-links {
+  margin-top: 0.42rem;
+}
+
+.page-new-construction-process .new-construction-intake .legal-consent-links a {
+  color: #ffffff !important;
+  font-weight: 800;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.page-new-construction-process .new-construction-search-embed-section {
+  position: relative;
+  overflow: hidden;
+  background: #edf0ef;
+  padding: clamp(1.7rem, 3.1vw, 2.4rem) 0 clamp(2rem, 4vw, 3.1rem);
+}
+
+.page-new-construction-process .new-construction-search-embed-section::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/assets/images/home/communities-lotlines-bg.jpg?v=20260319-lotlines1");
+  background-size: 300px auto;
+  background-position: center top;
+  background-repeat: repeat;
+  opacity: 0.53;
+  filter: grayscale(1) contrast(1.36) brightness(1.12);
+  pointer-events: none;
+}
+
+.page-new-construction-process .new-construction-search-embed-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(243, 246, 245, 0.86), rgba(243, 246, 245, 0.94));
+  pointer-events: none;
+}
+
+.page-new-construction-process .new-construction-search-embed-section .buy-search-intro {
+  position: relative;
+  z-index: 2;
+  width: min(100% - 1rem, 1260px);
+  margin: 0 auto clamp(1.2rem, 2.2vw, 1.8rem);
+  text-align: center;
+}
+
+.page-new-construction-process .new-construction-search-embed-section .buy-search-intro-script {
+  margin: 0;
+  font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
+  font-size: clamp(2.05rem, 3.4vw, 3.4rem);
+  line-height: 0.92;
+  color: #b88d28;
+}
+
+.page-new-construction-process .new-construction-search-embed-section .buy-search-intro h2 {
+  margin: 0.35rem 0 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.8rem, 3.85vw, 3.2rem);
+  line-height: 0.92;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #1f4b5e;
+}
+
+.page-new-construction-process .new-construction-search-embed-section .buy-search-intro p:not(.buy-search-intro-script) {
+  margin: clamp(0.9rem, 1.5vw, 1.16rem) auto 0;
+  max-width: 72ch;
+  font-size: clamp(0.94rem, 1.1vw, 1.16rem);
+  line-height: 1.45;
+  color: #102833;
+}
+
+.page-new-construction-process .new-construction-search-embed-section .buy-search-embed-inner {
+  position: relative;
+  z-index: 2;
+  width: min(100% - 1rem, 1360px);
+  margin-inline: auto;
+}
+
+.page-new-construction-process .new-construction-search-embed-section .buy-search-embed-shell {
+  background: #ffffff;
+  border: 1px solid rgba(16, 55, 42, 0.14);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 16px 36px rgba(20, 33, 24, 0.12);
+}
+
+.page-new-construction-process .new-construction-search-embed-section .buy-search-embed-frame {
+  width: 100%;
+  min-height: clamp(600px, 73vh, 860px);
+  border: 0;
+  display: block;
+  background: #ffffff;
+}
+
+.page-affordable-hotlist .buy-hero-inner {
+  padding: clamp(1.75rem, 3.3vw, 2.65rem) 0 clamp(1.9rem, 3.5vw, 2.85rem);
+}
+
+.page-affordable-hotlist .buy-hero h1 {
+  margin-top: 0.2rem;
+}
+
+.page-affordable-hotlist .affordable-hotlist-overview {
+  background: #2f7f53;
+  padding: clamp(1.4rem, 2.7vw, 2.4rem) 0 clamp(1.7rem, 3.1vw, 2.8rem);
+  border-top: 0;
+  border-bottom: 0;
+}
+
+.page-affordable-hotlist .affordable-hotlist-overview-inner {
+  width: min(100% - 2rem, 1240px);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  align-items: center;
+  gap: clamp(1.1rem, 2vw, 1.9rem);
+}
+
+.page-affordable-hotlist .affordable-hotlist-overview-copy {
+  color: #ffffff;
+}
+
+.page-affordable-hotlist .affordable-hotlist-overview-script {
+  margin: 0;
+  font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
+  font-size: clamp(2rem, 3.2vw, 3.4rem);
+  line-height: 0.92;
+  color: #c49a34;
+}
+
+.page-affordable-hotlist .affordable-hotlist-overview-copy h2 {
+  margin: 0.22rem 0 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.9rem, 3.6vw, 3.2rem);
+  line-height: 0.93;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #ffffff;
+}
+
+.page-affordable-hotlist .affordable-hotlist-overview-copy p:not(.affordable-hotlist-overview-script) {
+  margin: clamp(0.7rem, 1.2vw, 1rem) 0 0;
+  max-width: 72ch;
+  font-size: clamp(0.94rem, 1.06vw, 1.12rem);
+  line-height: 1.47;
+  color: #ecf6f0;
+}
+
+.page-affordable-hotlist .affordable-hotlist-overview-video-shell {
+  position: relative;
+  width: min(100%, 760px);
+  justify-self: end;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 18px 42px rgba(9, 29, 18, 0.28);
+  background: #102e24;
+  aspect-ratio: 16 / 9;
+}
+
+.page-affordable-hotlist .affordable-hotlist-overview-video-shell iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+.page-affordable-hotlist .home-template .home-featured-videos[data-video-feed-key] .home-featured-videos-inner {
+  width: min(100% - 3rem, 1156px);
+}
+
+.page-affordable-hotlist .home-template .home-featured-videos-head {
+  gap: 0.95rem 1.7rem;
+}
+
+.page-affordable-hotlist .home-template .home-featured-videos-script {
+  font-size: clamp(1.7rem, 2.42vw, 2.55rem);
+}
+
+.page-affordable-hotlist .home-template .home-featured-videos-copy h2 {
+  font-size: clamp(1.7rem, 3.25vw, 3.18rem);
+}
+
+.page-affordable-hotlist .home-template .home-featured-videos-copy .section-copy {
+  font-size: clamp(0.78rem, 0.85vw, 0.97rem);
+}
+
+.page-affordable-hotlist .home-template .home-featured-videos[data-video-feed-key] .home-video-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.64rem, 0.98vw, 0.85rem);
+}
+
+.page-affordable-hotlist .home-template .home-video-play {
+  width: 53px;
+  height: 39px;
+}
+
+.page-affordable-hotlist .home-template .home-video-play::before {
+  left: 20px;
+  top: 11px;
+  border-left-width: 13px;
+  border-top-width: 8px;
+  border-bottom-width: 8px;
+}
+
+.page-affordable-hotlist .home-template .home-video-meta {
+  padding: 0.75rem 0.8rem 0.85rem;
+}
+
+.page-affordable-hotlist .home-template .home-video-title {
+  font-size: clamp(0.85rem, 0.94vw, 1.1rem);
+}
+
+.page-affordable-hotlist .home-template .home-video-sub {
+  margin-top: 0.28rem;
+  font-size: clamp(0.68rem, 0.72vw, 0.82rem);
+}
+
+@media (max-width: 1024px) {
+  .page-affordable-hotlist .affordable-hotlist-overview-inner {
+    grid-template-columns: 1fr;
+  }
+
+  .page-affordable-hotlist .affordable-hotlist-overview-video-shell {
+    justify-self: start;
+    width: 100%;
+    max-width: 820px;
+  }
+
+  .page-affordable-hotlist .home-template .home-featured-videos[data-video-feed-key] .home-video-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .page-affordable-hotlist .home-template .home-featured-videos[data-video-feed-key] .home-video-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Hard override so Discover remains large and gold on New Construction page. */
+.page-new-construction-process .new-construction-discover-copy .new-construction-discover-script {
+  font-size: clamp(3.2rem, 5.4vw, 5.3rem) !important;
+  color: #dfb24b !important;
+  font-weight: 700;
+  line-height: 0.9;
 }
 
 @media (max-width: 1024px) {
@@ -3447,6 +4256,41 @@ main {
   margin-inline: auto;
 }
 
+.page-hottest-deals .home-template .home-featured-videos-head {
+  grid-template-columns: 1fr;
+}
+
+.page-hottest-deals .home-template .home-featured-videos[data-video-feed-key] .home-video-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.page-hottest-deals .home-template .home-video-pagination {
+  display: none !important;
+}
+
+.page-hottest-deals .home-template .home-featured-videos-copy h2 {
+  white-space: nowrap;
+  font-size: clamp(1.7rem, 3.05vw, 3.15rem);
+}
+
+@media (max-width: 1024px) {
+  .page-hottest-deals .home-template .home-featured-videos-copy h2 {
+    white-space: normal;
+  }
+
+  .page-hottest-deals .home-template .home-featured-videos[data-video-feed-key] .home-video-grid {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+}
+
+@media (max-width: 640px) {
+  .page-hottest-deals .home-template .home-featured-videos[data-video-feed-key] .home-video-grid {
+    grid-template-columns: 1fr;
+    justify-content: stretch;
+  }
+}
+
 .home-template .home-video-card {
   position: relative;
   display: flex;
@@ -3564,6 +4408,473 @@ main {
   background: #1f4b5e;
   border-color: #1f4b5e;
   color: #ffffff;
+}
+
+.home-template .suburb-school-stats {
+  background: linear-gradient(180deg, #1f4f67 0%, #153f52 100%);
+  border-top: 1px solid rgba(12, 36, 48, 0.32);
+  border-bottom: 1px solid rgba(12, 36, 48, 0.42);
+  color: #edf5f7;
+}
+
+.home-template .suburb-school-stats-inner {
+  width: min(100% - 4.5rem, 1650px);
+  margin-inline: auto;
+}
+
+.home-template .suburb-school-stats-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem 2rem;
+}
+
+.home-template .suburb-school-stats-script {
+  margin: 0;
+  font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
+  font-size: clamp(2rem, 2.8vw, 3rem);
+  line-height: 0.92;
+  color: #c49a34;
+}
+
+.home-template .suburb-school-stats-copy h2 {
+  margin: 0.3rem 0 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.9rem, 3.75vw, 3.35rem);
+  line-height: 0.94;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  color: #f4f8fa;
+}
+
+.home-template .suburb-school-stats-link {
+  align-self: start;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: clamp(210px, 21vw, 292px);
+  min-height: 54px;
+  padding: 0.6rem 1.25rem;
+  background: #c49a34;
+  color: #163b4b;
+  text-decoration: none;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(0.92rem, 1.04vw, 1.05rem);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  transition: background 0.2s ease;
+}
+
+.home-template .suburb-school-stats-link:hover,
+.home-template .suburb-school-stats-link:focus-visible {
+  background: #b68b24;
+}
+
+.home-template .suburb-school-stats-subhead {
+  margin: clamp(1rem, 1.4vw, 1.3rem) 0 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(0.88rem, 0.95vw, 1.02rem);
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: #d9e7ec;
+}
+
+.home-template .suburb-school-stats-grid {
+  margin-top: clamp(0.95rem, 1.4vw, 1.35rem);
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.75rem, 1vw, 1rem);
+}
+
+.home-template .suburb-school-card {
+  background: #f3f4f5;
+  color: #27353c;
+  border: 1px solid rgba(15, 45, 59, 0.16);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.home-template .suburb-school-card-head {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.85rem;
+  background: #ffffff;
+  border-bottom: 1px solid rgba(17, 44, 54, 0.16);
+}
+
+.home-template .suburb-school-card-badge {
+  flex: 0 0 auto;
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0.35rem 0.45rem;
+  border-radius: 6px;
+  background: #c49a34;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+
+.home-template .suburb-school-card-head h3 {
+  margin: 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.2rem, 1.24vw, 1.38rem);
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  color: #24353d;
+}
+
+.home-template .suburb-school-card-head p {
+  margin: 0.22rem 0 0;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #5c6b73;
+  letter-spacing: 0.02em;
+}
+
+.home-template .suburb-school-card-list {
+  margin: 0;
+}
+
+.home-template .suburb-school-card-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.58rem 0.85rem;
+  border-top: 1px solid rgba(17, 44, 54, 0.12);
+}
+
+.home-template .suburb-school-card-row dt {
+  margin: 0;
+  font-size: clamp(0.84rem, 0.9vw, 0.95rem);
+  line-height: 1.35;
+  color: #4c5c64;
+}
+
+.home-template .suburb-school-card-row dd {
+  margin: 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1rem, 1.03vw, 1.12rem);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #23353e;
+}
+
+.home-template .suburb-school-stats-footnote {
+  margin: clamp(0.95rem, 1.4vw, 1.25rem) 0 0;
+  max-width: 120ch;
+  font-size: clamp(0.74rem, 0.82vw, 0.86rem);
+  line-height: 1.44;
+  color: rgba(233, 242, 246, 0.92);
+}
+
+@media (max-width: 1200px) {
+  .home-template .suburb-school-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-template .suburb-school-stats-grid .suburb-school-card:last-child {
+    grid-column: 1 / -1;
+    max-width: 560px;
+    width: 100%;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 820px) {
+  .home-template .suburb-school-stats-inner {
+    width: min(100% - 2rem, 1650px);
+  }
+
+  .home-template .suburb-school-stats-head {
+    grid-template-columns: 1fr;
+  }
+
+  .home-template .suburb-school-stats-link {
+    justify-self: start;
+  }
+
+  .home-template .suburb-school-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .home-template .suburb-school-stats-grid .suburb-school-card:last-child {
+    max-width: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-template .suburb-school-stats-link {
+    width: min(100%, 320px);
+    min-width: 0;
+  }
+
+  .home-template .suburb-school-card-head {
+    padding-inline: 0.75rem;
+  }
+
+  .home-template .suburb-school-card-row {
+    padding-inline: 0.75rem;
+  }
+}
+
+.home-template .suburb-local-highlights {
+  background: linear-gradient(180deg, #1f4f67 0%, #153f52 100%);
+  border-top: 1px solid rgba(12, 36, 48, 0.34);
+  border-bottom: 1px solid rgba(12, 36, 48, 0.44);
+  color: #edf5f7;
+}
+
+.home-template .suburb-local-highlights-inner {
+  width: min(100% - 4.5rem, 1400px);
+  margin-inline: auto;
+}
+
+.home-template .suburb-local-highlights-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 1rem 2rem;
+}
+
+.home-template .suburb-local-highlights-script {
+  margin: 0;
+  font-family: "Caveat", "Brush Script MT", "Segoe Script", cursive;
+  font-size: clamp(2rem, 2.8vw, 3rem);
+  line-height: 0.92;
+  color: #c49a34;
+}
+
+.home-template .suburb-local-highlights-copy h2 {
+  margin: 0.3rem 0 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.9rem, 3.75vw, 3.35rem);
+  line-height: 0.94;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  color: #f4f8fa;
+}
+
+.home-template .suburb-local-highlights-filter-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  justify-self: end;
+}
+
+.home-template .suburb-local-highlights-filter-label {
+  display: none;
+}
+
+.home-template .suburb-local-highlights-filter-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.1rem;
+  font-size: 1rem;
+  line-height: 1;
+  color: #ffffff;
+  text-shadow: 0 2px 5px rgba(0, 0, 0, 0.32);
+}
+
+.home-template .suburb-local-highlights-filter {
+  min-width: clamp(180px, 18vw, 220px);
+  min-height: 50px;
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  border-radius: 4px;
+  background: #c49a34;
+  color: #ffffff;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+  padding: 0.55rem 2.2rem 0.55rem 0.82rem;
+  appearance: none;
+  cursor: pointer;
+  background-image:
+    linear-gradient(45deg, transparent 50%, #ffffff 50%),
+    linear-gradient(135deg, #ffffff 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) calc(50% - 2px),
+    calc(100% - 12px) calc(50% - 2px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+}
+
+.home-template .suburb-local-highlights-filter:focus-visible {
+  outline: 2px solid #f4f8fa;
+  outline-offset: 2px;
+}
+
+.home-template .suburb-local-highlights-grid {
+  margin-top: clamp(0.95rem, 1.45vw, 1.35rem);
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: clamp(0.75rem, 1vw, 1rem);
+  justify-items: center;
+}
+
+.home-template .suburb-local-highlights-card {
+  position: relative;
+  width: 100%;
+  max-width: clamp(220px, 18vw, 255px);
+  min-height: clamp(204px, 17.85vw, 255px);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 6px;
+  overflow: hidden;
+  text-decoration: none;
+  color: #ffffff;
+  background-image:
+    linear-gradient(180deg, rgba(9, 27, 35, 0.16) 0%, rgba(8, 21, 28, 0.76) 100%),
+    var(--suburb-local-highlight-image);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 18px 34px rgba(6, 18, 25, 0.34);
+  transition: transform 0.22s ease, box-shadow 0.22s ease;
+}
+
+.home-template .suburb-local-highlights-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(9, 21, 28, 0.03) 26%, rgba(6, 12, 16, 0.82) 100%);
+}
+
+.home-template .suburb-local-highlights-card:hover,
+.home-template .suburb-local-highlights-card:focus-visible {
+  transform: translateY(-3px);
+  box-shadow: 0 24px 38px rgba(6, 18, 25, 0.44);
+}
+
+.home-template .suburb-local-highlights-card:focus-visible {
+  outline: 2px solid #f4f8fa;
+  outline-offset: 2px;
+}
+
+.home-template .suburb-local-highlights-card-content {
+  position: absolute;
+  left: 0.8rem;
+  right: 0.8rem;
+  bottom: 0.75rem;
+  z-index: 1;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.home-template .suburb-local-highlights-card-name {
+  margin: 0;
+  font-family: "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.12rem, 1.2vw, 1.28rem);
+  line-height: 1.02;
+  letter-spacing: 0.01em;
+  font-weight: 800;
+  text-transform: uppercase;
+  text-shadow: 0 5px 12px rgba(0, 0, 0, 0.5);
+}
+
+.home-template .suburb-local-highlights-card-tagline {
+  margin: 0;
+  font-size: clamp(0.8rem, 0.85vw, 0.92rem);
+  line-height: 1.35;
+  color: rgba(233, 241, 246, 0.95);
+  text-shadow: 0 3px 8px rgba(0, 0, 0, 0.58);
+}
+
+.home-template .suburb-local-highlights-card-meta {
+  display: grid;
+  gap: 0.16rem;
+}
+
+.home-template .suburb-local-highlights-card-meta:empty {
+  display: none;
+}
+
+.home-template .suburb-local-highlights-card-rating {
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  color: rgba(242, 248, 252, 0.95);
+  text-shadow: 0 3px 7px rgba(0, 0, 0, 0.58);
+}
+
+.home-template .suburb-local-highlights-card-stars {
+  color: #f2be44;
+  letter-spacing: 0.07em;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.home-template .suburb-local-highlights-card-reviews {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: rgba(222, 234, 241, 0.92);
+  text-shadow: 0 3px 7px rgba(0, 0, 0, 0.58);
+}
+
+.home-template .suburb-local-highlights-footnote {
+  margin: clamp(0.9rem, 1.3vw, 1.2rem) 0 0;
+  max-width: 100ch;
+  font-size: clamp(0.74rem, 0.82vw, 0.86rem);
+  line-height: 1.44;
+  color: rgba(233, 242, 246, 0.9);
+}
+
+.home-template .suburb-local-highlights-empty {
+  grid-column: 1 / -1;
+  min-height: 170px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 1.2rem;
+  border: 1px dashed rgba(226, 239, 245, 0.4);
+  border-radius: 6px;
+  color: rgba(224, 237, 244, 0.93);
+  font-size: 0.95rem;
+}
+
+@media (max-width: 1200px) {
+  .home-template .suburb-local-highlights-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .home-template .suburb-local-highlights-inner {
+    width: min(100% - 2rem, 1400px);
+  }
+
+  .home-template .suburb-local-highlights-head {
+    grid-template-columns: 1fr;
+  }
+
+  .home-template .suburb-local-highlights-filter-wrap {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-template .suburb-local-highlights-filter {
+    width: min(100%, 320px);
+    min-width: 0;
+  }
+
+  .home-template .suburb-local-highlights-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .home-video-modal {
@@ -5005,6 +6316,15 @@ textarea {
 
   .page-about .about-hero-contact a {
     font-size: clamp(0.95rem, 4.2vw, 1.2rem);
+  }
+
+  .page-404 .error-hero-inner {
+    width: min(100% - 1.6rem, 980px);
+  }
+
+  .page-404 .error-hero-actions .btn {
+    min-width: 0;
+    width: 100%;
   }
 
   .page-about .about-partner-showcase .home-partner-cards {

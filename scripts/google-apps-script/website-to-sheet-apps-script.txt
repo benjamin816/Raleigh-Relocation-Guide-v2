@@ -1,0 +1,735 @@
+const SPREADSHEET_ID = '1V-4tnKUm22SXO9qTkBpC027gUU1eY_YwS6M2BplU8Uo';
+const SHEET_NAME = 'Website Direct Leads';
+const ALERT_EMAIL = 'livinginraleighteam@gmail.com';
+
+function doGet() {
+  return json_({ ok: true, message: 'Lead endpoint is live.' });
+}
+
+function doPost(e) {
+  try {
+    const raw = parseBody_(e);
+    const lead = normalizeLead_(raw);
+
+    const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+    const sheet = getOrCreateSheet_(ss, SHEET_NAME);
+    ensureHeaders_(sheet);
+    const rowNumber = appendLead_(sheet, lead, raw);
+    const emailResult = sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, raw);
+
+    return json_({
+      ok: true,
+      email_status: emailResult.status,
+      email_error: emailResult.error || ''
+    });
+  } catch (err) {
+    return json_({
+      ok: false,
+      error: String(err && err.message ? err.message : err)
+    });
+  }
+}
+
+function parseBody_(e) {
+  const rawText = e && e.postData && e.postData.contents ? e.postData.contents : '';
+  if (rawText) {
+    try {
+      return JSON.parse(rawText);
+    } catch (_) {}
+  }
+
+  const params = (e && e.parameter) ? e.parameter : {};
+  return params || {};
+}
+
+function normalizeLead_(p) {
+  const legacyRequestedContactName = clean_(p.requested_contact_name);
+  const splitRequestedContactName = splitName_(legacyRequestedContactName);
+  const normalizedFirstName = clean_(p.first_name) || clean_(p.requested_contact_first_name) || splitRequestedContactName.first;
+  const normalizedLastName = clean_(p.last_name) || clean_(p.requested_contact_last_name) || splitRequestedContactName.last;
+  const normalizedRequestedContactName = clean_(
+    legacyRequestedContactName || [normalizedFirstName, normalizedLastName].join(' ')
+  );
+  const normalizedPhone = clean_(p.phone) || clean_(p.home_eval_phone) || phoneFromFullPhone_(p.full_phone);
+  const hasHomeEvalFields = Boolean(clean_(p.home_eval_name) || clean_(p.home_eval_property_address));
+  const hasRequestedContactFields = Boolean(
+    normalizedRequestedContactName ||
+    clean_(p.requested_contact_intent) ||
+    clean_(p.requested_contact_interest) ||
+    clean_(p.requested_contact_source) ||
+    normalizedFirstName ||
+    normalizedLastName
+  );
+  const leadType = clean_(p.lead_type).toLowerCase() ||
+    (hasHomeEvalFields ? 'home_eval' : (hasRequestedContactFields ? 'requested_contact' : 'buyer'));
+  const requestedContactIntent = normalizeRequestedContactIntent_(
+    clean_(p.requested_contact_intent) || clean_(p.requested_contact_interest)
+  );
+  const requestedIntentMeta = requestedContactIntentMeta_(requestedContactIntent);
+
+  return {
+    submitted_at: clean_(p.submitted_at) || new Date().toISOString(),
+    source_page: clean_(p.source_page),
+    lead_type: leadType,
+
+    requested_contact_source: clean_(p.requested_contact_source),
+    requested_contact_name: normalizedRequestedContactName,
+    requested_contact_intent: requestedContactIntent,
+    requested_contact_is_buyer: toBoolean_(p.requested_contact_is_buyer, requestedIntentMeta.isBuyer),
+    requested_contact_is_seller: toBoolean_(p.requested_contact_is_seller, requestedIntentMeta.isSeller),
+    requested_contact_notes: clean_(p.requested_contact_notes),
+    new_construction_message: clean_(p.new_construction_message) || clean_(p.message) || clean_(p.requested_contact_notes),
+
+    first_name: normalizedFirstName,
+    last_name: normalizedLastName,
+    email: clean_(p.email) || clean_(p.home_eval_email),
+    phone_country: clean_(p.phone_country),
+    phone: normalizedPhone,
+    sms_opt_in: toBoolean_(p.sms_opt_in),
+
+    timeframe: clean_(p.timeframe),
+    budget: clean_(p.budget),
+    pre_approval: clean_(p.pre_approval),
+    area_interests: clean_(p.area_interests),
+
+    home_description: clean_(p.home_description),
+    home_bedrooms: clean_(p.home_bedrooms),
+    home_bathrooms: clean_(p.home_bathrooms),
+    year_built: clean_(p.year_built),
+    square_footage: clean_(p.square_footage),
+
+    property_address_line1: clean_(p.property_address_line1),
+    property_city: clean_(p.property_city),
+    property_state: clean_(p.property_state),
+    property_zip: clean_(p.property_zip),
+    full_address: clean_(p.full_address) || clean_(p.home_eval_property_address),
+
+    home_eval_name: clean_(p.home_eval_name),
+    home_eval_email: clean_(p.home_eval_email),
+    home_eval_phone: clean_(p.home_eval_phone),
+    home_eval_property_address: clean_(p.home_eval_property_address)
+  };
+}
+
+function headers_() {
+  return [
+    'Timestamp',
+    'Lead Type',
+    'Source Page',
+
+    'Requested Contact Source',
+    'Requested Contact Intent',
+    'Requested Contact Is Buyer',
+    'Requested Contact Is Seller',
+    'Requested Contact Notes',
+
+    'First Name',
+    'Last Name',
+    'Email',
+    'Phone Country',
+    'Phone',
+    'SMS Opt In',
+
+    'Timeframe',
+    'Budget / Est. Value',
+    'Pre-Approval',
+    'Area Interests',
+
+    'Home Description',
+    'Home Bedrooms',
+    'Home Bathrooms',
+    'Year Built',
+    'Square Footage',
+
+    'Property Address Line 1',
+    'Property City',
+    'Property State',
+    'Property ZIP',
+    'Full Address',
+
+    'Home Eval Name',
+    'Home Eval Email',
+    'Home Eval Phone',
+    'Home Eval Property Address',
+
+    'Raw JSON',
+    'Email Status',
+    'Email Sent At',
+    'Email Error',
+    'New Construction Message'
+  ];
+}
+
+function getOrCreateSheet_(ss, name) {
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  return sh;
+}
+
+function ensureHeaders_(sheet) {
+  removeDeprecatedColumns_(sheet);
+  const expected = headers_();
+  const currentMaxColumns = sheet.getMaxColumns();
+  if (currentMaxColumns < expected.length) {
+    sheet.insertColumnsAfter(currentMaxColumns, expected.length - currentMaxColumns);
+  }
+  const current = sheet.getRange(1, 1, 1, expected.length).getValues()[0];
+  let same = true;
+
+  for (let i = 0; i < expected.length; i++) {
+    if (String(current[i] || '').trim() !== expected[i]) {
+      same = false;
+      break;
+    }
+  }
+
+  if (!same) {
+    sheet.getRange(1, 1, 1, expected.length).setValues([expected]);
+    sheet.setFrozenRows(1);
+  }
+}
+
+function appendLead_(sheet, lead, raw) {
+  const row = [
+    new Date(),
+    lead.lead_type,
+    lead.source_page,
+
+    lead.requested_contact_source,
+    lead.requested_contact_intent,
+    lead.requested_contact_is_buyer,
+    lead.requested_contact_is_seller,
+    lead.requested_contact_notes,
+
+    lead.first_name,
+    lead.last_name,
+    lead.email,
+    lead.phone_country,
+    lead.phone,
+    lead.sms_opt_in,
+
+    lead.timeframe,
+    lead.budget,
+    lead.pre_approval,
+    lead.area_interests,
+
+    lead.home_description,
+    lead.home_bedrooms,
+    lead.home_bathrooms,
+    lead.year_built,
+    lead.square_footage,
+
+    lead.property_address_line1,
+    lead.property_city,
+    lead.property_state,
+    lead.property_zip,
+    lead.full_address,
+
+    lead.home_eval_name,
+    lead.home_eval_email,
+    lead.home_eval_phone,
+    lead.home_eval_property_address,
+
+    JSON.stringify(raw),
+    '',
+    '',
+    '',
+    lead.new_construction_message
+  ];
+
+  const nextRow = sheet.getLastRow() + 1;
+  sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+  return nextRow;
+}
+
+function sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, raw) {
+  try {
+    sendLeadEmail_(lead, raw);
+    updateLeadEmailStatus_(sheet, rowNumber, 'sent', new Date(), '');
+    return { status: 'sent', error: '' };
+  } catch (err) {
+    const message = clean_(err && err.message ? err.message : err);
+    updateLeadEmailStatus_(sheet, rowNumber, 'failed', '', message);
+    return { status: 'failed', error: message };
+  }
+}
+
+function removeDeprecatedColumns_(sheet) {
+  const deprecated = {
+    'name': true,
+    'full phone': true,
+    'requested contact name': true
+  };
+  const lastColumn = sheet.getLastColumn();
+  if (lastColumn < 1) {
+    return;
+  }
+
+  const headers = sheet.getRange(1, 1, 1, lastColumn).getValues()[0];
+  const toDelete = [];
+  headers.forEach(function (value, idx) {
+    const normalized = clean_(value).toLowerCase();
+    if (deprecated[normalized]) {
+      toDelete.push(idx + 1);
+    }
+  });
+
+  toDelete
+    .sort(function (a, b) { return b - a; })
+    .forEach(function (columnNumber) {
+      sheet.deleteColumn(columnNumber);
+    });
+}
+
+function updateLeadEmailStatus_(sheet, rowNumber, status, sentAt, errorMessage) {
+  const indexes = headerIndexes_();
+  if (indexes.email_status < 0 || indexes.email_sent_at < 0 || indexes.email_error < 0) {
+    return;
+  }
+
+  let sentAtValue = '';
+  if (sentAt instanceof Date && !isNaN(sentAt.getTime())) {
+    sentAtValue = sentAt;
+  }
+
+  sheet
+    .getRange(rowNumber, indexes.email_status + 1, 1, 3)
+    .setValues([[clean_(status), sentAtValue, clean_(errorMessage)]]);
+}
+
+function sendUnsentWebsiteLeadEmails() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = getOrCreateSheet_(ss, SHEET_NAME);
+  ensureHeaders_(sheet);
+
+  const indexes = headerIndexes_();
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return {
+      ok: true,
+      total_rows: 0,
+      pending_rows: 0,
+      sent_count: 0,
+      failed_count: 0
+    };
+  }
+
+  const rowCount = lastRow - 1;
+  const values = sheet.getRange(2, 1, rowCount, indexes.headers.length).getValues();
+  let pendingRows = 0;
+  let sentCount = 0;
+  let failedCount = 0;
+
+  values.forEach(function (row, rowOffset) {
+    const status = clean_(row[indexes.email_status]).toLowerCase();
+    if (status === 'sent') {
+      return;
+    }
+
+    pendingRows += 1;
+    const rowNumber = rowOffset + 2;
+    const rowContext = leadContextFromSheetRow_(row, indexes);
+    const result = sendLeadEmailAndUpdateStatus_(sheet, rowNumber, rowContext.lead, rowContext.raw);
+
+    if (result.status === 'sent') {
+      sentCount += 1;
+    } else {
+      failedCount += 1;
+    }
+  });
+
+  return {
+    ok: true,
+    total_rows: rowCount,
+    pending_rows: pendingRows,
+    sent_count: sentCount,
+    failed_count: failedCount
+  };
+}
+
+function leadContextFromSheetRow_(row, indexes) {
+  const rawJsonText = clean_(row[indexes.raw_json]);
+  let raw = {};
+  if (rawJsonText) {
+    try {
+      raw = JSON.parse(rawJsonText);
+    } catch (_) {
+      raw = {};
+    }
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    raw = {};
+  }
+
+  const rowPayload = {
+    submitted_at: toIsoString_(row[indexes.timestamp]),
+    source_page: row[indexes.source_page],
+    lead_type: row[indexes.lead_type],
+
+    requested_contact_source: row[indexes.requested_contact_source],
+    requested_contact_intent: row[indexes.requested_contact_intent],
+    requested_contact_is_buyer: row[indexes.requested_contact_is_buyer],
+    requested_contact_is_seller: row[indexes.requested_contact_is_seller],
+    requested_contact_notes: row[indexes.requested_contact_notes],
+
+    first_name: row[indexes.first_name],
+    last_name: row[indexes.last_name],
+    email: row[indexes.email],
+    phone_country: row[indexes.phone_country],
+    phone: row[indexes.phone],
+    sms_opt_in: row[indexes.sms_opt_in],
+
+    timeframe: row[indexes.timeframe],
+    budget: row[indexes.budget],
+    pre_approval: row[indexes.pre_approval],
+    area_interests: row[indexes.area_interests],
+
+    home_description: row[indexes.home_description],
+    home_bedrooms: row[indexes.home_bedrooms],
+    home_bathrooms: row[indexes.home_bathrooms],
+    year_built: row[indexes.year_built],
+    square_footage: row[indexes.square_footage],
+
+    property_address_line1: row[indexes.property_address_line1],
+    property_city: row[indexes.property_city],
+    property_state: row[indexes.property_state],
+    property_zip: row[indexes.property_zip],
+    full_address: row[indexes.full_address],
+
+    home_eval_name: row[indexes.home_eval_name],
+    home_eval_email: row[indexes.home_eval_email],
+    home_eval_phone: row[indexes.home_eval_phone],
+    home_eval_property_address: row[indexes.home_eval_property_address],
+    new_construction_message: row[indexes.new_construction_message]
+  };
+
+  const mergedPayload = Object.assign({}, raw, rowPayload);
+  const lead = normalizeLead_(mergedPayload);
+  const rawForEmail = Object.keys(raw).length ? raw : mergedPayload;
+  return { lead: lead, raw: rawForEmail };
+}
+
+function headerIndexes_() {
+  const headers = headers_();
+  const idx = function (name) {
+    return headers.indexOf(name);
+  };
+  return {
+    headers: headers,
+    timestamp: idx('Timestamp'),
+    lead_type: idx('Lead Type'),
+    source_page: idx('Source Page'),
+    requested_contact_source: idx('Requested Contact Source'),
+    requested_contact_intent: idx('Requested Contact Intent'),
+    requested_contact_is_buyer: idx('Requested Contact Is Buyer'),
+    requested_contact_is_seller: idx('Requested Contact Is Seller'),
+    requested_contact_notes: idx('Requested Contact Notes'),
+    first_name: idx('First Name'),
+    last_name: idx('Last Name'),
+    email: idx('Email'),
+    phone_country: idx('Phone Country'),
+    phone: idx('Phone'),
+    sms_opt_in: idx('SMS Opt In'),
+    timeframe: idx('Timeframe'),
+    budget: idx('Budget / Est. Value'),
+    pre_approval: idx('Pre-Approval'),
+    area_interests: idx('Area Interests'),
+    home_description: idx('Home Description'),
+    home_bedrooms: idx('Home Bedrooms'),
+    home_bathrooms: idx('Home Bathrooms'),
+    year_built: idx('Year Built'),
+    square_footage: idx('Square Footage'),
+    property_address_line1: idx('Property Address Line 1'),
+    property_city: idx('Property City'),
+    property_state: idx('Property State'),
+    property_zip: idx('Property ZIP'),
+    full_address: idx('Full Address'),
+    home_eval_name: idx('Home Eval Name'),
+    home_eval_email: idx('Home Eval Email'),
+    home_eval_phone: idx('Home Eval Phone'),
+    home_eval_property_address: idx('Home Eval Property Address'),
+    raw_json: idx('Raw JSON'),
+    email_status: idx('Email Status'),
+    email_sent_at: idx('Email Sent At'),
+    email_error: idx('Email Error'),
+    new_construction_message: idx('New Construction Message')
+  };
+}
+
+function toIsoString_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value.toISOString();
+  }
+  const parsed = new Date(value);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString();
+  }
+  return new Date().toISOString();
+}
+
+function sendLeadEmail_(lead, raw) {
+  const leadTypeLabel = leadTypeLabel_(lead.lead_type);
+  const requestedIntentLabel = formatRequestedContactIntent_(lead.requested_contact_intent);
+  const subjectByType = {
+    buyer: 'New Buyer Lead - Website',
+    seller: 'New Seller Lead - Website',
+    home_eval: 'New Home Valuation Lead - Website',
+    requested_contact: 'New Requested Contact Lead - Website',
+    new_construction: 'New Construction Inquiry - Website'
+  };
+  let subject = subjectByType[lead.lead_type] || 'New Website Lead';
+  if (lead.lead_type === 'requested_contact' && hasText_(requestedIntentLabel)) {
+    subject = 'New Requested Contact Lead (' + requestedIntentLabel + ') - Website';
+  }
+
+  const lines = [];
+  lines.push('New website lead received.');
+  lines.push('');
+  lines.push('Lead Type: ' + leadTypeLabel);
+  lines.push('Received: ' + formatDateTimeForEmail_(lead.submitted_at));
+  if (hasText_(lead.source_page)) {
+    lines.push('Source Page: ' + clean_(lead.source_page));
+  }
+
+  const fullName = clean_(([lead.first_name, lead.last_name].join(' ').trim() || lead.requested_contact_name || lead.home_eval_name));
+  const primaryEmail = clean_(lead.email || lead.home_eval_email);
+  const primaryPhone = clean_(((lead.phone_country ? lead.phone_country + ' ' : '') + lead.phone).trim() || lead.home_eval_phone);
+  const contactLines = [];
+  addFieldLineIfPresent_(contactLines, 'First Name', lead.first_name);
+  addFieldLineIfPresent_(contactLines, 'Last Name', lead.last_name);
+  if (!hasText_(lead.first_name) && !hasText_(lead.last_name)) {
+    addFieldLineIfPresent_(contactLines, 'Name', fullName);
+  }
+  addFieldLineIfPresent_(contactLines, 'Phone', primaryPhone);
+  addFieldLineIfPresent_(contactLines, 'Email', primaryEmail);
+  if (lead.sms_opt_in) {
+    addFieldLineIfPresent_(contactLines, 'SMS Consent', 'Yes');
+  }
+  appendSectionIfAny_(lines, 'Contact Information', contactLines);
+
+  if (lead.lead_type === 'buyer') {
+    const buyerLines = [];
+    addFieldLineIfPresent_(buyerLines, 'Ideal Timeframe', lead.timeframe);
+    addFieldLineIfPresent_(buyerLines, 'Budget', lead.budget);
+    addFieldLineIfPresent_(buyerLines, 'Pre-Approval', lead.pre_approval);
+    addFieldLineIfPresent_(buyerLines, 'Area Interests', lead.area_interests);
+    appendSectionIfAny_(lines, 'Buyer Details', buyerLines);
+  }
+
+  if (lead.lead_type === 'seller') {
+    const sellerLines = [];
+    addFieldLineIfPresent_(sellerLines, 'Selling Timeline', lead.timeframe);
+    addFieldLineIfPresent_(sellerLines, 'Estimated Value', lead.budget);
+    addFieldLineIfPresent_(sellerLines, 'Property Address', lead.full_address);
+    addFieldLineIfPresent_(sellerLines, 'Home Details', lead.home_description);
+    appendSectionIfAny_(lines, 'Seller Details', sellerLines);
+  }
+
+  if (lead.lead_type === 'home_eval') {
+    const homeEvalLines = [];
+    addFieldLineIfPresent_(homeEvalLines, 'Name', lead.home_eval_name || fullName);
+    addFieldLineIfPresent_(homeEvalLines, 'Email', lead.home_eval_email || primaryEmail);
+    addFieldLineIfPresent_(homeEvalLines, 'Phone', lead.home_eval_phone || primaryPhone);
+    addFieldLineIfPresent_(homeEvalLines, 'Property Address', lead.home_eval_property_address || lead.full_address);
+    appendSectionIfAny_(lines, 'Home Valuation Details', homeEvalLines);
+  }
+
+  if (lead.lead_type === 'requested_contact') {
+    const requestLines = [];
+    addFieldLineIfPresent_(requestLines, 'Request Type', requestedIntentLabel);
+    addFieldLineIfPresent_(requestLines, 'Request Source', lead.requested_contact_source);
+    addFieldLineIfPresent_(requestLines, 'Notes', lead.requested_contact_notes);
+    appendSectionIfAny_(lines, 'Requested Contact Details', requestLines);
+  }
+
+  if (lead.lead_type === 'new_construction') {
+    const newConstructionLines = [];
+    addFieldLineIfPresent_(newConstructionLines, 'Request Source', lead.requested_contact_source);
+    addFieldLineIfPresent_(newConstructionLines, 'Request Type', requestedIntentLabel || lead.requested_contact_intent);
+    addFieldLineIfPresent_(newConstructionLines, 'Message', lead.new_construction_message || lead.requested_contact_notes);
+    appendSectionIfAny_(lines, 'New Construction Inquiry', newConstructionLines);
+  }
+
+  lines.push('');
+  lines.push('Please follow up as soon as possible.');
+
+  MailApp.sendEmail({
+    to: ALERT_EMAIL,
+    subject: subject,
+    body: lines.join('\n')
+  });
+}
+
+function clean_(v) {
+  return String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
+}
+
+function splitName_(value) {
+  const normalized = clean_(value);
+  if (!normalized) {
+    return { first: '', last: '' };
+  }
+  const parts = normalized.split(' ');
+  const first = clean_(parts.shift());
+  const last = clean_(parts.join(' '));
+  return { first: first, last: last };
+}
+
+function phoneFromFullPhone_(value) {
+  const digits = String(value == null ? '' : value).replace(/[^\d]/g, '');
+  if (!digits) {
+    return '';
+  }
+  if (digits.length > 10) {
+    return digits.slice(-10);
+  }
+  return digits;
+}
+
+function toBoolean_(value, fallback) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  const normalized = clean_(value).toLowerCase();
+  if (!normalized) {
+    return Boolean(fallback);
+  }
+  return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'y';
+}
+
+function yesNo_(value) {
+  return value ? 'Yes' : 'No';
+}
+
+function normalizeRequestedContactIntent_(value) {
+  const normalized = clean_(value).toLowerCase();
+  if (!normalized) {
+    return '';
+  }
+  if (
+    normalized === 'looking to buy' ||
+    normalized === 'looking_to_buy' ||
+    normalized === 'buyer'
+  ) {
+    return 'looking_to_buy';
+  }
+  if (
+    normalized === 'looking to sell' ||
+    normalized === 'looking_to_sell' ||
+    normalized === 'seller'
+  ) {
+    return 'looking_to_sell';
+  }
+  if (
+    normalized === 'looking to sell and purchase a home' ||
+    normalized === 'looking_to_sell_and_buy' ||
+    normalized === 'looking to sell and buy' ||
+    normalized === 'seller_and_buyer' ||
+    normalized === 'sell_and_buy'
+  ) {
+    return 'looking_to_sell_and_buy';
+  }
+  return normalized.replace(/\s+/g, '_');
+}
+
+function requestedContactIntentMeta_(intent) {
+  if (intent === 'looking_to_buy') {
+    return { isBuyer: true, isSeller: false };
+  }
+  if (intent === 'looking_to_sell') {
+    return { isBuyer: false, isSeller: true };
+  }
+  if (intent === 'looking_to_sell_and_buy') {
+    return { isBuyer: true, isSeller: true };
+  }
+  return { isBuyer: false, isSeller: false };
+}
+
+function formatRequestedContactIntent_(intent) {
+  if (intent === 'looking_to_buy') {
+    return 'Looking to buy';
+  }
+  if (intent === 'looking_to_sell') {
+    return 'Looking to sell';
+  }
+  if (intent === 'looking_to_sell_and_buy') {
+    return 'Looking to sell and purchase a home';
+  }
+  return clean_(intent);
+}
+
+function hasText_(value) {
+  return clean_(value) !== '';
+}
+
+function addFieldLineIfPresent_(bucket, label, value) {
+  const cleaned = clean_(value);
+  if (!cleaned) {
+    return;
+  }
+  bucket.push(label + ': ' + cleaned);
+}
+
+function appendSectionIfAny_(lines, title, sectionLines) {
+  if (!sectionLines || !sectionLines.length) {
+    return;
+  }
+  lines.push('');
+  lines.push(title);
+  lines.push(Array(title.length + 1).join('-'));
+  sectionLines.forEach(function (line) {
+    lines.push(line);
+  });
+}
+
+function leadTypeLabel_(leadType) {
+  const normalized = clean_(leadType).toLowerCase();
+  if (normalized === 'buyer') {
+    return 'Buyer Lead';
+  }
+  if (normalized === 'seller') {
+    return 'Seller Lead';
+  }
+  if (normalized === 'home_eval') {
+    return 'Home Valuation Lead';
+  }
+  if (normalized === 'requested_contact') {
+    return 'Requested Contact Lead';
+  }
+  if (normalized === 'new_construction') {
+    return 'New Construction Inquiry';
+  }
+  return normalized ? normalized.replace(/_/g, ' ').replace(/\b\w/g, function (ch) { return ch.toUpperCase(); }) : 'Website Lead';
+}
+
+function formatDateTimeForEmail_(value) {
+  const parsed = new Date(value);
+  if (isNaN(parsed.getTime())) {
+    return clean_(value) || new Date().toISOString();
+  }
+  return Utilities.formatDate(
+    parsed,
+    Session.getScriptTimeZone() || 'America/New_York',
+    "MMM d, yyyy 'at' h:mm a z"
+  );
+}
+
+function json_(obj) {
+  return ContentService
+    .createTextOutput(JSON.stringify(obj))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function authorizeWebsiteLeadScriptScopes() {
+  SpreadsheetApp.openById(SPREADSHEET_ID).getName();
+  MailApp.getRemainingDailyQuota();
+  return "Authorization complete. Re-deploy web app after running this once.";
+}
+
+function cleanupWebsiteLeadSheetColumns() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = getOrCreateSheet_(ss, SHEET_NAME);
+  removeDeprecatedColumns_(sheet);
+  ensureHeaders_(sheet);
+  return 'Lead sheet schema refreshed. Deprecated Name/Full Phone columns removed if found.';
+}

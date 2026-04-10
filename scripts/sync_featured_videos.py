@@ -35,15 +35,27 @@ MANUAL_SUBURB_PLAYLIST_IDS: dict[str, str] = {
     "cary": "PLybPdL80h3XvFJRDLowLXaP_uDoibfaHt",
     "clayton": "PLybPdL80h3Xv1747TKhRdDERiPsvKUyjh",
     "durham": "PLybPdL80h3Xvrb15HTbQegtAtRUT1O6x3",
+    "east-raleigh": "PLybPdL80h3XsclSgZPVBPCZX2LW9HhH0-",
+    "garner": "PLybPdL80h3XsWMiq37VOFlkBdl8J_MUaO",
+    "holly-springs": "PLybPdL80h3Xugl5v5OnOeY7Dz88ohbtoQ",
+    "itb": "PLybPdL80h3XsclSgZPVBPCZX2LW9HhH0-",
     "knightdale": "PLybPdL80h3XsHfOHTaRJeovlgQ9orDz0r",
+    "morrisville": "PLybPdL80h3XsyTTWHZCZxWI-lL7e6tJ2U",
+    "north-raleigh": "PLybPdL80h3XsclSgZPVBPCZX2LW9HhH0-",
     "raleigh": "PLybPdL80h3XvCV-Hi72FLN48lgRlYju3t",
+    "south-raleigh": "PLybPdL80h3XsclSgZPVBPCZX2LW9HhH0-",
     "wake-forest": "PLybPdL80h3XtKnazS__YppgjwM6W2FZzz",
     "wendell": "PLybPdL80h3Xt2uL8xk-1TNhShlq2Ry4km",
+    "zebulon": "PLybPdL80h3XuGhzTgam6AgC6vF-71ydFq",
 }
 
 # These feeds are not tied to explore-the-area slugs, but power sections on
 # the Learning Center page and must stay in sync with specific playlists.
 MANUAL_ADDITIONAL_FEEDS: dict[str, dict[str, str]] = {
+    "raleigh-affordable-hotlist": {
+        "playlist_id": "PLybPdL80h3XuN1nLv3uQWKVX_3Dgb5UEc",
+        "playlist_title": "Affordable New Construction Hotlist",
+    },
     "raleigh-hottest-deals": {
         "playlist_id": "PLybPdL80h3Xucfh6cneUi5n2Yd-7ZReY_",
         "playlist_title": "Raleigh's Hottest Deals",
@@ -91,7 +103,7 @@ def normalize_text(value: str) -> str:
     """Attempt to repair common UTF-8 mojibake sequences."""
     if not value:
         return value
-    if "â" not in value and "ð" not in value:
+    if "Ã" not in value and "â" not in value:
         return value
     for source_encoding in ("cp1252", "latin-1"):
         try:
@@ -147,8 +159,6 @@ def parse_entries(xml_bytes: bytes) -> list[dict[str, str]]:
                 "published": published,
             }
         )
-
-    videos.sort(key=lambda item: item.get("published", ""), reverse=True)
 
     deduped: list[dict[str, str]] = []
     seen_video_ids: set[str] = set()
