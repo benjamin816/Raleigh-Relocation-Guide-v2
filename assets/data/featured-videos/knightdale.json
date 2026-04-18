@@ -1,8 +1,23 @@
 {
   "playlist_id": "PLybPdL80h3XsHfOHTaRJeovlgQ9orDz0r",
   "watch_more_url": "https://www.youtube.com/playlist?list=PLybPdL80h3XsHfOHTaRJeovlgQ9orDz0r",
-  "generated_at": "2026-04-18T21:50:50.201555+00:00",
-  "videos": [],
+  "generated_at": "2026-04-18T22:55:27.151431+00:00",
+  "videos": [
+    {
+      "video_id": "Uh87TsIIFQY",
+      "title": "Don’t Sleep on East Raleigh! The Truth About Knightdale, Wendell & Zebulon NC",
+      "thumbnail_url": "https://i.ytimg.com/vi/Uh87TsIIFQY/hqdefault.jpg",
+      "subtext": "EVERYTHING You Need to Know About Raleigh's East Suburbs [UPDATED 2025]",
+      "published": "2025-06-13T22:00:36+00:00"
+    },
+    {
+      "video_id": "464eUeFQdGY",
+      "title": "We Found Raleigh NC's MOST AFFORDABLE Homes for Sale in Knightdale with SUPER LOW RATES!",
+      "thumbnail_url": "https://i.ytimg.com/vi/464eUeFQdGY/hqdefault.jpg",
+      "subtext": "Today we are out here in Knightdale Station, one of the hottest new developments in Raleigh!",
+      "published": "2025-04-15T22:00:09+00:00"
+    }
+  ],
   "playlist_title": "knightdale",
   "slug": "knightdale"
 }
