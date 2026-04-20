@@ -1,8 +1,23 @@
 {
   "playlist_id": "PLybPdL80h3Xt2uL8xk-1TNhShlq2Ry4km",
   "watch_more_url": "https://www.youtube.com/playlist?list=PLybPdL80h3Xt2uL8xk-1TNhShlq2Ry4km",
-  "generated_at": "2026-04-19T22:56:15.919886+00:00",
-  "videos": [],
+  "generated_at": "2026-04-20T09:18:29.876380+00:00",
+  "videos": [
+    {
+      "video_id": "A1fwu8OjZyQ",
+      "title": "Why Wendell Falls is Raleigh’s BEST KEPT SECRET: Full Walking Tour!",
+      "thumbnail_url": "https://i.ytimg.com/vi/A1fwu8OjZyQ/hqdefault.jpg",
+      "subtext": "Join us for a tour of one of the top master planned communities near Raleigh! Wendell Falls offers a strong sense of community and unbeatable amenities. If you're thinking about relocating to Raleigh NC, this neighborhood is definitely worth checking out!",
+      "published": "2025-06-27T22:00:10+00:00"
+    },
+    {
+      "video_id": "Uh87TsIIFQY",
+      "title": "Don’t Sleep on East Raleigh! The Truth About Knightdale, Wendell & Zebulon NC",
+      "thumbnail_url": "https://i.ytimg.com/vi/Uh87TsIIFQY/hqdefault.jpg",
+      "subtext": "EVERYTHING You Need to Know About Raleigh's East Suburbs [UPDATED 2025]",
+      "published": "2025-06-13T22:00:36+00:00"
+    }
+  ],
   "playlist_title": "wendell",
   "slug": "wendell"
 }

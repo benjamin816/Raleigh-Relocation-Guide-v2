@@ -1,8 +1,37 @@
 {
   "playlist_id": "PLybPdL80h3XuWZB95BbC2pe-wspLWO0pv",
   "watch_more_url": "https://www.youtube.com/playlist?list=PLybPdL80h3XuWZB95BbC2pe-wspLWO0pv",
-  "generated_at": "2026-04-19T22:56:15.919886+00:00",
-  "videos": [],
+  "generated_at": "2026-04-20T09:18:29.876380+00:00",
+  "videos": [
+    {
+      "video_id": "upxdDu-dMSM",
+      "title": "INSANE Homes for LESS in Raleigh! (New Community)",
+      "thumbnail_url": "https://i.ytimg.com/vi/upxdDu-dMSM/hqdefault.jpg",
+      "subtext": "We found insane for plans for less than you’d think in one of the hottest new neighborhoods in Raleigh, North Carolina!!!",
+      "published": "2026-04-18T14:41:24+00:00"
+    },
+    {
+      "video_id": "ZDmRAdvyKdw",
+      "title": "Inside Raleigh’s Most In-Demand Suburb | Walk & Drive Apex NC 2026!",
+      "thumbnail_url": "https://i.ytimg.com/vi/ZDmRAdvyKdw/hqdefault.jpg",
+      "subtext": "Thinking about moving to Apex, North Carolina? Join our tour of \"The Peak of Good Living\" to see if it fits your 2026 lifestyle and real estate goals!",
+      "published": "2026-02-14T22:00:26+00:00"
+    },
+    {
+      "video_id": "cvcL2NDiGW0",
+      "title": "We Toured the MOST AFFORDABLE New Homes in Apex North Carolina! | Horton Park",
+      "thumbnail_url": "https://i.ytimg.com/vi/cvcL2NDiGW0/hqdefault.jpg",
+      "subtext": "DREAM to REALITY | Discover Your PERFECT Floor Plan in Apex, NC!",
+      "published": "2025-12-12T23:19:40+00:00"
+    },
+    {
+      "video_id": "KOUARyAck-A",
+      "title": "Pros and Cons of Living in Apex North Carolina | BEST Raleigh Suburbs",
+      "thumbnail_url": "https://i.ytimg.com/vi/KOUARyAck-A/hqdefault.jpg",
+      "subtext": "What's it really like living in Apex, North Carolina?....",
+      "published": "2024-09-19T20:41:51+00:00"
+    }
+  ],
   "playlist_title": "apex",
   "slug": "apex"
 }

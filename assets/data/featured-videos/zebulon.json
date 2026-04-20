@@ -1,8 +1,23 @@
 {
   "playlist_id": "PLybPdL80h3XuGhzTgam6AgC6vF-71ydFq",
   "watch_more_url": "https://www.youtube.com/playlist?list=PLybPdL80h3XuGhzTgam6AgC6vF-71ydFq",
-  "generated_at": "2026-04-19T22:56:15.919886+00:00",
-  "videos": [],
+  "generated_at": "2026-04-20T09:18:29.876380+00:00",
+  "videos": [
+    {
+      "video_id": "NjLGG2LKwAI",
+      "title": "We Found Raleigh NC's MOST AFFORDABLE Homes for Sale in Zebulon [AND THEY HAVE LUXURY AMENITIES!]",
+      "thumbnail_url": "https://i.ytimg.com/vi/NjLGG2LKwAI/hqdefault.jpg",
+      "subtext": "Homes as low as $316k?! 🤯 even crazier... you get luxury amenities that even homes in the 4s and 5s don't often get, like pickleball courts, gas fire pits, dog parks, clubhouse, pool, trails, and more! Welcome to the first look at Sidney Creek's FINAL phase in Zebulon, North Carolina.",
+      "published": "2025-07-06T15:59:00+00:00"
+    },
+    {
+      "video_id": "Uh87TsIIFQY",
+      "title": "Don’t Sleep on East Raleigh! The Truth About Knightdale, Wendell & Zebulon NC",
+      "thumbnail_url": "https://i.ytimg.com/vi/Uh87TsIIFQY/hqdefault.jpg",
+      "subtext": "EVERYTHING You Need to Know About Raleigh's East Suburbs [UPDATED 2025]",
+      "published": "2025-06-13T22:00:36+00:00"
+    }
+  ],
   "playlist_title": "zebulon",
   "slug": "zebulon"
 }
