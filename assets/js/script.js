@@ -689,7 +689,23 @@
   }
 
   document.querySelectorAll(".home-promo-video").forEach(function (video) {
+    var promoBand = video.closest(".home-promo-band");
+    var markPromoReady = function () {
+      if (!promoBand) {
+        return;
+      }
+      promoBand.classList.remove("is-loading");
+      promoBand.classList.add("is-ready");
+    };
+
     video.loop = true;
+    if (video.readyState >= 2) {
+      markPromoReady();
+    }
+    video.addEventListener("loadeddata", markPromoReady, { once: true });
+    video.addEventListener("canplay", markPromoReady, { once: true });
+    video.addEventListener("playing", markPromoReady, { once: true });
+
     video.addEventListener("ended", function () {
       video.currentTime = 0;
       var playPromise = video.play();

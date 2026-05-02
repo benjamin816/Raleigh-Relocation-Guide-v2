@@ -18,7 +18,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css?v=20260401-mapstar1">
+  <link rel="stylesheet" href="assets/css/styles.css?v=20260501-promo-loadfix2">
 </head>
 <body class="page-home">
   <a class="skip-link" href="#main">Skip to content</a>
@@ -56,8 +56,9 @@
       </div>
       <a href="/" class="home-stack-overlay-link" aria-label="Go to home"><img src="/assets/images/banner-image-2.png" alt="Banner image 2" class="home-stack-overlay"></a>
     </div>
-    <section class="home-promo-band" aria-label="Promo video">
-      <video class="home-promo-video" autoplay muted loop playsinline preload="metadata" controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture>
+    <section class="home-promo-band is-loading" aria-label="Promo video">
+      <div class="home-promo-loading" aria-hidden="true"></div>
+      <video class="home-promo-video" autoplay muted loop playsinline preload="metadata" poster="/assets/images/home-promo-first-frame.jpg?v=20260501a" controlslist="nodownload noplaybackrate noremoteplayback" disablepictureinpicture>
         <source src="/assets/videos/promo-for-website.mp4" type="video/mp4">
       </video>
       <img class="home-promo-overlay" src="/assets/images/video-text-overlay-variant-1.png" alt="The Official Living in Raleigh NC Team">
@@ -494,7 +495,7 @@
       </div>
     </footer>
   </div>
-  <script src="assets/js/script.js?v=20260401-consent8" defer></script>
+  <script src="assets/js/script.js?v=20260501-promo-loadfix2" defer></script>
 </body>
 </html>
 
