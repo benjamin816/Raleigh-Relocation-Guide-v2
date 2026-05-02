@@ -308,6 +308,32 @@ a {
   transform: none;
   filter: brightness(75%);
   pointer-events: none;
+  z-index: 0;
+}
+
+.home-promo-loading {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  background-image: url("/assets/images/home-promo-first-frame.jpg?v=20260501a");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  z-index: 1;
+  opacity: 1;
+  transition: opacity 420ms ease;
+}
+
+.home-promo-band.is-ready .home-promo-loading {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.home-promo-video,
+.home-promo-loading {
+  /* Slight overscan removes occasional 1px edge artifacts on first paint */
+  transform: scale(1.002);
+  transform-origin: center;
 }
 
 .home-header-stack {
@@ -402,6 +428,7 @@ a {
   height: auto;
   object-fit: contain;
   pointer-events: none;
+  z-index: 2;
 }
 
 .home-promo-cta {
@@ -7933,6 +7960,10 @@ textarea {
   }
 
   .home-promo-video {
+    display: none;
+  }
+
+  .home-promo-loading {
     display: none;
   }
 
