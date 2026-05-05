@@ -66,11 +66,16 @@ function normalizeLead_(p) {
     clean_(p.requested_contact_intent) || clean_(p.requested_contact_interest)
   );
   const requestedIntentMeta = requestedContactIntentMeta_(requestedContactIntent);
+  const quizResults = extractQuizResults_(p.results);
+  const sourcePage = clean_(p.source_page) || clean_(p.source);
+  const normalizedSourceForQuiz = sourcePage.toLowerCase();
+  const isSuburbQuizLead = normalizedSourceForQuiz.indexOf('/quiz') !== -1 || normalizedSourceForQuiz.indexOf('raleigh-suburb-quiz') !== -1;
 
   return {
     submitted_at: clean_(p.submitted_at) || new Date().toISOString(),
-    source_page: clean_(p.source_page),
-    lead_type: leadType,
+    source_page: sourcePage,
+    source_key: clean_(p.source_key) || sourcePage,
+    lead_type: isSuburbQuizLead ? 'suburb_quiz' : leadType,
 
     requested_contact_source: clean_(p.requested_contact_source),
     requested_contact_name: normalizedRequestedContactName,
@@ -107,7 +112,14 @@ function normalizeLead_(p) {
     home_eval_name: clean_(p.home_eval_name),
     home_eval_email: clean_(p.home_eval_email),
     home_eval_phone: clean_(p.home_eval_phone),
-    home_eval_property_address: clean_(p.home_eval_property_address)
+    home_eval_property_address: clean_(p.home_eval_property_address),
+
+    wants_consultation: toBoolean_(p.wantsConsultation || p.wants_consultation),
+    quiz_top_pick: clean_(quizResults.topPick),
+    quiz_second_pick: clean_(quizResults.secondPick),
+    quiz_third_pick: clean_(quizResults.thirdPick),
+    quiz_results_json: safeJsonString_(p.results),
+    quiz_answers_json: safeJsonString_(p.answers)
   };
 }
 
@@ -116,47 +128,50 @@ function headers_() {
     'Timestamp',
     'Lead Type',
     'Source Page',
-
+    'Source Key',
     'Requested Contact Source',
     'Requested Contact Intent',
     'Requested Contact Is Buyer',
     'Requested Contact Is Seller',
     'Requested Contact Notes',
-
     'First Name',
     'Last Name',
     'Email',
     'Phone Country',
     'Phone',
     'SMS Opt In',
-
     'Timeframe',
     'Budget / Est. Value',
     'Pre-Approval',
     'Area Interests',
-
     'Home Description',
     'Home Bedrooms',
     'Home Bathrooms',
     'Year Built',
     'Square Footage',
-
     'Property Address Line 1',
     'Property City',
     'Property State',
     'Property ZIP',
     'Full Address',
-
     'Home Eval Name',
     'Home Eval Email',
     'Home Eval Phone',
     'Home Eval Property Address',
-
     'Raw JSON',
     'Email Status',
     'Email Sent At',
     'Email Error',
-    'New Construction Message'
+    'New Construction Message',
+    'Wants Consultation',
+    'Quiz Top Pick',
+    'Quiz Second Pick',
+    'Quiz Third Pick',
+    'Quiz Results JSON',
+    'Quiz Answers JSON',
+    'Quiz Result Email Status',
+    'Quiz Result Email Sent At',
+    'Quiz Result Email Error'
   ];
 }
 
@@ -168,77 +183,91 @@ function getOrCreateSheet_(ss, name) {
 
 function ensureHeaders_(sheet) {
   removeDeprecatedColumns_(sheet);
-  const expected = headers_();
-  const currentMaxColumns = sheet.getMaxColumns();
-  if (currentMaxColumns < expected.length) {
-    sheet.insertColumnsAfter(currentMaxColumns, expected.length - currentMaxColumns);
-  }
-  const current = sheet.getRange(1, 1, 1, expected.length).getValues()[0];
-  let same = true;
+  const required = headers_();
+  const lastCol = Math.max(1, sheet.getLastColumn());
+  const headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const normalized = headerRow.map(function (h) { return clean_(h).toLowerCase(); });
 
-  for (let i = 0; i < expected.length; i++) {
-    if (String(current[i] || '').trim() !== expected[i]) {
-      same = false;
-      break;
+  required.forEach(function (headerName) {
+    const key = clean_(headerName).toLowerCase();
+    if (normalized.indexOf(key) !== -1) {
+      return;
     }
-  }
 
-  if (!same) {
-    sheet.getRange(1, 1, 1, expected.length).setValues([expected]);
+    const blankIndex = normalized.indexOf('');
+    if (blankIndex !== -1) {
+      sheet.getRange(1, blankIndex + 1).setValue(headerName);
+      normalized[blankIndex] = key;
+      return;
+    }
+
+    const appendAt = sheet.getLastColumn() + 1;
+    sheet.getRange(1, appendAt).setValue(headerName);
+    normalized.push(key);
+  });
+
+  if (sheet.getFrozenRows() !== 1) {
     sheet.setFrozenRows(1);
   }
 }
 
 function appendLead_(sheet, lead, raw) {
-  const row = [
-    new Date(),
-    lead.lead_type,
-    lead.source_page,
+  const indexes = headerIndexes_(sheet);
+  const width = sheet.getLastColumn();
+  const row = new Array(width).fill('');
+  function put(headerName, value) {
+    const col = indexes.byName[headerName];
+    if (col < 1) return;
+    row[col - 1] = value;
+  }
 
-    lead.requested_contact_source,
-    lead.requested_contact_intent,
-    lead.requested_contact_is_buyer,
-    lead.requested_contact_is_seller,
-    lead.requested_contact_notes,
-
-    lead.first_name,
-    lead.last_name,
-    lead.email,
-    lead.phone_country,
-    lead.phone,
-    lead.sms_opt_in,
-
-    lead.timeframe,
-    lead.budget,
-    lead.pre_approval,
-    lead.area_interests,
-
-    lead.home_description,
-    lead.home_bedrooms,
-    lead.home_bathrooms,
-    lead.year_built,
-    lead.square_footage,
-
-    lead.property_address_line1,
-    lead.property_city,
-    lead.property_state,
-    lead.property_zip,
-    lead.full_address,
-
-    lead.home_eval_name,
-    lead.home_eval_email,
-    lead.home_eval_phone,
-    lead.home_eval_property_address,
-
-    JSON.stringify(raw),
-    '',
-    '',
-    '',
-    lead.new_construction_message
-  ];
+  put('Timestamp', new Date());
+  put('Lead Type', lead.lead_type);
+  put('Source Page', lead.source_page);
+  put('Source Key', lead.source_key);
+  put('Requested Contact Source', lead.requested_contact_source);
+  put('Requested Contact Intent', lead.requested_contact_intent);
+  put('Requested Contact Is Buyer', lead.requested_contact_is_buyer);
+  put('Requested Contact Is Seller', lead.requested_contact_is_seller);
+  put('Requested Contact Notes', lead.requested_contact_notes);
+  put('First Name', lead.first_name);
+  put('Last Name', lead.last_name);
+  put('Email', lead.email);
+  put('Phone Country', lead.phone_country);
+  put('Phone', lead.phone);
+  put('SMS Opt In', lead.sms_opt_in);
+  put('Timeframe', lead.timeframe);
+  put('Budget / Est. Value', lead.budget);
+  put('Pre-Approval', lead.pre_approval);
+  put('Area Interests', lead.area_interests);
+  put('Home Description', lead.home_description);
+  put('Home Bedrooms', lead.home_bedrooms);
+  put('Home Bathrooms', lead.home_bathrooms);
+  put('Year Built', lead.year_built);
+  put('Square Footage', lead.square_footage);
+  put('Property Address Line 1', lead.property_address_line1);
+  put('Property City', lead.property_city);
+  put('Property State', lead.property_state);
+  put('Property ZIP', lead.property_zip);
+  put('Full Address', lead.full_address);
+  put('Home Eval Name', lead.home_eval_name);
+  put('Home Eval Email', lead.home_eval_email);
+  put('Home Eval Phone', lead.home_eval_phone);
+  put('Home Eval Property Address', lead.home_eval_property_address);
+  put('Raw JSON', JSON.stringify(raw));
+  put('Email Status', '');
+  put('Email Sent At', '');
+  put('Email Error', '');
+  put('New Construction Message', lead.new_construction_message);
+  put('Wants Consultation', lead.wants_consultation);
+  put('Quiz Top Pick', lead.quiz_top_pick);
+  put('Quiz Second Pick', lead.quiz_second_pick);
+  put('Quiz Third Pick', lead.quiz_third_pick);
+  put('Quiz Results JSON', lead.quiz_results_json);
+  put('Quiz Answers JSON', lead.quiz_answers_json);
 
   const nextRow = sheet.getLastRow() + 1;
-  sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+  sheet.getRange(nextRow, 1, 1, width).setValues([row]);
   return nextRow;
 }
 
@@ -282,7 +311,7 @@ function removeDeprecatedColumns_(sheet) {
 }
 
 function updateLeadEmailStatus_(sheet, rowNumber, status, sentAt, errorMessage) {
-  const indexes = headerIndexes_();
+  const indexes = headerIndexes_(sheet);
   if (indexes.email_status < 0 || indexes.email_sent_at < 0 || indexes.email_error < 0) {
     return;
   }
@@ -302,7 +331,7 @@ function sendUnsentWebsiteLeadEmails() {
   const sheet = getOrCreateSheet_(ss, SHEET_NAME);
   ensureHeaders_(sheet);
 
-  const indexes = headerIndexes_();
+  const indexes = headerIndexes_(sheet);
   const lastRow = sheet.getLastRow();
   if (lastRow < 2) {
     return {
@@ -315,7 +344,7 @@ function sendUnsentWebsiteLeadEmails() {
   }
 
   const rowCount = lastRow - 1;
-  const values = sheet.getRange(2, 1, rowCount, indexes.headers.length).getValues();
+  const values = sheet.getRange(2, 1, rowCount, sheet.getLastColumn()).getValues();
   let pendingRows = 0;
   let sentCount = 0;
   let failedCount = 0;
@@ -348,7 +377,7 @@ function sendUnsentWebsiteLeadEmails() {
 }
 
 function leadContextFromSheetRow_(row, indexes) {
-  const rawJsonText = clean_(row[indexes.raw_json]);
+  const rawJsonText = clean_(row[indexes.raw_json]) || findRawJsonInRow_(row);
   let raw = {};
   if (rawJsonText) {
     try {
@@ -364,6 +393,7 @@ function leadContextFromSheetRow_(row, indexes) {
   const rowPayload = {
     submitted_at: toIsoString_(row[indexes.timestamp]),
     source_page: row[indexes.source_page],
+    source_key: row[indexes.source_key],
     lead_type: row[indexes.lead_type],
 
     requested_contact_source: row[indexes.requested_contact_source],
@@ -400,25 +430,56 @@ function leadContextFromSheetRow_(row, indexes) {
     home_eval_email: row[indexes.home_eval_email],
     home_eval_phone: row[indexes.home_eval_phone],
     home_eval_property_address: row[indexes.home_eval_property_address],
+    wants_consultation: row[indexes.wants_consultation],
+    quiz_top_pick: row[indexes.quiz_top_pick],
+    quiz_second_pick: row[indexes.quiz_second_pick],
+    quiz_third_pick: row[indexes.quiz_third_pick],
+    quiz_results_json: row[indexes.quiz_results_json],
+    quiz_answers_json: row[indexes.quiz_answers_json],
     new_construction_message: row[indexes.new_construction_message]
   };
 
-  const mergedPayload = Object.assign({}, raw, rowPayload);
+  // Trust raw payload first when present; shifted columns should not override true source data.
+  const mergedPayload = Object.assign({}, rowPayload, raw);
   const lead = normalizeLead_(mergedPayload);
   const rawForEmail = Object.keys(raw).length ? raw : mergedPayload;
   return { lead: lead, raw: rawForEmail };
 }
 
-function headerIndexes_() {
-  const headers = headers_();
+function findRawJsonInRow_(row) {
+  for (var i = 0; i < row.length; i++) {
+    var candidate = clean_(row[i]);
+    if (!candidate || candidate.charAt(0) !== '{' || candidate.charAt(candidate.length - 1) !== '}') {
+      continue;
+    }
+    try {
+      var parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === 'object' && (parsed.submitted_at || parsed.source_page || parsed.email || parsed.lead_type)) {
+        return candidate;
+      }
+    } catch (_) {}
+  }
+  return '';
+}
+
+function headerIndexes_(sheet) {
+  const lastCol = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function (h) { return clean_(h); });
+  const byName = {};
+  headers.forEach(function (h, i) {
+    if (h) byName[h] = i + 1;
+  });
   const idx = function (name) {
-    return headers.indexOf(name);
+    const col = byName[name];
+    return col ? col - 1 : -1;
   };
   return {
     headers: headers,
+    byName: byName,
     timestamp: idx('Timestamp'),
     lead_type: idx('Lead Type'),
     source_page: idx('Source Page'),
+    source_key: idx('Source Key'),
     requested_contact_source: idx('Requested Contact Source'),
     requested_contact_intent: idx('Requested Contact Intent'),
     requested_contact_is_buyer: idx('Requested Contact Is Buyer'),
@@ -448,6 +509,12 @@ function headerIndexes_() {
     home_eval_email: idx('Home Eval Email'),
     home_eval_phone: idx('Home Eval Phone'),
     home_eval_property_address: idx('Home Eval Property Address'),
+    wants_consultation: idx('Wants Consultation'),
+    quiz_top_pick: idx('Quiz Top Pick'),
+    quiz_second_pick: idx('Quiz Second Pick'),
+    quiz_third_pick: idx('Quiz Third Pick'),
+    quiz_results_json: idx('Quiz Results JSON'),
+    quiz_answers_json: idx('Quiz Answers JSON'),
     raw_json: idx('Raw JSON'),
     email_status: idx('Email Status'),
     email_sent_at: idx('Email Sent At'),
@@ -475,7 +542,8 @@ function sendLeadEmail_(lead, raw) {
     seller: 'New Seller Lead - Website',
     home_eval: 'New Home Valuation Lead - Website',
     requested_contact: 'New Requested Contact Lead - Website',
-    new_construction: 'New Construction Inquiry - Website'
+    new_construction: 'New Construction Inquiry - Website',
+    suburb_quiz: 'New Raleigh Suburb Quiz Lead - Website'
   };
   let subject = subjectByType[lead.lead_type] || 'New Website Lead';
   if (lead.lead_type === 'requested_contact' && hasText_(requestedIntentLabel)) {
@@ -489,6 +557,9 @@ function sendLeadEmail_(lead, raw) {
   lines.push('Received: ' + formatDateTimeForEmail_(lead.submitted_at));
   if (hasText_(lead.source_page)) {
     lines.push('Source Page: ' + clean_(lead.source_page));
+  }
+  if (hasText_(lead.source_key)) {
+    lines.push('Source Key: ' + clean_(lead.source_key));
   }
 
   const fullName = clean_(([lead.first_name, lead.last_name].join(' ').trim() || lead.requested_contact_name || lead.home_eval_name));
@@ -504,6 +575,9 @@ function sendLeadEmail_(lead, raw) {
   addFieldLineIfPresent_(contactLines, 'Email', primaryEmail);
   if (lead.sms_opt_in) {
     addFieldLineIfPresent_(contactLines, 'SMS Consent', 'Yes');
+  }
+  if (lead.wants_consultation) {
+    addFieldLineIfPresent_(contactLines, 'Requested Team Call', 'Yes');
   }
   appendSectionIfAny_(lines, 'Contact Information', contactLines);
 
@@ -548,6 +622,14 @@ function sendLeadEmail_(lead, raw) {
     addFieldLineIfPresent_(newConstructionLines, 'Request Type', requestedIntentLabel || lead.requested_contact_intent);
     addFieldLineIfPresent_(newConstructionLines, 'Message', lead.new_construction_message || lead.requested_contact_notes);
     appendSectionIfAny_(lines, 'New Construction Inquiry', newConstructionLines);
+  }
+  if (lead.lead_type === 'suburb_quiz' || hasText_(lead.quiz_top_pick)) {
+    const quizLines = [];
+    addFieldLineIfPresent_(quizLines, 'Top Pick', lead.quiz_top_pick);
+    addFieldLineIfPresent_(quizLines, 'Second Pick', lead.quiz_second_pick);
+    addFieldLineIfPresent_(quizLines, 'Third Pick', lead.quiz_third_pick);
+    addFieldLineIfPresent_(quizLines, 'Requested Team Call', lead.wants_consultation ? 'Yes' : 'No');
+    appendSectionIfAny_(lines, 'Raleigh Suburb Quiz Results', quizLines);
   }
 
   lines.push('');
@@ -595,6 +677,25 @@ function toBoolean_(value, fallback) {
     return Boolean(fallback);
   }
   return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'y';
+}
+
+function extractQuizResults_(results) {
+  if (!Array.isArray(results)) {
+    return { topPick: '', secondPick: '', thirdPick: '' };
+  }
+  return {
+    topPick: clean_(results[0] && results[0].suburb),
+    secondPick: clean_(results[1] && results[1].suburb),
+    thirdPick: clean_(results[2] && results[2].suburb)
+  };
+}
+
+function safeJsonString_(value) {
+  try {
+    return JSON.stringify(value == null ? null : value);
+  } catch (_) {
+    return '';
+  }
 }
 
 function yesNo_(value) {
@@ -726,10 +827,7 @@ function authorizeWebsiteLeadScriptScopes() {
   return "Authorization complete. Re-deploy web app after running this once.";
 }
 
-function cleanupWebsiteLeadSheetColumns() {
-  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-  const sheet = getOrCreateSheet_(ss, SHEET_NAME);
-  removeDeprecatedColumns_(sheet);
-  ensureHeaders_(sheet);
-  return 'Lead sheet schema refreshed. Deprecated Name/Full Phone columns removed if found.';
-}
+
+
+
+
