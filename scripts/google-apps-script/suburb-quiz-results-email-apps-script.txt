@@ -1,0 +1,334 @@
+const CONFIG = {
+  SPREADSHEET_ID: '1V-4tnKUm22SXO9qTkBpC027gUU1eY_YwS6M2BplU8Uo',
+  SHEET_NAME: 'Website Direct Leads',
+  SOURCE_MATCH: '/quiz',
+  EMAIL_FROM_NAME: 'The Official Living in Raleigh NC Team',
+  ADMIN_EMAIL: 'livinginraleighteam@gmail.com',
+  TEST_EMAIL: 'benjamin.raleighrealtor@gmail.com',
+  STATUS_COLUMN: 'Quiz Result Email Status',
+  SENT_AT_COLUMN: 'Quiz Result Email Sent At',
+  ERROR_COLUMN: 'Quiz Result Email Error',
+  SUBJECT_LINE: 'Your Raleigh Suburb Quiz Results!',
+  BASE_SITE_URL: 'https://raleighncguide.com',
+  LOGO_URL: 'https://raleighncguide.com/assets/images/banner-image-2.png'
+};
+
+function sendPendingSuburbQuizEmails() {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = getOrCreateSheet_(ss, CONFIG.SHEET_NAME);
+  ensureQuizEmailColumns_(sheet);
+
+  const indexes = headerIndexes_(sheet);
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return { ok: true, scanned: 0, matched: 0, sent: 0, failed: 0 };
+  }
+
+  const values = sheet.getRange(2, 1, lastRow - 1, sheet.getLastColumn()).getValues();
+  let matched = 0;
+  let sent = 0;
+  let failed = 0;
+
+  values.forEach(function (row, idx) {
+    const rowNumber = idx + 2;
+    const sourcePage = clean_(row[indexes.source_page]);
+    const sourceKey = clean_(row[indexes.source_key]);
+    const email = clean_(row[indexes.email]);
+    const status = clean_(row[indexes.quiz_email_status]).toLowerCase();
+
+    const sourceHaystack = (sourcePage + ' ' + sourceKey).toLowerCase();
+    const isQuizSource = sourceHaystack.indexOf(CONFIG.SOURCE_MATCH) !== -1 || sourceHaystack.indexOf('raleigh-suburb-quiz') !== -1;
+    if (!isQuizSource || !email || status === 'sent') {
+      return;
+    }
+
+    matched += 1;
+    try {
+      const payload = rowToPayload_(row, indexes);
+      sendSuburbResultsEmail_(payload);
+      markQuizEmailStatus_(sheet, rowNumber, 'sent', new Date(), '');
+      sent += 1;
+    } catch (err) {
+      const message = clean_(err && err.message ? err.message : err);
+      markQuizEmailStatus_(sheet, rowNumber, 'failed', '', message);
+      failed += 1;
+    }
+  });
+
+  return { ok: true, scanned: values.length, matched: matched, sent: sent, failed: failed };
+}
+
+function testSendRandomSuburbQuizEmail() {
+  const suburbKeys = Object.keys(SUBURB_LIBRARY);
+  const picks = shuffle_(suburbKeys).slice(0, 3);
+
+  const payload = {
+    first_name: 'Benjamin',
+    last_name: 'Test',
+    email: CONFIG.TEST_EMAIL,
+    quiz_top_pick: picks[0],
+    quiz_second_pick: picks[1],
+    quiz_third_pick: picks[2],
+    source_page: '/quiz/'
+  };
+
+  sendSuburbResultsEmail_(payload, true);
+  return { ok: true, sent_to: CONFIG.TEST_EMAIL, picks: picks };
+}
+
+function installSuburbQuizEmailTrigger() {
+  removeSuburbQuizEmailTriggers();
+  ScriptApp.newTrigger('sendPendingSuburbQuizEmails')
+    .timeBased()
+    .everyMinutes(10)
+    .create();
+  return { ok: true, message: 'Trigger installed: sendPendingSuburbQuizEmails every 10 minutes.' };
+}
+
+function removeSuburbQuizEmailTriggers() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let removed = 0;
+  triggers.forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === 'sendPendingSuburbQuizEmails') {
+      ScriptApp.deleteTrigger(trigger);
+      removed += 1;
+    }
+  });
+  return { ok: true, removed: removed };
+}
+
+function runSuburbQuizEmailNow() {
+  return sendPendingSuburbQuizEmails();
+}
+
+function sendSuburbResultsEmail_(lead, isTest) {
+  const toEmail = clean_(lead.email);
+  if (!toEmail) throw new Error('Missing lead email.');
+
+  const topPick = clean_(lead.quiz_top_pick);
+  const secondPick = clean_(lead.quiz_second_pick);
+  const thirdPick = clean_(lead.quiz_third_pick);
+
+  if (!topPick) throw new Error('Missing quiz top pick.');
+
+  const picks = [topPick, secondPick, thirdPick].filter(function (v, i, arr) {
+    return v && arr.indexOf(v) === i;
+  });
+
+  const suburbCards = picks.map(function (suburbName, idx) {
+    return buildSuburbBlockHtml_(suburbName, idx === 0);
+  }).join('');
+
+  const firstName = clean_(lead.first_name) || 'there';
+  const subject = CONFIG.SUBJECT_LINE;
+
+  const htmlBody =
+    '<div style="font-family:Arial,sans-serif;color:#1F2937;line-height:1.55;max-width:760px;margin:0 auto;padding:20px;">' +
+      '<div style="text-align:center;margin:0 0 6px;"><img src="' + escapeHtml_(CONFIG.LOGO_URL) + '" alt="Living in Raleigh Team" style="max-width:280px;width:100%;height:auto;"></div>' +
+      '<h1 style="text-align:center;color:#2F5233;margin:0 0 8px;">Your Raleigh Suburb Quiz Results</h1>' +
+      '<p style="text-align:center;margin:0 0 24px;">Hi ' + escapeHtml_(firstName) + ', here are your personalized suburb matches based on your quiz responses.</p>' +
+      suburbCards +
+      '<div style="margin-top:24px;padding:16px;border:1px solid #d9e2e6;border-radius:12px;background:#f7fbf8;">' +
+        '<h3 style="margin:0 0 8px;color:#2F5233;">Want help choosing the best fit?</h3>' +
+        '<p style="margin:0 0 10px;">We can help you compare commute, schools, home styles, and budget in real time.</p>' +
+        '<a href="' + CONFIG.BASE_SITE_URL + '/consult/" style="display:inline-block;background:#2F5233;color:#fff;text-decoration:none;padding:10px 14px;border-radius:999px;font-weight:700;">Book Your Suburb Strategy Call</a>' +
+      '</div>' +
+      '<p style="margin-top:20px;font-size:12px;color:#5b6770;">This quiz is guidance only. Final fit depends on inventory, timing, and your exact priorities.</p>' +
+    '</div>';
+
+  const textBody = buildFallbackTextBody_(firstName, picks);
+
+  MailApp.sendEmail({
+    to: toEmail,
+    name: CONFIG.EMAIL_FROM_NAME,
+    subject: subject,
+    body: textBody,
+    htmlBody: htmlBody,
+    replyTo: CONFIG.ADMIN_EMAIL
+  });
+}
+
+function buildSuburbBlockHtml_(suburbName, isTopPick) {
+  const suburb = SUBURB_LIBRARY[suburbName];
+  if (!suburb) {
+    return '<div style="margin:18px 0;"><h2 style="text-align:center;">' + escapeHtml_(suburbName) + '</h2></div>';
+  }
+
+  const badge = isTopPick
+    ? '<div style="text-align:center;margin-bottom:8px;"><span style="background:#2F5233;color:#fff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Top Pick</span></div>'
+    : '<div style="text-align:center;margin-bottom:8px;"><span style="background:#e8f5e9;color:#2F5233;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Also Consider</span></div>';
+
+  return (
+    '<section style="margin:22px 0;padding:18px;border:1px solid #dce5ea;border-radius:14px;background:#fff;">' +
+      badge +
+      '<h2 style="text-align:center;margin:0 0 12px;color:#1F2937;font-size:28px;font-weight:800;">' + escapeHtml_(suburbName) + '</h2>' +
+      (suburb.imageUrl ? '<div style="text-align:center;margin:0 0 14px;"><a href="' + escapeHtml_(suburb.videoUrl) + '" target="_blank" rel="noopener noreferrer"><img src="' + escapeHtml_(suburb.imageUrl) + '" alt="' + escapeHtml_(suburbName) + '" style="max-width:480px;width:100%;height:auto;border-radius:10px;"></a></div>' : '') +
+      '<div style="margin:0 0 12px;">' +
+        '<p style="margin:0 0 8px;"><strong>Why this could feel like home:</strong> ' + escapeHtml_(suburb.strongFit) + '</p>' +
+        '<p style="margin:0 0 8px;"><strong>Day-to-day vibe:</strong> ' + escapeHtml_(suburb.vibe) + '</p>' +
+        '<p style="margin:0 0 8px;"><strong>Homes you will usually see:</strong> ' + escapeHtml_(suburb.homes) + '</p>' +
+        '<p style="margin:0 0 8px;"><strong>School context:</strong> ' + escapeHtml_(suburb.schools) + '</p>' +
+        '<p style="margin:0 0 8px;"><strong>Commute and access:</strong> ' + escapeHtml_(suburb.access) + '</p>' +
+        '<p style="margin:0;"><strong>Shopping and amenities:</strong> ' + escapeHtml_(suburb.amenities) + '</p>' +
+      '</div>' +
+      '<p style="margin:8px 0 0;"><a href="' + escapeHtml_(getSuburbLearnMoreUrl_(suburbName)) + '" target="_blank" rel="noopener noreferrer" style="color:#2F5233;font-weight:700;">Learn More About ' + escapeHtml_(suburbName) + '</a></p>' +
+    '</section>'
+  );
+}
+
+function getSuburbLearnMoreUrl_(suburbName) {
+  const slugBySuburb = {
+    'Inside-the-Beltline Raleigh': '/explore-the-area/itb/',
+    'Northwest Raleigh': '/explore-the-area/north-raleigh/',
+    'North Raleigh': '/explore-the-area/north-raleigh/',
+    'Northeast Raleigh': '/explore-the-area/east-raleigh/',
+    'East Raleigh': '/explore-the-area/east-raleigh/',
+    'Southeast Raleigh': '/explore-the-area/south-raleigh/',
+    'Cary': '/explore-the-area/cary/',
+    'Apex': '/explore-the-area/apex/',
+    'Morrisville': '/explore-the-area/morrisville/',
+    'Holly Springs': '/explore-the-area/holly-springs/',
+    'Fuquay-Varina': '/explore-the-area/fuquay-varina/',
+    'Garner': '/explore-the-area/garner/',
+    'Knightdale': '/explore-the-area/knightdale/',
+    'Wendell': '/explore-the-area/wendell/',
+    'Rolesville': '/explore-the-area/rolesville/',
+    'Zebulon': '/explore-the-area/zebulon/',
+    'Wake Forest': '/explore-the-area/wake-forest/',
+    'Youngsville': '/explore-the-area/youngsville/',
+    'Downtown Durham': '/explore-the-area/durham/',
+    'Central Durham': '/explore-the-area/durham/',
+    'South Durham': '/explore-the-area/durham/',
+    'East Durham': '/explore-the-area/durham/',
+    'Clayton': '/explore-the-area/clayton/',
+  };
+  return CONFIG.BASE_SITE_URL + (slugBySuburb[suburbName] || '/explore-the-area/');
+}
+
+function buildFallbackTextBody_(firstName, picks) {
+  const lines = [];
+  lines.push('Hi ' + firstName + ',');
+  lines.push('');
+  lines.push('Thanks for taking our Raleigh Suburb Quiz. Your top matches:');
+  lines.push('');
+  picks.forEach(function (pick, idx) {
+    lines.push((idx + 1) + '. ' + pick);
+  });
+  lines.push('');
+  lines.push('Book your suburb strategy call: ' + CONFIG.BASE_SITE_URL + '/consult/');
+  lines.push('');
+  lines.push('- The Official Living in Raleigh NC Team');
+  return lines.join('\n');
+}
+
+function rowToPayload_(row, indexes) {
+  return {
+    first_name: clean_(row[indexes.first_name]),
+    last_name: clean_(row[indexes.last_name]),
+    email: clean_(row[indexes.email]),
+    source_page: clean_(row[indexes.source_page]),
+    source_key: clean_(row[indexes.source_key]),
+    quiz_top_pick: clean_(row[indexes.quiz_top_pick]),
+    quiz_second_pick: clean_(row[indexes.quiz_second_pick]),
+    quiz_third_pick: clean_(row[indexes.quiz_third_pick])
+  };
+}
+
+function ensureQuizEmailColumns_(sheet) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(function (h) { return clean_(h); });
+  [CONFIG.STATUS_COLUMN, CONFIG.SENT_AT_COLUMN, CONFIG.ERROR_COLUMN].forEach(function (name) {
+    if (headers.indexOf(name) === -1) {
+      sheet.insertColumnAfter(sheet.getLastColumn());
+      sheet.getRange(1, sheet.getLastColumn()).setValue(name);
+    }
+  });
+}
+
+function markQuizEmailStatus_(sheet, rowNumber, status, sentAt, errorMessage) {
+  const indexes = headerIndexes_(sheet);
+  const statusCol = indexes.quiz_email_status + 1;
+  const sentCol = indexes.quiz_email_sent_at + 1;
+  const errorCol = indexes.quiz_email_error + 1;
+  if (statusCol < 1 || sentCol < 1 || errorCol < 1) return;
+
+  sheet.getRange(rowNumber, statusCol).setValue(clean_(status));
+  sheet.getRange(rowNumber, sentCol).setValue(sentAt || '');
+  sheet.getRange(rowNumber, errorCol).setValue(clean_(errorMessage));
+}
+
+function getOrCreateSheet_(ss, name) {
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  return sh;
+}
+
+function headerIndexes_(sheet) {
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const idx = function (name) { return headers.indexOf(name); };
+  return {
+    first_name: idx('First Name'),
+    last_name: idx('Last Name'),
+    email: idx('Email'),
+    source_page: idx('Source Page'),
+    source_key: idx('Source Key'),
+    quiz_top_pick: idx('Quiz Top Pick'),
+    quiz_second_pick: idx('Quiz Second Pick'),
+    quiz_third_pick: idx('Quiz Third Pick'),
+    quiz_email_status: idx(CONFIG.STATUS_COLUMN),
+    quiz_email_sent_at: idx(CONFIG.SENT_AT_COLUMN),
+    quiz_email_error: idx(CONFIG.ERROR_COLUMN)
+  };
+}
+
+function clean_(v) {
+  return String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
+}
+
+function escapeHtml_(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function shuffle_(arr) {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const tmp = out[i];
+    out[i] = out[j];
+    out[j] = tmp;
+  }
+  return out;
+}
+
+const SUBURB_LIBRARY = {
+  'Inside-the-Beltline Raleigh': { imageUrl: 'https://i.ytimg.com/vi/aJOhOV7EtFk/maxresdefault.jpg', strongFit: 'If you light up when you can walk to coffee, dinner, and parks, this is one of the most rewarding places to live in the Triangle.', vibe: 'It feels lively, established, and full of personality, with real neighborhood character block to block.', homes: 'You will mostly see older homes with charm, plus selective high-end renovations and newer infill options.', schools: 'School choices vary by micro-area, and many buyers here also look closely at charter, magnet, or private options.', access: 'You are closest to downtown Raleigh, with manageable drives to RTP and RDU depending on time of day.', amenities: 'From Village District to local restaurants, museums, greenways, and parks, your lifestyle options are excellent.', videoUrl: 'https://www.youtube.com/watch?v=aJOhOV7EtFk' },
+  'Northwest Raleigh': { imageUrl: 'https://i.ytimg.com/vi/lhQltOJ3UXk/maxresdefault.jpg', strongFit: 'This is a great match if you want a proven, comfortable suburb feel without feeling too far from everything.', vibe: 'It feels polished and practical, with mature neighborhoods and a steady, family-friendly rhythm.', homes: 'You will find many established homes in mid-to-high price ranges, often with larger lots and updated interiors.', schools: 'A lot of buyers choose this area specifically for school reputation, though exact zoning still matters.', access: 'You get strong connectivity to Raleigh, RTP, and RDU, especially compared with farther-out suburbs.', amenities: 'Daily convenience is easy with nearby retail, parks, trails, and multiple shopping corridors.', videoUrl: 'https://www.youtube.com/watch?v=lhQltOJ3UXk' },
+  'North Raleigh': { imageUrl: 'https://i.ytimg.com/vi/qqnyJVTXzB8/maxresdefault.jpg', strongFit: 'If your priority is breathing room, good neighborhood stability, and day-to-day comfort, North Raleigh usually lands well.', vibe: 'It is calm, residential, and very livable, with a strong long-term homeowner feel.', homes: 'Housing is mostly established, and many pockets offer larger lots or more interior square footage.', schools: 'You will see a mix of strong public and private pathways depending on the exact community.', access: 'Getting into Raleigh is straightforward, while RTP and RDU are typically moderate commutes.', amenities: 'North Hills plus local shopping, fitness, parks, and healthcare access make daily life convenient.', videoUrl: 'https://www.youtube.com/watch?v=qqnyJVTXzB8' },
+  'Northeast Raleigh': { imageUrl: 'https://i.ytimg.com/vi/bh9q31N_lg0/maxresdefault.jpg', strongFit: 'This area often works well for buyers who want to stay connected to Raleigh while keeping more flexibility in budget.', vibe: 'It feels like a practical growth corridor where value and convenience can meet.', homes: 'You will see a healthy mix of newer communities and resale opportunities at approachable price points.', schools: 'School performance varies by assignment, so we always narrow this down by exact address before deciding.', access: 'Raleigh access is usually strong, while RTP and Durham drives tend to be longer.', amenities: 'You still get good everyday coverage with groceries, parks, and local retail nearby.', videoUrl: 'https://www.youtube.com/watch?v=bh9q31N_lg0' },
+  'East Raleigh': { imageUrl: 'https://i.ytimg.com/vi/f0bjkQ_1q1w/maxresdefault.jpg', strongFit: 'If you are looking for close-in Raleigh access with future upside potential, East Raleigh is often worth serious attention.', vibe: 'It feels transitional in a good way, with more momentum and new investment than many people expect.', homes: 'Home styles and prices vary widely, which can create good opportunities if your strategy is value plus growth.', schools: 'Because school fit is very neighborhood-specific here, we treat this as an address-by-address decision.', access: 'You are very close to downtown Raleigh, while RTP and Durham routes are typically longer.', amenities: 'You get quick city access plus a growing mix of local food, services, and park options.', videoUrl: 'https://www.youtube.com/watch?v=f0bjkQ_1q1w' },
+  'Southeast Raleigh': { imageUrl: 'https://i.ytimg.com/vi/AUFCGF8lojk/maxresdefault.jpg', strongFit: 'This can be a smart fit if you want a quieter residential feel while staying reasonably close to central Raleigh.', vibe: 'It feels practical and neighborhood-oriented, with a lot of buyers finding a comfortable pace here.', homes: 'You will find entry to mid-range inventory, including both resale and newer community options.', schools: 'School quality differs by zone, so we would verify your exact assignment before you commit.', access: 'Raleigh access is generally strong, while RTP and Durham are less convenient.', amenities: 'Day-to-day needs are covered through nearby retail, parks, and straightforward city connectivity.', videoUrl: 'https://www.youtube.com/watch?v=AUFCGF8lojk' },
+  'Cary': { imageUrl: 'https://i.ytimg.com/vi/f5uJaPMkix0/maxresdefault.jpg', strongFit: 'Cary is a strong match when you want everything to feel polished, efficient, and easy to manage day to day.', vibe: 'It has a clean, well-planned feel with excellent services and a very consistent quality of life.', homes: 'Prices are typically on the higher side, with a mix of established neighborhoods and upscale newer pockets.', schools: 'Many buyers are drawn here for school reputation, with several consistently strong assignment areas.', access: 'Commutes to RTP and RDU are among the easiest in the region, with good Raleigh connectivity too.', amenities: 'Between Downtown Cary, Fenton, greenways, and dining, there is a lot to enjoy without traveling far.', videoUrl: 'https://www.youtube.com/watch?v=f5uJaPMkix0' },
+  'Apex': { imageUrl: 'https://i.ytimg.com/vi/ZDmRAdvyKdw/maxresdefault.jpg', strongFit: 'Apex tends to fit buyers who want strong schools and quality lifestyle without losing that neighborhood charm.', vibe: 'You get a nice blend of historic small-town character and modern suburban convenience.', homes: 'Inventory includes both established homes and newer communities, so there is flexibility in style and price.', schools: 'School reputation is a major draw here in many assignment zones.', access: 'RTP is usually convenient, with moderate drives to Raleigh and RDU depending on your exact location.', amenities: 'Downtown Apex, parks, and local events make it easy to feel connected to the community quickly.', videoUrl: 'https://www.youtube.com/watch?v=ZDmRAdvyKdw' },
+  'Morrisville': { imageUrl: 'https://i.ytimg.com/vi/GHJ1BjTNx3c/maxresdefault.jpg', strongFit: 'If commute efficiency is a top priority, Morrisville usually shines because of how close it is to RTP and RDU.', vibe: 'It feels modern, practical, and very commuter-aware, with a strong convenience-first lifestyle.', homes: 'You will often see newer homes and townhomes designed for lower-maintenance living.', schools: 'There are solid school options nearby, but exact assignment checks are still important.', access: 'RTP, RDU, and Durham access are some of the best in the Triangle from this location.', amenities: 'You have great international dining, shopping hubs, and parks close to home.', videoUrl: 'https://www.youtube.com/watch?v=GHJ1BjTNx3c' },
+  'Holly Springs': { imageUrl: 'https://i.ytimg.com/vi/5qxMMVPCKAM/maxresdefault.jpg', strongFit: 'Holly Springs is often a great fit for families who want newer neighborhoods and strong built-in community amenities.', vibe: 'It feels welcoming, organized, and very family-forward in day-to-day life.', homes: 'The housing mix leans heavily toward newer construction and master-planned community layouts.', schools: 'Many zones have a strong reputation, which is a major reason buyers choose this area.', access: 'Commute times to Raleigh and RTP are usually manageable, though location within town matters.', amenities: 'Community pools, clubhouses, parks, and expanding retail make weekends easy.', videoUrl: 'https://www.youtube.com/watch?v=5qxMMVPCKAM' },
+  'Fuquay-Varina': { imageUrl: 'https://i.ytimg.com/vi/yWocXZnGEyM/maxresdefault.jpg', strongFit: 'Fuquay-Varina tends to work really well for buyers chasing more space and better value without leaving growth areas.', vibe: 'It has a relaxed, local feel with just enough energy to keep things interesting.', homes: 'You will find lots of newer communities plus resale options that can stretch your budget further.', schools: 'School quality varies by area, so we always narrow this with your target neighborhood.', access: 'Commutes can be longer, especially toward RTP and Durham, but many buyers accept that tradeoff for value.', amenities: 'Downtown districts, breweries, parks, and practical retail make it easy to enjoy weekends nearby.', videoUrl: 'https://www.youtube.com/watch?v=yWocXZnGEyM' },
+  'Garner': { imageUrl: 'https://i.ytimg.com/vi/gbURv6AB_Rs/maxresdefault.jpg', strongFit: 'Garner is a practical fit when you want to stay close to Raleigh while keeping a tighter grip on monthly costs.', vibe: 'The feel is grounded and friendly, with steady growth but not an overwhelming pace.', homes: 'You can usually find good value across both starter and move-up homes.', schools: 'School fit is mixed by zone, so we would map this carefully based on your address targets.', access: 'Downtown Raleigh is generally convenient, while RTP and Durham are less ideal for daily commuting.', amenities: 'White Oak retail, local parks, and service access cover most everyday needs well.', videoUrl: 'https://www.youtube.com/watch?v=gbURv6AB_Rs' },
+  'Knightdale': { imageUrl: 'https://i.ytimg.com/vi/464eUeFQdGY/maxresdefault.jpg', strongFit: 'If you want newer homes without giving up Raleigh access, Knightdale is often a really practical sweet spot.', vibe: 'A growing, upbeat suburb where people are putting down roots and enjoying newer community energy.', homes: 'You will usually see newer homes and townhomes with layouts that feel modern and livable.', schools: 'School options can vary by exact neighborhood, so we always recommend confirming assignments with your target address.', access: 'It is one of the easier east-side commutes into Raleigh, while RTP and Durham tend to be longer drives.', amenities: 'Knightdale Station and nearby retail corridors give you parks, trails, groceries, and daily conveniences close by.', videoUrl: 'https://www.youtube.com/watch?v=464eUeFQdGY' },
+  'Wendell': { imageUrl: 'https://i.ytimg.com/vi/A1fwu8OjZyQ/maxresdefault.jpg', strongFit: 'Wendell is a nice fit for buyers who like newer communities and still want room for long-term value growth.', vibe: 'It feels fresh and up-and-coming, with a lot of neighborhood pride in newer developments.', homes: 'Most options are newer and often more value-forward than west-side suburbs.', schools: 'School quality can be solid in many areas, but it still depends on the exact neighborhood and assignment.', access: 'Raleigh is usually manageable, while RTP and Durham drives are longer.', amenities: 'Wendell Falls-style amenities, parks, and local downtown options keep life enjoyable close to home.', videoUrl: 'https://www.youtube.com/watch?v=A1fwu8OjZyQ' },
+  'Rolesville': { imageUrl: 'https://i.ytimg.com/vi/OqNBUFUtAKs/maxresdefault.jpg', strongFit: 'Rolesville often works beautifully for families who want a quieter rhythm and more home for the money.', vibe: 'It is calm, residential, and still growing in a way that feels manageable.', homes: 'You will commonly see newer housing stock with good square footage and family-friendly layouts.', schools: 'There are solid school options in many zones, with assignment-level checks still recommended.', access: 'Raleigh access is decent, while RTP and Durham are typically longer commutes.', amenities: 'You get neighborhood amenities plus easy access to nearby Wake Forest shopping and services.', videoUrl: 'https://www.youtube.com/watch?v=OqNBUFUtAKs' },
+  'Zebulon': { imageUrl: 'https://i.ytimg.com/vi/NjLGG2LKwAI/maxresdefault.jpg', strongFit: 'Zebulon can be a strong fit when your top priorities are space, peace, and a lower monthly payment.', vibe: 'It is noticeably quieter and less crowded, which many buyers find refreshing.', homes: 'Pricing is often more approachable, and larger-lot opportunities are more common than in close-in suburbs.', schools: 'School options are more limited in some pockets, so up-front zoning review is important.', access: 'This is one of the longer commute profiles to Raleigh, RTP, and Durham.', amenities: 'Daily essentials are covered locally, with bigger retail trips usually regional.', videoUrl: 'https://www.youtube.com/watch?v=NjLGG2LKwAI' },
+  'Wake Forest': { imageUrl: 'https://i.ytimg.com/vi/WC5ofUmInYI/maxresdefault.jpg', strongFit: 'Wake Forest is often the sweet spot for buyers wanting a complete suburban lifestyle with strong community identity.', vibe: 'It feels polished but still warm, with a lot of local pride and family activity.', homes: 'You will find both established neighborhoods and newer communities across a broad range of price points.', schools: 'Many assignments are highly regarded, which is one of the area\'s biggest draws.', access: 'Raleigh access is usually good, while RTP and Durham commutes are longer for most buyers.', amenities: 'Downtown Wake Forest, trails, shopping, and dining provide a strong everyday lifestyle mix.', videoUrl: 'https://www.youtube.com/watch?v=WC5ofUmInYI' },
+  'Youngsville': { imageUrl: 'https://i.ytimg.com/vi/W8TINxM-Nhs/maxresdefault.jpg', strongFit: 'Youngsville fits buyers who want more privacy and space while keeping costs more comfortable.', vibe: 'The pace is slower and more residential, which many people love after busier markets.', homes: 'You will usually see good value in newer homes and larger lots compared with closer-in locations.', schools: 'School fit is mixed by assignment, so we would review exact zoning with you.', access: 'Commutes to major job hubs can be longer, so schedule expectations are important.', amenities: 'Most essentials are nearby, and Wake Forest access adds more shopping and dining options.', videoUrl: 'https://www.youtube.com/watch?v=W8TINxM-Nhs' },
+  'Downtown Durham': { imageUrl: 'https://i.ytimg.com/vi/HRygIJl3zzQ/maxresdefault.jpg', strongFit: 'If you are energized by restaurants, culture, and walkable city life, Downtown Durham can be an exciting fit.', vibe: 'It feels urban, social, and creative, with something happening most nights of the week.', homes: 'Housing leans toward condos, townhomes, and close-in historic properties with character.', schools: 'This area is usually chosen more for lifestyle than school-driven priorities.', access: 'You are right in Durham with very strong RTP convenience.', amenities: 'Food, nightlife, arts venues, events, and local businesses are all close at hand.', videoUrl: 'https://www.youtube.com/watch?v=HRygIJl3zzQ' },
+  'Central Durham': { imageUrl: 'https://i.ytimg.com/vi/ea7E1aVD2QE/maxresdefault.jpg', strongFit: 'Central Durham is a strong option when you want access, personality, and room for smart value decisions.', vibe: 'It has an eclectic feel with a mix of city energy and neighborhood charm.', homes: 'You will see renovated older homes, infill opportunities, and a broad mix of property styles.', schools: 'School performance varies by exact location, so block-level planning matters here.', access: 'Durham and RTP access are usually excellent, with Raleigh at a moderate commute distance.', amenities: 'Dining corridors, parks, and local retail make daily life feel connected and convenient.', videoUrl: 'https://www.youtube.com/watch?v=ea7E1aVD2QE' },
+  'South Durham': { imageUrl: 'https://i.ytimg.com/vi/ZQX5nOGZUBo/maxresdefault.jpg', strongFit: 'South Durham is often ideal for buyers who want an easier RTP commute without giving up family-friendly neighborhoods.', vibe: 'It feels balanced and practical, with a suburban pace and strong everyday convenience.', homes: 'You will find a healthy mix of townhomes and single-family communities across different budgets.', schools: 'Several zones are considered solid by local buyers, with assignment checks still important.', access: 'RTP and Durham access are usually excellent, and Raleigh remains manageable for many households.', amenities: 'Southpoint shopping, trails, and nearby services make routine life straightforward.', videoUrl: 'https://www.youtube.com/watch?v=ZQX5nOGZUBo' },
+  'East Durham': { imageUrl: 'https://i.ytimg.com/vi/cEa_EK2Y4Kg/maxresdefault.jpg', strongFit: 'East Durham can be a smart fit if you are focused on long-term value and improving neighborhood momentum.', vibe: 'It feels opportunity-driven, with areas that are actively changing and attracting attention.', homes: 'Pricing is often more approachable, and many buyers like the appreciation potential over time.', schools: 'School fit is mixed and should always be verified by the exact target address.', access: 'Durham access is strong, with fair connectivity into RTP.', amenities: 'Local retail and neighborhood services continue to improve in many pockets.', videoUrl: 'https://www.youtube.com/watch?v=cEa_EK2Y4Kg' },
+  'Clayton': { imageUrl: 'https://i.ytimg.com/vi/xK8vIJLSiMk/maxresdefault.jpg', strongFit: 'Clayton is a strong fit for buyers who want more space and value while still having suburban conveniences nearby.', vibe: 'It feels family-oriented and steadily growing, without losing its approachable pace.', homes: 'You will find plenty of newer communities along with resale options that can be budget-friendly.', schools: 'School quality can range from mixed to strong depending on the exact neighborhood.', access: 'Raleigh is typically manageable, while RTP and Durham are longer drives for most commuters.', amenities: 'Parks, shopping centers, and continued growth around Cleveland and surrounding areas support daily life well.', videoUrl: 'https://www.youtube.com/watch?v=xK8vIJLSiMk' },
+};
+
+
+

@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Raleigh Suburb Quiz | Living in Raleigh NC</title>
+  <meta name="description" content="Take our Raleigh suburb quiz and get a personalized suburb match sent to your inbox.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://raleighncguide.com/quiz/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Raleigh Suburb Quiz | Living in Raleigh NC">
+  <meta property="og:description" content="Answer 24 quick questions and get a personalized Raleigh suburb match.">
+  <meta property="og:image" content="https://raleighncguide.com/assets/images/consult-hero.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20260402-relocationgreen1">
+  <style>
+    :root { --primary-green: #2F5233; --secondary-green: #5F8C63; --accent-light: #E8F5E9; --text-dark: #1F2937; --white: #FFFFFF; --frame: 520px; --border: rgba(17,24,39,.10); --shadow: 0 10px 30px rgba(17,24,39,.08); }
+    * { box-sizing: border-box; }
+    .quiz-page { margin: 0; background: var(--accent-light); color: var(--text-dark); font-family: "Manrope", sans-serif; }
+    .page-container { min-height: 100vh; display: flex; flex-direction: column; padding-bottom: 40px; width: 100%; overflow-x: hidden; }
+    .hero-container { width: 100%; position: relative; background-color: var(--primary-green); line-height: 0; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+    .hero-image { width: 100%; height: auto; display: block; }
+    .hero-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 40%; background: linear-gradient(to bottom, transparent 0%, rgba(232,245,233,0.2) 60%, var(--accent-light) 100%); pointer-events: none; }
+    .quiz-shell { width: 100%; max-width: 980px; margin: 40px auto 0; padding: 0 18px; }
+    .quiz-hero { text-align: center; margin: 1rem 0 2rem; }
+    .quiz-hero h1 { margin: 0; font-size: clamp(2rem, 3.3vw, 3rem); color: var(--primary-green); text-transform: uppercase; }
+    .quiz-hero p { margin: 0.7rem auto; max-width: 760px; }
+    .quiz-card, .consultation-card { background: #fff; border: 1px solid #dae3e9; border-radius: 24px; padding: clamp(1rem, 2vw, 2rem); box-shadow: 0 14px 30px rgba(7, 23, 33, 0.08); }
+    .quiz-progress-row { display: flex; justify-content: space-between; margin-bottom: 0.8rem; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.08em; text-transform: uppercase; color: #36515d; }
+    .quiz-progress-track { width: 100%; height: 10px; border-radius: 999px; background: #e4edf3; overflow: hidden; margin-bottom: 1.3rem; }
+    .quiz-progress-fill { height: 100%; width: 0; background: linear-gradient(90deg, #3f6b45 0%, #63a46c 100%); transition: width 180ms ease; }
+    .quiz-question { font-size: clamp(1.2rem, 2.2vw, 1.55rem); margin-bottom: 1rem; color: #fff; }
+    .quiz-options { display: grid; gap: 0.7rem; }
+    .quiz-option { text-align: left; width: 100%; border: 1px solid #cfdce5; background: #fbfdff; border-radius: 14px; padding: 0.9rem 1rem; font: inherit; color: #17313d; cursor: pointer; }
+    .quiz-nav { margin-top: 1rem; display: flex; justify-content: space-between; gap: 1rem; }
+    .quiz-btn { border: 1px solid #17313d; border-radius: 999px; padding: 0.65rem 1.1rem; background: #fff; color: #17313d; font-weight: 700; cursor: pointer; }
+    .quiz-btn[disabled] { opacity: 0.45; cursor: not-allowed; }
+    .next-wrap { position: relative; display: inline-flex; justify-content: flex-end; }
+    .next-wrap.is-disabled .quiz-btn { background: #eef2f5; }
+    .next-tooltip { position: absolute; bottom: calc(100% + 8px); right: 0; background: #17313d; color: #fff; font-size: 0.76rem; padding: 0.4rem 0.55rem; border-radius: 8px; white-space: nowrap; opacity: 0; transform: translateY(5px); pointer-events: none; transition: opacity 120ms ease, transform 120ms ease; }
+    .next-wrap.is-disabled:hover .next-tooltip,
+    .next-wrap.is-disabled.show-tooltip .next-tooltip { opacity: 1; transform: translateY(0); }
+    .quiz-results, .quiz-lead-gate, .quiz-success-screen { display: none; }
+    .quiz-results.active, .quiz-lead-gate.active, .quiz-success-screen.active { display: block; }
+    .quiz-results-grid { display: grid; gap: 0.85rem; margin: 1rem 0 1.1rem; }
+    .quiz-result-card { border: 1px solid #d5e2ea; border-radius: 14px; padding: 0.9rem 1rem; background: #f8fcff; }
+    .quiz-form-grid { display: grid; gap: 0.9rem; grid-template-columns: 1fr 1fr; }
+    .quiz-field { display: grid; gap: 0.35rem; }
+    .quiz-field input { border: 1px solid #cddbe4; border-radius: 12px; padding: 0.8rem; font: inherit; }
+    .quiz-field.full { grid-column: 1 / -1; }
+    .quiz-checkbox-row { display: grid; grid-template-columns: 1rem minmax(0, 1fr); align-items: start; gap: 0.6rem; }
+    .quiz-checkbox-row input[type="checkbox"] { margin: 0.15rem 0 0; width: 1rem; height: 1rem; }
+    .quiz-phone-conditional { display: none; }
+    .quiz-phone-conditional.active { display: grid; }
+    .quiz-submit-wrap { margin-top: 0.8rem; }
+    .quiz-submit, .quiz-start-over, .quiz-results-cta { border: 0; border-radius: 999px; padding: 0.82rem 1.25rem; font: inherit; font-weight: 700; background: #17313d; color: #fff; cursor: pointer; }
+    .quiz-success-screen { min-height: 56vh; text-align: center; place-items: center; background: #fff; border-radius: 24px; }
+    .quiz-success-screen.active { display: grid; }
+    .quiz-page.quiz-complete { background: #fff; }
+    .quiz-page.quiz-complete .hero-container,
+    .quiz-page.quiz-complete .quiz-hero,
+    .quiz-page.quiz-complete .consultation-card,
+    .quiz-page.quiz-complete footer { display: none; }
+    .quiz-page.quiz-complete .quiz-card { display: none; }
+    .quiz-page.quiz-complete .quiz-shell { min-height: 100vh; display: grid; place-items: center; }
+    .consultation-card { margin-top: 2rem; text-align: center; background: #fff; color: var(--text-dark); border: 1px solid #dae3e9; border-radius: 24px; box-shadow: 0 14px 30px rgba(7, 23, 33, 0.08); width: auto; margin-left: 0; margin-right: 0; padding: clamp(1rem, 2vw, 2rem); }
+    .consultation-inner { width: min(980px, 100%); margin: 0 auto; background: transparent; }
+    .consultation-title { font-size: 1.8rem; color: var(--primary-green); margin-bottom: 1.5rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .embedShell { margin-top: 12px; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+    .embedHeader { background: #16a34a; color: #fff; padding: 14px 16px; font-size: 14px; line-height: 1.45; font-weight: 500; }
+    .embedHeaderInner { width: min(860px, 100%); margin: 0 auto; padding: 0 2px; }
+    .embedWrap { position: relative; width: 100%; background: #fff; overflow: hidden; height: var(--frame); }
+    iframe.frame { display: block; width: 100%; border: 0; height: var(--frame); background: #fff; }
+    @media (max-width: 720px) { .quiz-form-grid { grid-template-columns: 1fr; } .quiz-nav { flex-direction: column; } .quiz-btn { width: 100%; } :root { --frame: 680px; } }
+    @media (max-width: 420px) { :root { --frame: 760px; } }
+    .quiz-card { margin-top: 2rem; text-align: center; background: var(--primary-green); color: #fff; border: 0; border-radius: 0; box-shadow: none; width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding: 2.2rem 1rem; }
+    .quiz-card > * { width: min(980px, 100%); margin-left: auto; margin-right: auto; text-align: left; }
+    .quiz-card .quiz-progress-row { color: #d9ece0; }
+    .quiz-card .quiz-results h2, .quiz-card .quiz-results h3, .quiz-card .quiz-results p, .quiz-card .quiz-lead-gate h2, .quiz-card .quiz-lead-gate p, .quiz-card .quiz-field span { color: #fff; }
+  </style>
+</head>
+<body class="quiz-page">
+  <a class="skip-link" href="#main">Skip to content</a>
+  <div class="page-container">
+    <div class="hero-container">
+      <img src="https://lh3.googleusercontent.com/d/1ad8y4w1SQCXcnZzF7RDCF7FJue2IF6Fb" alt="Banner" class="hero-image" referrerpolicy="no-referrer" onerror="this.style.display='none'">
+      <div class="hero-fade"></div>
+    </div>
+
+    <main id="main" class="quiz-shell" aria-label="Raleigh suburb quiz">
+      <section class="quiz-hero" aria-label="Quiz intro">
+        <h1>Raleigh Suburb Quiz</h1>
+        <p>Answer 24 quick questions and we will map your preferences to the best Raleigh-area suburb matches.</p>
+      </section>
+
+      <section class="quiz-card" aria-live="polite">
+        <div id="quizStage">
+          <div class="quiz-progress-row"><span id="quizStepLabel">Question 1 of 24</span><span id="quizPercent">4%</span></div>
+          <div class="quiz-progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="4" aria-label="Quiz progress"><div class="quiz-progress-fill" id="quizProgressFill"></div></div>
+          <h2 class="quiz-question" id="quizQuestion"></h2>
+          <div class="quiz-options" id="quizOptions"></div>
+          <div class="quiz-nav">
+            <button class="quiz-btn" id="prevBtn" type="button">Previous</button>
+            <div class="next-wrap" id="nextWrap">
+              <button class="quiz-btn" id="nextBtn" type="button">Next</button>
+              <span class="next-tooltip">Please select an option first.</span>
+            </div>
+          </div>
+        </div>`n        <div class="quiz-lead-gate" id="leadGate">
+          <h2>Your quiz is complete.</h2>
+          <p>Enter your info below and we will send your suburb quiz result summary to your email.</p>
+          <form id="leadForm" novalidate>
+            <div class="quiz-form-grid">
+              <label class="quiz-field"><span>First name</span><input type="text" name="firstName" autocomplete="given-name" required></label>
+              <label class="quiz-field"><span>Last name</span><input type="text" name="lastName" autocomplete="family-name" required></label>
+              <label class="quiz-field full"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+              <label class="quiz-field full quiz-checkbox-row"><input type="checkbox" name="wantsConsultation" id="wantsConsultation"> <span>I would like to speak to someone on the Living in Raleigh team about making a move to Raleigh.</span></label>
+              <label class="quiz-field full quiz-phone-conditional" id="phoneConditional"><span>Phone</span><input type="tel" name="phone" id="phoneInput" autocomplete="tel"></label>
+            </div>
+            <div class="quiz-submit-wrap"><button class="quiz-submit" type="submit">Send My Quiz Results</button></div>
+            <p class="quiz-msg" id="formMsg" hidden></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="quiz-success-screen" id="quizSuccessScreen">
+        <div>
+          <h2>Success! Check your email now.</h2>
+          <p>Your quiz has been submitted.</p>
+          <button class="quiz-start-over" id="startOverBtn" type="button">Start Over</button>
+        </div>
+      </section>
+
+      <section class="consultation-card" aria-label="Schedule consultation">
+        <div class="consultation-inner">
+        <div class="consultation-title">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+          <span>Schedule Your Relocation Consultation</span>
+        </div>
+        <p style="color: #666; margin-bottom: 1rem;">Ready to make the move? Book a free 15-minute intro call.</p>
+        <div class="embedShell">
+          <div class="embedHeader"><div class="embedHeaderInner">Pick a time below. You'll get an instant confirmation email plus a calendar invite. Choose from a video call, phone call, or meet with us in person.</div></div>
+          <div class="embedWrap"><iframe class="frame" src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true" title="Google Calendar appointment scheduling" loading="eager" allow="camera; microphone; fullscreen"></iframe></div>
+        </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer legal-auto-footer">
+      <div class="legal-auto-footer-inner">
+        <span>&copy; <span data-year></span> Living in Raleigh LLC</span>
+        <span><a href="/consult/">Contact</a> | <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> | <a href="/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a></span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="/assets/js/raleigh-suburb-quiz.js" defer></script>
+  <script src="/assets/js/script.js" defer></script>
+</body>
+</html>
+

@@ -62,7 +62,8 @@ const CONFIG = {
     "popup_submit_rate",
     "home_eval_submit_rate",
     "requested_contact_submit_rate",
-    "new_construction_submit_rate"
+    "new_construction_submit_rate",
+    "suburb_quiz_submit_rate"
   ],
   FUNNEL_HEADERS: [
     "date",
@@ -93,7 +94,8 @@ const CONFIG = {
     "popup_submit_rate",
     "home_eval_submit_rate",
     "requested_contact_submit_rate",
-    "new_construction_submit_rate"
+    "new_construction_submit_rate",
+    "suburb_quiz_submit_rate"
   ]
 };
 
@@ -356,7 +358,7 @@ function rebuildSummaries_(ss) {
   writeTable_(pageSheet, CONFIG.PAGE_HEADERS, pageRows);
   if (pageRows.length) {
     pageSheet.getRange(2, 5, pageRows.length, 2).setNumberFormat("0.00");
-    pageSheet.getRange(2, 7, pageRows.length, 7).setNumberFormat("0.00%");
+    pageSheet.getRange(2, 7, pageRows.length, 8).setNumberFormat("0.00%");
   }
 
   const funnelSheet = ss.getSheetByName(CONFIG.SHEETS.FUNNEL);
@@ -370,7 +372,7 @@ function rebuildSummaries_(ss) {
   writeTable_(overviewSheet, CONFIG.OVERVIEW_HEADERS, overviewRows);
   if (overviewRows.length) {
     overviewSheet.getRange(2, 3, overviewRows.length, 2).setNumberFormat("0.00");
-    overviewSheet.getRange(2, 5, overviewRows.length, 7).setNumberFormat("0.00%");
+    overviewSheet.getRange(2, 5, overviewRows.length, 8).setNumberFormat("0.00%");
   }
 }
 
@@ -436,6 +438,7 @@ function buildPageMetricRows_(events) {
         home_eval_submit_success: new Set(),
         requested_contact_submit_success: new Set(),
         new_construction_submit_success: new Set(),
+        suburb_quiz_submit_success: new Set(),
         exit_sessions: new Set(),
         engaged_ms_total: 0,
         page_time_ms_total: 0
@@ -476,6 +479,9 @@ function buildPageMetricRows_(events) {
     if (ev.event_name === "new_construction_form_submit_success" && sessionId) {
       agg.new_construction_submit_success.add(sessionId);
     }
+    if (sessionId && (ev.event_name === "raleigh_suburb_quiz_submit" || ev.event_name === "suburb_quiz_submit_success")) {
+      agg.suburb_quiz_submit_success.add(sessionId);
+    }
 
     if (ev.event_name === "page_exit" && sessionId) {
       const exitKey = date + "|" + pagePath + "|" + sessionId;
@@ -508,7 +514,8 @@ function buildPageMetricRows_(events) {
       rate_(agg.popup_submit_success.size, sessionCount),
       rate_(agg.home_eval_submit_success.size, sessionCount),
       rate_(agg.requested_contact_submit_success.size, sessionCount),
-      rate_(agg.new_construction_submit_success.size, sessionCount)
+      rate_(agg.new_construction_submit_success.size, sessionCount),
+      rate_(agg.suburb_quiz_submit_success.size, sessionCount)
     ];
   });
 
@@ -670,6 +677,7 @@ function buildDailyOverviewRows_(events) {
         home_eval_submit_success: new Set(),
         requested_contact_submit_success: new Set(),
         new_construction_submit_success: new Set(),
+        suburb_quiz_submit_success: new Set(),
         exit_sessions: new Set(),
         engaged_ms_total: 0,
         page_time_ms_total: 0
@@ -707,6 +715,9 @@ function buildDailyOverviewRows_(events) {
     if (ev.event_name === "new_construction_form_submit_success" && sessionId) {
       agg.new_construction_submit_success.add(sessionId);
     }
+    if (sessionId && (ev.event_name === "raleigh_suburb_quiz_submit" || ev.event_name === "suburb_quiz_submit_success")) {
+      agg.suburb_quiz_submit_success.add(sessionId);
+    }
 
     if (ev.event_name === "page_exit" && sessionId) {
       const pagePath = asString_(ev.page_path) || "(unknown)";
@@ -738,7 +749,8 @@ function buildDailyOverviewRows_(events) {
       rate_(agg.popup_submit_success.size, sessionCount),
       rate_(agg.home_eval_submit_success.size, sessionCount),
       rate_(agg.requested_contact_submit_success.size, sessionCount),
-      rate_(agg.new_construction_submit_success.size, sessionCount)
+      rate_(agg.new_construction_submit_success.size, sessionCount),
+      rate_(agg.suburb_quiz_submit_success.size, sessionCount)
     ];
   });
 
@@ -779,6 +791,7 @@ function buildMonthlySummary_(events, range) {
   let homeEvalLeadCount = 0;
   let requestedContactLeadCount = 0;
   let newConstructionLeadCount = 0;
+  let suburbQuizLeadCount = 0;
   let requestedContactBuyerLeadCount = 0;
   let requestedContactSellerLeadCount = 0;
   let requestedContactSellerBuyerLeadCount = 0;
@@ -875,6 +888,11 @@ function buildMonthlySummary_(events, range) {
       newConstructionLeadCount += 1;
       ensureIntakeConversion("New Construction Form").completed_sessions.add(sessionId);
     }
+    if (ev.event_name === "raleigh_suburb_quiz_submit" && sessionId) {
+      intakeCompletedAny.add(sessionId);
+      suburbQuizLeadCount += 1;
+      ensureIntakeConversion("Raleigh Suburb Quiz").completed_sessions.add(sessionId);
+    }
 
     if ((ev.event_name === "popup_step_viewed" || ev.event_name === "popup_step_completed") && sessionId) {
       const leadType = asString_(ev.popup_lead_type);
@@ -925,7 +943,7 @@ function buildMonthlySummary_(events, range) {
     }
   });
 
-  const totalLeads = buyerLeadCount + sellerLeadCount + homeEvalLeadCount + requestedContactLeadCount + newConstructionLeadCount;
+  const totalLeads = buyerLeadCount + sellerLeadCount + homeEvalLeadCount + requestedContactLeadCount + newConstructionLeadCount + suburbQuizLeadCount;
   const visitorCount = visitors.size;
 
   const topConvertingIntakes = Array.from(intakeConversions.values())
@@ -995,6 +1013,7 @@ function buildMonthlySummary_(events, range) {
     home_eval_leads: homeEvalLeadCount,
     requested_contact_leads: requestedContactLeadCount,
     new_construction_leads: newConstructionLeadCount,
+    suburb_quiz_leads: suburbQuizLeadCount,
     requested_contact_buyer_leads: requestedContactBuyerLeadCount,
     requested_contact_seller_leads: requestedContactSellerLeadCount,
     requested_contact_seller_and_buyer_leads: requestedContactSellerBuyerLeadCount,
@@ -1037,6 +1056,7 @@ function buildMonthlyDigestEmailBody_(summary, range) {
   lines.push("- Requested contact (sell and buy intent): " + summary.requested_contact_seller_and_buyer_leads);
   lines.push("- Home valuation leads: " + summary.home_eval_leads);
   lines.push("- New construction form leads: " + summary.new_construction_leads);
+  lines.push("- Raleigh suburb quiz leads: " + summary.suburb_quiz_leads);
   lines.push("");
   lines.push("3) Conversion + Engagement Rates");
   lines.push("- Popup impression rate: " + asPercent_(summary.popup_impression_rate));
