@@ -62,7 +62,7 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
   const userHeadline = {};
   Object.keys(suburbProfiles).forEach((suburb) => { userHeadline[suburb] = `Strong fit based on your lifestyle, commute, and home priorities in ${suburb}.`; });
   const state = { current: 0, answers: new Array(quizQuestions.length).fill(null), finalResults: [] };
-  const el = { stage: document.getElementById("quizStage"), leadGate: document.getElementById("leadGate"), success: document.getElementById("quizSuccessScreen"), startOver: document.getElementById("startOverBtn"), question: document.getElementById("quizQuestion"), options: document.getElementById("quizOptions"), stepLabel: document.getElementById("quizStepLabel"), percent: document.getElementById("quizPercent"), fill: document.getElementById("quizProgressFill"), prev: document.getElementById("prevBtn"), nextWrap: document.getElementById("nextWrap"), next: document.getElementById("nextBtn"), form: document.getElementById("leadForm"), formMsg: document.getElementById("formMsg"), wantsConsultation: document.getElementById("wantsConsultation"), phoneConditional: document.getElementById("phoneConditional"), phoneInput: document.getElementById("phoneInput") };
+  const el = { stage: document.getElementById("quizStage"), leadGate: document.getElementById("leadGate"), success: document.getElementById("quizSuccessScreen"), startOver: document.getElementById("startOverBtn"), question: document.getElementById("quizQuestion"), options: document.getElementById("quizOptions"), stepLabel: document.getElementById("quizStepLabel"), percent: document.getElementById("quizPercent"), fill: document.getElementById("quizProgressFill"), prev: document.getElementById("prevBtn"), nextWrap: document.getElementById("nextWrap"), next: document.getElementById("nextBtn"), form: document.getElementById("leadForm"), formMsg: document.getElementById("formMsg"), submit: document.querySelector("#leadForm .quiz-submit"), wantsConsultation: document.getElementById("wantsConsultation"), phoneConditional: document.getElementById("phoneConditional"), phoneInput: document.getElementById("phoneInput") };
   function initTraits() { const t = {}; TRAIT_KEYS.forEach((k) => { t[k] = 0; }); return t; }
   function applyDelta(scores, names, pct, up) { names.forEach((n) => { if (scores[n] != null) scores[n] = up ? scores[n] * (1 + pct) : scores[n] * (1 - pct); }); }
   function applyBoostsAndPenalties(scores, t) {
@@ -86,8 +86,10 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
   function pct(stepIndex) { return Math.round(((stepIndex + 1) / quizQuestions.length) * 100); }
   function renderQuestion() { const q = quizQuestions[state.current]; const progress = pct(state.current); el.stepLabel.textContent = `Question ${state.current + 1} of ${quizQuestions.length}`; el.percent.textContent = `${progress}%`; el.fill.style.width = `${progress}%`; el.fill.parentElement.setAttribute("aria-valuenow", String(progress)); el.question.textContent = q.q; el.options.innerHTML = ""; q.options.forEach((option, idx) => { const button = document.createElement("button"); const letter = OPTION_LETTERS[idx]; button.type = "button"; button.className = "quiz-option"; button.innerHTML = `<strong>${letter}.</strong> ${option}`; if (state.answers[state.current] === idx) { button.style.borderColor = "#3f6b45"; button.style.background = "#ebf8ee"; } button.addEventListener("click", () => { state.answers[state.current] = idx; renderQuestion(); }); el.options.appendChild(button); }); el.prev.disabled = state.current === 0; el.next.textContent = state.current === quizQuestions.length - 1 ? "Finish" : "Next"; const unanswered = state.answers[state.current] === null; el.next.disabled = unanswered; el.nextWrap.classList.toggle("is-disabled", unanswered); }
   function answerPayload() { return quizQuestions.map((question, index) => { const choiceIndex = state.answers[index]; const letter = choiceIndex !== null ? OPTION_LETTERS[choiceIndex] : null; return { questionNumber: index + 1, question: question.q, selectedOptionLetter: letter, selectedOptionText: choiceIndex !== null ? question.options[choiceIndex] : null }; }); }
+  function getConsentInput() { return el.form ? el.form.querySelector("[data-legal-consent] input[type='checkbox'], input[name='sms_opt_in']") : null; }
+  function syncSubmitState() { if (!el.submit) return; const consentInput = getConsentInput(); el.submit.disabled = Boolean(consentInput && !consentInput.checked); }
   el.prev.addEventListener("click", () => { if (state.current > 0) { state.current -= 1; renderQuestion(); } });
-  el.next.addEventListener("click", () => { if (state.current < quizQuestions.length - 1) { state.current += 1; renderQuestion(); return; } const results = calculateResults(state.answers); state.finalResults = results.top3; el.stage.style.display = "none"; el.leadGate.classList.add("active"); });
+  el.next.addEventListener("click", () => { if (state.current < quizQuestions.length - 1) { state.current += 1; renderQuestion(); return; } const results = calculateResults(state.answers); state.finalResults = results.top3; el.stage.style.display = "none"; el.leadGate.classList.add("active"); syncSubmitState(); });
   el.nextWrap.addEventListener("click", () => {
     if (!el.next.disabled) return;
     el.nextWrap.classList.add("show-tooltip");
@@ -105,6 +107,17 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     el.wantsConsultation.addEventListener("change", syncConsultationPhoneField);
     syncConsultationPhoneField();
   }
+  if (el.form && typeof MutationObserver !== "undefined") {
+    const observer = new MutationObserver(() => {
+      const consentInput = getConsentInput();
+      if (!consentInput) return;
+      consentInput.addEventListener("change", syncSubmitState);
+      syncSubmitState();
+      observer.disconnect();
+    });
+    observer.observe(el.form, { childList: true, subtree: true });
+  }
+  syncSubmitState();
   el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (!el.form.reportValidity()) return; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), answers: answerPayload(), results: state.finalResults }; try { if (LEAD_CAPTURE_ENDPOINT) { await fetch(LEAD_CAPTURE_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); } if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } document.body.classList.add("quiz-complete"); el.leadGate.classList.remove("active"); el.success.classList.add("active"); } catch (error) { el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; } });
   el.startOver.addEventListener("click", () => { window.location.reload(); });
   renderQuestion();
