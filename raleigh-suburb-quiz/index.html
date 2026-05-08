@@ -56,7 +56,8 @@
     .quiz-phone-conditional { display: none; }
     .quiz-phone-conditional.active { display: grid; }
     .quiz-submit-wrap { margin-top: 0.8rem; }
-    .quiz-submit, .quiz-start-over, .quiz-results-cta { border: 0; border-radius: 999px; padding: 0.82rem 1.25rem; font: inherit; font-weight: 700; background: #17313d; color: #fff; cursor: pointer; }
+    .quiz-submit, .quiz-start-over, .quiz-results-cta { border: 0; border-radius: 999px; padding: 0.82rem 1.25rem; font: inherit; font-weight: 700; background: var(--brand-gold-500); color: #fff; cursor: pointer; }
+    .quiz-submit[disabled] { opacity: 0.5; cursor: not-allowed; }
     .quiz-success-screen { min-height: 56vh; text-align: center; place-items: center; background: #fff; border-radius: 24px; }
     .quiz-success-screen.active { display: grid; }
     .quiz-page.quiz-complete { background: #fff; }
@@ -80,6 +81,8 @@
     .quiz-card > * { width: min(980px, 100%); margin-left: auto; margin-right: auto; text-align: left; }
     .quiz-card .quiz-progress-row { color: #d9ece0; }
     .quiz-card .quiz-results h2, .quiz-card .quiz-results h3, .quiz-card .quiz-results p, .quiz-card .quiz-lead-gate h2, .quiz-card .quiz-lead-gate p, .quiz-card .quiz-field span { color: #fff; }
+    .quiz-card .legal-consent-copy, .quiz-card .legal-consent-meta, .quiz-card .legal-consent-note { color: #d9ece0; }
+    .quiz-card .legal-consent-links a { color: #fff; text-decoration-color: rgba(255,255,255,0.9); }
   </style>
 </head>
 <body class="quiz-page">
@@ -109,7 +112,8 @@
               <span class="next-tooltip">Please select an option first.</span>
             </div>
           </div>
-        </div>`n        <div class="quiz-lead-gate" id="leadGate">
+        </div>
+        <div class="quiz-lead-gate" id="leadGate">
           <h2>Your quiz is complete.</h2>
           <p>Enter your info below and we will send your suburb quiz result summary to your email.</p>
           <form id="leadForm" novalidate>

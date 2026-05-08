@@ -1792,7 +1792,7 @@
     if (canonicalPath.charAt(canonicalPath.length - 1) !== "/") {
       canonicalPath += "/";
     }
-    var isExcludedPopupPage = canonicalPath.indexOf("/consult/") === 0 || canonicalPath.indexOf("/2026/") === 0;
+    var isExcludedPopupPage = canonicalPath.indexOf("/consult/") === 0 || canonicalPath.indexOf("/2026/") === 0 || canonicalPath.indexOf("/quiz/") === 0 || canonicalPath.indexOf("/raleigh-suburb-quiz/") === 0;
     if (isExcludedPopupPage) {
       return;
     }
