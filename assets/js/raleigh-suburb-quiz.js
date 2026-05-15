@@ -88,8 +88,57 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
   function answerPayload() { return quizQuestions.map((question, index) => { const choiceIndex = state.answers[index]; const letter = choiceIndex !== null ? OPTION_LETTERS[choiceIndex] : null; return { questionNumber: index + 1, question: question.q, selectedOptionLetter: letter, selectedOptionText: choiceIndex !== null ? question.options[choiceIndex] : null }; }); }
   function getConsentInput() { return el.form ? el.form.querySelector("[data-legal-consent] input[type='checkbox'], input[name='sms_opt_in']") : null; }
   function syncSubmitState() { if (!el.submit) return; const consentInput = getConsentInput(); el.submit.disabled = Boolean(consentInput && !consentInput.checked); }
+  function isTextInputTarget(target) {
+    if (!target || !(target instanceof HTMLElement)) return false;
+    const tagName = target.tagName;
+    return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT" || target.isContentEditable;
+  }
+  async function postQuizLead(payload) {
+    if (!LEAD_CAPTURE_ENDPOINT) return;
+    const jsonBody = JSON.stringify(payload);
+    try {
+      const response = await fetch(LEAD_CAPTURE_ENDPOINT, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: jsonBody,
+        keepalive: true
+      });
+      if (response && response.ok === false) throw new Error(`Lead endpoint returned ${response.status}`);
+      return;
+    } catch (firstError) {
+      // Fallback avoids CORS preflight failures some browsers/extensions trigger on JSON posts.
+      await fetch(LEAD_CAPTURE_ENDPOINT, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: jsonBody,
+        keepalive: true
+      }).catch(() => {
+        throw firstError;
+      });
+    }
+  }
   el.prev.addEventListener("click", () => { if (state.current > 0) { state.current -= 1; renderQuestion(); } });
   el.next.addEventListener("click", () => { if (state.current < quizQuestions.length - 1) { state.current += 1; renderQuestion(); return; } const results = calculateResults(state.answers); state.finalResults = results.top3; el.stage.style.display = "none"; el.leadGate.classList.add("active"); syncSubmitState(); });
+  document.addEventListener("keydown", (event) => {
+    if (!el.stage || el.stage.style.display === "none") return;
+    if (isTextInputTarget(event.target)) return;
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
+    const key = String(event.key || "");
+    const upperKey = key.toUpperCase();
+    const optionIndex = OPTION_LETTERS.indexOf(upperKey);
+    const currentQuestion = quizQuestions[state.current];
+    if (optionIndex !== -1 && currentQuestion && optionIndex < currentQuestion.options.length) {
+      event.preventDefault();
+      state.answers[state.current] = optionIndex;
+      renderQuestion();
+      return;
+    }
+    if (key === "Enter" && state.answers[state.current] !== null) {
+      event.preventDefault();
+      el.next.click();
+    }
+  });
   el.nextWrap.addEventListener("click", () => {
     if (!el.next.disabled) return;
     el.nextWrap.classList.add("show-tooltip");
@@ -118,7 +167,7 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     observer.observe(el.form, { childList: true, subtree: true });
   }
   syncSubmitState();
-  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (!el.form.reportValidity()) return; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), answers: answerPayload(), results: state.finalResults }; try { if (LEAD_CAPTURE_ENDPOINT) { await fetch(LEAD_CAPTURE_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }); } if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } document.body.classList.add("quiz-complete"); el.leadGate.classList.remove("active"); el.success.classList.add("active"); } catch (error) { el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; } });
+  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (!el.form.reportValidity()) return; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } document.body.classList.add("quiz-complete"); el.leadGate.classList.remove("active"); el.success.classList.add("active"); } catch (error) { el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; } });
   el.startOver.addEventListener("click", () => { window.location.reload(); });
   renderQuestion();
 })();
