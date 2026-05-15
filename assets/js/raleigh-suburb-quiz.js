@@ -1,6 +1,7 @@
 (() => {
   const LEAD_CAPTURE_ENDPOINT = "https://script.google.com/macros/s/AKfycbwnqkPb6Nkp9owlDv_orcAId7cNHbKuQrf5ENMW4BvbUuaLFNHP-yANDdSwQ6Vjl41v/exec";
   const ANALYTICS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzBMxFBoQZBWSCdVCRnW4kFnjyoGZA2F-3ym2rqW-fVMFa1Wx5xT5SNMrvZdP3Xky0/exec";
+  const QUIZ_SUCCESS_REDIRECT_MS = 3000;
   const TRAIT_KEYS = ["walkability","downtownEnergy","family","schools","luxury","affordability","valueGrowth","newConstruction","establishedCharm","spacePrivacy","quiet","commuteRaleigh","commuteRTP","commuteDurham","amenities","outdoors","lowMaintenance","socialLifestyle","ruralTolerance","trafficSensitive"];
   const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
   const quizQuestions = [
@@ -115,6 +116,15 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
       window.sessionStorage.setItem(QUIZ_SESSION_KEY, JSON.stringify(payload));
     } catch (error) {}
   }
+  function showSuccessAndRedirect() {
+    document.body.classList.add("quiz-complete");
+    el.leadGate.classList.remove("active");
+    el.success.classList.add("active");
+    clearSessionState();
+    window.setTimeout(() => {
+      window.location.assign("/");
+    }, QUIZ_SUCCESS_REDIRECT_MS);
+  }
   function restoreSessionState() {
     const saved = readSessionState();
     if (!saved) return;
@@ -139,10 +149,7 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
       el.stage.style.display = "none";
       el.leadGate.classList.add("active");
     } else if (saved.view === "success") {
-      document.body.classList.add("quiz-complete");
-      el.stage.style.display = "none";
-      el.leadGate.classList.remove("active");
-      el.success.classList.add("active");
+      showSuccessAndRedirect();
     }
   }
   function initTraits() { const t = {}; TRAIT_KEYS.forEach((k) => { t[k] = 0; }); return t; }
@@ -308,8 +315,10 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     observer.observe(el.form, { childList: true, subtree: true });
   }
   syncSubmitState();
-  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (!el.form.reportValidity()) return; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } document.body.classList.add("quiz-complete"); el.leadGate.classList.remove("active"); el.success.classList.add("active"); persistSessionState("success"); clearSessionState(); } catch (error) { el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; persistSessionState("leadGate"); } });
-  el.startOver.addEventListener("click", () => { clearSessionState(); window.location.reload(); });
+  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (!el.form.reportValidity()) return; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } showSuccessAndRedirect(); } catch (error) { el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; persistSessionState("leadGate"); } });
+  if (el.startOver) {
+    el.startOver.addEventListener("click", () => { clearSessionState(); window.location.reload(); });
+  }
   restoreSessionState();
   syncConsultationPhoneField();
   syncSubmitState();
