@@ -61,8 +61,90 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
 
   const userHeadline = {};
   Object.keys(suburbProfiles).forEach((suburb) => { userHeadline[suburb] = `Strong fit based on your lifestyle, commute, and home priorities in ${suburb}.`; });
+  const QUIZ_SESSION_KEY = "raleigh-suburb-quiz-session-v1";
   const state = { current: 0, answers: new Array(quizQuestions.length).fill(null), finalResults: [] };
   const el = { stage: document.getElementById("quizStage"), leadGate: document.getElementById("leadGate"), success: document.getElementById("quizSuccessScreen"), startOver: document.getElementById("startOverBtn"), question: document.getElementById("quizQuestion"), options: document.getElementById("quizOptions"), stepLabel: document.getElementById("quizStepLabel"), percent: document.getElementById("quizPercent"), fill: document.getElementById("quizProgressFill"), prev: document.getElementById("prevBtn"), nextWrap: document.getElementById("nextWrap"), next: document.getElementById("nextBtn"), form: document.getElementById("leadForm"), formMsg: document.getElementById("formMsg"), submit: document.querySelector("#leadForm .quiz-submit"), wantsConsultation: document.getElementById("wantsConsultation"), phoneConditional: document.getElementById("phoneConditional"), phoneInput: document.getElementById("phoneInput") };
+  function readSessionState() {
+    try {
+      const raw = window.sessionStorage.getItem(QUIZ_SESSION_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return null;
+      return parsed;
+    } catch (error) {
+      return null;
+    }
+  }
+  function clearSessionState() {
+    try {
+      window.sessionStorage.removeItem(QUIZ_SESSION_KEY);
+    } catch (error) {}
+  }
+  function getLeadFormState() {
+    if (!el.form) return null;
+    const data = new FormData(el.form);
+    return {
+      firstName: String(data.get("firstName") || ""),
+      lastName: String(data.get("lastName") || ""),
+      email: String(data.get("email") || ""),
+      phone: String(data.get("phone") || ""),
+      wantsConsultation: data.get("wantsConsultation") === "on"
+    };
+  }
+  function restoreLeadFormState(formState) {
+    if (!el.form || !formState || typeof formState !== "object") return;
+    const firstName = el.form.querySelector("input[name='firstName']");
+    const lastName = el.form.querySelector("input[name='lastName']");
+    const email = el.form.querySelector("input[name='email']");
+    const phone = el.form.querySelector("input[name='phone']");
+    if (firstName) firstName.value = String(formState.firstName || "");
+    if (lastName) lastName.value = String(formState.lastName || "");
+    if (email) email.value = String(formState.email || "");
+    if (phone) phone.value = String(formState.phone || "");
+    if (el.wantsConsultation) el.wantsConsultation.checked = Boolean(formState.wantsConsultation);
+  }
+  function persistSessionState(view) {
+    try {
+      const payload = {
+        view: view || "quiz",
+        current: Number.isInteger(state.current) ? state.current : 0,
+        answers: state.answers.map((value) => (Number.isInteger(value) ? value : null)),
+        finalResults: Array.isArray(state.finalResults) ? state.finalResults : [],
+        form: getLeadFormState()
+      };
+      window.sessionStorage.setItem(QUIZ_SESSION_KEY, JSON.stringify(payload));
+    } catch (error) {}
+  }
+  function restoreSessionState() {
+    const saved = readSessionState();
+    if (!saved) return;
+    if (Array.isArray(saved.answers) && saved.answers.length === quizQuestions.length) {
+      state.answers = saved.answers.map((value, index) => {
+        if (!Number.isInteger(value)) return null;
+        const optionCount = quizQuestions[index] && Array.isArray(quizQuestions[index].options)
+          ? quizQuestions[index].options.length
+          : 0;
+        if (value < 0 || value >= optionCount) return null;
+        return value;
+      });
+    }
+    if (Number.isInteger(saved.current)) {
+      state.current = Math.max(0, Math.min(saved.current, quizQuestions.length - 1));
+    }
+    if (Array.isArray(saved.finalResults)) {
+      state.finalResults = saved.finalResults;
+    }
+    restoreLeadFormState(saved.form);
+    if (saved.view === "leadGate") {
+      el.stage.style.display = "none";
+      el.leadGate.classList.add("active");
+    } else if (saved.view === "success") {
+      document.body.classList.add("quiz-complete");
+      el.stage.style.display = "none";
+      el.leadGate.classList.remove("active");
+      el.success.classList.add("active");
+    }
+  }
   function initTraits() { const t = {}; TRAIT_KEYS.forEach((k) => { t[k] = 0; }); return t; }
   function applyDelta(scores, names, pct, up) { names.forEach((n) => { if (scores[n] != null) scores[n] = up ? scores[n] * (1 + pct) : scores[n] * (1 - pct); }); }
   function applyBoostsAndPenalties(scores, t) {
@@ -84,7 +166,38 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
   function applyDiversityRule(ranked) { const chosen = []; const counts = {}; for (const item of ranked) { const group = groupOf(item.suburb); const used = counts[group] || 0; if (chosen.length < 2 || used < 2) { chosen.push(item); counts[group] = used + 1; } if (chosen.length === 3) break; } return chosen.length === 3 ? chosen : ranked.slice(0, 3); }
   function calculateResults(answerIndexes) { const traits = initTraits(); answerIndexes.forEach((answerIdx, index) => { const qKey = `q${index + 1}`; const letter = OPTION_LETTERS[answerIdx]; const delta = answerScores[qKey][letter]; Object.keys(delta).forEach((k) => { traits[k] += delta[k]; }); }); let scores = {}; Object.keys(suburbProfiles).forEach((suburb) => { let score = 0; TRAIT_KEYS.forEach((trait) => { score += traits[trait] * suburbProfiles[suburb][trait]; }); scores[suburb] = score; }); scores = applyBoostsAndPenalties(scores, traits); const ranked = Object.entries(scores).map(([suburb, score]) => ({ suburb, score })).sort((a, b) => b.score - a.score); const top3 = applyDiversityRule(ranked); return { traits, top3: top3.map((item, idx) => ({ rank: idx + 1, label: idx === 0 ? "Top Pick" : "Also Consider", suburb: item.suburb, headline: userHeadline[item.suburb] })) }; }
   function pct(stepIndex) { return Math.round(((stepIndex + 1) / quizQuestions.length) * 100); }
-  function renderQuestion() { const q = quizQuestions[state.current]; const progress = pct(state.current); el.stepLabel.textContent = `Question ${state.current + 1} of ${quizQuestions.length}`; el.percent.textContent = `${progress}%`; el.fill.style.width = `${progress}%`; el.fill.parentElement.setAttribute("aria-valuenow", String(progress)); el.question.textContent = q.q; el.options.innerHTML = ""; q.options.forEach((option, idx) => { const button = document.createElement("button"); const letter = OPTION_LETTERS[idx]; button.type = "button"; button.className = "quiz-option"; button.innerHTML = `<strong>${letter}.</strong> ${option}`; if (state.answers[state.current] === idx) { button.style.borderColor = "#3f6b45"; button.style.background = "#ebf8ee"; } button.addEventListener("click", () => { state.answers[state.current] = idx; renderQuestion(); }); el.options.appendChild(button); }); el.prev.disabled = state.current === 0; el.next.textContent = state.current === quizQuestions.length - 1 ? "Finish" : "Next"; const unanswered = state.answers[state.current] === null; el.next.disabled = unanswered; el.nextWrap.classList.toggle("is-disabled", unanswered); }
+  function renderQuestion() {
+    const q = quizQuestions[state.current];
+    const progress = pct(state.current);
+    el.stepLabel.textContent = `Question ${state.current + 1} of ${quizQuestions.length}`;
+    el.percent.textContent = `${progress}%`;
+    el.fill.style.width = `${progress}%`;
+    el.fill.parentElement.setAttribute("aria-valuenow", String(progress));
+    el.question.textContent = q.q;
+    el.options.innerHTML = "";
+    q.options.forEach((option, idx) => {
+      const button = document.createElement("button");
+      const letter = OPTION_LETTERS[idx];
+      button.type = "button";
+      button.className = "quiz-option";
+      button.innerHTML = `<strong>${letter}.</strong> ${option}`;
+      if (state.answers[state.current] === idx) {
+        button.style.borderColor = "#3f6b45";
+        button.style.background = "#ebf8ee";
+      }
+      button.addEventListener("click", () => {
+        state.answers[state.current] = idx;
+        renderQuestion();
+      });
+      el.options.appendChild(button);
+    });
+    el.prev.disabled = state.current === 0;
+    el.next.textContent = state.current === quizQuestions.length - 1 ? "Finish" : "Next";
+    const unanswered = state.answers[state.current] === null;
+    el.next.disabled = unanswered;
+    el.nextWrap.classList.toggle("is-disabled", unanswered);
+    persistSessionState("quiz");
+  }
   function answerPayload() { return quizQuestions.map((question, index) => { const choiceIndex = state.answers[index]; const letter = choiceIndex !== null ? OPTION_LETTERS[choiceIndex] : null; return { questionNumber: index + 1, question: question.q, selectedOptionLetter: letter, selectedOptionText: choiceIndex !== null ? question.options[choiceIndex] : null }; }); }
   function getConsentInput() { return el.form ? el.form.querySelector("[data-legal-consent] input[type='checkbox'], input[name='sms_opt_in']") : null; }
   function syncSubmitState() { if (!el.submit) return; const consentInput = getConsentInput(); el.submit.disabled = Boolean(consentInput && !consentInput.checked); }
@@ -118,8 +231,25 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
       });
     }
   }
-  el.prev.addEventListener("click", () => { if (state.current > 0) { state.current -= 1; renderQuestion(); } });
-  el.next.addEventListener("click", () => { if (state.current < quizQuestions.length - 1) { state.current += 1; renderQuestion(); return; } const results = calculateResults(state.answers); state.finalResults = results.top3; el.stage.style.display = "none"; el.leadGate.classList.add("active"); syncSubmitState(); });
+  el.prev.addEventListener("click", () => {
+    if (state.current > 0) {
+      state.current -= 1;
+      renderQuestion();
+    }
+  });
+  el.next.addEventListener("click", () => {
+    if (state.current < quizQuestions.length - 1) {
+      state.current += 1;
+      renderQuestion();
+      return;
+    }
+    const results = calculateResults(state.answers);
+    state.finalResults = results.top3;
+    el.stage.style.display = "none";
+    el.leadGate.classList.add("active");
+    syncSubmitState();
+    persistSessionState("leadGate");
+  });
   document.addEventListener("keydown", (event) => {
     if (!el.stage || el.stage.style.display === "none") return;
     if (isTextInputTarget(event.target)) return;
@@ -153,8 +283,19 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     }
   }
   if (el.wantsConsultation) {
-    el.wantsConsultation.addEventListener("change", syncConsultationPhoneField);
+    el.wantsConsultation.addEventListener("change", () => {
+      syncConsultationPhoneField();
+      persistSessionState(el.leadGate.classList.contains("active") ? "leadGate" : "quiz");
+    });
     syncConsultationPhoneField();
+  }
+  if (el.form) {
+    el.form.addEventListener("input", () => {
+      if (el.leadGate.classList.contains("active")) persistSessionState("leadGate");
+    });
+    el.form.addEventListener("change", () => {
+      if (el.leadGate.classList.contains("active")) persistSessionState("leadGate");
+    });
   }
   if (el.form && typeof MutationObserver !== "undefined") {
     const observer = new MutationObserver(() => {
@@ -167,9 +308,16 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     observer.observe(el.form, { childList: true, subtree: true });
   }
   syncSubmitState();
-  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (!el.form.reportValidity()) return; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } document.body.classList.add("quiz-complete"); el.leadGate.classList.remove("active"); el.success.classList.add("active"); } catch (error) { el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; } });
-  el.startOver.addEventListener("click", () => { window.location.reload(); });
-  renderQuestion();
+  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (!el.form.reportValidity()) return; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } document.body.classList.add("quiz-complete"); el.leadGate.classList.remove("active"); el.success.classList.add("active"); persistSessionState("success"); clearSessionState(); } catch (error) { el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; persistSessionState("leadGate"); } });
+  el.startOver.addEventListener("click", () => { clearSessionState(); window.location.reload(); });
+  restoreSessionState();
+  syncConsultationPhoneField();
+  syncSubmitState();
+  if (!el.leadGate.classList.contains("active") && !document.body.classList.contains("quiz-complete")) {
+    renderQuestion();
+  } else if (el.leadGate.classList.contains("active")) {
+    persistSessionState("leadGate");
+  }
 })();
 
 
