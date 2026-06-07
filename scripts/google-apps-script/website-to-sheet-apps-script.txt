@@ -8,6 +8,8 @@ function doGet() {
 }
 
 function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
   try {
     const raw = parseBody_(e);
     const lead = normalizeLead_(raw);
@@ -15,6 +17,16 @@ function doPost(e) {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const sheet = getOrCreateSheet_(ss, SHEET_NAME);
     ensureHeaders_(sheet);
+    const duplicateRow = lead.submission_id ? findLeadRowBySubmissionId_(sheet, lead.submission_id) : 0;
+    if (duplicateRow) {
+      return json_({
+        ok: true,
+        duplicate: true,
+        duplicate_row: duplicateRow,
+        email_status: 'duplicate',
+        email_error: ''
+      });
+    }
     const rowNumber = appendLead_(sheet, lead, raw);
     const emailResult = sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, raw);
 
@@ -28,6 +40,8 @@ function doPost(e) {
       ok: false,
       error: String(err && err.message ? err.message : err)
     });
+  } finally {
+    lock.releaseLock();
   }
 }
 
@@ -120,7 +134,8 @@ function normalizeLead_(p) {
     quiz_second_pick: clean_(quizResults.secondPick),
     quiz_third_pick: clean_(quizResults.thirdPick),
     quiz_results_json: safeJsonString_(p.results),
-    quiz_answers_json: safeJsonString_(p.answers)
+    quiz_answers_json: safeJsonString_(p.answers),
+    submission_id: clean_(p.submission_id)
   };
 }
 
@@ -130,6 +145,7 @@ function headers_() {
     'Lead Type',
     'Source Page',
     'Source Key',
+    'Submission ID',
     'Requested Contact Source',
     'Requested Contact Intent',
     'Requested Contact Is Buyer',
@@ -226,6 +242,7 @@ function appendLead_(sheet, lead, raw) {
   put('Lead Type', lead.lead_type);
   put('Source Page', lead.source_page);
   put('Source Key', lead.source_key);
+  put('Submission ID', lead.submission_id);
   put('Requested Contact Source', lead.requested_contact_source);
   put('Requested Contact Intent', lead.requested_contact_intent);
   put('Requested Contact Is Buyer', lead.requested_contact_is_buyer);
@@ -411,6 +428,7 @@ function leadContextFromSheetRow_(row, indexes) {
     submitted_at: toIsoString_(row[indexes.timestamp]),
     source_page: row[indexes.source_page],
     source_key: row[indexes.source_key],
+    submission_id: row[indexes.submission_id],
     lead_type: row[indexes.lead_type],
 
     requested_contact_source: row[indexes.requested_contact_source],
@@ -497,6 +515,7 @@ function headerIndexes_(sheet) {
     lead_type: idx('Lead Type'),
     source_page: idx('Source Page'),
     source_key: idx('Source Key'),
+    submission_id: idx('Submission ID'),
     requested_contact_source: idx('Requested Contact Source'),
     requested_contact_intent: idx('Requested Contact Intent'),
     requested_contact_is_buyer: idx('Requested Contact Is Buyer'),
@@ -538,6 +557,31 @@ function headerIndexes_(sheet) {
     email_error: idx('Email Error'),
     new_construction_message: idx('New Construction Message')
   };
+}
+
+function findLeadRowBySubmissionId_(sheet, submissionId) {
+  const normalizedSubmissionId = clean_(submissionId);
+  if (!normalizedSubmissionId) {
+    return 0;
+  }
+
+  const indexes = headerIndexes_(sheet);
+  if (indexes.submission_id < 0) {
+    return 0;
+  }
+
+  const lastRow = sheet.getLastRow();
+  if (lastRow < 2) {
+    return 0;
+  }
+
+  const values = sheet.getRange(2, indexes.submission_id + 1, lastRow - 1, 1).getValues();
+  for (let i = 0; i < values.length; i++) {
+    if (clean_(values[i][0]) === normalizedSubmissionId) {
+      return i + 2;
+    }
+  }
+  return 0;
 }
 
 function toIsoString_(value) {

@@ -63,7 +63,7 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
   const userHeadline = {};
   Object.keys(suburbProfiles).forEach((suburb) => { userHeadline[suburb] = `Strong fit based on your lifestyle, commute, and home priorities in ${suburb}.`; });
   const QUIZ_SESSION_KEY = "raleigh-suburb-quiz-session-v1";
-  const state = { current: 0, answers: new Array(quizQuestions.length).fill(null), finalResults: [] };
+  const state = { current: 0, answers: new Array(quizQuestions.length).fill(null), finalResults: [], submissionId: "" };
   const el = { stage: document.getElementById("quizStage"), leadGate: document.getElementById("leadGate"), success: document.getElementById("quizSuccessScreen"), startOver: document.getElementById("startOverBtn"), question: document.getElementById("quizQuestion"), options: document.getElementById("quizOptions"), stepLabel: document.getElementById("quizStepLabel"), percent: document.getElementById("quizPercent"), fill: document.getElementById("quizProgressFill"), prev: document.getElementById("prevBtn"), nextWrap: document.getElementById("nextWrap"), next: document.getElementById("nextBtn"), form: document.getElementById("leadForm"), formMsg: document.getElementById("formMsg"), submit: document.querySelector("#leadForm .quiz-submit"), wantsConsultation: document.getElementById("wantsConsultation"), phoneConditional: document.getElementById("phoneConditional"), phoneInput: document.getElementById("phoneInput") };
   function readSessionState() {
     try {
@@ -111,6 +111,7 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
         current: Number.isInteger(state.current) ? state.current : 0,
         answers: state.answers.map((value) => (Number.isInteger(value) ? value : null)),
         finalResults: Array.isArray(state.finalResults) ? state.finalResults : [],
+        submissionId: String(state.submissionId || ""),
         form: getLeadFormState()
       };
       window.sessionStorage.setItem(QUIZ_SESSION_KEY, JSON.stringify(payload));
@@ -143,6 +144,9 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     }
     if (Array.isArray(saved.finalResults)) {
       state.finalResults = saved.finalResults;
+    }
+    if (typeof saved.submissionId === "string") {
+      state.submissionId = saved.submissionId;
     }
     restoreLeadFormState(saved.form);
     if (saved.view === "leadGate") {
@@ -208,6 +212,15 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
   function answerPayload() { return quizQuestions.map((question, index) => { const choiceIndex = state.answers[index]; const letter = choiceIndex !== null ? OPTION_LETTERS[choiceIndex] : null; return { questionNumber: index + 1, question: question.q, selectedOptionLetter: letter, selectedOptionText: choiceIndex !== null ? question.options[choiceIndex] : null }; }); }
   function getConsentInput() { return el.form ? el.form.querySelector("[data-legal-consent] input[type='checkbox'], input[name='sms_opt_in']") : null; }
   function syncSubmitState() { if (!el.submit) return; const consentInput = getConsentInput(); el.submit.disabled = Boolean(consentInput && !consentInput.checked); }
+  function getOrCreateSubmissionId() {
+    if (state.submissionId) return state.submissionId;
+    var generated = (window.crypto && typeof window.crypto.randomUUID === "function")
+      ? window.crypto.randomUUID()
+      : "quiz-" + Date.now() + "-" + Math.random().toString(36).slice(2, 10);
+    state.submissionId = generated;
+    persistSessionState(el.leadGate.classList.contains("active") ? "leadGate" : "quiz");
+    return generated;
+  }
   function isTextInputTarget(target) {
     if (!target || !(target instanceof HTMLElement)) return false;
     const tagName = target.tagName;
@@ -217,25 +230,16 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     if (!LEAD_CAPTURE_ENDPOINT) return;
     const jsonBody = JSON.stringify(payload);
     try {
-      const response = await fetch(LEAD_CAPTURE_ENDPOINT, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: jsonBody,
-        keepalive: true
-      });
-      if (response && response.ok === false) throw new Error(`Lead endpoint returned ${response.status}`);
-      return;
-    } catch (firstError) {
-      // Fallback avoids CORS preflight failures some browsers/extensions trigger on JSON posts.
       await fetch(LEAD_CAPTURE_ENDPOINT, {
         method: "POST",
         mode: "no-cors",
         headers: { "Content-Type": "text/plain;charset=UTF-8" },
         body: jsonBody,
         keepalive: true
-      }).catch(() => {
-        throw firstError;
       });
+      return;
+    } catch (error) {
+      throw error;
     }
   }
   el.prev.addEventListener("click", () => {
@@ -315,7 +319,8 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     observer.observe(el.form, { childList: true, subtree: true });
   }
   syncSubmitState();
-  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (!el.form.reportValidity()) return; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } showSuccessAndRedirect(); } catch (error) { el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; persistSessionState("leadGate"); } });
+  var quizSubmitInFlight = false;
+  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (quizSubmitInFlight) return; if (!el.form.reportValidity()) return; quizSubmitInFlight = true; el.submit.disabled = true; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), submission_id: getOrCreateSubmissionId(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } showSuccessAndRedirect(); } catch (error) { quizSubmitInFlight = false; syncSubmitState(); el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; persistSessionState("leadGate"); } });
   if (el.startOver) {
     el.startOver.addEventListener("click", () => { clearSessionState(); window.location.reload(); });
   }
