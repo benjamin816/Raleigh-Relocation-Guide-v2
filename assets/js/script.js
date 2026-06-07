@@ -46,6 +46,42 @@
     };
   })();
 
+  var sharedNormalizeInputValue = function (value) {
+    return String(value || "").replace(/\s+/g, " ").trim();
+  };
+
+  var sharedStripNonDigits = function (value) {
+    return String(value || "").replace(/[^\d]/g, "");
+  };
+
+  var sharedValidateEmail = function (value) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(sharedNormalizeInputValue(value).toLowerCase());
+  };
+
+  var sharedValidatePhoneNumber = function (value) {
+    return sharedStripNonDigits(value).length >= 10;
+  };
+
+  var sharedValidateStreetAddress = function (value) {
+    var normalized = sharedNormalizeInputValue(value);
+    return Boolean(normalized) && /[A-Za-z]/.test(normalized) && /\d/.test(normalized);
+  };
+
+  var sharedValidateCity = function (value) {
+    var normalized = sharedNormalizeInputValue(value);
+    return Boolean(normalized) && /^[A-Za-z][A-Za-z\s.'-]*$/.test(normalized);
+  };
+
+  var sharedValidateState = function (value) {
+    var normalized = sharedNormalizeInputValue(value);
+    return Boolean(normalized) && /^[A-Za-z][A-Za-z\s.'-]*$/.test(normalized);
+  };
+
+  var sharedValidateZip = function (value) {
+    var normalized = sharedNormalizeInputValue(value);
+    return /^\d{5}(?:-\d{4})?$/.test(normalized);
+  };
+
   var initUtilityNav = function () {
     var utilityInners = Array.prototype.slice.call(document.querySelectorAll(".utility-nav .utility-inner"));
     if (!utilityInners.length) {
@@ -716,7 +752,7 @@
   });
 
   var smsConsentDisclosureText = "I agree to be contacted by The Official Living in Raleigh NC Team via call, email, and text for real estate services. We use SMS to confirm appointments, send reminders, and notify clients of schedule updates or important changes. You can opt out at any time by replying STOP, or reply HELP for assistance. Message and data rates may apply. Message frequency may vary.";
-  var smsConsentOptionalNoteText = "SMS consent is optional and is not required to submit this form.";
+  var smsConsentOptionalNoteText = "SMS consent is required to submit this form.";
 
   var analyticsTracker = (function () {
     // Set this globally before script.js loads: window.__LIVR_ANALYTICS_ENDPOINT__ = "https://script.google.com/macros/s/.../exec";
@@ -2005,8 +2041,7 @@
       "</label>",
       "</div>",
       "<div class='lead-popup-step-actions'>",
-      "<button type='button' class='lead-popup-button' data-lead-action='submit'>Submit</button>",
-      "<span class='lead-popup-step-submit-note'>Press Enter</span>",
+      "<button type='button' class='lead-popup-button' data-lead-action='submit' data-submit-ready='false' data-submit-hint='Please complete the form to continue.'>Submit</button>",
       "</div>",
       "<div class='lead-popup-consent-meta'>",
       "<p class='lead-popup-consent-note'>" + smsConsentOptionalNoteText + "</p>",
@@ -2163,6 +2198,7 @@
     var navPrev = popupHost.querySelector("[data-lead-nav='prev']");
     var navNext = popupHost.querySelector("[data-lead-nav='next']");
     var startButton = popupHost.querySelector("[data-lead-action='start']");
+    var submitButton = popupHost.querySelector("[data-lead-action='submit']");
     var formInputs = {
       areaInterests: popupHost.querySelector("[data-lead-input='areaInterests']"),
       homeDescription: popupHost.querySelector("[data-lead-input='homeDescription']"),
@@ -2267,6 +2303,7 @@
     };
 
     var clearStepError = function (stepIndex) {
+      clearStepErrorTimer(stepIndex);
       var errorNode = stepErrors[stepIndex];
       if (errorNode) {
         errorNode.textContent = "";
@@ -2275,6 +2312,7 @@
 
     var showStepError = function (stepIndex, message) {
       var errorNode = stepErrors[stepIndex];
+      clearStepErrorTimer(stepIndex);
       if (errorNode) {
         errorNode.textContent = message;
       }
@@ -2284,6 +2322,10 @@
           step_key: getPopupStepKey(stepIndex),
           error_message: message
         });
+        stepErrorTimerIds[stepIndex] = window.setTimeout(function () {
+          clearStepError(stepIndex);
+          clearStepInvalidState();
+        }, 1000);
       }
     };
 
@@ -2295,8 +2337,131 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     };
 
-    var stripNonDigits = function (value) {
-      return String(value || "").replace(/[^\d]/g, "");
+    var submitHintMessage = "Please complete the form to continue.";
+    var submitHintTimerId = 0;
+    var stepErrorTimerIds = {};
+
+    var clearStepInvalidState = function () {
+      Object.keys(formInputs).forEach(function (key) {
+        if (formInputs[key] && formInputs[key].classList) {
+          formInputs[key].classList.remove("is-invalid");
+        }
+      });
+    };
+
+    var clearStepErrorTimer = function (stepIndex) {
+      var timerId = stepErrorTimerIds[stepIndex];
+      if (timerId) {
+        window.clearTimeout(timerId);
+        stepErrorTimerIds[stepIndex] = 0;
+      }
+    };
+
+    var isSubmitReady = function () {
+      return Boolean(
+        normalizeValue(inputs.name && inputs.name.value) &&
+        validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase()) &&
+        sharedValidatePhoneNumber(inputs.phone && inputs.phone.value) &&
+        sharedValidateStreetAddress(inputs.propertyAddress && inputs.propertyAddress.value) &&
+        Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+      );
+    };
+
+    var updateSubmitButtonState = function () {
+      if (!submitButton) {
+        return;
+      }
+      submitButton.dataset.submitReady = isSubmitReady() ? "true" : "false";
+      submitButton.removeAttribute("aria-disabled");
+      submitButton.dataset.submitHint = submitHintMessage;
+      if (isSubmitReady()) {
+        submitButton.removeAttribute("data-submit-hint-visible");
+        if (submitHintTimerId) {
+          window.clearTimeout(submitHintTimerId);
+          submitHintTimerId = 0;
+        }
+      }
+    };
+
+    var updateSubmitButtonState = function () {
+      if (!submitButton) {
+        return;
+      }
+      var ready = isSubmitReady();
+      submitButton.dataset.submitReady = ready ? "true" : "false";
+      submitButton.removeAttribute("aria-disabled");
+      submitButton.dataset.submitHint = submitHintMessage;
+      if (ready) {
+        submitButton.removeAttribute("data-submit-hint-visible");
+        if (submitHintTimerId) {
+          window.clearTimeout(submitHintTimerId);
+          submitHintTimerId = 0;
+        }
+      }
+    };
+
+    var showSubmitHint = function () {
+      if (!submitButton || isSubmitReady()) {
+        return;
+      }
+      submitButton.dataset.submitHint = submitHintMessage;
+      submitButton.setAttribute("data-submit-hint-visible", "true");
+      if (submitHintTimerId) {
+        window.clearTimeout(submitHintTimerId);
+      }
+      submitHintTimerId = window.setTimeout(function () {
+        if (submitButton) {
+          submitButton.removeAttribute("data-submit-hint-visible");
+        }
+        submitHintTimerId = 0;
+      }, 2200);
+    };
+
+    var submitHintMessage = "Please complete the form to continue.";
+    var submitHintTimerId = 0;
+
+    var isFinalSubmitReady = function () {
+      return Boolean(
+        normalizeValue(formState.firstName) &&
+        normalizeValue(formState.lastName) &&
+        sharedValidatePhoneNumber(formState.phone) &&
+        validateEmail(normalizeValue(formState.email).toLowerCase()) &&
+        Boolean(formState.smsOptIn)
+      );
+    };
+
+    var updateFinalSubmitButtonState = function () {
+      if (!submitButton) {
+        return;
+      }
+      var ready = isFinalSubmitReady();
+      submitButton.dataset.submitReady = ready ? "true" : "false";
+      submitButton.removeAttribute("aria-disabled");
+      submitButton.dataset.submitHint = submitHintMessage;
+      if (ready) {
+        submitButton.removeAttribute("data-submit-hint-visible");
+        if (submitHintTimerId) {
+          window.clearTimeout(submitHintTimerId);
+          submitHintTimerId = 0;
+        }
+      }
+    };
+
+    var showFinalSubmitHint = function () {
+      if (!submitButton || isFinalSubmitReady()) {
+        return;
+      }
+      submitButton.dataset.submitHint = submitHintMessage;
+      submitButton.setAttribute("data-submit-hint-visible", "true");
+      if (submitHintTimerId) {
+        window.clearTimeout(submitHintTimerId);
+      }
+      submitHintTimerId = window.setTimeout(function () {
+        if (submitButton) {
+          submitButton.removeAttribute("data-submit-hint-visible");
+        }
+        submitHintTimerId = 0;
+      }, 2200);
     };
 
     var isStepReadyForNext = function (stepIndex) {
@@ -2317,10 +2482,10 @@
           return Boolean(normalizeValue(formInputs.areaInterests && formInputs.areaInterests.value));
         }
         return Boolean(
-          normalizeValue(formInputs.addressStreet && formInputs.addressStreet.value) &&
-          normalizeValue(formInputs.addressCity && formInputs.addressCity.value) &&
-          normalizeValue(formInputs.addressState && formInputs.addressState.value) &&
-          normalizeValue(formInputs.addressZip && formInputs.addressZip.value)
+          sharedValidateStreetAddress(formInputs.addressStreet && formInputs.addressStreet.value) &&
+          sharedValidateCity(formInputs.addressCity && formInputs.addressCity.value) &&
+          sharedValidateState(formInputs.addressState && formInputs.addressState.value) &&
+          sharedValidateZip(formInputs.addressZip && formInputs.addressZip.value)
         );
       }
       return true;
@@ -2354,6 +2519,9 @@
 
       clearStepError(currentStep);
       updateNavState();
+      if (currentStep === steps.length - 1) {
+        updateFinalSubmitButtonState();
+      }
       if (currentScreen === "form" || hasStartedForm) {
         var stepViewKey = [currentScreen, currentStep, hasStartedForm ? "started" : "not_started"].join(":");
         if (stepViewKey !== lastTrackedStepViewKey) {
@@ -2532,11 +2700,7 @@
 
     var validateStep = function (stepIndex) {
       clearStepError(stepIndex);
-      Object.keys(formInputs).forEach(function (key) {
-        if (formInputs[key]) {
-          formInputs[key].classList.remove("is-invalid");
-        }
-      });
+      clearStepInvalidState();
 
       if (stepIndex === 0) {
         if (!normalizeValue(formState.timeframe)) {
@@ -2593,26 +2757,32 @@
         formState.addressZip = normalizeValue(formInputs.addressZip && formInputs.addressZip.value);
 
         var firstInvalidAddressInput = null;
-        if (!formState.addressStreet && formInputs.addressStreet) {
+        var addressErrorMessage = "";
+
+        if (!sharedValidateStreetAddress(formState.addressStreet) && formInputs.addressStreet) {
           firstInvalidAddressInput = firstInvalidAddressInput || formInputs.addressStreet;
           formInputs.addressStreet.classList.add("is-invalid");
+          addressErrorMessage = "Please enter a valid street address.";
         }
-        if (!formState.addressCity && formInputs.addressCity) {
+        if (!sharedValidateCity(formState.addressCity) && formInputs.addressCity) {
           firstInvalidAddressInput = firstInvalidAddressInput || formInputs.addressCity;
           formInputs.addressCity.classList.add("is-invalid");
+          addressErrorMessage = addressErrorMessage || "Please enter a valid city.";
         }
-        if (!formState.addressState && formInputs.addressState) {
+        if (!sharedValidateState(formState.addressState) && formInputs.addressState) {
           firstInvalidAddressInput = firstInvalidAddressInput || formInputs.addressState;
           formInputs.addressState.classList.add("is-invalid");
+          addressErrorMessage = addressErrorMessage || "Please enter a valid state.";
         }
-        if (!formState.addressZip && formInputs.addressZip) {
+        if (!sharedValidateZip(formState.addressZip) && formInputs.addressZip) {
           firstInvalidAddressInput = firstInvalidAddressInput || formInputs.addressZip;
           formInputs.addressZip.classList.add("is-invalid");
+          addressErrorMessage = addressErrorMessage || "Please enter a valid ZIP code.";
         }
 
         if (firstInvalidAddressInput) {
           firstInvalidAddressInput.focus();
-          showStepError(stepIndex, "Please complete your full address to continue.");
+          showStepError(stepIndex, addressErrorMessage || "Please complete your full address to continue.");
           return false;
         }
         return true;
@@ -2648,9 +2818,14 @@
           formInputs.email.classList.add("is-invalid");
         }
 
+        if (!formState.smsOptIn && formInputs.smsOptIn) {
+          firstInvalidInput = firstInvalidInput || formInputs.smsOptIn;
+          formInputs.smsOptIn.classList.add("is-invalid");
+        }
+
         if (firstInvalidInput) {
           firstInvalidInput.focus();
-          showStepError(stepIndex, "Please complete all required contact fields with valid information.");
+          showStepError(stepIndex, !formState.smsOptIn ? "Please agree to be contacted to continue." : "Please complete all required contact fields with valid information.");
           return false;
         }
       }
@@ -2685,6 +2860,9 @@
 
     var runSubmit = function () {
       if (submitInFlight || !validateStep(steps.length - 1)) {
+        if (!isFinalSubmitReady()) {
+          showFinalSubmitHint();
+        }
         return;
       }
       submitInFlight = true;
@@ -2799,6 +2977,9 @@
       }
       if (action === "submit") {
         markPopupTouched("submit_click");
+        if (!isFinalSubmitReady()) {
+          showFinalSubmitHint();
+        }
         runSubmit();
       }
     });
@@ -2850,6 +3031,9 @@
         formState[key] = normalizeValue(formInputs[key].value);
         formInputs[key].classList.remove("is-invalid");
         updateNavState();
+        if (currentStep === steps.length - 1) {
+          updateFinalSubmitButtonState();
+        }
       });
     });
 
@@ -2866,8 +3050,25 @@
         formInputs.smsOptIn.addEventListener("change", function () {
           trackStepInputStart("smsOptIn");
           formState.smsOptIn = Boolean(formInputs.smsOptIn.checked);
+          formInputs.smsOptIn.classList.remove("is-invalid");
+          updateFinalSubmitButtonState();
         });
       }
+
+    if (submitButton) {
+      submitButton.addEventListener("mouseenter", function () {
+        if (!isFinalSubmitReady()) {
+          showFinalSubmitHint();
+        }
+      });
+      submitButton.addEventListener("focus", function () {
+        if (!isFinalSubmitReady()) {
+          showFinalSubmitHint();
+        }
+      });
+    }
+
+    updateFinalSubmitButtonState();
 
     popupHost.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
@@ -2926,6 +3127,8 @@
     var sendingSubmitLabel = "Sending your request...";
     var submitInFlight = false;
     var hasTrackedStart = false;
+    var submitHintMessage = "Please complete the form to continue.";
+    var submitHintTimerId = 0;
     var inputs = {
       firstName: intakeForm.querySelector("[data-new-construction-input='firstName']"),
       lastName: intakeForm.querySelector("[data-new-construction-input='lastName']"),
@@ -2947,12 +3150,67 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     };
 
+    var isSubmitReady = function () {
+      return Boolean(
+        normalizeValue(inputs.firstName && inputs.firstName.value) &&
+        normalizeValue(inputs.lastName && inputs.lastName.value) &&
+        sharedValidatePhoneNumber(inputs.phone && inputs.phone.value) &&
+        validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase()) &&
+        Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+      );
+    };
+
+    var updateSubmitButtonState = function () {
+      if (!submitButton) {
+        return;
+      }
+      var ready = isSubmitReady();
+      submitButton.dataset.submitReady = ready ? "true" : "false";
+      submitButton.removeAttribute("aria-disabled");
+      submitButton.dataset.submitHint = submitHintMessage;
+      if (ready) {
+        submitButton.removeAttribute("data-submit-hint-visible");
+        if (submitHintTimerId) {
+          window.clearTimeout(submitHintTimerId);
+          submitHintTimerId = 0;
+        }
+      }
+    };
+
+    var showSubmitHint = function () {
+      if (!submitButton || isSubmitReady()) {
+        return;
+      }
+      submitButton.dataset.submitHint = submitHintMessage;
+      submitButton.setAttribute("data-submit-hint-visible", "true");
+      if (submitHintTimerId) {
+        window.clearTimeout(submitHintTimerId);
+      }
+      submitHintTimerId = window.setTimeout(function () {
+        if (submitButton) {
+          submitButton.removeAttribute("data-submit-hint-visible");
+        }
+        submitHintTimerId = 0;
+      }, 2200);
+    };
+
     var setStatus = function (message, isError) {
       if (!statusNode) {
         return;
       }
       statusNode.textContent = message || "";
       statusNode.classList.toggle("is-error", Boolean(isError));
+      clearStatusTimer();
+      if (isError && message) {
+        statusClearTimerId = window.setTimeout(function () {
+          if (statusNode) {
+            statusNode.textContent = "";
+            statusNode.classList.remove("is-error");
+          }
+          clearInvalidFeedback();
+          statusClearTimerId = 0;
+        }, 1000);
+      }
     };
 
     var setSubmitButton = function (label, disabled) {
@@ -2964,10 +3222,12 @@
     };
 
     var clearInvalidState = function () {
-      Object.keys(inputs).forEach(function (key) {
-        if (inputs[key] && inputs[key].classList) {
-          inputs[key].classList.remove("is-invalid");
-        }
+      clearInvalidFeedback();
+    };
+
+    var restoreScrollPosition = function (scrollY) {
+      window.requestAnimationFrame(function () {
+        window.scrollTo(0, scrollY);
       });
     };
 
@@ -3043,14 +3303,28 @@
       inputs[key].addEventListener("input", function () {
         trackStartIfNeeded("input_" + key);
         inputs[key].classList.remove("is-invalid");
+        updateSubmitButtonState();
       });
     });
 
     if (inputs.smsOptIn) {
       inputs.smsOptIn.addEventListener("change", function () {
         trackStartIfNeeded("sms_opt_in_change");
+        updateSubmitButtonState();
       });
     }
+
+    if (submitButton) {
+      submitButton.addEventListener("mouseenter", showSubmitHint);
+      submitButton.addEventListener("focus", showSubmitHint);
+      submitButton.addEventListener("click", function () {
+        if (!isSubmitReady()) {
+          showSubmitHint();
+        }
+      });
+    }
+
+    updateSubmitButtonState();
 
     intakeForm.addEventListener("submit", function (event) {
       event.preventDefault();
@@ -3062,37 +3336,51 @@
       markAnalyticsFormInteraction("new_construction_form_submit");
       clearInvalidState();
       setStatus("", false);
+      updateSubmitButtonState();
 
       var firstName = normalizeValue(inputs.firstName && inputs.firstName.value);
       var lastName = normalizeValue(inputs.lastName && inputs.lastName.value);
       var phone = normalizeValue(inputs.phone && inputs.phone.value);
       var email = normalizeValue(inputs.email && inputs.email.value).toLowerCase();
       var message = normalizeValue(inputs.message && inputs.message.value);
+      var smsOptInChecked = Boolean(inputs.smsOptIn && inputs.smsOptIn.checked);
       var invalidFields = [];
       var firstInvalidInput = null;
+      var validationMessage = "";
 
       if (!firstName && inputs.firstName) {
         inputs.firstName.classList.add("is-invalid");
         invalidFields.push("first_name");
         firstInvalidInput = firstInvalidInput || inputs.firstName;
+        validationMessage = validationMessage || "Please enter your first name.";
       }
 
       if (!lastName && inputs.lastName) {
         inputs.lastName.classList.add("is-invalid");
         invalidFields.push("last_name");
         firstInvalidInput = firstInvalidInput || inputs.lastName;
+        validationMessage = validationMessage || "Please enter your last name.";
       }
 
       if (stripNonDigits(phone).length < 10 && inputs.phone) {
         inputs.phone.classList.add("is-invalid");
         invalidFields.push("phone");
         firstInvalidInput = firstInvalidInput || inputs.phone;
+        validationMessage = validationMessage || "Please enter a valid phone number.";
       }
 
       if (!validateEmail(email) && inputs.email) {
         inputs.email.classList.add("is-invalid");
         invalidFields.push("email");
         firstInvalidInput = firstInvalidInput || inputs.email;
+        validationMessage = validationMessage || "Please enter a valid email address.";
+      }
+
+      if (!smsOptInChecked && inputs.smsOptIn) {
+        inputs.smsOptIn.classList.add("is-invalid");
+        invalidFields.push("sms_opt_in");
+        firstInvalidInput = firstInvalidInput || inputs.smsOptIn;
+        validationMessage = validationMessage || "Please agree to be contacted to continue.";
       }
 
       if (invalidFields.length) {
@@ -3103,7 +3391,8 @@
           invalid_fields: invalidFields.join(","),
           invalid_count: invalidFields.length
         });
-        setStatus("Please complete all required fields with valid information.", true);
+        showSubmitHint();
+        setStatus(validationMessage || "Please complete all required fields with valid information.", true);
         return;
       }
 
@@ -3132,11 +3421,13 @@
 
       trackIntakeEvent("new_construction_form_submit_attempt", {});
       showSuccessState();
+      updateSubmitButtonState();
 
       submitPayload(payload)
         .then(function (submissionTransport) {
           submitInFlight = false;
           setSubmitButton(defaultSubmitLabel, false);
+          updateSubmitButtonState();
           trackIntakeEvent("new_construction_form_submit_success", {
             submission_transport: submissionTransport || "fetch"
           });
@@ -3144,6 +3435,7 @@
         .catch(function (error) {
           submitInFlight = false;
           setSubmitButton(defaultSubmitLabel, false);
+          updateSubmitButtonState();
           trackIntakeEvent("new_construction_form_submit_error", {
             error_message: String(error && error.message || "submit_failed")
           });
@@ -3209,20 +3501,90 @@
       return String(value || "").replace(/[^\d]/g, "");
     };
 
+    var statusClearTimerId = 0;
+    var submitHintMessage = "Please complete the form to continue.";
+    var submitHintTimerId = 0;
+
+    var isSubmitReady = function () {
+      return Boolean(
+        normalizeValue(inputs.name && inputs.name.value) &&
+        validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase()) &&
+        sharedValidatePhoneNumber(inputs.phone && inputs.phone.value) &&
+        sharedValidateStreetAddress(inputs.propertyAddress && inputs.propertyAddress.value) &&
+        Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+      );
+    };
+
+    var clearStatusTimer = function () {
+      if (statusClearTimerId) {
+        window.clearTimeout(statusClearTimerId);
+        statusClearTimerId = 0;
+      }
+    };
+
+    var showSubmitHint = function () {
+      if (!submitButton || isSubmitReady()) {
+        return;
+      }
+      submitButton.dataset.submitHint = submitHintMessage;
+      submitButton.setAttribute("data-submit-hint-visible", "true");
+      if (submitHintTimerId) {
+        window.clearTimeout(submitHintTimerId);
+      }
+      submitHintTimerId = window.setTimeout(function () {
+        if (submitButton) {
+          submitButton.removeAttribute("data-submit-hint-visible");
+        }
+        submitHintTimerId = 0;
+      }, 2200);
+    };
+
+    var clearInvalidFeedback = function () {
+      Object.keys(inputs).forEach(function (key) {
+        if (inputs[key] && inputs[key].classList) {
+          inputs[key].classList.remove("is-invalid");
+        }
+      });
+    };
+
     var setStatus = function (message, isError) {
       if (!statusNode) {
         return;
       }
       statusNode.textContent = message || "";
       statusNode.classList.toggle("is-error", Boolean(isError));
+      clearStatusTimer();
+      if (isError && message) {
+        statusClearTimerId = window.setTimeout(function () {
+          if (statusNode) {
+            statusNode.textContent = "";
+            statusNode.classList.remove("is-error");
+          }
+          clearInvalidFeedback();
+          statusClearTimerId = 0;
+        }, 1000);
+      }
     };
 
     var clearInvalidState = function () {
-      Object.keys(inputs).forEach(function (key) {
-        if (inputs[key]) {
-          inputs[key].classList.remove("is-invalid");
+      clearInvalidFeedback();
+    };
+
+    var updateSubmitButtonState = function () {
+      if (!submitButton) {
+        return;
+      }
+      var ready = isSubmitReady();
+      submitButton.dataset.submitReady = ready ? "true" : "false";
+      submitButton.removeAttribute("aria-disabled");
+      submitButton.dataset.submitHint = submitHintMessage;
+      if (ready) {
+        submitButton.removeAttribute("data-submit-hint-visible");
+        if (submitHintTimerId) {
+          window.clearTimeout(submitHintTimerId);
+          submitHintTimerId = 0;
         }
-      });
+      }
     };
 
     trackHomeEvalEvent("home_eval_impression", {});
@@ -3235,8 +3597,29 @@
       });
       inputs[key].addEventListener("input", function () {
         trackHomeEvalStart("input_" + key);
+        updateSubmitButtonState();
       });
     });
+
+    if (inputs.smsOptIn) {
+      inputs.smsOptIn.addEventListener("change", function () {
+        trackHomeEvalStart("sms_opt_in_change");
+        inputs.smsOptIn.classList.remove("is-invalid");
+        updateSubmitButtonState();
+      });
+    }
+
+    if (submitButton) {
+      submitButton.addEventListener("mouseenter", showSubmitHint);
+      submitButton.addEventListener("focus", showSubmitHint);
+      submitButton.addEventListener("click", function () {
+        if (!isSubmitReady()) {
+          showSubmitHint();
+        }
+      });
+    }
+
+    updateSubmitButtonState();
 
     homeEvalForm.addEventListener("submit", function (event) {
       event.preventDefault();
@@ -3249,36 +3632,50 @@
       trackHomeEvalEvent("home_eval_submit_attempt", {});
       clearInvalidState();
       setStatus("", false);
+      updateSubmitButtonState();
 
       var name = normalizeValue(inputs.name && inputs.name.value);
       var email = normalizeValue(inputs.email && inputs.email.value).toLowerCase();
       var phone = normalizeValue(inputs.phone && inputs.phone.value);
       var propertyAddress = normalizeValue(inputs.propertyAddress && inputs.propertyAddress.value);
+      var smsOptInChecked = Boolean(inputs.smsOptIn && inputs.smsOptIn.checked);
       var firstInvalidInput = null;
       var invalidFields = [];
+      var validationMessage = "";
 
       if (!name && inputs.name) {
         firstInvalidInput = firstInvalidInput || inputs.name;
         inputs.name.classList.add("is-invalid");
         invalidFields.push("name");
+        validationMessage = validationMessage || "Please enter your name.";
       }
 
       if (!validateEmail(email) && inputs.email) {
         firstInvalidInput = firstInvalidInput || inputs.email;
         inputs.email.classList.add("is-invalid");
         invalidFields.push("email");
+        validationMessage = validationMessage || "Please enter a valid email address.";
       }
 
-      if (stripNonDigits(phone).length < 10 && inputs.phone) {
+      if (!sharedValidatePhoneNumber(phone) && inputs.phone) {
         firstInvalidInput = firstInvalidInput || inputs.phone;
         inputs.phone.classList.add("is-invalid");
         invalidFields.push("phone");
+        validationMessage = validationMessage || "Please enter a valid phone number.";
       }
 
-      if (!propertyAddress && inputs.propertyAddress) {
+      if (!sharedValidateStreetAddress(propertyAddress) && inputs.propertyAddress) {
         firstInvalidInput = firstInvalidInput || inputs.propertyAddress;
         inputs.propertyAddress.classList.add("is-invalid");
         invalidFields.push("propertyAddress");
+        validationMessage = validationMessage || "Please enter a valid property address.";
+      }
+
+      if (!smsOptInChecked && inputs.smsOptIn) {
+        firstInvalidInput = firstInvalidInput || inputs.smsOptIn;
+        inputs.smsOptIn.classList.add("is-invalid");
+        invalidFields.push("sms_opt_in");
+        validationMessage = validationMessage || "Please agree to be contacted to continue.";
       }
 
       if (firstInvalidInput) {
@@ -3287,7 +3684,8 @@
           invalid_fields: invalidFields.join(","),
           invalid_count: invalidFields.length
         });
-        setStatus("Please complete all required fields with valid information.", true);
+        showSubmitHint();
+        setStatus(validationMessage || "Please complete all required fields with valid information.", true);
         return;
       }
 
@@ -3296,6 +3694,7 @@
         submitButton.disabled = true;
       }
       setStatus("Sending message...", false);
+      var submitScrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
 
       var nameParts = name.split(" ");
       var firstName = nameParts.length ? nameParts[0] : "";
@@ -3326,6 +3725,8 @@
           submitButton.disabled = false;
         }
         homeEvalForm.reset();
+        updateSubmitButtonState();
+        restoreScrollPosition(submitScrollY);
         trackHomeEvalEvent("home_eval_submit_success", {
           submission_transport: "not_configured"
         });
@@ -3359,6 +3760,8 @@
             submitButton.disabled = false;
           }
           homeEvalForm.reset();
+          updateSubmitButtonState();
+          restoreScrollPosition(submitScrollY);
           trackHomeEvalEvent("home_eval_submit_success", {
             submission_transport: "fetch"
           });
@@ -3369,6 +3772,7 @@
           if (submitButton) {
             submitButton.disabled = false;
           }
+          updateSubmitButtonState();
           trackHomeEvalEvent("home_eval_submit_error", {
             error_message: String(error && error.message || "submit_failed")
           });
@@ -3381,7 +3785,7 @@
     var isHomePage = Boolean(document.body && document.body.classList.contains("page-home"));
     var isAboutPage = Boolean(document.body && document.body.classList.contains("page-about"));
     var isDesktopViewport = !window.matchMedia || window.matchMedia("(min-width: 1025px)").matches;
-    var shouldEnableCallPopup = isHomePage || (isAboutPage && isDesktopViewport);
+    var shouldEnableCallPopup = isDesktopViewport || isHomePage || isAboutPage;
     if (!shouldEnableCallPopup) {
       return;
     }
@@ -3409,7 +3813,7 @@
         ".call-contact-modal { position: fixed; inset: 0; z-index: 5600; display: grid; place-items: center; padding: clamp(0.8rem, 2vw, 1.4rem); }",
         ".call-contact-modal[hidden] { display: none; }",
         ".call-contact-backdrop { position: absolute; inset: 0; background: rgba(8, 20, 30, 0.72); backdrop-filter: blur(14px) saturate(0.95); }",
-        ".call-contact-dialog { position: relative; z-index: 1; width: min(680px, 95vw); max-height: 92vh; overflow: auto; border-radius: 12px; background: #f7f8f7; box-shadow: 0 24px 56px rgba(8, 16, 23, 0.34); padding: clamp(1.1rem, 3vw, 2rem) clamp(1rem, 3vw, 1.9rem) clamp(0.78rem, 2.2vw, 1.15rem); }",
+        ".call-contact-dialog { position: relative; z-index: 1; width: min(680px, 95vw); max-height: 90vh; overflow: auto; border-radius: 12px; background: #f7f8f7; box-shadow: 0 24px 56px rgba(8, 16, 23, 0.34); padding: clamp(0.92rem, 2.5vw, 1.7rem) clamp(0.92rem, 2.5vw, 1.65rem) clamp(0.78rem, 2vw, 1rem); }",
         ".call-contact-dialog.is-success { background: #ffffff; min-height: 230px; display: flex; align-items: center; justify-content: center; padding: clamp(1.5rem, 4vw, 2.8rem); }",
         ".call-contact-dialog.is-success .call-contact-header, .call-contact-dialog.is-success form { display: none; }",
         ".call-contact-dialog.is-success .call-contact-close { background: rgba(199, 157, 44, 0.16); color: #8f6f15; }",
@@ -3417,7 +3821,7 @@
         ".call-contact-close:hover, .call-contact-close:focus-visible { background: rgba(22, 44, 57, 0.22); }",
         ".call-contact-header h2 { margin: 0; color: #1f4b5f; font-size: clamp(1.2rem, 2.8vw, 1.8rem); line-height: 1.2; text-transform: uppercase; }",
         ".call-contact-header p { margin: 0.42rem 0 0.18rem; color: #426477; font-size: 0.95rem; line-height: 1.5; }",
-        ".call-contact-form { margin-top: 1.36rem; display: grid; gap: 1.52rem; }",
+        ".call-contact-form { margin-top: 1.08rem; display: grid; gap: 1.12rem; }",
         ".call-contact-form > label, .call-contact-form > .call-contact-name-grid, .call-contact-form > fieldset, .call-contact-form > .call-contact-consent, .call-contact-form > .call-contact-actions, .call-contact-form > .call-contact-consent-meta { margin: 0; }",
         ".call-contact-name-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.88rem; }",
         ".call-contact-label { display: block; margin-bottom: 0.2rem; color: #1f4b5f; font-size: 0.9rem; font-weight: 800; text-transform: uppercase; line-height: 1.2; }",
@@ -3431,17 +3835,22 @@
         ".call-contact-intent-option input[type='radio'] { margin: 0; width: 1rem; height: 1rem; }",
         ".call-contact-intent.is-invalid .call-contact-intent-option { border-color: #b44141; }",
         ".call-contact-input.is-invalid { border-color: #b44141; }",
-        ".call-contact-actions { margin-top: 0.52rem; display: grid; gap: 0.86rem; }",
-        ".call-contact-submit { border: 0; border-radius: 8px; background: #c79d2c; color: #ffffff; font-size: 1rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.025em; padding: 0.84rem 1rem; cursor: pointer; }",
-        ".call-contact-submit:hover, .call-contact-submit:focus-visible { background: #af8926; }",
+        ".call-contact-actions { position: relative; margin-top: 0.42rem; display: grid; gap: 0.72rem; overflow: visible; }",
+        ".call-contact-submit { position: relative; z-index: 1; border: 0; border-radius: 8px; background: linear-gradient(180deg, #8d949a 0%, #6f777d 100%); color: #ffffff; font-size: 1.08rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.025em; min-height: 62px; padding: 1rem 1.25rem; cursor: pointer; overflow: visible; }",
+        ".call-contact-submit[data-submit-ready='true'] { background: linear-gradient(180deg, #d8b864 0%, #c79d2c 52%, #af8926 100%); }",
+        ".call-contact-submit[data-submit-ready='true']:hover, .call-contact-submit[data-submit-ready='true']:focus-visible { background: linear-gradient(180deg, #e2c26f 0%, #d1ac3f 52%, #b68b24 100%); }",
+        ".call-contact-submit[data-submit-ready='false']:hover, .call-contact-submit[data-submit-ready='false']:focus-visible { background: linear-gradient(180deg, #979fa5 0%, #7d858c 100%); }",
+        ".call-contact-submit[data-submit-hint]::after { content: attr(data-submit-hint); position: absolute; left: 50%; bottom: calc(100% + 0.5rem); width: max-content; max-width: min(270px, 82vw); padding: 0.52rem 0.72rem; border-radius: 7px; background: rgba(16, 28, 36, 0.96); color: #ffffff; font-size: 0.84rem; font-weight: 700; line-height: 1.35; text-transform: none; letter-spacing: 0; text-align: center; opacity: 0; pointer-events: none; transform: translate(-50%, 6px); transition: opacity 0.16s ease, transform 0.16s ease; z-index: 3; }",
+        ".call-contact-submit[data-submit-hint-visible='true']::after { opacity: 1; transform: translate(-50%, 0); }",
         ".call-contact-submit[disabled] { opacity: 0.7; cursor: wait; }",
         ".call-contact-direct-call { color: #1f4b5f; font-size: 0.9rem; font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }",
-        ".call-contact-consent { margin-top: 0.12rem; color: #355564; font-size: 0.76rem; line-height: 1.44; }",
-        ".call-contact-consent label { display: grid; grid-template-columns: 0.92rem minmax(0, 1fr); align-items: flex-start; gap: 0.48rem; margin: 0; }",
+        ".call-contact-consent { margin-top: 0.12rem; color: #355564; font-size: 0.74rem; line-height: 1.38; }",
+        ".call-contact-consent label { display: flex; align-items: flex-start; gap: 0.48rem; margin: 0; }",
+        ".call-contact-consent span { flex: 1 1 auto; min-width: 0; }",
         ".call-contact-consent input[type='checkbox'] { margin: 0.12rem 0 0; width: 0.92rem; height: 0.92rem; }",
-        ".call-contact-consent-meta { margin-top: 0.22rem; color: #556d79; font-size: 0.73rem; line-height: 1.4; }",
+        ".call-contact-consent-meta { margin-top: 0.18rem; color: #556d79; font-size: 0.7rem; line-height: 1.34; }",
         ".call-contact-consent-note { margin: 0.35rem 0 0; color: #556d79; }",
-        ".call-contact-consent-links { margin: 0.3rem 0 0; }",
+        ".call-contact-consent-links { margin: 0.22rem 0 0; }",
         ".call-contact-consent-links a { color: #1f4b5f; text-decoration: underline; text-underline-offset: 2px; }",
         ".call-contact-status { margin: 0.08rem 0 0; color: #1f5a36; font-size: 0.89rem; font-weight: 700; }",
         ".call-contact-status:empty { display: none; }",
@@ -3506,7 +3915,7 @@
       "</label>",
       "</div>",
       "<div class='call-contact-actions'>",
-      "<button type='submit' class='call-contact-submit' data-call-contact-submit>Contact Us</button>",
+      "<button type='submit' class='call-contact-submit' data-call-contact-submit data-submit-ready='false' data-submit-hint='Please complete the form to continue.'>Contact Us</button>",
       "<a class='call-contact-direct-call' href='tel:+19197377896'>Prefer to call now? 919-737-7896</a>",
       "</div>",
       "<div class='call-contact-consent-meta'>",
@@ -3563,6 +3972,62 @@
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
     };
 
+    var submitHintMessage = "Please complete the form to continue.";
+    var submitHintTimerId = 0;
+    var statusClearTimerId = 0;
+
+    var clearStatusTimer = function () {
+      if (statusClearTimerId) {
+        window.clearTimeout(statusClearTimerId);
+        statusClearTimerId = 0;
+      }
+    };
+
+    var isSubmitReady = function () {
+      return Boolean(
+        normalizeValue(inputs.firstName && inputs.firstName.value) &&
+        normalizeValue(inputs.lastName && inputs.lastName.value) &&
+        validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase()) &&
+        sharedValidatePhoneNumber(inputs.phone && inputs.phone.value) &&
+        Boolean(inputs.smsOptIn && inputs.smsOptIn.checked) &&
+        Boolean(getIntentValue())
+      );
+    };
+
+    var updateSubmitButtonState = function () {
+      if (!submitButton) {
+        return;
+      }
+      var ready = isSubmitReady();
+      submitButton.dataset.submitReady = ready ? "true" : "false";
+      submitButton.removeAttribute("aria-disabled");
+      submitButton.dataset.submitHint = submitHintMessage;
+      if (ready) {
+        submitButton.removeAttribute("data-submit-hint-visible");
+        if (submitHintTimerId) {
+          window.clearTimeout(submitHintTimerId);
+          submitHintTimerId = 0;
+        }
+      }
+    };
+
+    var showSubmitHint = function () {
+      if (!submitButton || isSubmitReady()) {
+        return;
+      }
+      submitButton.dataset.submitHint = submitHintMessage;
+      submitButton.setAttribute("data-submit-hint-visible", "true");
+      if (submitHintTimerId) {
+        window.clearTimeout(submitHintTimerId);
+      }
+      submitHintTimerId = window.setTimeout(function () {
+        if (submitButton) {
+          submitButton.removeAttribute("data-submit-hint-visible");
+        }
+        submitHintTimerId = 0;
+      }, 2200);
+    };
+
     var getIntentValue = function () {
       var selected = popupHost.querySelector("input[name='contactIntent']:checked");
       return selected ? String(selected.value) : "";
@@ -3574,6 +4039,17 @@
       }
       statusNode.textContent = message || "";
       statusNode.classList.toggle("is-error", Boolean(isError));
+      clearStatusTimer();
+      if (isError && message) {
+        statusClearTimerId = window.setTimeout(function () {
+          if (statusNode) {
+            statusNode.textContent = "";
+            statusNode.classList.remove("is-error");
+          }
+          clearInvalidState();
+          statusClearTimerId = 0;
+        }, 1000);
+      }
     };
 
     var setSubmitButton = function (label, disabled) {
@@ -3608,6 +4084,7 @@
       form.reset();
       clearInvalidState();
       setStatus("", false);
+      updateSubmitButtonState();
       if (popupDialog) {
         popupDialog.classList.add("is-success");
       }
@@ -3621,6 +4098,7 @@
       hideSuccessScreen();
       setSubmitButton(defaultSubmitLabel, false);
       submitInFlight = false;
+      updateSubmitButtonState();
     };
 
     var clearInvalidState = function () {
@@ -3785,6 +4263,7 @@
       inputs[key].addEventListener("input", function () {
         trackStartIfNeeded("input_" + key);
         inputs[key].classList.remove("is-invalid");
+        updateSubmitButtonState();
       });
     });
 
@@ -3800,8 +4279,22 @@
     if (inputs.smsOptIn) {
       inputs.smsOptIn.addEventListener("change", function () {
         trackStartIfNeeded("sms_opt_in_change");
+        inputs.smsOptIn.classList.remove("is-invalid");
+        updateSubmitButtonState();
       });
     }
+
+    if (submitButton) {
+      submitButton.addEventListener("mouseenter", showSubmitHint);
+      submitButton.addEventListener("focus", showSubmitHint);
+      submitButton.addEventListener("click", function () {
+        if (!isSubmitReady()) {
+          showSubmitHint();
+        }
+      });
+    }
+
+    updateSubmitButtonState();
 
     if (!form) {
       return;
@@ -3817,6 +4310,7 @@
       markAnalyticsFormInteraction("requested_contact_submit");
       clearInvalidState();
       setStatus("", false);
+      updateSubmitButtonState();
 
       var firstName = normalizeValue(inputs.firstName && inputs.firstName.value);
       var lastName = normalizeValue(inputs.lastName && inputs.lastName.value);
@@ -3828,29 +4322,43 @@
       var intentMeta = resolveIntentMeta(intent);
       var invalidFields = [];
       var firstInvalidInput = null;
+      var validationMessage = "";
 
       if (!firstName && inputs.firstName) {
         inputs.firstName.classList.add("is-invalid");
         firstInvalidInput = firstInvalidInput || inputs.firstName;
         invalidFields.push("first_name");
+        validationMessage = validationMessage || "Please enter your first name.";
       }
 
       if (!lastName && inputs.lastName) {
         inputs.lastName.classList.add("is-invalid");
         firstInvalidInput = firstInvalidInput || inputs.lastName;
         invalidFields.push("last_name");
+        validationMessage = validationMessage || "Please enter your last name.";
       }
 
       if (!validateEmail(email) && inputs.email) {
         inputs.email.classList.add("is-invalid");
         firstInvalidInput = firstInvalidInput || inputs.email;
         invalidFields.push("email");
+        validationMessage = validationMessage || "Please enter a valid email address.";
       }
 
-      if (stripNonDigits(phone).length < 10 && inputs.phone) {
+      if (!sharedValidatePhoneNumber(phone) && inputs.phone) {
         inputs.phone.classList.add("is-invalid");
         firstInvalidInput = firstInvalidInput || inputs.phone;
         invalidFields.push("phone");
+        validationMessage = validationMessage || "Please enter a valid phone number.";
+      }
+
+      if (!inputs.smsOptIn || !inputs.smsOptIn.checked) {
+        if (inputs.smsOptIn) {
+          inputs.smsOptIn.classList.add("is-invalid");
+        }
+        firstInvalidInput = firstInvalidInput || inputs.smsOptIn;
+        invalidFields.push("sms_opt_in");
+        validationMessage = validationMessage || "Please agree to be contacted to continue.";
       }
 
       if (!intent) {
@@ -3858,6 +4366,7 @@
           intentGroup.classList.add("is-invalid");
         }
         invalidFields.push("contactIntent");
+        validationMessage = validationMessage || "Please choose what you are looking to do.";
       }
 
       if (invalidFields.length) {
@@ -3879,7 +4388,8 @@
           invalid_count: invalidFields.length,
           contact_intent: intent
         });
-        setStatus("Please complete all required fields with valid information.", true);
+        showSubmitHint();
+        setStatus(validationMessage || "Please complete all required fields with valid information.", true);
         return;
       }
 
@@ -4003,9 +4513,9 @@
         ".legal-consent-copy { margin-top: 0.8rem; font-size: 0.76rem; line-height: 1.45; color: #355564; }",
         ".legal-consent-meta { margin-top: 0.34rem; font-size: 0.72rem; line-height: 1.4; color: #536d79; }",
         ".legal-consent-meta .legal-consent-note { margin: 0; color: #536d79; font-size: 0.72rem; }",
-        ".legal-consent-checkbox { display: grid; grid-template-columns: 0.94rem minmax(0, 1fr); align-items: flex-start; gap: 0.5rem; margin: 0; }",
+        ".legal-consent-checkbox { display: flex; align-items: flex-start; gap: 0.5rem; margin: 0; }",
         ".legal-consent-checkbox input[type='checkbox'] { width: 0.94rem; min-width: 0.94rem; height: 0.94rem; margin: 0.14rem 0 0; padding: 0; border: 1px solid #8ea4af; border-radius: 2px; background: #ffffff; flex: 0 0 auto; }",
-        ".legal-consent-checkbox span { display: block; min-width: 0; }",
+        ".legal-consent-checkbox span { display: block; flex: 1 1 auto; min-width: 0; }",
         ".legal-consent-meta .legal-consent-links { margin: 0.3rem 0 0; }",
         ".lead-popup-consent-copy { margin-top: 0.65rem; color: #456778; font-size: 0.69rem; line-height: 1.45; }",
         ".lead-popup-consent-meta { margin-top: 0.3rem; color: #5a7d8d; font-size: 0.66rem; line-height: 1.4; }",

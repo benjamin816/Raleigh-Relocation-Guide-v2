@@ -1,6 +1,7 @@
 const SPREADSHEET_ID = '1V-4tnKUm22SXO9qTkBpC027gUU1eY_YwS6M2BplU8Uo';
 const SHEET_NAME = 'Website Direct Leads';
 const ALERT_EMAIL = 'livinginraleighteam@gmail.com';
+const ALERT_FROM_ALIAS = 'benjamin.carver@exprealty.com';
 
 function doGet() {
   return json_({ ok: true, message: 'Lead endpoint is live.' });
@@ -273,6 +274,11 @@ function appendLead_(sheet, lead, raw) {
 
 function sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, raw) {
   try {
+    if (!leadHasPhoneNumber_(lead)) {
+      const skipMessage = 'No phone number provided for admin email.';
+      updateLeadEmailStatus_(sheet, rowNumber, 'skipped_no_phone', '', skipMessage);
+      return { status: 'skipped_no_phone', error: skipMessage };
+    }
     sendLeadEmail_(lead, raw);
     updateLeadEmailStatus_(sheet, rowNumber, 'sent', new Date(), '');
     return { status: 'sent', error: '' };
@@ -307,7 +313,14 @@ function removeDeprecatedColumns_(sheet) {
     .sort(function (a, b) { return b - a; })
     .forEach(function (columnNumber) {
       sheet.deleteColumn(columnNumber);
-    });
+  });
+}
+
+function leadHasPhoneNumber_(lead) {
+  if (!lead || typeof lead !== 'object') {
+    return false;
+  }
+  return hasText_(lead.phone) || hasText_(lead.home_eval_phone);
 }
 
 function updateLeadEmailStatus_(sheet, rowNumber, status, sentAt, errorMessage) {
@@ -351,13 +364,17 @@ function sendUnsentWebsiteLeadEmails() {
 
   values.forEach(function (row, rowOffset) {
     const status = clean_(row[indexes.email_status]).toLowerCase();
-    if (status === 'sent') {
+    if (status === 'sent' || status.indexOf('skipped') === 0) {
       return;
     }
 
-    pendingRows += 1;
     const rowNumber = rowOffset + 2;
     const rowContext = leadContextFromSheetRow_(row, indexes);
+    if (!leadHasPhoneNumber_(rowContext.lead)) {
+      updateLeadEmailStatus_(sheet, rowNumber, 'skipped_no_phone', '', 'No phone number provided for admin email.');
+      return;
+    }
+    pendingRows += 1;
     const result = sendLeadEmailAndUpdateStatus_(sheet, rowNumber, rowContext.lead, rowContext.raw);
 
     if (result.status === 'sent') {
@@ -635,11 +652,41 @@ function sendLeadEmail_(lead, raw) {
   lines.push('');
   lines.push('Please follow up as soon as possible.');
 
-  MailApp.sendEmail({
-    to: ALERT_EMAIL,
-    subject: subject,
-    body: lines.join('\n')
-  });
+  sendAdminAlertEmail_(subject, lines.join('\n'));
+}
+
+function sendTestLeadAlertEmail() {
+  sendAdminAlertEmail_(
+    'Test Lead Alert - Website',
+    [
+      'This is a test admin alert from the website lead pipeline.',
+      '',
+      'If you received this, the alert sender settings are working.',
+      '',
+      'Sender Name: Living in Raleigh Website Bot',
+      'From Alias: ' + ALERT_FROM_ALIAS
+    ].join('\n')
+  );
+}
+
+function sendAdminAlertEmail_(subject, body) {
+  const options = {
+    name: 'Living in Raleigh Website Bot'
+  };
+
+  if (adminAlertAliasIsAvailable_()) {
+    options.from = ALERT_FROM_ALIAS;
+  }
+
+  GmailApp.sendEmail(ALERT_EMAIL, subject, body, options);
+}
+
+function adminAlertAliasIsAvailable_() {
+  try {
+    return GmailApp.getAliases().indexOf(ALERT_FROM_ALIAS) !== -1;
+  } catch (_) {
+    return false;
+  }
 }
 
 function clean_(v) {
