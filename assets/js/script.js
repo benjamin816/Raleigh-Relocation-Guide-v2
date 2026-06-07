@@ -2220,6 +2220,8 @@
     var lastTrackedStepViewKey = "";
     var hasStartedForm = false;
     var submitInFlight = false;
+    var scrollGuardBound = false;
+    var scrollGuardActive = false;
     var formState = {
       timeframe: "",
       budget: "",
@@ -2238,6 +2240,61 @@
       smsOptIn: false
     };
     var stepInputStarted = {};
+
+    var isPopupInteractiveTarget = function (target) {
+      return Boolean(popupDialog && target && popupDialog.contains(target));
+    };
+
+    var shouldBlockScrollKey = function (event) {
+      if (!event) {
+        return false;
+      }
+      return ["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "].indexOf(event.key) !== -1;
+    };
+
+    var blockLeadPopupBackgroundScroll = function (event) {
+      if (!scrollGuardActive || popupHost.hidden) {
+        return;
+      }
+      if (isPopupInteractiveTarget(event.target)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    var blockLeadPopupBackgroundKeyScroll = function (event) {
+      if (!scrollGuardActive || popupHost.hidden || !shouldBlockScrollKey(event)) {
+        return;
+      }
+      if (isPopupInteractiveTarget(event.target)) {
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+    };
+
+    var bindLeadPopupScrollGuard = function () {
+      if (scrollGuardBound) {
+        return;
+      }
+      scrollGuardBound = true;
+      scrollGuardActive = true;
+      document.addEventListener("wheel", blockLeadPopupBackgroundScroll, { passive: false, capture: true });
+      document.addEventListener("touchmove", blockLeadPopupBackgroundScroll, { passive: false, capture: true });
+      document.addEventListener("keydown", blockLeadPopupBackgroundKeyScroll, true);
+    };
+
+    var unbindLeadPopupScrollGuard = function () {
+      scrollGuardActive = false;
+      if (!scrollGuardBound) {
+        return;
+      }
+      document.removeEventListener("wheel", blockLeadPopupBackgroundScroll, true);
+      document.removeEventListener("touchmove", blockLeadPopupBackgroundScroll, true);
+      document.removeEventListener("keydown", blockLeadPopupBackgroundKeyScroll, true);
+      scrollGuardBound = false;
+    };
 
     var trackStepInputStart = function (fieldName) {
       var key = String(currentStep) + ":" + String(fieldName || "input");
@@ -2567,6 +2624,7 @@
       popupHost.setAttribute("aria-hidden", "false");
       document.body.classList.add("lead-popup-open");
       viewportScrollLock.lock();
+      bindLeadPopupScrollGuard();
       lastTrackedStepViewKey = "";
 
       if (forceOpen) {
@@ -2629,6 +2687,7 @@
       popupHost.setAttribute("aria-hidden", "true");
       document.body.classList.remove("lead-popup-open");
       viewportScrollLock.unlock();
+      unbindLeadPopupScrollGuard();
       if (!hasSubmitted && reschedule !== false) {
         setNextShowAt(Date.now() + leadPopupReopenDelayMs);
         schedulePopup();
