@@ -35,9 +35,16 @@ function sendPendingSuburbQuizEmails() {
     const sourceKey = clean_(row[indexes.source_key]);
     const email = clean_(row[indexes.email]);
     const status = clean_(row[indexes.quiz_email_status]).toLowerCase();
+    const quizType = clean_(row[indexes.quiz_type]);
+    const quizTitle = clean_(row[indexes.quiz_title]);
+    const quizResultsJson = clean_(row[indexes.quiz_results_json]);
 
     const sourceHaystack = (sourcePage + ' ' + sourceKey).toLowerCase();
-    const isQuizSource = sourceHaystack.indexOf(CONFIG.SOURCE_MATCH) !== -1 || sourceHaystack.indexOf('raleigh-suburb-quiz') !== -1;
+    const isQuizSource = sourceHaystack.indexOf(CONFIG.SOURCE_MATCH) !== -1 ||
+      sourceHaystack.indexOf('raleigh-suburb-quiz') !== -1 ||
+      Boolean(quizType) ||
+      Boolean(quizTitle) ||
+      Boolean(quizResultsJson);
     if (!isQuizSource || !email || status === 'sent') {
       return;
     }
@@ -76,6 +83,57 @@ function testSendRandomSuburbQuizEmail() {
   return { ok: true, sent_to: CONFIG.TEST_EMAIL, picks: picks };
 }
 
+function testSendNeighborhoodFitEmail() {
+  const payload = {
+    first_name: 'Benjamin',
+    last_name: 'Test',
+    email: CONFIG.TEST_EMAIL,
+    quiz_title: 'Raleigh Neighborhood Fit',
+    quiz_city: 'Raleigh',
+    quiz_results_json: JSON.stringify([
+      {
+        suburb: 'Five Points',
+        label: 'Top Pick',
+        typeLabel: 'Resale-heavy',
+        summary: 'Historic, central, and easy to love if you want a classic Raleigh resale neighborhood with personality.',
+        why: 'Best for buyers who want character homes and quick access to downtown Raleigh.',
+        homes: 'Bungalows, renovated cottages, and established single-family homes.',
+        access: 'Strong Raleigh access with fast trips to downtown, North Hills, and the inner beltline.',
+        amenities: 'Coffee, restaurants, parks, and neighborhood nightlife are all part of the draw.',
+        image: CONFIG.LOGO_URL,
+        learnMoreUrl: '/explore-the-area/raleigh/'
+      },
+      {
+        suburb: 'Historic Oakwood',
+        label: 'Also Consider',
+        typeLabel: 'Resale-heavy',
+        summary: 'A preserved historic neighborhood with a strong old-Raleigh feel.',
+        why: 'Best if you want a historic resale neighborhood with character.',
+        homes: 'Historic homes, renovated classics, and limited-inventory resale properties.',
+        access: 'Close to downtown Raleigh and core city amenities.',
+        amenities: 'Walkable access to eateries, events, and neighborhood energy.',
+        image: CONFIG.LOGO_URL,
+        learnMoreUrl: '/explore-the-area/raleigh/'
+      },
+      {
+        suburb: 'North Hills',
+        label: 'Also Consider',
+        typeLabel: 'Lifestyle mix',
+        summary: 'Raleigh’s midtown energy with shopping, restaurants, and established homes mixed with newer product.',
+        why: 'Best for buyers who want polished convenience and a social feel.',
+        homes: 'Updated resale homes, upscale condos, townhomes, and some newer builds.',
+        access: 'Excellent access to central Raleigh and major commute routes.',
+        amenities: 'Restaurants, retail, entertainment, fitness, and everyday errands are right nearby.',
+        image: CONFIG.LOGO_URL,
+        learnMoreUrl: '/explore-the-area/raleigh/'
+      }
+    ])
+  };
+
+  sendSuburbResultsEmail_(payload, true);
+  return { ok: true, sent_to: CONFIG.TEST_EMAIL, quiz_title: payload.quiz_title };
+}
+
 function installSuburbQuizEmailTrigger() {
   removeSuburbQuizEmailTriggers();
   ScriptApp.newTrigger('sendPendingSuburbQuizEmails')
@@ -108,25 +166,31 @@ function sendSuburbResultsEmail_(lead, isTest) {
   const topPick = clean_(lead.quiz_top_pick);
   const secondPick = clean_(lead.quiz_second_pick);
   const thirdPick = clean_(lead.quiz_third_pick);
+  const dynamicResults = parseQuizResultsPayload_(lead.quiz_results_json);
+  const useDynamicResults = dynamicResults.length > 0;
+  const firstName = clean_(lead.first_name) || 'there';
+  const quizTitle = clean_(lead.quiz_title) || 'Raleigh Suburb Quiz';
+  const subject = lead.quiz_title ? ('Your ' + clean_(lead.quiz_title) + ' Results!') : CONFIG.SUBJECT_LINE;
 
-  if (!topPick) throw new Error('Missing quiz top pick.');
+  if (!useDynamicResults && !topPick) throw new Error('Missing quiz top pick.');
 
-  const picks = [topPick, secondPick, thirdPick].filter(function (v, i, arr) {
+  const fallbackPicks = [topPick, secondPick, thirdPick].filter(function (v, i, arr) {
     return v && arr.indexOf(v) === i;
   });
-
-  const suburbCards = picks.map(function (suburbName, idx) {
-    return buildSuburbBlockHtml_(suburbName, idx === 0);
-  }).join('');
-
-  const firstName = clean_(lead.first_name) || 'there';
-  const subject = CONFIG.SUBJECT_LINE;
+  const suburbCards = useDynamicResults
+    ? dynamicResults.map(function (result, idx) {
+        return buildNeighborhoodFitBlockHtml_(result, idx === 0);
+      }).join('')
+    : fallbackPicks.map(function (suburbName, idx) {
+        return buildSuburbBlockHtml_(suburbName, idx === 0);
+      }).join('');
+  const textBody = useDynamicTextBody_(firstName, useDynamicResults ? dynamicResults : fallbackPicks);
 
   const htmlBody =
     '<div style="font-family:Arial,sans-serif;color:#1F2937;line-height:1.55;max-width:760px;margin:0 auto;padding:20px;">' +
       '<div style="text-align:center;margin:0 0 6px;"><img src="' + escapeHtml_(CONFIG.LOGO_URL) + '" alt="Living in Raleigh Team" style="max-width:280px;width:100%;height:auto;"></div>' +
-      '<h1 style="text-align:center;color:#2F5233;margin:0 0 8px;">Your Raleigh Suburb Quiz Results</h1>' +
-      '<p style="text-align:center;margin:0 0 24px;">Hi ' + escapeHtml_(firstName) + ', here are your personalized suburb matches based on your quiz responses.</p>' +
+      '<h1 style="text-align:center;color:#2F5233;margin:0 0 8px;">' + escapeHtml_(quizTitle) + '</h1>' +
+      '<p style="text-align:center;margin:0 0 24px;">Hi ' + escapeHtml_(firstName) + ', here are your personalized neighborhood matches based on your quiz responses.</p>' +
       suburbCards +
       '<div style="margin-top:24px;padding:16px;border:1px solid #d9e2e6;border-radius:12px;background:#f7fbf8;">' +
         '<h3 style="margin:0 0 8px;color:#2F5233;">Want help choosing the best fit?</h3>' +
@@ -135,8 +199,6 @@ function sendSuburbResultsEmail_(lead, isTest) {
       '</div>' +
       '<p style="margin-top:20px;font-size:12px;color:#5b6770;">This quiz is guidance only. Final fit depends on inventory, timing, and your exact priorities.</p>' +
     '</div>';
-
-  const textBody = buildFallbackTextBody_(firstName, picks);
 
   MailApp.sendEmail({
     to: toEmail,
@@ -221,6 +283,109 @@ function buildFallbackTextBody_(firstName, picks) {
   return lines.join('\n');
 }
 
+function parseQuizResultsPayload_(value) {
+  if (Array.isArray(value)) {
+    return value.map(normalizeQuizResultEntry_).filter(function (entry) {
+      return Boolean(entry.suburb);
+    });
+  }
+
+  const cleaned = clean_(value);
+  if (!cleaned) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(cleaned);
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    return parsed.map(normalizeQuizResultEntry_).filter(function (entry) {
+      return Boolean(entry.suburb);
+    });
+  } catch (_) {
+    return [];
+  }
+}
+
+function normalizeQuizResultEntry_(entry) {
+  const obj = entry && typeof entry === 'object' ? entry : {};
+  const suburb = clean_(obj.suburb || obj.neighborhood || obj.name);
+  return {
+    rank: clean_(obj.rank),
+    label: clean_(obj.label) || (clean_(obj.rank) === '1' ? 'Top Pick' : 'Also Consider'),
+    suburb: suburb,
+    typeLabel: clean_(obj.typeLabel),
+    summary: clean_(obj.summary),
+    why: clean_(obj.why),
+    homes: clean_(obj.homes),
+    access: clean_(obj.access),
+    amenities: clean_(obj.amenities),
+    learnMoreUrl: clean_(obj.learnMoreUrl),
+    image: clean_(obj.image || obj.imageUrl),
+    imageAlt: clean_(obj.imageAlt || suburb)
+  };
+}
+
+function buildNeighborhoodFitBlockHtml_(result, isTopPick) {
+  const suburbName = clean_(result.suburb);
+  if (!suburbName) {
+    return '';
+  }
+
+  const badge = isTopPick
+    ? '<div style="text-align:center;margin-bottom:8px;"><span style="background:#2F5233;color:#fff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Top Pick</span></div>'
+    : '<div style="text-align:center;margin-bottom:8px;"><span style="background:#e8f5e9;color:#2F5233;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Also Consider</span></div>';
+
+  return (
+    '<section style="margin:22px 0;padding:18px;border:1px solid #dce5ea;border-radius:14px;background:#fff;">' +
+      badge +
+      '<h2 style="text-align:center;margin:0 0 12px;color:#1F2937;font-size:28px;font-weight:800;">' + escapeHtml_(suburbName) + '</h2>' +
+      (result.image ? '<div style="text-align:center;margin:0 0 14px;"><img src="' + escapeHtml_(resolvePublicUrl_(result.image)) + '" alt="' + escapeHtml_(result.imageAlt || suburbName) + '" style="max-width:480px;width:100%;height:auto;border-radius:10px;"></div>' : '') +
+      '<div style="margin:0 0 12px;">' +
+        (result.typeLabel ? '<p style="margin:0 0 8px;"><strong>Style:</strong> ' + escapeHtml_(result.typeLabel) + '</p>' : '') +
+        (result.summary ? '<p style="margin:0 0 8px;"><strong>Why this could feel like home:</strong> ' + escapeHtml_(result.summary) + '</p>' : '') +
+        (result.why ? '<p style="margin:0 0 8px;"><strong>Best for:</strong> ' + escapeHtml_(result.why) + '</p>' : '') +
+        (result.homes ? '<p style="margin:0 0 8px;"><strong>Homes you will usually see:</strong> ' + escapeHtml_(result.homes) + '</p>' : '') +
+        (result.access ? '<p style="margin:0 0 8px;"><strong>Commute and access:</strong> ' + escapeHtml_(result.access) + '</p>' : '') +
+        (result.amenities ? '<p style="margin:0;"><strong>Shopping and amenities:</strong> ' + escapeHtml_(result.amenities) + '</p>' : '') +
+      '</div>' +
+      '<p style="margin:8px 0 0;"><a href="' + escapeHtml_(resolvePublicUrl_(result.learnMoreUrl || CONFIG.BASE_SITE_URL + '/explore-the-area/')) + '" target="_blank" rel="noopener noreferrer" style="color:#2F5233;font-weight:700;">Learn More About ' + escapeHtml_(suburbName) + '</a></p>' +
+    '</section>'
+  );
+}
+
+function resolvePublicUrl_(value) {
+  const cleaned = clean_(value);
+  if (!cleaned) {
+    return CONFIG.BASE_SITE_URL;
+  }
+  if (/^https?:\/\//i.test(cleaned)) {
+    return cleaned;
+  }
+  if (cleaned.charAt(0) === '/') {
+    return CONFIG.BASE_SITE_URL + cleaned;
+  }
+  return cleaned;
+}
+
+function useDynamicTextBody_(firstName, resultsOrPicks) {
+  const lines = [];
+  lines.push('Hi ' + firstName + ',');
+  lines.push('');
+  lines.push('Thanks for taking our neighborhood fit quiz. Your top matches:');
+  lines.push('');
+  resultsOrPicks.forEach(function (item, idx) {
+    const name = typeof item === 'string' ? item : clean_(item && (item.suburb || item.neighborhood || item.name));
+    lines.push((idx + 1) + '. ' + name);
+  });
+  lines.push('');
+  lines.push('Book your suburb strategy call: ' + CONFIG.BASE_SITE_URL + '/consult/');
+  lines.push('');
+  lines.push('- The Official Living in Raleigh NC Team');
+  return lines.join('\n');
+}
+
 function rowToPayload_(row, indexes) {
   return {
     first_name: clean_(row[indexes.first_name]),
@@ -228,9 +393,15 @@ function rowToPayload_(row, indexes) {
     email: clean_(row[indexes.email]),
     source_page: clean_(row[indexes.source_page]),
     source_key: clean_(row[indexes.source_key]),
+    quiz_type: clean_(row[indexes.quiz_type]),
+    quiz_title: clean_(row[indexes.quiz_title]),
+    quiz_city: clean_(row[indexes.quiz_city]),
+    quiz_slug: clean_(row[indexes.quiz_slug]),
     quiz_top_pick: clean_(row[indexes.quiz_top_pick]),
     quiz_second_pick: clean_(row[indexes.quiz_second_pick]),
-    quiz_third_pick: clean_(row[indexes.quiz_third_pick])
+    quiz_third_pick: clean_(row[indexes.quiz_third_pick]),
+    quiz_results_json: clean_(row[indexes.quiz_results_json]),
+    quiz_answers_json: clean_(row[indexes.quiz_answers_json])
   };
 }
 
@@ -271,9 +442,15 @@ function headerIndexes_(sheet) {
     email: idx('Email'),
     source_page: idx('Source Page'),
     source_key: idx('Source Key'),
+    quiz_type: idx('Quiz Type'),
+    quiz_title: idx('Quiz Title'),
+    quiz_city: idx('Quiz City'),
+    quiz_slug: idx('Quiz Slug'),
     quiz_top_pick: idx('Quiz Top Pick'),
     quiz_second_pick: idx('Quiz Second Pick'),
     quiz_third_pick: idx('Quiz Third Pick'),
+    quiz_results_json: idx('Quiz Results JSON'),
+    quiz_answers_json: idx('Quiz Answers JSON'),
     quiz_email_status: idx(CONFIG.STATUS_COLUMN),
     quiz_email_sent_at: idx(CONFIG.SENT_AT_COLUMN),
     quiz_email_error: idx(CONFIG.ERROR_COLUMN)

@@ -82,15 +82,29 @@ function normalizeLead_(p) {
   );
   const requestedIntentMeta = requestedContactIntentMeta_(requestedContactIntent);
   const quizResults = extractQuizResults_(p.results);
+  const quizType = clean_(p.quiz_type);
+  const quizTitle = clean_(p.quiz_title);
+  const quizCity = clean_(p.quiz_city);
+  const quizSlug = clean_(p.quiz_slug);
   const sourcePage = clean_(p.source_page) || clean_(p.source);
   const normalizedSourceForQuiz = sourcePage.toLowerCase();
-  const isSuburbQuizLead = normalizedSourceForQuiz.indexOf('/quiz') !== -1 || normalizedSourceForQuiz.indexOf('raleigh-suburb-quiz') !== -1;
+  const isSuburbQuizLead = Boolean(
+    quizType ||
+    quizTitle ||
+    clean_(p.quiz_results_json) ||
+    normalizedSourceForQuiz.indexOf('/quiz') !== -1 ||
+    normalizedSourceForQuiz.indexOf('raleigh-suburb-quiz') !== -1
+  );
 
   return {
     submitted_at: clean_(p.submitted_at) || new Date().toISOString(),
     source_page: sourcePage,
     source_key: clean_(p.source_key) || sourcePage,
     lead_type: isSuburbQuizLead ? 'suburb_quiz' : leadType,
+    quiz_type: quizType,
+    quiz_title: quizTitle,
+    quiz_city: quizCity,
+    quiz_slug: quizSlug,
 
     requested_contact_source: clean_(p.requested_contact_source),
     requested_contact_name: normalizedRequestedContactName,
@@ -181,6 +195,10 @@ function headers_() {
     'Email Error',
     'New Construction Message',
     'Wants Consultation',
+    'Quiz Type',
+    'Quiz Title',
+    'Quiz City',
+    'Quiz Slug',
     'Quiz Top Pick',
     'Quiz Second Pick',
     'Quiz Third Pick',
@@ -278,6 +296,10 @@ function appendLead_(sheet, lead, raw) {
   put('Email Error', '');
   put('New Construction Message', lead.new_construction_message);
   put('Wants Consultation', lead.wants_consultation);
+  put('Quiz Type', lead.quiz_type);
+  put('Quiz Title', lead.quiz_title);
+  put('Quiz City', lead.quiz_city);
+  put('Quiz Slug', lead.quiz_slug);
   put('Quiz Top Pick', lead.quiz_top_pick);
   put('Quiz Second Pick', lead.quiz_second_pick);
   put('Quiz Third Pick', lead.quiz_third_pick);
@@ -607,6 +629,11 @@ function sendLeadEmail_(lead, raw) {
     suburb_quiz: 'New Raleigh Suburb Quiz Lead - Website'
   };
   let subject = subjectByType[lead.lead_type] || 'New Website Lead';
+  if (hasText_(lead.quiz_title)) {
+    subject = 'New ' + clean_(lead.quiz_title) + ' Lead - Website';
+  } else if (lead.lead_type === 'suburb_quiz' && hasText_(lead.quiz_city)) {
+    subject = 'New ' + clean_(lead.quiz_city) + ' Neighborhood Fit Lead - Website';
+  }
   if (lead.lead_type === 'requested_contact' && hasText_(requestedIntentLabel)) {
     subject = 'New Requested Contact Lead (' + requestedIntentLabel + ') - Website';
   }
@@ -684,8 +711,11 @@ function sendLeadEmail_(lead, raw) {
     addFieldLineIfPresent_(newConstructionLines, 'Message', lead.new_construction_message || lead.requested_contact_notes);
     appendSectionIfAny_(lines, 'New Construction Inquiry', newConstructionLines);
   }
-  if (lead.lead_type === 'suburb_quiz' || hasText_(lead.quiz_top_pick)) {
+  if (lead.lead_type === 'suburb_quiz' || hasText_(lead.quiz_top_pick) || hasText_(lead.quiz_results_json)) {
     const quizLines = [];
+    addFieldLineIfPresent_(quizLines, 'Quiz Type', lead.quiz_type);
+    addFieldLineIfPresent_(quizLines, 'Quiz Title', lead.quiz_title);
+    addFieldLineIfPresent_(quizLines, 'Quiz City', lead.quiz_city);
     addFieldLineIfPresent_(quizLines, 'Top Pick', lead.quiz_top_pick);
     addFieldLineIfPresent_(quizLines, 'Second Pick', lead.quiz_second_pick);
     addFieldLineIfPresent_(quizLines, 'Third Pick', lead.quiz_third_pick);
