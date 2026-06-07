@@ -3782,16 +3782,8 @@
   })();
   
   (function () {
-    var isHomePage = Boolean(document.body && document.body.classList.contains("page-home"));
-    var isAboutPage = Boolean(document.body && document.body.classList.contains("page-about"));
-    var isDesktopViewport = !window.matchMedia || window.matchMedia("(min-width: 1025px)").matches;
-    var shouldEnableCallPopup = isDesktopViewport || isHomePage || isAboutPage;
-    if (!shouldEnableCallPopup) {
-      return;
-    }
-
-    var callMeLink = document.querySelector(".utility-nav .call-link");
-    if (!callMeLink) {
+    var callMeLinks = Array.prototype.slice.call(document.querySelectorAll(".call-link"));
+    if (!callMeLinks.length) {
       return;
     }
 
@@ -4234,9 +4226,11 @@
       });
     };
 
-    callMeLink.addEventListener("click", function (event) {
-      event.preventDefault();
-      openPopup();
+    callMeLinks.forEach(function (callMeLink) {
+      callMeLink.addEventListener("click", function (event) {
+        event.preventDefault();
+        openPopup();
+      });
     });
 
     popupHost.querySelectorAll("[data-call-contact-close]").forEach(function (closeNode) {

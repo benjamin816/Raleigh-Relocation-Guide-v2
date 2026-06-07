@@ -2500,6 +2500,13 @@ a {
   color: #ffffff !important;
   text-decoration: underline;
   text-underline-offset: 2px;
+  text-decoration-color: #ffffff;
+}
+
+.page-new-construction-process .new-construction-intake .legal-consent-links a:visited,
+.page-new-construction-process .new-construction-intake .legal-consent-links a:hover,
+.page-new-construction-process .new-construction-intake .legal-consent-links a:focus-visible {
+  color: #ffffff !important;
 }
 
 .page-new-construction-process .new-construction-intake-status {
@@ -2680,6 +2687,13 @@ a {
   text-decoration: underline;
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
+  text-decoration-color: var(--color-white);
+}
+
+.page-new-construction-process .new-construction-intake .legal-consent-links a:visited,
+.page-new-construction-process .new-construction-intake .legal-consent-links a:hover,
+.page-new-construction-process .new-construction-intake .legal-consent-links a:focus-visible {
+  color: var(--color-white) !important;
 }
 
 .page-new-construction-process .new-construction-search-embed-section {
@@ -5160,7 +5174,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
   border-radius: 8px;
   position: relative;
   overflow: visible;
-  background: var(--brand-gold-500);
+  background: linear-gradient(180deg, #8d949a 0%, #6f777d 100%);
   color: var(--color-white);
   font-weight: 800;
   font-size: 1.08rem;
@@ -5173,7 +5187,7 @@ body.lead-popup-open .lead-popup-dev-trigger {
 
 .lead-popup-button:hover,
 .lead-popup-button:focus-visible {
-  background: var(--brand-gold-600);
+  background: linear-gradient(180deg, #979fa5 0%, #7d858c 100%);
 }
 
 .lead-popup-button[data-submit-ready="true"] {
