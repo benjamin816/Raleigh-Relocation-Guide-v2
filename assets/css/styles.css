@@ -3240,15 +3240,15 @@ a {
 }
 
 .home-map-stage-inner {
-  width: 100%;
-  margin-inline: 0;
+  width: min(1560px, calc(100% - 2.8rem));
+  margin-inline: auto;
   display: grid;
   grid-template-columns: minmax(320px, 41%) minmax(0, 59%);
   align-items: center;
-  column-gap: clamp(1rem, 2vw, 2rem);
+  column-gap: 1.8rem;
   min-height: clamp(520px, 39vw, 650px);
   overflow: hidden;
-  padding: 0 clamp(0.9rem, 2vw, 1.8rem);
+  padding: 0 1.4rem;
   background: transparent;
 }
 
@@ -3323,8 +3323,9 @@ a {
   position: relative;
   justify-self: end;
   align-self: center;
-  width: min(940px, 62vw);
-  transform: translateX(clamp(52px, 4vw, 80px)) scale(1.88671875);
+  width: 940px;
+  max-width: none;
+  transform: translateX(72px) scale(1.88671875);
   transform-origin: center right;
   z-index: 2;
   aspect-ratio: 2400 / 1000;
