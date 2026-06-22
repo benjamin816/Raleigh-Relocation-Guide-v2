@@ -1,8 +1,23 @@
 {
   "playlist_id": "PLybPdL80h3Xvrb15HTbQegtAtRUT1O6x3",
   "watch_more_url": "https://www.youtube.com/playlist?list=PLybPdL80h3Xvrb15HTbQegtAtRUT1O6x3",
-  "generated_at": "2026-06-22T05:30:42.615384+00:00",
-  "videos": [],
+  "generated_at": "2026-06-22T12:25:26.933501+00:00",
+  "videos": [
+    {
+      "video_id": "ZQX5nOGZUBo",
+      "title": "Raleigh's Luxury Builders Are Quietly Moving HERE — You Need to See Why!!",
+      "thumbnail_url": "https://i.ytimg.com/vi/ZQX5nOGZUBo/hqdefault.jpg",
+      "subtext": "These Raleigh builds are UNBELIEVABLE...",
+      "published": "2026-05-02T16:00:50+00:00"
+    },
+    {
+      "video_id": "ea7E1aVD2QE",
+      "title": "Raleigh vs Durham | The Differences Between Raleigh and Durham North Carolina | Raleigh NC Suburbs",
+      "thumbnail_url": "https://i.ytimg.com/vi/ea7E1aVD2QE/hqdefault.jpg",
+      "subtext": "Raleigh v Durham. Let's compare these two North Carolina Cities and see which one wins head-to-head. 🤜🏼🤛🏼",
+      "published": "2023-11-15T17:00:36+00:00"
+    }
+  ],
   "playlist_title": "durham",
   "slug": "durham"
 }
