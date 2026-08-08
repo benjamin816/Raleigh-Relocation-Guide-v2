@@ -1,8 +1,16 @@
 {
   "playlist_id": "PLybPdL80h3XsHfOHTaRJeovlgQ9orDz0r",
   "watch_more_url": "https://www.youtube.com/playlist?list=PLybPdL80h3XsHfOHTaRJeovlgQ9orDz0r",
-  "generated_at": "2026-08-08T05:56:24.051616+00:00",
-  "videos": [],
+  "generated_at": "2026-08-08T07:15:00.166832+00:00",
+  "videos": [
+    {
+      "video_id": "464eUeFQdGY",
+      "title": "We Found Raleigh NC's MOST AFFORDABLE Homes for Sale in Knightdale with SUPER LOW RATES!",
+      "thumbnail_url": "https://i.ytimg.com/vi/464eUeFQdGY/hqdefault.jpg",
+      "subtext": "Today we are out here in Knightdale Station, one of the hottest new developments in Raleigh!",
+      "published": "2025-04-15T22:00:09+00:00"
+    }
+  ],
   "playlist_title": "knightdale",
   "slug": "knightdale"
 }
