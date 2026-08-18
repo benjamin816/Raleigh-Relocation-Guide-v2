@@ -1,8 +1,16 @@
 {
   "playlist_id": "PLybPdL80h3XsyTTWHZCZxWI-lL7e6tJ2U",
   "watch_more_url": "https://www.youtube.com/playlist?list=PLybPdL80h3XsyTTWHZCZxWI-lL7e6tJ2U",
-  "generated_at": "2026-08-18T03:08:26.971548+00:00",
-  "videos": [],
+  "generated_at": "2026-08-18T07:03:52.878314+00:00",
+  "videos": [
+    {
+      "video_id": "L9skutTltYk",
+      "title": "Why Everyone Is Moving to Morrisville, North Carolina (Raleigh’s Most Misunderstood Suburb?)",
+      "thumbnail_url": "https://i.ytimg.com/vi/L9skutTltYk/hqdefault.jpg",
+      "subtext": "🌳⬇️ Moving to North Carolina? Let's Chat! ⬇️🏡",
+      "published": "2026-07-11T16:00:27+00:00"
+    }
+  ],
   "playlist_title": "morrisville",
   "slug": "morrisville"
 }
