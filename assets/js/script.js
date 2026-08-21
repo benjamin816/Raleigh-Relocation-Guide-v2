@@ -83,6 +83,10 @@
   };
 
   var initUtilityNav = function () {
+    if (document.body && document.body.classList.contains("page-2026")) {
+      return;
+    }
+
     var utilityInners = Array.prototype.slice.call(document.querySelectorAll(".utility-nav .utility-inner"));
     if (!utilityInners.length) {
       return;
@@ -268,7 +272,7 @@
       mobileMediaQuery.addListener(queueVisibilityUpdate);
     }
 
-    if (typeof window.MutationObserver === "function") {
+    if (typeof window.MutationObserver === "function" && document.body && document.body.nodeType === 1) {
       var classObserver = new MutationObserver(queueVisibilityUpdate);
       classObserver.observe(document.body, { attributes: true, attributeFilter: ["class"] });
     }
@@ -1525,7 +1529,7 @@
             return;
           }
 
-          window.fetch(candidates[index] + "?ts=" + String(Date.now()), { cache: "no-store" })
+          window.fetch(candidates[index], { cache: "default" })
             .then(function (response) {
               if (!response.ok) {
                 throw new Error("Unable to load featured videos JSON");
@@ -1767,7 +1771,7 @@
         feedPath += "?v=" + encodeURIComponent(feedVersion);
       }
 
-      window.fetch(feedPath, { cache: "no-store" })
+      window.fetch(feedPath, { cache: "default" })
         .then(function (response) {
           if (!response.ok) {
             throw new Error("Unable to load local highlights JSON");
@@ -1828,7 +1832,7 @@
     if (canonicalPath.charAt(canonicalPath.length - 1) !== "/") {
       canonicalPath += "/";
     }
-    var isExcludedPopupPage = canonicalPath.indexOf("/consult/") === 0 || canonicalPath.indexOf("/2026/") === 0 || canonicalPath.indexOf("/quiz/") === 0 || canonicalPath.indexOf("/raleigh-suburb-quiz/") === 0;
+    var isExcludedPopupPage = canonicalPath.indexOf("/consult/") === 0 || canonicalPath.indexOf("/2026/") === 0 || canonicalPath.indexOf("/2026-test/") === 0 || canonicalPath.indexOf("/quiz/") === 0 || canonicalPath.indexOf("/raleigh-suburb-quiz/") === 0;
     if (isExcludedPopupPage) {
       return;
     }
@@ -1976,7 +1980,7 @@
       "<button type='button' class='lead-popup-close' data-lead-popup-close aria-label='Close popup'>&times;</button>",
       "<section class='lead-popup-screen lead-popup-screen--intro is-active' data-lead-screen='intro'>",
       "<div class='lead-popup-intro-media'>",
-      "<img src='/assets/images/home/local-area-bottom-left.png?v=20260312-bottomleft1' alt='The Official Living in Raleigh NC Team'>",
+      "<img src='/assets/images/home/local-area-bottom-left.png?v=20260818-perf1' alt='The Official Living in Raleigh NC Team'>",
       "</div>",
       "<div class='lead-popup-intro-content'>",
       "<h2>Ready to take the next step?</h2>",
@@ -2076,6 +2080,8 @@
     } else {
       document.body.appendChild(popupHost);
     }
+
+    var popupDialog = popupHost.querySelector(".lead-popup-modal-dialog");
 
     trackPopupEvent("popup_instance_ready", {
       popup_render_mode: useInlinePopup ? "inline" : "overlay",
@@ -2866,7 +2872,7 @@
           formInputs.lastName.classList.add("is-invalid");
         }
 
-        var phoneDigits = stripNonDigits(formState.phone);
+        var phoneDigits = sharedStripNonDigits(formState.phone);
         if (phoneDigits.length < 10 && formInputs.phone) {
           firstInvalidInput = firstInvalidInput || formInputs.phone;
           formInputs.phone.classList.add("is-invalid");
@@ -3188,6 +3194,7 @@
     var hasTrackedStart = false;
     var submitHintMessage = "Please complete the form to continue.";
     var submitHintTimerId = 0;
+    var statusClearTimerId = 0;
     var inputs = {
       firstName: intakeForm.querySelector("[data-new-construction-input='firstName']"),
       lastName: intakeForm.querySelector("[data-new-construction-input='lastName']"),
@@ -3253,6 +3260,13 @@
       }, 2200);
     };
 
+    var clearStatusTimer = function () {
+      if (statusClearTimerId) {
+        window.clearTimeout(statusClearTimerId);
+        statusClearTimerId = 0;
+      }
+    };
+
     var setStatus = function (message, isError) {
       if (!statusNode) {
         return;
@@ -3266,7 +3280,7 @@
             statusNode.textContent = "";
             statusNode.classList.remove("is-error");
           }
-          clearInvalidFeedback();
+          clearInvalidState();
           statusClearTimerId = 0;
         }, 1000);
       }
@@ -3281,7 +3295,11 @@
     };
 
     var clearInvalidState = function () {
-      clearInvalidFeedback();
+      Object.keys(inputs).forEach(function (key) {
+        if (inputs[key] && inputs[key].classList) {
+          inputs[key].classList.remove("is-invalid");
+        }
+      });
     };
 
     var restoreScrollPosition = function (scrollY) {

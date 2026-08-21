@@ -17,30 +17,49 @@
             width: 100%;
             overflow-x: hidden; /* CRITICAL: Prevents mobile horizontal scroll */
             font-family: 'Inter', sans-serif;
-            background-color: #E8F5E9; /* accent-light */
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 60%);
+            background-color: #f8fafc;
             color: #1F2937; /* text-dark */
+        }
+
+        html.layout-editor-booting body {
+            visibility: hidden;
         }
 
         /* --- VARIABLES --- */
         :root {
             --primary-green: #2F5233;
             --secondary-green: #5F8C63;
+            --brand-gold-500: #c49a34;
+            --brand-gold-600: #b68b24;
             --accent-light: #E8F5E9;
             --text-dark: #1F2937;
             --white: #FFFFFF;
             --frame: 520px;
+            --frame-w: 1088px;
+            --frame-h: 930px;
+            --desktop-2026-scale: 1;
+            --footer-h: 56px;
             --border: rgba(17,24,39,.10);
             --shadow: 0 10px 30px rgba(17,24,39,.08);
         }
 
         /* --- LAYOUT --- */
-        .page-container {
-            min-height: 100vh;
+        .site-shell {
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            padding-bottom: 40px;
+            overflow: hidden;
             width: 100%;
             overflow-x: hidden;
+        }
+
+        .site-shell-content {
+            flex: 1 1 auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            min-height: 0;
         }
         
         /* Hero */
@@ -65,17 +84,519 @@
             background: linear-gradient(to bottom, transparent 0%, rgba(232, 245, 233, 0.2) 60%, var(--accent-light) 100%);
             pointer-events: none;
         }
-        
-        /* Content */
-        .main-content {
-            width: 100%;
-            max-width: 980px;
-            margin: 40px auto 0;
-            padding: 0 18px;
+
+        body.page-2026 {
+            overflow-x: hidden;
+            overflow: hidden;
+        }
+
+        body.page-2026.page-2026-test {
+            overflow-x: hidden !important;
+            overflow-y: hidden !important;
+            height: 100vh !important;
+            min-height: 100vh !important;
+            background: #f2f4ef !important;
+            background-image: none !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026.page-2026-test {
+            background: #f2f4ef !important;
+            background-image: none !important;
+        }
+
+        html.desktop-lock-2026 {
+            background: #f2f4ef !important;
+            background-image: none !important;
+        }
+
+        body.page-2026.page-2026-test .site-shell {
+            height: 100vh !important;
+            min-height: 100vh !important;
+            overflow: hidden !important;
+            background: #f2f4ef !important;
+        }
+
+        body.page-2026.page-2026-test .wrap {
+            background: #f2f4ef !important;
+        }
+
+        body.page-2026.page-2026-test .wrap {
+            height: auto !important;
+            min-height: 0 !important;
+        }
+
+        body.page-2026.page-2026-test .card {
+            height: auto !important;
+            min-height: 0 !important;
+        }
+
+        body.page-2026.page-2026-test .embedWrap::after {
+            height: 0 !important;
+        }
+
+        @media (min-width: 981px) {
+            body.page-2026 {
+                overflow: hidden;
+                height: 100vh;
+            }
+        }
+
+        html.desktop-lock-2026 body.page-2026 .site-shell-content {
+            width: calc(100vw / var(--desktop-2026-scale));
+            min-height: calc((100vh - var(--footer-h)) / var(--desktop-2026-scale));
+            height: calc((100vh - var(--footer-h)) / var(--desktop-2026-scale));
+            transform: scale(var(--desktop-2026-scale));
+            transform-origin: top left;
+            margin: 0;
             position: relative;
-            z-index: 10;
+            overflow: hidden;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .site-shell-content > * {
+            flex-shrink: 0;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .site-shell {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .site-footer.legal-auto-footer {
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 40;
+        }
+
+        body.page-2026 .site-shell {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        body.page-2026 .home-header-stack {
+            position: relative;
+            z-index: 1210;
+            --home-top-row-h: 14px;
+            --home-green-row-h: 50px;
+            --home-edge-gap: clamp(52px, 4vw, 88px);
+            margin-bottom: 0;
+        }
+
+        body.page-2026 .team-strip {
+            display: none;
+        }
+
+        body.page-2026 .utility-nav {
+            position: relative;
+            z-index: 1212;
+            width: 100%;
+            margin-inline: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            background: var(--primary-green);
+        }
+
+        body.page-2026 .utility-inner {
+            width: 100%;
+            max-width: none;
+            min-height: var(--home-green-row-h);
+            padding-inline: var(--home-edge-gap);
+            display: block;
+            position: relative;
+        }
+
+        body.page-2026 .utility-links {
+            display: none;
+        }
+
+        body.page-2026 .utility-nav::before {
+            content: '#1 RELOCATION TEAM IN RALEIGH';
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: 0.12em;
+            line-height: 1;
+            text-align: center;
+            padding: 0;
+            pointer-events: none;
+        }
+
+        body.page-2026 .consult-banner-link {
+            position: absolute;
+            left: calc(var(--home-edge-gap) + 40px);
+            top: -18px;
+            width: 224px;
+            height: 224px;
+            display: block;
+            text-decoration: none;
+            z-index: 1305;
+            box-sizing: border-box;
+            overflow: visible;
+        }
+
+        body.page-2026 .consult-banner-square {
+            position: absolute;
+            inset: 0;
+            display: block;
+            background: var(--primary-green);
+            z-index: 0;
+        }
+
+        body.page-2026 .consult-banner-image {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            width: 204px;
+            height: 204px;
+            display: block;
+            object-fit: contain;
+            object-position: center center;
+            transform: none;
+            z-index: 1;
+        }
+
+        body.page-2026 .call-link {
+            position: absolute;
+            right: var(--home-edge-gap);
+            top: 50%;
+            transform: translate(-91.3px, -17.8px);
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            min-width: 136px;
+            justify-content: center;
+            height: 34px;
+            display: inline-flex;
+            align-items: center;
+            font-weight: 800;
+            color: #fff;
+            text-decoration: none;
+            background: var(--brand-gold-500);
+            border: 1px solid rgba(255, 255, 255, 0.42);
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        body.page-2026 .call-link:visited,
+        body.page-2026 .call-link:hover,
+        body.page-2026 .call-link:focus-visible {
+            color: #fff;
+            text-decoration: none;
+        }
+
+        body.page-2026 .utility-mobile-toggle {
+            display: none !important;
+        }
+
+        body.page-2026 .mobile-scroll-top {
+            display: none !important;
+        }
+
+        body.page-2026 .site-footer.legal-auto-footer {
+            margin-top: 0 !important;
+            border-top: 1px solid rgba(37, 93, 58, 0.15) !important;
+            background: #f2f4ef !important;
+            padding: 1rem 1.2rem !important;
+        }
+
+        body.page-2026 .wrap {
+            padding-top: 36px;
+        }
+
+        body.page-2026 .consult-copy--guide .guide-left {
+            padding-top: 8.8rem;
+            padding-left: 5.85rem;
+            min-height: 0;
+            row-gap: 1rem;
+            column-gap: clamp(10px, 1.6vw, 22px);
+            align-content: start;
+        }
+
+        body.page-2026 .guide-left h1 {
+            font-size: clamp(2.45rem, 3.05vw, 3.85rem);
+            margin-bottom: 0;
+            max-width: 10ch;
+            transform: translateY(-6px);
+        }
+
+        body.page-2026 .guide-left h2 {
+            font-size: clamp(0.86rem, 1.0vw, 1.25rem);
+            padding-top: 0.1rem;
+            margin-top: 0;
+            letter-spacing: 0.28em;
+            transform: translateY(-6px);
+        }
+
+        body.page-2026 .guide-book-shell {
+            width: clamp(78px, 6.6vw, 108px);
+            justify-self: end;
+            align-self: start;
+            margin-top: 5rem;
+        }
+
+        body.page-2026 .download-btn {
+            min-width: 280px;
+            margin-top: 1.8rem;
+            align-self: start;
+        }
+
+        body.page-2026 .legal-auto-footer-inner {
+            width: min(100%, 980px);
+            margin: 0 auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 0.8rem;
+            color: #4f5f5d !important;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial !important;
+            font-size: 0.92rem !important;
+            line-height: 1.55 !important;
+        }
+
+        body.page-2026 .legal-auto-footer-inner > span {
+            min-width: 0;
+        }
+
+        body.page-2026 .legal-auto-footer-inner a,
+        body.page-2026 .legal-auto-footer-inner a:visited {
+            color: #4f5f5d !important;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            font-weight: 700;
+        }
+
+        .wrap {
+            max-width: 1480px;
+            margin: 0 auto;
+            padding: 6px 16px 8px;
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            width: 100%;
+        }
+
+        .card {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            display: grid;
+            grid-template-columns: minmax(320px, 0.68fr) minmax(0, 1.32fr);
+            gap: 18px;
+            align-items: stretch;
+            background: #ffffff;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            box-shadow: var(--shadow);
+            padding: 10px;
+            overflow: hidden;
+        }
+
+        .consult-copy {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-width: 0;
+            padding: 0 10px 0 2px;
             text-align: center;
         }
+
+        .consult-copy--guide {
+            align-items: stretch;
+            justify-content: flex-start;
+            padding: 0 10px 0 2px;
+        }
+
+        .consult-copy--guide .guide-left {
+            width: 100%;
+        }
+
+        .consult-embed {
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            height: 100%;
+            padding: 0;
+        }
+
+        .embedShell {
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+
+        .embedHeader {
+            background: var(--primary-green);
+            color: #fff;
+            padding: 10px 12px;
+            font-size: 12px;
+            line-height: 1.45;
+            font-weight: 500;
+        }
+
+        .embedHeaderInner {
+            width: min(860px, 100%);
+            margin: 0 auto;
+            padding: 0 2px;
+        }
+
+        .embedWrap {
+            position: relative;
+            width: 100%;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+            background: #fff;
+            height: 100%;
+        }
+
+        .embedWrap::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 164px;
+            background: #fff;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .embedWrap::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 22px;
+            bottom: 0;
+            background: #fff;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        iframe.frame {
+            display: block;
+            position: absolute;
+            inset: 0;
+            width: 147.8%;
+            height: 118%;
+            border: 0;
+            background: #fff;
+            transform: scale(0.666667);
+            transform-origin: top left;
+        }
+
+        .site-footer {
+            margin-top: 0;
+        }
+
+        /* Content */
+        .main-content {
+            width: min(100% - 2.5rem, 1520px);
+            margin: 24px auto 0;
+            padding: 0 12px;
+            position: relative;
+            z-index: 10;
+            flex: 1 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 0.96fr) minmax(0, 1.04fr);
+            gap: clamp(20px, 2.5vw, 40px);
+            align-items: start;
+            text-align: left;
+        }
+
+        .guide-left {
+            min-width: 0;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            grid-template-areas:
+                "title title"
+                "subtitle book"
+                "button button";
+            align-items: center;
+            justify-items: start;
+            row-gap: 0.82rem;
+            column-gap: clamp(12px, 2vw, 28px);
+            padding-top: 3.45rem;
+            min-height: 744px;
+        }
+
+        .guide-left h1 {
+            grid-area: title;
+            margin: 0;
+            font-size: clamp(3.6rem, 4.35vw, 5.1rem);
+            font-weight: 800;
+            color: var(--primary-green);
+            line-height: 0.88;
+            text-transform: uppercase;
+            letter-spacing: -0.04em;
+            text-align: left;
+        }
+
+        .guide-left h2 {
+            grid-area: subtitle;
+            margin: 0;
+            font-size: clamp(1.35rem, 1.55vw, 1.95rem);
+            font-weight: 700;
+            color: var(--secondary-green);
+            text-transform: uppercase;
+            letter-spacing: 0.28em;
+            line-height: 1;
+            align-self: start;
+            padding-top: 0.6rem;
+            text-align: left;
+        }
+
+        .guide-book-shell {
+            grid-area: book;
+            justify-self: end;
+            align-self: center;
+            width: clamp(200px, 17vw, 268px);
+            aspect-ratio: 172 / 235;
+            filter: drop-shadow(0 12px 20px rgba(20, 33, 24, 0.18));
+            perspective: 1200px;
+        }
+
+        .guide-book-3d {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: block;
+            transform-origin: center center;
+            transform-style: preserve-3d;
+        }
+
+        .guide-book-face {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: contain;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+        }
+
+        .guide-book-face.back {
+            transform: rotateY(180deg);
+        }
+
         h1 {
             font-size: 3.5rem;
             font-weight: 800;
@@ -93,73 +614,491 @@
             text-transform: uppercase;
             letter-spacing: 0.2em;
         }
-        
         /* Buttons */
         .download-btn {
-            background-color: var(--primary-green);
+            grid-area: button;
+            justify-self: center;
+            background-color: var(--brand-gold-500);
             color: white;
             border: none;
-            padding: 1.25rem 3rem;
-            font-size: 1.25rem;
-            font-weight: 600;
-            border-radius: 50px;
+            padding: 1.1rem 2.5rem;
+            font-size: 1.02rem;
+            font-weight: 800;
+            border-radius: 999px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 20px rgba(47, 82, 51, 0.2);
+            box-shadow: 0 10px 20px rgba(182, 139, 36, 0.22);
             display: inline-flex;
             align-items: center;
             gap: 12px;
             max-width: 100%;
-            /* Ensure text wraps on very small screens */
-            white-space: normal;
+            white-space: nowrap;
             text-align: center;
+            min-width: 360px;
+            line-height: 1.08;
+            margin-top: 1.8rem;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
         }
         .download-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(47, 82, 51, 0.3);
-            background-color: #264229;
-        }
-        
-        /* Consultation */
-        .consultation-card {
-            background: var(--white);
-            margin-top: 5rem;
-            padding: 22px 18px 18px;
-            border-radius: 18px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-        .consultation-title {
-            font-size: 1.8rem;
-            color: var(--primary-green);
-            margin-bottom: 1.5rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .calendly-container {
-            min-width: 320px;
-            height: 700px;
-            width: 100%;
+            box-shadow: 0 15px 30px rgba(182, 139, 36, 0.3);
+            background-color: var(--brand-gold-600);
         }
 
+        body.page-2026.relo-guide-modal-open {
+            overflow: hidden !important;
+            height: 100vh;
+        }
+
+        .relo-guide-modal[hidden] {
+            display: none !important;
+        }
+
+        .relo-guide-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 5600;
+            display: grid;
+            place-items: center;
+            padding: clamp(0.7rem, 1.8vw, 1.2rem);
+        }
+
+        .relo-guide-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(7, 18, 12, 0.52);
+            -webkit-backdrop-filter: blur(16px) saturate(0.82);
+            backdrop-filter: blur(16px) saturate(0.82);
+        }
+
+        .relo-guide-modal-dialog {
+            position: relative;
+            z-index: 1;
+            width: min(1130px, calc(100vw - 1.4rem));
+            height: min(88vh, 720px);
+            max-height: calc(100vh - 1.4rem);
+            overflow: hidden;
+            border-radius: 22px;
+            border: 1px solid rgba(47, 82, 51, 0.12);
+            background: linear-gradient(180deg, #faf9f4 0%, #f1f5eb 100%);
+            box-shadow: 0 28px 62px rgba(7, 18, 12, 0.35);
+        }
+
+        .relo-guide-modal-close {
+            position: absolute;
+            top: 0.8rem;
+            right: 0.85rem;
+            width: 2rem;
+            height: 2rem;
+            border: 0;
+            border-radius: 999px;
+            background: rgba(47, 82, 51, 0.12);
+            color: var(--primary-green);
+            font-size: 1.2rem;
+            line-height: 1;
+            font-weight: 800;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        .relo-guide-modal-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.06fr) minmax(280px, 0.94fr);
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+        }
+
+        .relo-guide-modal-copy {
+            min-width: 0;
+            height: 100%;
+            padding: clamp(1rem, 2.2vw, 1.8rem) clamp(1rem, 2.3vw, 2rem) clamp(1rem, 2.2vw, 1.5rem) clamp(1.15rem, 2.4vw, 2.1rem);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .relo-guide-modal-title {
+            margin: 0 2rem 0.85rem 0;
+            color: var(--primary-green);
+            font-size: clamp(1.9rem, 2.9vw, 3.1rem);
+            line-height: 0.95;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -0.05em;
+        }
+
+        .relo-guide-modal-form,
+        .relo-guide-success {
+            display: grid;
+            gap: 0.76rem;
+            align-content: start;
+        }
+
+        .relo-guide-fields {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+
+        .relo-guide-field {
+            display: grid;
+            gap: 0.34rem;
+        }
+
+        .relo-guide-field > span,
+        .relo-guide-consent > span {
+            color: #31493a;
+            font-size: 0.95rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .relo-guide-field input {
+            width: 100%;
+            min-width: 0;
+            border: 1px solid rgba(47, 82, 51, 0.18);
+            border-radius: 12px;
+            background: #ffffff;
+            color: #173425;
+            font-size: 1rem;
+            line-height: 1.2;
+            padding: 0.95rem 1rem;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+        }
+
+        .relo-guide-field input::placeholder {
+            color: rgba(47, 82, 51, 0.38);
+        }
+
+        .relo-guide-field input.is-invalid,
+        .relo-guide-consent.is-invalid {
+            border-color: #d13f3f !important;
+            box-shadow: 0 0 0 2px rgba(209, 63, 63, 0.16);
+        }
+
+        .relo-guide-field--full {
+            grid-column: 1 / -1;
+        }
+
+        .relo-guide-phone-label {
+            display: flex;
+            align-items: baseline;
+            gap: 0.38rem;
+            flex-wrap: wrap;
+        }
+
+        .relo-guide-phone-label small {
+            color: #708273;
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        .relo-guide-consent {
+            display: grid;
+            grid-template-columns: 1rem minmax(0, 1fr);
+            gap: 0.6rem;
+            align-items: start;
+            margin-top: 0.05rem;
+            padding: 0.82rem 0.9rem;
+            border-radius: 14px;
+            border: 1px solid rgba(47, 82, 51, 0.12);
+            background: rgba(255, 255, 255, 0.72);
+            color: #31493a;
+        }
+
+        .relo-guide-consent input {
+            width: 1rem;
+            height: 1rem;
+            margin: 0.14rem 0 0;
+            accent-color: var(--primary-green);
+        }
+
+        .relo-guide-actions {
+            position: relative;
+            display: grid;
+            gap: 0.45rem;
+            margin-top: 0.1rem;
+        }
+
+        .relo-guide-submit {
+            min-height: 58px;
+            border: 0;
+            border-radius: 12px;
+            background: linear-gradient(180deg, #8e959a 0%, #6e767c 100%);
+            color: #ffffff;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+            box-shadow: none;
+        }
+
+        .relo-guide-submit[data-ready="true"] {
+            background: linear-gradient(180deg, var(--brand-gold-500) 0%, var(--brand-gold-600) 100%);
+            box-shadow: 0 12px 24px rgba(182, 139, 36, 0.22);
+        }
+
+        .relo-guide-submit:hover {
+            transform: translateY(-1px);
+        }
+
+        .relo-guide-submit-hint {
+            position: absolute;
+            right: 0;
+            bottom: calc(100% + 8px);
+            margin: 0;
+            padding: 0.48rem 0.7rem;
+            border-radius: 10px;
+            background: #ffffff;
+            color: var(--primary-green);
+            font-size: 0.78rem;
+            font-weight: 800;
+            line-height: 1.25;
+            box-shadow: 0 16px 30px rgba(0, 0, 0, 0.16);
+            border: 1px solid rgba(47, 82, 51, 0.12);
+            max-width: min(100%, 290px);
+            pointer-events: none;
+        }
+
+        .relo-guide-footer-links {
+            margin: 0;
+            color: #4b6154;
+            font-size: 0.78rem;
+            line-height: 1.45;
+        }
+
+        .relo-guide-footer-links a {
+            color: var(--primary-green);
+            font-weight: 700;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .relo-guide-modal-art {
+            position: relative;
+            display: grid;
+            place-items: center;
+            padding: clamp(0.9rem, 2vw, 1.4rem);
+            background: linear-gradient(180deg, #edf4e6 0%, #dfead6 100%);
+            border-left: 1px solid rgba(47, 82, 51, 0.08);
+        }
+
+        .relo-guide-art-frame {
+            width: min(82%, 340px);
+            height: min(82%, 560px);
+            display: grid;
+            place-items: center;
+            padding: clamp(0.75rem, 2vw, 1.25rem);
+        }
+
+        .relo-guide-art-frame img {
+            display: block;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            filter: drop-shadow(0 24px 22px rgba(13, 43, 25, 0.25));
+        }
+
+        .relo-guide-success {
+            display: none;
+            height: 100%;
+            align-content: center;
+        }
+
+        .relo-guide-success.is-visible {
+            display: grid;
+        }
+
+        .relo-guide-success-kicker {
+            margin: 0;
+            color: var(--brand-gold-600);
+            font-size: 0.82rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.18em;
+        }
+
+        .relo-guide-success h3 {
+            margin: 0;
+            color: var(--primary-green);
+            font-size: clamp(1.8rem, 2.4vw, 2.55rem);
+            line-height: 1.02;
+            letter-spacing: -0.04em;
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+
+        .relo-guide-success p {
+            margin: 0;
+            color: #31493a;
+            font-size: 1rem;
+            line-height: 1.55;
+            max-width: 28ch;
+        }
+
+        .relo-guide-success .relo-guide-close-action {
+            justify-self: start;
+            min-height: 50px;
+            padding: 0.9rem 1.2rem;
+            border-radius: 10px;
+            border: 0;
+            background: var(--brand-gold-500);
+            color: #fff;
+            font-size: 0.94rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            cursor: pointer;
+        }
+
+        @media (max-width: 980px) {
+            .relo-guide-modal-dialog {
+                width: min(960px, calc(100vw - 1rem));
+                height: min(88vh, 700px);
+            }
+
+            .relo-guide-modal-grid {
+                grid-template-columns: minmax(0, 1fr);
+            }
+
+            .relo-guide-modal-art {
+                border-left: 0;
+                border-top: 1px solid rgba(47, 82, 51, 0.08);
+                min-height: 0;
+            }
+
+            .relo-guide-art-frame {
+                width: min(78%, 300px);
+                height: min(92%, 420px);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .relo-guide-modal-dialog {
+                width: min(100vw - 0.8rem, 560px);
+                height: min(92vh, 720px);
+                overflow-x: hidden;
+                overflow-y: auto;
+                border-radius: 18px;
+            }
+
+            .relo-guide-modal-copy {
+                padding: 1rem 0.95rem 0.9rem;
+            }
+
+            .relo-guide-modal-title {
+                margin-right: 0;
+                font-size: clamp(1.55rem, 8vw, 2.05rem);
+            }
+
+            .relo-guide-fields {
+                grid-template-columns: 1fr;
+            }
+
+            .relo-guide-field > span,
+            .relo-guide-consent > span {
+                font-size: 0.88rem;
+            }
+
+            .relo-guide-field input {
+                padding: 0.84rem 0.92rem;
+                font-size: 0.96rem;
+            }
+
+            .relo-guide-consent {
+                padding: 0.72rem 0.8rem;
+            }
+
+            .relo-guide-submit {
+                min-height: 54px;
+                font-size: 0.93rem;
+            }
+
+            .relo-guide-art-frame {
+                width: min(72%, 220px);
+                height: min(90%, 300px);
+            }
+
+            .relo-guide-success p {
+                max-width: none;
+            }
+        }
+
+        html.desktop-lock-2026 body.page-2026 .download-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        @media (max-height: 820px) and (min-width: 981px) {
+            .wrap {
+                margin-top: 16px;
+                gap: clamp(12px, 1.4vw, 24px);
+            }
+
+            .guide-left {
+                padding-top: 2.35rem;
+                min-height: 630px;
+                row-gap: 0.35rem;
+                column-gap: clamp(8px, 1.2vw, 18px);
+            }
+
+            .guide-left h1 {
+                font-size: clamp(2.2rem, 2.85vw, 3.55rem);
+                line-height: 0.9;
+            }
+
+            .guide-left h2 {
+                font-size: clamp(0.88rem, 1.05vw, 1.28rem);
+                padding-top: 0.15rem;
+                letter-spacing: 0.24em;
+            }
+
+            .guide-book-shell {
+                width: clamp(140px, 12.4vw, 194px);
+            }
+
+            .download-btn {
+                margin-top: 0.6rem;
+                min-width: 280px;
+                padding: 0.9rem 2rem;
+                font-size: 0.96rem;
+            }
+
+            .card {
+                padding: 12px;
+            }
+
+            .embedShell {
+                margin-top: 6px;
+            }
+
+            .embedHeader {
+                padding: 9px 11px;
+                font-size: 10px;
+            }
+        }
         /* Appointment Setter Block (from /consult/) */
         .embedShell {
-            margin-top: 12px;
-            border: 1px solid var(--border);
-            border-radius: 12px;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
             overflow: hidden;
             background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 12px;
         }
         .embedHeader {
-            background: #16a34a;
+            background: var(--primary-green);
             color: #fff;
-            padding: 14px 16px;
-            font-size: 14px;
+            padding: 10px 12px;
+            font-size: 12px;
             line-height: 1.45;
             font-weight: 500;
         }
@@ -171,85 +1110,656 @@
         .embedWrap {
             position: relative;
             width: 100%;
-            background: #fff;
+            flex: 1;
+            min-height: 0;
             overflow: hidden;
-            height: var(--frame);
+            background: #fff;
+            height: 100%;
         }
         iframe.frame {
-            display: block;
-            width: 100%;
+            position: absolute;
+            inset: 0;
+            width: 150%;
+            height: 118%;
             border: 0;
-            position: relative;
-            top: 0;
-            height: var(--frame);
             background: #fff;
+            transform: scale(0.666667);
+            transform-origin: top left;
         }
 
         /* Responsive Tweaks */
         @media (max-width: 640px) {
             h1 { font-size: 2.25rem; }
             .download-btn { width: 100%; justify-content: center; padding: 1rem; }
-            .consultation-card { padding: 18px 14px 14px; }
+            .card { padding: 18px 14px 14px; }
             :root { --frame: 680px; }
             .embedHeader { font-size: 13px; padding: 12px 12px; }
             .embedHeaderInner { padding: 0; }
         }
+        @media (max-width: 900px) {
+            .card {
+                grid-template-columns: 1fr;
+            }
+
+            .guide-left {
+                min-height: 0;
+                padding-top: 1.75rem;
+                justify-items: center;
+                grid-template-columns: 1fr;
+                grid-template-areas:
+                    "title"
+                    "subtitle"
+                    "book"
+                    "button";
+                text-align: center;
+            }
+
+            .guide-left h1,
+            .guide-left h2 {
+                text-align: center;
+            }
+
+            .guide-book-shell {
+                justify-self: center;
+                width: clamp(200px, 34vw, 280px);
+            }
+
+            .download-btn {
+                min-width: 0;
+                width: min(100%, 420px);
+                margin-top: 0.8rem;
+            }
+        }
         @media (max-width: 420px) {
             :root { --frame: 760px; }
         }
+
+        html.desktop-lock-2026 {
+            --frame: 520px;
+        }
+
+        html.desktop-lock-2026 body.page-2026 {
+            overflow: hidden !important;
+            height: 100vh !important;
+            background: linear-gradient(180deg, #f8fafc 0%, #ffffff 60%) !important;
+            background-color: #f8fafc !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .wrap {
+            padding: 36px 16px 8px !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .card {
+            padding: 10px !important;
+            grid-template-columns: minmax(320px, 0.68fr) minmax(0, 1.32fr) !important;
+            gap: 18px !important;
+            align-items: stretch !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .consult-copy--guide {
+            padding: 0 10px 0 2px !important;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .consult-copy--guide .guide-left {
+            min-height: 0 !important;
+            padding-top: 9.9rem !important;
+            padding-left: 5.85rem !important;
+            row-gap: 1rem !important;
+            column-gap: clamp(24px, 2.8vw, 40px) !important;
+            align-content: start !important;
+            justify-items: start !important;
+            text-align: left !important;
+            grid-template-columns: minmax(0, 1fr) auto !important;
+            grid-template-areas:
+                "title book"
+                "subtitle book"
+                ". book"
+                "button button" !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .guide-left h1,
+        html.desktop-lock-2026 body.page-2026 .guide-left h2 {
+            text-align: left !important;
+            transform: translateY(-6px);
+            min-width: 0 !important;
+            max-width: 100% !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .guide-left h1 {
+            font-size: clamp(2.0rem, 2.25vw, 3.15rem) !important;
+            line-height: 0.9 !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .guide-left h2 {
+            font-size: clamp(0.82rem, 0.95vw, 1.18rem) !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .guide-book-shell {
+            width: clamp(70px, 4.8vw, 92px) !important;
+            justify-self: end !important;
+            align-self: start !important;
+            margin-top: 4.35rem !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .download-btn {
+            min-width: 280px !important;
+            width: auto !important;
+            margin-top: 1.8rem !important;
+            align-self: start !important;
+            justify-self: start !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .consult-embed {
+            min-height: 0 !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .embedShell {
+            margin-top: 0 !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .embedHeader {
+            padding: 10px 12px !important;
+            font-size: 12px !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .embedHeaderInner {
+            padding: 0 2px !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .embedWrap::after {
+            height: 0 !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .embedWrap::before {
+            width: 34px !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 iframe.frame {
+            width: 145.5% !important;
+            height: 130% !important;
+        }
+
+        html.desktop-lock-2026 body.page-2026 .wrap,
+        html.desktop-lock-2026 body.page-2026 .card,
+        html.desktop-lock-2026 body.page-2026 .guide-left,
+        html.desktop-lock-2026 body.page-2026 .guide-left h1,
+        html.desktop-lock-2026 body.page-2026 .guide-left h2,
+        html.desktop-lock-2026 body.page-2026 .guide-book-shell,
+        html.desktop-lock-2026 body.page-2026 .download-btn,
+        html.desktop-lock-2026 body.page-2026 .consultation-card,
+        html.desktop-lock-2026 body.page-2026 .consultation-title,
+        html.desktop-lock-2026 body.page-2026 .embedShell,
+        html.desktop-lock-2026 body.page-2026 .embedHeader,
+        html.desktop-lock-2026 body.page-2026 .embedHeaderInner {
+            max-width: none;
+        }
+
+        @media (max-width: 1100px) {
+            .consult-copy--guide {
+                padding: 2px 2px 8px;
+            }
+
+            .consult-embed {
+                min-height: 70vh;
+            }
+        }
+
+        @media (max-width: 980px) {
+            body.page-2026 {
+                overflow: auto;
+            }
+
+            .wrap {
+                padding: 12px;
+                height: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .wrap {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 12px;
+            }
+
+            .guide-left h1 {
+                font-size: 1.45rem;
+            }
+
+            .guide-left p {
+                font-size: 0.95rem;
+            }
+
+            .embedHeader {
+                font-size: 13px;
+                padding: 12px;
+            }
+
+            :root {
+                --frame: 680px;
+            }
+        }
+
+        /* Mobile layout: use a normal scrolling document instead of the desktop viewport lock. */
+        @media (max-width: 980px) {
+            html,
+            body.page-2026,
+            body.page-2026.page-2026-test {
+                width: 100% !important;
+                height: auto !important;
+                min-height: 100% !important;
+                overflow-x: hidden !important;
+                overflow-y: auto !important;
+            }
+
+            body.page-2026 .site-shell,
+            body.page-2026.page-2026-test .site-shell {
+                position: relative !important;
+                width: 100% !important;
+                height: auto !important;
+                min-height: 100dvh !important;
+                overflow: visible !important;
+            }
+
+            body.page-2026 .site-shell-content,
+            body.page-2026.page-2026-test .site-shell-content {
+                width: 100% !important;
+                height: auto !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+            }
+
+            body.page-2026 .home-header-stack {
+                --home-top-row-h: 0px;
+                --home-green-row-h: 72px;
+                --home-edge-gap: 12px;
+                position: relative;
+                width: 100%;
+                min-height: 72px;
+            }
+
+            body.page-2026 .utility-nav::before {
+                display: none;
+            }
+
+            body.page-2026 .consult-banner-link {
+                left: 12px;
+                top: 4px;
+                width: 64px;
+                height: 64px;
+                overflow: hidden;
+            }
+
+            body.page-2026 .consult-banner-square {
+                display: none;
+            }
+
+            body.page-2026 .consult-banner-image {
+                inset: 0;
+                width: 64px;
+                height: 64px;
+                object-fit: contain;
+            }
+
+            body.page-2026 .call-link {
+                right: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                min-width: 116px;
+                height: 38px;
+                font-size: 0.74rem;
+            }
+
+            body.page-2026 .wrap,
+            body.page-2026.page-2026-test .wrap {
+                display: block;
+                width: 100%;
+                max-width: 760px;
+                height: auto;
+                min-height: 0;
+                flex: none;
+                margin: 0 auto;
+                padding: 18px 10px 26px !important;
+                overflow: visible;
+            }
+
+            body.page-2026 .card {
+                display: flex;
+                flex-direction: column;
+                width: 100%;
+                height: auto;
+                min-height: 0;
+                gap: 14px;
+                padding: 10px;
+                overflow: visible;
+                border-radius: 14px;
+            }
+
+            body.page-2026 .consult-copy--guide,
+            body.page-2026 .consult-copy--guide .guide-left {
+                width: 100%;
+                min-height: 0;
+            }
+
+            body.page-2026 .consult-copy--guide {
+                padding: 0;
+            }
+
+            body.page-2026 .consult-copy--guide .guide-left {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) 92px;
+                grid-template-areas:
+                    "title book"
+                    "subtitle book"
+                    "button button";
+                align-items: center;
+                justify-items: start;
+                gap: 8px 14px;
+                padding: 1.1rem 0.9rem 1rem !important;
+                text-align: left;
+            }
+
+            body.page-2026 .guide-left h1 {
+                font-size: clamp(1.85rem, 8.8vw, 2.65rem);
+                line-height: 0.9;
+                max-width: none;
+                transform: none;
+                text-align: left;
+            }
+
+            body.page-2026 .guide-left h2 {
+                font-size: clamp(0.78rem, 3.8vw, 1rem);
+                letter-spacing: 0.18em;
+                padding: 0;
+                transform: none;
+                text-align: left;
+            }
+
+            body.page-2026 .guide-book-shell {
+                width: 92px;
+                margin: 0;
+                justify-self: end;
+                align-self: center;
+            }
+
+            body.page-2026 .download-btn {
+                width: 100%;
+                min-width: 0;
+                min-height: 52px;
+                margin: 0.6rem 0 0;
+                padding: 0.9rem 1rem;
+                justify-content: center;
+                white-space: normal;
+            }
+
+            body.page-2026 .consult-embed {
+                width: 100%;
+                height: auto;
+                min-height: 0;
+            }
+
+            body.page-2026 .embedShell {
+                width: 100%;
+                height: auto;
+                min-height: 0;
+                overflow: hidden;
+            }
+
+            body.page-2026 .embedWrap {
+                flex: none;
+                width: 100%;
+                height: 720px;
+                min-height: 720px;
+                overflow: hidden;
+            }
+
+            body.page-2026 .embedWrap::before,
+            body.page-2026 .embedWrap::after {
+                display: none;
+            }
+
+            body.page-2026 iframe.frame {
+                position: static;
+                width: 100%;
+                height: 720px;
+                transform: none;
+            }
+
+            body.page-2026 .site-footer.legal-auto-footer {
+                position: static !important;
+                width: 100%;
+                padding: 0.9rem 0.8rem !important;
+            }
+
+            body.page-2026 .legal-auto-footer-inner {
+                display: grid;
+                justify-items: center;
+                text-align: center;
+                gap: 0.45rem;
+                font-size: 0.78rem !important;
+            }
+        }
+
+        @media (max-width: 420px) {
+            body.page-2026 .consult-copy--guide .guide-left {
+                grid-template-columns: minmax(0, 1fr) 78px;
+                column-gap: 10px;
+                padding-inline: 0.7rem !important;
+            }
+
+            body.page-2026 .guide-left h1 {
+                font-size: clamp(1.65rem, 8.4vw, 2rem);
+            }
+
+            body.page-2026 .guide-book-shell {
+                width: 78px;
+            }
+
+            body.page-2026 .embedWrap,
+            body.page-2026 iframe.frame {
+                height: 680px;
+                min-height: 680px;
+            }
+        }
     </style>
-  <meta name="google-adsense-account" content="ca-pub-5221840001116187">
+
+    <script>
+      (function () {
+        if (window.innerWidth >= 981 && window.innerHeight >= 600) {
+          document.documentElement.classList.add('desktop-lock-2026');
+        }
+        window.addEventListener('load', function () {
+          document.body.classList.remove('lead-popup-open', 'viewport-scroll-locked');
+          document.documentElement.classList.remove('viewport-scroll-locked');
+          document.body.style.top = '';
+          var baseWidth = 1280;
+          var baseHeight = 720;
+          var footer = document.querySelector('.site-footer.legal-auto-footer');
+          var syncFooterHeight = function () {
+            if (!footer) {
+              return;
+            }
+            var footerHeight = footer.getBoundingClientRect().height;
+            if (!isFinite(footerHeight) || footerHeight <= 0) {
+              footerHeight = 56;
+            }
+            document.documentElement.style.setProperty('--footer-h', footerHeight + 'px');
+          };
+          var syncViewportScale = function () {
+            if (!document.documentElement.classList.contains('desktop-lock-2026')) {
+              return;
+            }
+            var vw = window.innerWidth || baseWidth;
+            var vh = window.innerHeight || baseHeight;
+            var fitScale = Math.min(1, vw / baseWidth, vh / baseHeight);
+            var scale = fitScale;
+            if (!isFinite(scale) || scale <= 0) {
+              scale = 1;
+            }
+            document.documentElement.style.setProperty('--desktop-2026-scale', String(scale));
+          };
+          syncFooterHeight();
+          syncViewportScale();
+          window.addEventListener('resize', syncViewportScale);
+          window.addEventListener('resize', syncFooterHeight);
+          var modal = document.querySelector('.relo-guide-modal');
+          if (modal) modal.hidden = true;
+        });
+      })();
+    </script>
 </head>
-<body>
+<body class="page-2026 page-2026-test">
 
-    <div class="page-container">
-        <!-- Hero -->
-        <div class="hero-container">
-            <img src="https://lh3.googleusercontent.com/d/1ad8y4w1SQCXcnZzF7RDCF7FJue2IF6Fb" alt="Banner" class="hero-image" referrerpolicy="no-referrer" onerror="this.style.display='none'">
-            <div class="hero-fade"></div>
-        </div>
-
-        <!-- Main Content -->
-        <main class="main-content">
-            <h1>RALEIGH RELOCATION GUIDE</h1>
-            <h2>2026 EDITION</h2>
-            
-            <!-- Trigger Button using ConvertKit Native Toggle -->
-            <button class="download-btn" data-formkit-toggle="e79dbafbfd">
-                DOWNLOAD YOUR FREE COPY 
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
-            </button>
-
-            <div class="consultation-card">
-                <div class="consultation-title">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-                    <span>Schedule Your Relocation Consultation</span>
+    <div class="site-shell">
+        <div class="site-shell-content">
+            <div class="home-header-stack">
+                <div class="team-strip">
+                    <p>#1 RELOCATION TEAM IN RALEIGH</p>
                 </div>
-                <p style="color: #666; margin-bottom: 1rem;">Ready to make the move? Book a free 15-minute intro call.</p>
-                <div class="embedShell">
-                    <div class="embedHeader">
-                        <div class="embedHeaderInner">
-                            Pick a time below. You’ll get an instant confirmation email plus a calendar invite. Choose from a video call, phone call, or meet with us in person. We look forward to meeting you!
+                <div class="utility-nav">
+                    <div class="utility-inner">
+                        <nav class="utility-links two-row" aria-label="Page links">
+                            <div class="menu-row">
+                                <a href="/buy/">BUY</a><span class="sep">/</span>
+                                <a href="/sell/">SELL</a><span class="sep">/</span>
+                                <a href="/explore-the-area/">EXPLORE THE AREA</a><span class="sep">/</span>
+                                <a href="/about/">ABOUT</a>
+                            </div>
+                            <div class="menu-row">
+                                <a href="/relocation/">RELOCATION</a><span class="sep">/</span>
+                                <div class="menu-dropdown">
+                                    <a class="menu-trigger" href="/raleighs-hottest-deals/hottest-deals/">RALEIGH'S HOTTEST DEALS</a>
+                                    <div class="submenu">
+                                        <a href="/raleighs-hottest-deals/hottest-deals/">HOTTEST DEALS</a>
+                                        <a href="/raleighs-hottest-deals/new-construction-process/">NEW CONSTRUCTION PROCESS</a>
+                                        <a href="/raleighs-hottest-deals/affordable-new-construction-hotlist/">AFFORDABLE NEW CONSTRUCTION HOTLIST</a>
+                                    </div>
+                                </div>
+                                <span class="sep">/</span>
+                                <a href="/learning-center/">LEARNING CENTER</a>
+                            </div>
+                        </nav>
+                        <a class="call-link" href="tel:+19197377896">Call Me</a>
+                    </div>
+                </div>
+                <a href="/" class="home-stack-overlay-link consult-banner-link" aria-label="Go to home">
+                    <span class="consult-banner-square" aria-hidden="true"></span>
+                    <img src="/assets/images/consult-banner-bottom-left.png?v=20260818-perf1" alt="The Official Living in Raleigh NC Team" class="consult-banner-image">
+                </a>
+            </div>
+
+            <main class="wrap">
+                <section class="card">
+                    <div class="consult-copy consult-copy--guide">
+                        <div class="guide-left">
+                            <h1>RALEIGH<br>RELOCATION<br>GUIDE</h1>
+                            <h2>2026 EDITION</h2>
+                            <div class="guide-book-shell">
+                                <div class="guide-book-3d" aria-hidden="true">
+                                    <img class="guide-book-face front" src="/assets/images/home/relo-guide-book-cropped.png?v=20260630-book1" alt="2026 Raleigh relocation guide cover">
+                                    <img class="guide-book-face back" src="/assets/images/home/relo-guide-book-cropped.png?v=20260630-book1" alt="">
+                                </div>
+                            </div>
+
+                            <button type="button" class="download-btn" data-relo-guide-trigger aria-haspopup="dialog" aria-expanded="false">
+                                DOWNLOAD YOUR FREE COPY
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
+                            </button>
                         </div>
                     </div>
-                    <div class="embedWrap">
-                        <iframe
-                            class="frame"
-                            src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true"
-                            title="Google Calendar appointment scheduling"
-                            loading="eager"
-                            allow="camera; microphone; fullscreen"
-                        ></iframe>
+
+                    <div class="consult-embed">
+                        <div class="embedShell">
+                            <div class="embedHeader">
+                                <div class="embedHeaderInner">
+                                    Pick a time below. You'll get an instant confirmation email plus a calendar invite. Choose from a video call, phone call, or meet with us in person. We look forward to meeting you!
+                                </div>
+                            </div>
+                            <div class="embedWrap">
+                                <iframe
+                                    class="frame"
+                                    src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true"
+                                    title="Google Calendar appointment scheduling"
+                                    loading="eager"
+                                    allow="camera; microphone; fullscreen"
+                                ></iframe>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </main>
+        </div>
+        <footer class="site-footer legal-auto-footer">
+            <div class="legal-auto-footer-inner">
+                <span>
+                    &copy; <span data-year></span> Living in Raleigh LLC
+                    | <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                    | <a href="/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+                </span>
+                <span data-legal-footer-links="true">Email us at <a href="mailto:livinginraleighteam@gmail.com">livinginraleighteam@gmail.com</a></span>
+            </div>
+        </footer>
+    </div>
+
+    <div class="relo-guide-modal" data-relo-guide-modal hidden aria-hidden="true">
+        <div class="relo-guide-modal-backdrop" data-relo-guide-close></div>
+        <div class="relo-guide-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="reloGuideModalTitle">
+            <button type="button" class="relo-guide-modal-close" data-relo-guide-close aria-label="Close relocation guide form">&times;</button>
+            <div class="relo-guide-modal-grid">
+                <div class="relo-guide-modal-copy">
+                    <div class="relo-guide-form-panel" data-relo-guide-form-panel>
+                        <h2 class="relo-guide-modal-title" id="reloGuideModalTitle">Get Your Raleigh Relocation Guide</h2>
+                        <form class="relo-guide-modal-form" data-relo-guide-form novalidate>
+                            <div class="relo-guide-fields">
+                                <label class="relo-guide-field">
+                                    <span>First Name *</span>
+                                    <input type="text" name="first_name" autocomplete="given-name" placeholder="Jane" data-relo-guide-field="first_name" required>
+                                </label>
+                                <label class="relo-guide-field">
+                                    <span>Last Name *</span>
+                                    <input type="text" name="last_name" autocomplete="family-name" placeholder="Smith" data-relo-guide-field="last_name" required>
+                                </label>
+                                <label class="relo-guide-field relo-guide-field--full">
+                                    <span>Email *</span>
+                                    <input type="email" name="email" autocomplete="email" placeholder="name@example.com" data-relo-guide-field="email" required>
+                                </label>
+                                <label class="relo-guide-field relo-guide-field--full">
+                                    <span class="relo-guide-phone-label">Phone <small>(optional)</small></span>
+                                    <input type="tel" name="phone" autocomplete="tel" placeholder="(919) 555-0123" data-relo-guide-field="phone">
+                                </label>
+                                <label class="relo-guide-consent relo-guide-field--full" data-relo-guide-consent-wrap data-legal-consent="true">
+                                    <input type="checkbox" name="sms_opt_in" data-relo-guide-field="sms_opt_in">
+                                    <span data-relo-guide-consent-text>I agree to be contacted by The Official Living in Raleigh team by email about my request.</span>
+                                </label>
+                            </div>
+                            <div class="relo-guide-actions">
+                                <button type="submit" class="relo-guide-submit" data-relo-guide-submit data-ready="false">Send My Guide</button>
+                                <div class="relo-guide-submit-hint" data-relo-guide-submit-hint hidden>Please complete the form to continue.</div>
+                            </div>
+                            <p class="relo-guide-footer-links">
+                                <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+                                | <a href="/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+                            </p>
+                        </form>
+                    </div>
+                    <div class="relo-guide-success" data-relo-guide-success hidden>
+                        <p class="relo-guide-success-kicker">Success</p>
+                        <h3>Your Raleigh Relocation Guide is on the way.</h3>
+                        <p>We have sent your guide to your inbox. Please check your email in a moment.</p>
+                        <button type="button" class="relo-guide-close-action" data-relo-guide-close>Close</button>
+                    </div>
+                </div>
+                <div class="relo-guide-modal-art" aria-hidden="true">
+                    <div class="relo-guide-art-frame">
+                        <img src="/assets/images/home/relo-guide-book-cropped.png?v=20260630-book1" alt="2026 Raleigh Relocation Guide book cover">
                     </div>
                 </div>
             </div>
-        </main>
-        <footer class="site-footer legal-auto-footer">
-            <div class="legal-auto-footer-inner">
-                <span>&copy; <span data-year></span> Living in Raleigh LLC</span>
-      <span><a href="/consult/">Contact</a> | <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> | <a href="/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a></span>
-            </div>
-        </footer>
+        </div>
     </div>
 
     <!-- SCRIPTS -->
@@ -258,28 +1768,357 @@
       (function () {
         function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
 
+        var desktopLock = document.documentElement.classList.contains('desktop-lock-2026');
+        var baseDesktopWidth = 1280;
+        var baseDesktopHeight = 720;
+
+        function setDesktopScale() {
+          if (!desktopLock) {
+            document.documentElement.style.setProperty('--desktop-2026-scale', '1');
+            return;
+          }
+
+          var vw = window.innerWidth || baseDesktopWidth;
+          var vh = window.innerHeight || baseDesktopHeight;
+          var fitScale = Math.min(1, vw / baseDesktopWidth, vh / baseDesktopHeight);
+          var scale = fitScale;
+          if (!isFinite(scale) || scale <= 0) scale = 1;
+          document.documentElement.style.setProperty('--desktop-2026-scale', String(scale));
+        }
+
         function setEmbedVars(){
+        if (desktopLock) {
+            document.documentElement.style.setProperty('--frame', '520px');
+            document.documentElement.style.setProperty('--frame-w', '2000px');
+            document.documentElement.style.setProperty('--frame-h', '780px');
+            setDesktopScale();
+            return;
+        }
+
           var vw = window.innerWidth || 1024;
           var vh = window.innerHeight || 800;
           var frame;
+          var frameW;
+          var frameH;
 
           if (vw <= 420) frame = clamp(Math.round(vh * 0.80), 680, 920);
           else if (vw <= 640) frame = clamp(Math.round(vh * 0.78), 640, 900);
-          else frame = clamp(Math.round(vh * 0.70), 500, 720);
+          else frame = clamp(Math.round(vh * 0.55), 430, 620);
+
+          frameW = clamp(Math.round(vw * 0.68), 680, 1180);
+          frameH = clamp(Math.round(vh * 0.775), 620, 980);
 
           document.documentElement.style.setProperty('--frame', frame + 'px');
+          document.documentElement.style.setProperty('--frame-w', frameW + 'px');
+          document.documentElement.style.setProperty('--frame-h', frameH + 'px');
         }
 
         setEmbedVars();
         window.addEventListener('resize', setEmbedVars);
         window.addEventListener('orientationchange', setEmbedVars);
+        if (window.visualViewport) {
+          window.visualViewport.addEventListener('resize', setEmbedVars);
+        }
       })();
     </script>
 
-    <!-- ConvertKit (Updated to specific URL for your account) -->
-    <script src="https://living-in-raleigh.kit.com/e79dbafbfd/index.js" data-uid="e79dbafbfd" async></script>
-  <script src="/assets/js/script.js?v=20260401-consent8" defer></script>
+  <script src="/assets/js/script.js?v=20260821-mobilefix1" defer></script>
+  <script>
+    (function () {
+      var endpoint = "https://script.google.com/macros/s/AKfycbwnqkPb6Nkp9owlDv_orcAId7cNHbKuQrf5ENMW4BvbUuaLFNHP-yANDdSwQ6Vjl41v/exec";
+      var trigger = document.querySelector("[data-relo-guide-trigger]");
+      var modal = document.querySelector("[data-relo-guide-modal]");
+      if (!trigger || !modal) {
+        return;
+      }
 
+      var dialog = modal.querySelector(".relo-guide-modal-dialog");
+      var formPanel = modal.querySelector("[data-relo-guide-form-panel]");
+      var successPanel = modal.querySelector("[data-relo-guide-success]");
+      var form = modal.querySelector("[data-relo-guide-form]");
+      var submit = modal.querySelector("[data-relo-guide-submit]");
+      var hint = modal.querySelector("[data-relo-guide-submit-hint]");
+      var closeNodes = modal.querySelectorAll("[data-relo-guide-close]");
+      var inputs = {
+        first_name: modal.querySelector("[data-relo-guide-field='first_name']"),
+        last_name: modal.querySelector("[data-relo-guide-field='last_name']"),
+        email: modal.querySelector("[data-relo-guide-field='email']"),
+        phone: modal.querySelector("[data-relo-guide-field='phone']"),
+        sms_opt_in: modal.querySelector("[data-relo-guide-field='sms_opt_in']")
+      };
+      var consentText = modal.querySelector("[data-relo-guide-consent-text]");
+      var invalidResetTimer = 0;
+      var hintTimer = 0;
+      var submissionCounter = 0;
+
+      function trim(value) {
+        return String(value || "").trim();
+      }
+
+      function digitsOnly(value) {
+        return String(value || "").replace(/\D+/g, "");
+      }
+
+      function isValidEmail(value) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim().toLowerCase());
+      }
+
+      function hasPhoneValue() {
+        return Boolean(digitsOnly(inputs.phone && inputs.phone.value));
+      }
+
+      function updateConsentText() {
+        if (!consentText) {
+          return;
+        }
+        consentText.textContent = hasPhoneValue()
+          ? "I agree to be contacted by The Official Living in Raleigh team by call, email, and text about my request."
+          : "I agree to be contacted by The Official Living in Raleigh team by email about my request.";
+      }
+
+      function makeSubmissionId() {
+        submissionCounter += 1;
+        var randomPart = Math.random().toString(36).slice(2, 10);
+        return "relo-guide-" + String(Date.now()) + "-" + String(submissionCounter) + "-" + randomPart;
+      }
+
+      function setHintVisible(visible) {
+        if (!hint) {
+          return;
+        }
+        hint.hidden = !visible;
+      }
+
+      function clearInvalidState() {
+        Object.keys(inputs).forEach(function (key) {
+          var el = inputs[key];
+          if (!el) {
+            return;
+          }
+          el.classList.remove("is-invalid");
+          var wrap = el.closest("[data-relo-guide-consent-wrap]");
+          if (wrap) {
+            wrap.classList.remove("is-invalid");
+          }
+        });
+      }
+
+      function flashInvalidState() {
+        clearTimeout(invalidResetTimer);
+        invalidResetTimer = window.setTimeout(clearInvalidState, 1000);
+      }
+
+      function validateReadyState() {
+        updateConsentText();
+        var ready = Boolean(
+          trim(inputs.first_name && inputs.first_name.value) &&
+          trim(inputs.last_name && inputs.last_name.value) &&
+          isValidEmail(inputs.email && inputs.email.value) &&
+          Boolean(inputs.sms_opt_in && inputs.sms_opt_in.checked)
+        );
+        submit.dataset.ready = ready ? "true" : "false";
+        return ready;
+      }
+
+      function markMissingFields() {
+        var missing = false;
+
+        if (!trim(inputs.first_name && inputs.first_name.value) && inputs.first_name) {
+          inputs.first_name.classList.add("is-invalid");
+          missing = true;
+        }
+        if (!trim(inputs.last_name && inputs.last_name.value) && inputs.last_name) {
+          inputs.last_name.classList.add("is-invalid");
+          missing = true;
+        }
+        if (!isValidEmail(inputs.email && inputs.email.value) && inputs.email) {
+          inputs.email.classList.add("is-invalid");
+          missing = true;
+        }
+        if (!(inputs.sms_opt_in && inputs.sms_opt_in.checked)) {
+          var consentWrap = inputs.sms_opt_in && inputs.sms_opt_in.closest("[data-relo-guide-consent-wrap]");
+          if (consentWrap) {
+            consentWrap.classList.add("is-invalid");
+          }
+          missing = true;
+        }
+
+        var phoneValue = trim(inputs.phone && inputs.phone.value);
+        if (phoneValue && digitsOnly(phoneValue).length < 10 && inputs.phone) {
+          inputs.phone.classList.add("is-invalid");
+          missing = true;
+        }
+
+        if (missing) {
+          flashInvalidState();
+        }
+        return missing;
+      }
+
+      function collectPayload() {
+        var phoneValue = trim(inputs.phone && inputs.phone.value);
+        return {
+          submitted_at: new Date().toISOString(),
+          submission_id: makeSubmissionId(),
+          source_page: "/2026/",
+          source_key: "relo_guide_direct_from_website",
+          lead_type: "relo_guide",
+          first_name: trim(inputs.first_name && inputs.first_name.value),
+          last_name: trim(inputs.last_name && inputs.last_name.value),
+          email: trim(inputs.email && inputs.email.value).toLowerCase(),
+          phone_country: "+1",
+          phone: phoneValue,
+          sms_opt_in: Boolean(phoneValue && inputs.sms_opt_in && inputs.sms_opt_in.checked)
+        };
+      }
+
+      function openModal() {
+        modal.hidden = false;
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("relo-guide-modal-open");
+        trigger.setAttribute("aria-expanded", "true");
+        if (formPanel) {
+          formPanel.hidden = false;
+        }
+        if (successPanel) {
+          successPanel.hidden = true;
+          successPanel.classList.remove("is-visible");
+        }
+        if (form && typeof form.reset === "function") {
+          form.reset();
+        }
+        updateConsentText();
+        clearInvalidState();
+        setHintVisible(false);
+        validateReadyState();
+        submit.disabled = false;
+        window.setTimeout(function () {
+          if (inputs.first_name) {
+            inputs.first_name.focus();
+          }
+        }, 0);
+      }
+
+      function closeModal() {
+        modal.hidden = true;
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("relo-guide-modal-open");
+        trigger.setAttribute("aria-expanded", "false");
+        setHintVisible(false);
+        clearTimeout(hintTimer);
+        clearInvalidState();
+      }
+
+      function showHint() {
+        setHintVisible(true);
+        clearTimeout(hintTimer);
+        hintTimer = window.setTimeout(function () {
+          setHintVisible(false);
+        }, 1800);
+      }
+
+      function sendPayload(payload) {
+        if (!window.fetch) {
+          return Promise.resolve();
+        }
+        return window.fetch(endpoint, {
+          method: "POST",
+          mode: "no-cors",
+          body: JSON.stringify(payload)
+        }).then(function () {
+          return null;
+        });
+      }
+
+      function showSuccessState() {
+        if (formPanel) {
+          formPanel.hidden = true;
+        }
+        if (successPanel) {
+          successPanel.hidden = false;
+          successPanel.classList.add("is-visible");
+        }
+      }
+
+      trigger.addEventListener("click", function () {
+        openModal();
+      });
+
+      closeNodes.forEach(function (node) {
+        node.addEventListener("click", function () {
+          closeModal();
+        });
+      });
+
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal || event.target.classList.contains("relo-guide-modal-backdrop")) {
+          closeModal();
+        }
+      });
+
+      window.addEventListener("keydown", function (event) {
+        if (!modal.hidden && event.key === "Escape") {
+          closeModal();
+        }
+      });
+
+      Object.keys(inputs).forEach(function (key) {
+        var el = inputs[key];
+        if (!el) {
+          return;
+        }
+        el.addEventListener("input", validateReadyState);
+        el.addEventListener("change", validateReadyState);
+      });
+
+      if (submit) {
+        submit.addEventListener("mouseenter", function () {
+          if (!validateReadyState()) {
+            showHint();
+          }
+        });
+        submit.addEventListener("focus", function () {
+          if (!validateReadyState()) {
+            showHint();
+          }
+        });
+        submit.addEventListener("click", function (event) {
+          if (!validateReadyState()) {
+            event.preventDefault();
+            showHint();
+            markMissingFields();
+            return;
+          }
+        });
+      }
+
+      if (form) {
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          if (!validateReadyState() || markMissingFields()) {
+            showHint();
+            return;
+          }
+
+          var payload = collectPayload();
+          submit.disabled = true;
+          sendPayload(payload).catch(function (error) {
+            if (window.console && typeof window.console.warn === "function") {
+              window.console.warn("[relo-guide] submit failed", error);
+            }
+          }).then(function () {
+            showSuccessState();
+            submit.disabled = false;
+          });
+        });
+      }
+    })();
+  </script>
+
+
+  <!-- Start of HubSpot Embed Code -->
+  <script type="text/javascript" id="hs-script-loader" async defer src="//js-na2.hs-scripts.com/246333845.js"></script>
+  <!-- End of HubSpot Embed Code -->
 </body>
 </html>
 

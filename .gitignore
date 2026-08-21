@@ -22,3 +22,34 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local Codex review and rendering artifacts
+.codex-*/
+tmp/
+output/
+backups/
+2026-test/
+/*.png
+*.pyc
+__pycache__/
+
+# Neighborhood approval scratch files (final approved assets live beside these)
+assets/images/neighborhood-fit/_*
+assets/images/neighborhood-fit/review/
+assets/images/neighborhood-fit/morrisville-carpenter-park.jpg
+assets/images/neighborhood-fit/morrisville-preston.jpg
+assets/images/neighborhood-fit/raleigh-historic-oakwood.jpg
+assets/images/neighborhood-fit/raleigh-mordecai.jpg
+assets/images/neighborhood-fit/wake-forest-traditions-at-wake-forest.jpg
+
+# One-off local review utilities
+neighborhood-photo-flashcards.html
+run-neighborhood-photo-flashcards.cmd
+assets/images/banner-image-2-cropped.png
+assets/images/consult-banner-framed.png
+assets/images/editor/
+docs/rollback-snapshots/
+scripts/generate_neighborhood_fit_photo_review.py
+scripts/generate_neighborhood_fit_remaining_preview.py
+scripts/generate_neighborhood_fit_review.py
+scripts/serve-neighborhood-photo-flashcards.js

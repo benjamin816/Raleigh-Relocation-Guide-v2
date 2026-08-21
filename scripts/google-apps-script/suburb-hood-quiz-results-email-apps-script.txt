@@ -1,3 +1,5 @@
+// Suburb Hood Quiz Results Email
+// Combined suburb + neighborhood quiz results email export.
 const CONFIG = {
   SPREADSHEET_ID: '1V-4tnKUm22SXO9qTkBpC027gUU1eY_YwS6M2BplU8Uo',
   SHEET_NAME: 'Website Direct Leads',
@@ -8,9 +10,11 @@ const CONFIG = {
   STATUS_COLUMN: 'Quiz Result Email Status',
   SENT_AT_COLUMN: 'Quiz Result Email Sent At',
   ERROR_COLUMN: 'Quiz Result Email Error',
-  SUBJECT_LINE: 'Your Raleigh Suburb Quiz Results!',
+  SUBJECT_LINE: 'Your Raleigh Suburb Quiz Results Are In!',
   BASE_SITE_URL: 'https://raleighncguide.com',
-  LOGO_URL: 'https://raleighncguide.com/assets/images/banner-image-2.png'
+  LOGO_URL: 'https://raleighncguide.com/assets/images/email/living-in-raleigh-team-email-header.png',
+  CONTACT_PHONE: '919-737-7896',
+  CONTACT_EMAIL: 'livinginraleighteam@gmail.com'
 };
 
 function sendPendingSuburbQuizEmails() {
@@ -52,7 +56,11 @@ function sendPendingSuburbQuizEmails() {
     matched += 1;
     try {
       const payload = rowToPayload_(row, indexes);
-      sendSuburbResultsEmail_(payload);
+      if (isNeighborhoodQuizPayload_(payload)) {
+        sendNeighborhoodResultsEmail_(payload);
+      } else {
+        sendSuburbResultsEmail_(payload);
+      }
       markQuizEmailStatus_(sheet, rowNumber, 'sent', new Date(), '');
       sent += 1;
     } catch (err) {
@@ -83,56 +91,45 @@ function testSendRandomSuburbQuizEmail() {
   return { ok: true, sent_to: CONFIG.TEST_EMAIL, picks: picks };
 }
 
-function testSendNeighborhoodFitEmail() {
+function testSendRandomNeighborhoodQuizEmail() {
+  const picks = shuffle_(RALEIGH_NEIGHBORHOOD_TEST_LIBRARY).slice(0, 3).map(function (item, index) {
+    const result = Object.assign({}, item, { label: pickLabel_(index) });
+    if (index === 0) {
+      result.videoUrl = RALEIGH_NEIGHBORHOOD_TEST_VIDEO_URL;
+      result.videoTitle = 'Raleigh neighborhood map tour';
+    }
+    return result;
+  });
+
   const payload = {
     first_name: 'Benjamin',
     last_name: 'Test',
     email: CONFIG.TEST_EMAIL,
     quiz_title: 'Raleigh Neighborhood Fit',
     quiz_city: 'Raleigh',
-    quiz_results_json: JSON.stringify([
-      {
-        suburb: 'Five Points',
-        label: 'Top Pick',
-        typeLabel: 'Resale-heavy',
-        summary: 'Historic, central, and easy to love if you want a classic Raleigh resale neighborhood with personality.',
-        why: 'Best for buyers who want character homes and quick access to downtown Raleigh.',
-        homes: 'Bungalows, renovated cottages, and established single-family homes.',
-        access: 'Strong Raleigh access with fast trips to downtown, North Hills, and the inner beltline.',
-        amenities: 'Coffee, restaurants, parks, and neighborhood nightlife are all part of the draw.',
-        image: CONFIG.LOGO_URL,
-        learnMoreUrl: '/explore-the-area/raleigh/'
-      },
-      {
-        suburb: 'Historic Oakwood',
-        label: 'Also Consider',
-        typeLabel: 'Resale-heavy',
-        summary: 'A preserved historic neighborhood with a strong old-Raleigh feel.',
-        why: 'Best if you want a historic resale neighborhood with character.',
-        homes: 'Historic homes, renovated classics, and limited-inventory resale properties.',
-        access: 'Close to downtown Raleigh and core city amenities.',
-        amenities: 'Walkable access to eateries, events, and neighborhood energy.',
-        image: CONFIG.LOGO_URL,
-        learnMoreUrl: '/explore-the-area/raleigh/'
-      },
-      {
-        suburb: 'North Hills',
-        label: 'Also Consider',
-        typeLabel: 'Lifestyle mix',
-        summary: 'Raleigh’s midtown energy with shopping, restaurants, and established homes mixed with newer product.',
-        why: 'Best for buyers who want polished convenience and a social feel.',
-        homes: 'Updated resale homes, upscale condos, townhomes, and some newer builds.',
-        access: 'Excellent access to central Raleigh and major commute routes.',
-        amenities: 'Restaurants, retail, entertainment, fitness, and everyday errands are right nearby.',
-        image: CONFIG.LOGO_URL,
-        learnMoreUrl: '/explore-the-area/raleigh/'
-      }
-    ])
+    quiz_results_json: JSON.stringify(picks)
   };
 
-  sendSuburbResultsEmail_(payload, true);
-  return { ok: true, sent_to: CONFIG.TEST_EMAIL, quiz_title: payload.quiz_title };
+  sendNeighborhoodResultsEmail_(payload, true);
+  return {
+    ok: true,
+    sent_to: CONFIG.TEST_EMAIL,
+    quiz_title: payload.quiz_title,
+    picks: picks.map(function (item) { return item.suburb; })
+  };
 }
+
+function testSendRandomAll() {
+  const suburbResult = testSendRandomSuburbQuizEmail();
+  const neighborhoodResult = testSendRandomNeighborhoodQuizEmail();
+  return {
+    ok: true,
+    sent_to: CONFIG.TEST_EMAIL,
+    suburb_picks: suburbResult.picks,
+    neighborhood_picks: neighborhoodResult.picks
+  };
+}
+
 
 function installSuburbQuizEmailTrigger() {
   removeSuburbQuizEmailTriggers();
@@ -170,7 +167,8 @@ function sendSuburbResultsEmail_(lead, isTest) {
   const useDynamicResults = dynamicResults.length > 0;
   const firstName = clean_(lead.first_name) || 'there';
   const quizTitle = clean_(lead.quiz_title) || 'Raleigh Suburb Quiz';
-  const subject = lead.quiz_title ? ('Your ' + clean_(lead.quiz_title) + ' Results!') : CONFIG.SUBJECT_LINE;
+  const quizCity = clean_(lead.quiz_city) || 'Raleigh';
+  const subject = 'Your Raleigh Suburb Quiz Results Are In!';
 
   if (!useDynamicResults && !topPick) throw new Error('Missing quiz top pick.');
 
@@ -179,23 +177,23 @@ function sendSuburbResultsEmail_(lead, isTest) {
   });
   const suburbCards = useDynamicResults
     ? dynamicResults.map(function (result, idx) {
-        return buildNeighborhoodFitBlockHtml_(result, idx === 0);
+        return buildNeighborhoodFitBlockHtml_(result, idx, quizCity);
       }).join('')
     : fallbackPicks.map(function (suburbName, idx) {
-        return buildSuburbBlockHtml_(suburbName, idx === 0);
+        return buildSuburbBlockHtml_(suburbName, idx);
       }).join('');
   const textBody = useDynamicTextBody_(firstName, useDynamicResults ? dynamicResults : fallbackPicks);
 
   const htmlBody =
     '<div style="font-family:Arial,sans-serif;color:#1F2937;line-height:1.55;max-width:760px;margin:0 auto;padding:20px;">' +
-      '<div style="text-align:center;margin:0 0 6px;"><img src="' + escapeHtml_(CONFIG.LOGO_URL) + '" alt="Living in Raleigh Team" style="max-width:280px;width:100%;height:auto;"></div>' +
+      '<div style="text-align:center;margin:0 0 10px;"><a href="' + CONFIG.BASE_SITE_URL + '/" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;"><img src="' + escapeHtml_(CONFIG.LOGO_URL) + '" alt="Living in Raleigh Team" style="max-width:180px;width:100%;height:auto;display:block;margin:0 auto;"></a></div>' +
       '<h1 style="text-align:center;color:#2F5233;margin:0 0 8px;">' + escapeHtml_(quizTitle) + '</h1>' +
       '<p style="text-align:center;margin:0 0 24px;">Hi ' + escapeHtml_(firstName) + ', here are your personalized neighborhood matches based on your quiz responses.</p>' +
       suburbCards +
-      '<div style="margin-top:24px;padding:16px;border:1px solid #d9e2e6;border-radius:12px;background:#f7fbf8;">' +
+      '<div style="margin-top:24px;padding:16px;border:1px solid #d9e2e6;border-radius:12px;background:#f7fbf8;text-align:center;">' +
         '<h3 style="margin:0 0 8px;color:#2F5233;">Want help choosing the best fit?</h3>' +
         '<p style="margin:0 0 10px;">We can help you compare commute, schools, home styles, and budget in real time.</p>' +
-        '<a href="' + CONFIG.BASE_SITE_URL + '/consult/" style="display:inline-block;background:#2F5233;color:#fff;text-decoration:none;padding:10px 14px;border-radius:999px;font-weight:700;">Book Your Suburb Strategy Call</a>' +
+        '<a href="' + CONFIG.BASE_SITE_URL + '/consult/" style="display:block;max-width:320px;margin:0 auto;background:#D8B13A;color:#fff;text-decoration:none;padding:16px 30px;border-radius:999px;font-weight:800;font-size:18px;">Book Your Suburb Strategy Call</a>' +
       '</div>' +
       '<p style="margin-top:20px;font-size:12px;color:#5b6770;">This quiz is guidance only. Final fit depends on inventory, timing, and your exact priorities.</p>' +
     '</div>';
@@ -210,30 +208,36 @@ function sendSuburbResultsEmail_(lead, isTest) {
   });
 }
 
-function buildSuburbBlockHtml_(suburbName, isTopPick) {
+function buildSuburbBlockHtml_(suburbName, position) {
   const suburb = SUBURB_LIBRARY[suburbName];
   if (!suburb) {
     return '<div style="margin:18px 0;"><h2 style="text-align:center;">' + escapeHtml_(suburbName) + '</h2></div>';
   }
 
-  const badge = isTopPick
-    ? '<div style="text-align:center;margin-bottom:8px;"><span style="background:#2F5233;color:#fff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Top Pick</span></div>'
-    : '<div style="text-align:center;margin-bottom:8px;"><span style="background:#e8f5e9;color:#2F5233;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Also Consider</span></div>';
+  const rankLabel = pickLabel_(position);
+  const isTopPick = position === 0;
+  const badgeStyle = isTopPick
+    ? 'background:#2F5233;color:#fff;'
+    : 'background:#dbeafe;color:#1e3a8a;';
+  const heroVideoId = clean_(SUBURB_HERO_VIDEO_IDS[suburbName]);
+  const heroVideoUrl = heroVideoId
+    ? 'https://www.youtube.com/watch?v=' + heroVideoId
+    : suburb.videoUrl;
+  const heroImageUrl = heroVideoId
+    ? 'https://i.ytimg.com/vi/' + heroVideoId + '/maxresdefault.jpg'
+    : suburb.imageUrl;
 
   return (
     '<section style="margin:22px 0;padding:18px;border:1px solid #dce5ea;border-radius:14px;background:#fff;">' +
-      badge +
+      '<div style="text-align:center;margin-bottom:8px;"><span style="' + badgeStyle + 'padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">' + escapeHtml_(rankLabel) + '</span></div>' +
       '<h2 style="text-align:center;margin:0 0 12px;color:#1F2937;font-size:28px;font-weight:800;">' + escapeHtml_(suburbName) + '</h2>' +
-      (suburb.imageUrl ? '<div style="text-align:center;margin:0 0 14px;"><a href="' + escapeHtml_(suburb.videoUrl) + '" target="_blank" rel="noopener noreferrer"><img src="' + escapeHtml_(suburb.imageUrl) + '" alt="' + escapeHtml_(suburbName) + '" style="max-width:480px;width:100%;height:auto;border-radius:10px;"></a></div>' : '') +
-      '<div style="margin:0 0 12px;">' +
-        '<p style="margin:0 0 8px;"><strong>Why this could feel like home:</strong> ' + escapeHtml_(suburb.strongFit) + '</p>' +
-        '<p style="margin:0 0 8px;"><strong>Day-to-day vibe:</strong> ' + escapeHtml_(suburb.vibe) + '</p>' +
-        '<p style="margin:0 0 8px;"><strong>Homes you will usually see:</strong> ' + escapeHtml_(suburb.homes) + '</p>' +
-        '<p style="margin:0 0 8px;"><strong>School context:</strong> ' + escapeHtml_(suburb.schools) + '</p>' +
-        '<p style="margin:0 0 8px;"><strong>Commute and access:</strong> ' + escapeHtml_(suburb.access) + '</p>' +
-        '<p style="margin:0;"><strong>Shopping and amenities:</strong> ' + escapeHtml_(suburb.amenities) + '</p>' +
+      renderClickableVideoPreview_(heroImageUrl, heroVideoUrl, suburbName, suburbName + ' video tour') +
+      '<div style="margin:0 0 12px;color:#374151;font-size:16px;line-height:1.65;">' +
+        (suburb.strongFit ? '<p style="margin:0 0 10px;">' + escapeHtml_(suburb.strongFit) + '</p>' : '') +
+        (suburb.vibe ? '<p style="margin:0 0 10px;">' + escapeHtml_(suburb.vibe) + '</p>' : '') +
+        (combineSentences_([suburb.homes, suburb.schools, suburb.access, suburb.amenities]) ? '<p style="margin:0;">' + escapeHtml_(combineSentences_([suburb.homes, suburb.schools, suburb.access, suburb.amenities])) + '</p>' : '') +
       '</div>' +
-      '<p style="margin:8px 0 0;"><a href="' + escapeHtml_(getSuburbLearnMoreUrl_(suburbName)) + '" target="_blank" rel="noopener noreferrer" style="color:#2F5233;font-weight:700;">Learn More About ' + escapeHtml_(suburbName) + '</a></p>' +
+      '<p style="margin:8px 0 0;"><a href="' + escapeHtml_(getSuburbLearnMoreUrl_(suburbName)) + '" target="_blank" rel="noopener noreferrer" style="color:#2F5233;font-weight:700;">To learn more about ' + escapeHtml_(suburbName) + ', click here.</a></p>' +
     '</section>'
   );
 }
@@ -313,46 +317,193 @@ function normalizeQuizResultEntry_(entry) {
   const suburb = clean_(obj.suburb || obj.neighborhood || obj.name);
   return {
     rank: clean_(obj.rank),
-    label: clean_(obj.label) || (clean_(obj.rank) === '1' ? 'Top Pick' : 'Also Consider'),
+    label: clean_(obj.label) || (clean_(obj.rank) === '1' ? 'Top Pick' : 'Second Pick'),
     suburb: suburb,
     typeLabel: clean_(obj.typeLabel),
     summary: clean_(obj.summary),
     why: clean_(obj.why),
     homes: clean_(obj.homes),
+    priceRange: clean_(obj.priceRange),
+    homeAge: clean_(obj.homeAge),
     access: clean_(obj.access),
     amenities: clean_(obj.amenities),
     learnMoreUrl: clean_(obj.learnMoreUrl),
     image: clean_(obj.image || obj.imageUrl),
-    imageAlt: clean_(obj.imageAlt || suburb)
+    imageAlt: clean_(obj.imageAlt || suburb),
+    imageSecondary: clean_(obj.imageSecondary),
+    imageSecondaryAlt: clean_(obj.imageSecondaryAlt || suburb),
+    videoUrl: clean_(obj.videoUrl),
+    videoTitle: clean_(obj.videoTitle)
   };
 }
 
-function buildNeighborhoodFitBlockHtml_(result, isTopPick) {
+function buildNeighborhoodFitBlockHtml_(result, position, quizCity) {
   const suburbName = clean_(result.suburb);
   if (!suburbName) {
     return '';
   }
 
-  const badge = isTopPick
-    ? '<div style="text-align:center;margin-bottom:8px;"><span style="background:#2F5233;color:#fff;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Top Pick</span></div>'
-    : '<div style="text-align:center;margin-bottom:8px;"><span style="background:#e8f5e9;color:#2F5233;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">Also Consider</span></div>';
+  const rankLabel = pickLabel_(position);
+  const isTopPick = position === 0;
+  const badgeStyle = isTopPick
+    ? 'background:#2F5233;color:#fff;'
+    : 'background:#dbeafe;color:#1e3a8a;';
+  const videoUrl = clean_(result.videoUrl);
+  const imageUrl = clean_(result.image || result.imageUrl);
+  const imageSecondaryUrl = clean_(result.imageSecondary);
+  const imageAlt = clean_(result.imageAlt || suburbName);
+  const imageSecondaryAlt = clean_(result.imageSecondaryAlt || suburbName);
+  const resolvedImageUrl = resolvePublicImageUrl_(imageUrl);
+  const resolvedSecondaryImageUrl = resolvePublicImageUrl_(imageSecondaryUrl);
+  const videoCaption = isTopPick
+    ? 'Watch this to learn more about the different neighborhoods in ' + (clean_(quizCity) || 'this area') + '.'
+    : '';
+  const neighborhoodImagesHtml = renderNeighborhoodImages_(
+    resolvedImageUrl,
+    imageAlt,
+    resolvedSecondaryImageUrl,
+    imageSecondaryAlt
+  );
+  const learnMoreHtml = '<p style="margin:8px 0 14px;"><a href="' + escapeHtml_(resolvePublicUrl_(result.learnMoreUrl || CONFIG.BASE_SITE_URL + '/explore-the-area/')) + '" target="_blank" rel="noopener noreferrer" style="color:#2F5233;font-weight:700;">To learn more about ' + escapeHtml_(suburbName) + ', click here.</a></p>';
+  const videoHtml = videoUrl
+    ? '<div style="max-width:480px;width:100%;margin:0 auto;">' + renderClickableVideoPreview_('', videoUrl, suburbName, suburbName + ' video tour') + '</div>'
+    : '';
+  const videoCaptionHtml = videoCaption
+    ? '<p style="margin:0 0 14px;text-align:center;color:#4b5563;font-size:15px;line-height:1.5;">' + escapeHtml_(videoCaption) + '</p>'
+    : '';
+  const closingMediaHtml = isTopPick
+    ? learnMoreHtml + videoHtml + videoCaptionHtml
+    : videoHtml + videoCaptionHtml + learnMoreHtml;
 
   return (
     '<section style="margin:22px 0;padding:18px;border:1px solid #dce5ea;border-radius:14px;background:#fff;">' +
-      badge +
+      '<div style="text-align:center;margin-bottom:8px;"><span style="' + badgeStyle + 'padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;">' + escapeHtml_(rankLabel) + '</span></div>' +
       '<h2 style="text-align:center;margin:0 0 12px;color:#1F2937;font-size:28px;font-weight:800;">' + escapeHtml_(suburbName) + '</h2>' +
-      (result.image ? '<div style="text-align:center;margin:0 0 14px;"><img src="' + escapeHtml_(resolvePublicUrl_(result.image)) + '" alt="' + escapeHtml_(result.imageAlt || suburbName) + '" style="max-width:480px;width:100%;height:auto;border-radius:10px;"></div>' : '') +
-      '<div style="margin:0 0 12px;">' +
-        (result.typeLabel ? '<p style="margin:0 0 8px;"><strong>Style:</strong> ' + escapeHtml_(result.typeLabel) + '</p>' : '') +
-        (result.summary ? '<p style="margin:0 0 8px;"><strong>Why this could feel like home:</strong> ' + escapeHtml_(result.summary) + '</p>' : '') +
-        (result.why ? '<p style="margin:0 0 8px;"><strong>Best for:</strong> ' + escapeHtml_(result.why) + '</p>' : '') +
-        (result.homes ? '<p style="margin:0 0 8px;"><strong>Homes you will usually see:</strong> ' + escapeHtml_(result.homes) + '</p>' : '') +
-        (result.access ? '<p style="margin:0 0 8px;"><strong>Commute and access:</strong> ' + escapeHtml_(result.access) + '</p>' : '') +
-        (result.amenities ? '<p style="margin:0;"><strong>Shopping and amenities:</strong> ' + escapeHtml_(result.amenities) + '</p>' : '') +
+      neighborhoodImagesHtml +
+      '<div style="margin:0 0 12px;color:#374151;font-size:16px;line-height:1.65;">' +
+        (result.summary ? '<p style="margin:0 0 10px;">' + escapeHtml_(result.summary) + '</p>' : '') +
+        (combineSentences_([formatPriceSentence_(result.priceRange), formatSentence_(result.homeAge), formatSentence_(result.homes)]) ? '<p style="margin:0 0 10px;">' + escapeHtml_(combineSentences_([formatPriceSentence_(result.priceRange), formatSentence_(result.homeAge), formatSentence_(result.homes)])) + '</p>' : '') +
+        (combineSentences_([formatSentence_(result.why), formatSentence_(result.access), formatSentence_(result.amenities)]) ? '<p style="margin:0;">' + escapeHtml_(combineSentences_([formatSentence_(result.why), formatSentence_(result.access), formatSentence_(result.amenities)])) + '</p>' : '') +
       '</div>' +
-      '<p style="margin:8px 0 0;"><a href="' + escapeHtml_(resolvePublicUrl_(result.learnMoreUrl || CONFIG.BASE_SITE_URL + '/explore-the-area/')) + '" target="_blank" rel="noopener noreferrer" style="color:#2F5233;font-weight:700;">Learn More About ' + escapeHtml_(suburbName) + '</a></p>' +
+      closingMediaHtml +
     '</section>'
   );
+}
+
+function renderNeighborhoodImages_(primaryUrl, primaryAlt, secondaryUrl, secondaryAlt) {
+  if (!primaryUrl && !secondaryUrl) {
+    return '';
+  }
+
+  if (primaryUrl && secondaryUrl) {
+    return (
+      '<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="width:100%;max-width:680px;margin:0 auto 18px;border-collapse:separate;">' +
+        '<tr>' +
+          '<td width="50%" style="width:50%;padding:0 4px 0 0;vertical-align:top;">' +
+            '<img src="' + escapeHtml_(primaryUrl) + '" alt="' + escapeHtml_(primaryAlt) + '" width="100%" style="display:block;width:100%;height:230px;object-fit:cover;object-position:center;border-radius:10px;">' +
+          '</td>' +
+          '<td width="50%" style="width:50%;padding:0 0 0 4px;vertical-align:top;">' +
+            '<img src="' + escapeHtml_(secondaryUrl) + '" alt="' + escapeHtml_(secondaryAlt) + '" width="100%" style="display:block;width:100%;height:230px;object-fit:cover;object-position:center;border-radius:10px;">' +
+          '</td>' +
+        '</tr>' +
+      '</table>'
+    );
+  }
+
+  const singleUrl = primaryUrl || secondaryUrl;
+  const singleAlt = primaryUrl ? primaryAlt : secondaryAlt;
+  return '<div style="text-align:center;margin:0 0 14px;"><img src="' + escapeHtml_(singleUrl) + '" alt="' + escapeHtml_(singleAlt) + '" style="display:block;max-width:480px;width:100%;height:auto;border-radius:10px;margin:0 auto;"></div>';
+}
+
+function pickLabel_(position) {
+  if (position === 0) return 'Top Pick';
+  if (position === 1) return 'Second Pick';
+  return 'Third Pick';
+}
+
+
+function buildYouTubeThumbnailUrl_(videoUrl) {
+  const cleaned = clean_(videoUrl);
+  if (!cleaned) {
+    return '';
+  }
+  const match = cleaned.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=))([A-Za-z0-9_-]{6,})/i);
+  if (!match) {
+    return cleaned;
+  }
+  return 'https://i.ytimg.com/vi/' + match[1] + '/hqdefault.jpg';
+}
+
+function normalizeYouTubeWatchUrl_(videoUrl) {
+  const cleaned = clean_(videoUrl);
+  if (!cleaned) {
+    return '';
+  }
+  const match = cleaned.match(/(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|watch\?v=))([A-Za-z0-9_-]{6,})/i);
+  if (!match) {
+    return cleaned;
+  }
+  return 'https://www.youtube.com/watch?v=' + match[1];
+}
+
+function resolveRenderableImageUrl_(imageUrl, videoUrl) {
+  const publicImageUrl = resolvePublicImageUrl_(imageUrl);
+  if (publicImageUrl) {
+    return publicImageUrl;
+  }
+  if (clean_(videoUrl)) {
+    const videoThumbnailUrl = buildYouTubeThumbnailUrl_(videoUrl);
+    if (videoThumbnailUrl) {
+      return videoThumbnailUrl;
+    }
+  }
+  return '';
+}
+
+function resolvePublicImageUrl_(imageUrl) {
+  const cleanedImageUrl = clean_(imageUrl);
+  if (!cleanedImageUrl) {
+    return '';
+  }
+  const publicImageUrl = resolvePublicUrl_(cleanedImageUrl);
+  return /^https?:\/\//i.test(publicImageUrl) ? publicImageUrl : '';
+}
+
+function renderClickableVideoPreview_(imageUrl, videoUrl, title, altText) {
+  const thumbnailUrl = resolveRenderableImageUrl_(imageUrl, videoUrl);
+  const href = normalizeYouTubeWatchUrl_(videoUrl) || resolvePublicUrl_(imageUrl);
+  if (!thumbnailUrl) {
+    return '';
+  }
+
+  return (
+    '<div style="margin:0 0 14px;border-radius:14px;overflow:hidden;border:1px solid #d7dde3;background:#fff;">' +
+      '<a href="' + escapeHtml_(href) + '" target="_blank" rel="noopener noreferrer" style="display:block;text-decoration:none;">' +
+        '<img src="' + escapeHtml_(thumbnailUrl) + '" alt="' + escapeHtml_(altText || title || '') + '" style="display:block;width:100%;height:auto;border:0;">' +
+      '</a>' +
+    '</div>'
+  );
+}
+
+function combineSentences_(values) {
+  return values
+    .map(function (value) { return clean_(value); })
+    .filter(function (value) { return Boolean(value); })
+    .join(' ')
+    .trim();
+}
+
+function formatPriceSentence_(value) {
+  const text = clean_(value);
+  if (!text) return '';
+  if (/Homes here typically start/i.test(text) || /start/i.test(text) || /[.?!]$/.test(text)) {
+    return text;
+  }
+  return 'Homes here typically start in the ' + text + ' range.';
+}
+
+function formatSentence_(value) {
+  return clean_(value);
 }
 
 function resolvePublicUrl_(value) {
@@ -393,6 +544,7 @@ function rowToPayload_(row, indexes) {
     email: clean_(row[indexes.email]),
     source_page: clean_(row[indexes.source_page]),
     source_key: clean_(row[indexes.source_key]),
+    lead_type: clean_(row[indexes.lead_type]),
     quiz_type: clean_(row[indexes.quiz_type]),
     quiz_title: clean_(row[indexes.quiz_title]),
     quiz_city: clean_(row[indexes.quiz_city]),
@@ -403,6 +555,18 @@ function rowToPayload_(row, indexes) {
     quiz_results_json: clean_(row[indexes.quiz_results_json]),
     quiz_answers_json: clean_(row[indexes.quiz_answers_json])
   };
+}
+
+function isNeighborhoodQuizPayload_(payload) {
+  const haystack = [
+    payload.lead_type,
+    payload.quiz_type,
+    payload.quiz_title,
+    payload.quiz_slug,
+    payload.source_key,
+    payload.source_page
+  ].map(function (value) { return clean_(value); }).join(' ').toLowerCase();
+  return haystack.indexOf('neighborhood') !== -1;
 }
 
 function ensureQuizEmailColumns_(sheet) {
@@ -442,6 +606,7 @@ function headerIndexes_(sheet) {
     email: idx('Email'),
     source_page: idx('Source Page'),
     source_key: idx('Source Key'),
+    lead_type: idx('Lead Type'),
     quiz_type: idx('Quiz Type'),
     quiz_title: idx('Quiz Title'),
     quiz_city: idx('Quiz City'),
@@ -481,6 +646,117 @@ function shuffle_(arr) {
   return out;
 }
 
+const RALEIGH_NEIGHBORHOOD_TEST_VIDEO_URL = 'https://www.youtube.com/watch?v=UVWafIUp0BQ';
+
+const RALEIGH_NEIGHBORHOOD_TEST_LIBRARY = [
+  {
+    suburb: 'Five Points',
+    summary: 'Classic close-in Raleigh with older homes and a strong neighborhood feel.',
+    why: 'If you want character and a short hop to downtown Raleigh, Five Points is a strong fit.',
+    homes: 'Bungalows, cottages, and older single-family homes.',
+    priceRange: '$850K to $1.4M+',
+    homeAge: 'Mostly 1910s to 1950s homes, often updated.',
+    access: 'Quick access to downtown Raleigh and the inner beltline.',
+    amenities: 'Coffee, restaurants, and parks are nearby.',
+    image: '/assets/images/neighborhood-fit/raleigh-five-points.jpg',
+    imageAlt: 'Five Points in Raleigh',
+    learnMoreUrl: '/explore-the-area/raleigh/'
+  },
+  {
+    suburb: 'North Hills',
+    summary: 'North Hills is often called Raleigh\'s second downtown, with upscale shopping, dining, and a polished walkable core.',
+    why: 'If you like being close to everything and want a neighborhood that feels walkable, easy to live in, and still premium, North Hills is a strong fit.',
+    homes: 'Older homes, newer homes, condos, and brand-new construction.',
+    priceRange: '$600K to $3M+',
+    homeAge: 'A mix of older homes, newer homes, condos, and brand-new construction.',
+    access: 'Easy access to surrounding neighborhoods and major Raleigh routes.',
+    amenities: 'Upscale stores, local businesses, dining, and everyday conveniences are the draw.',
+    image: '/assets/images/neighborhood-fit/raleigh-north-hills.jpg',
+    imageAlt: 'North Hills in Raleigh',
+    learnMoreUrl: '/explore-the-area/raleigh/'
+  },
+  {
+    suburb: 'Stonehenge',
+    summary: 'Stonehenge gives you established streets and a newer pocket with more recent construction in North Raleigh.',
+    why: 'If you want an established feel, a strong school area, and a quick commute to the airport and top employers, Stonehenge is a strong fit.',
+    homes: 'Older single-family homes plus newer homes in the more recent pocket.',
+    priceRange: '$500K to $1M+',
+    homeAge: 'Mostly 1970s to 1990s homes, plus a newer pocket with more recent construction.',
+    access: 'Good access to North Raleigh, the airport corridor, and major Raleigh routes.',
+    amenities: 'Parks, greenways, and everyday shopping are nearby.',
+    image: '/assets/images/neighborhood-fit/raleigh-stonehenge.jpg',
+    imageAlt: 'Newer homes in Stonehenge',
+    imageSecondary: '/assets/images/neighborhood-fit/raleigh-stonehenge-secondary.jpg',
+    imageSecondaryAlt: 'Established Stonehenge neighborhood street',
+    learnMoreUrl: '/explore-the-area/raleigh/'
+  },
+  {
+    suburb: 'Six Forks',
+    summary: 'Six Forks is a classic North Raleigh neighborhood with a strong suburban feel and a central location.',
+    why: 'If you want an established North Raleigh neighborhood with an easy commute and a solid everyday location, Six Forks is a strong fit.',
+    homes: 'Updated resale homes, entry-level townhomes, and condos.',
+    priceRange: '$400K to $700K+',
+    homeAge: 'Mostly 1970s to 1990s homes.',
+    access: 'Strong access to downtown, North Hills, the airport, and major Raleigh routes.',
+    amenities: 'Day-to-day shopping, parks, trails, and nearby schools make the area easy to live in.',
+    image: '/assets/images/neighborhood-fit/raleigh-six-forks.jpg',
+    imageAlt: 'Six Forks in Raleigh',
+    learnMoreUrl: '/explore-the-area/raleigh/'
+  },
+  {
+    suburb: 'Brier Creek',
+    summary: 'Brier Creek is a polished Raleigh choice close to RTP, the airport, and everyday convenience.',
+    why: 'If you want a modern neighborhood feel with a practical commute and easy errands, Brier Creek is a strong fit.',
+    homes: 'Newer single-family homes, townhomes, condos, and low-maintenance options.',
+    priceRange: '$650K to $1M+',
+    homeAge: 'Mostly 2000s to 2010s homes, with newer construction mixed in.',
+    access: 'Strong access to RTP, the airport, major roads, and northwest Raleigh.',
+    amenities: 'Shopping, restaurants, golf, parks, and quick access to top Wake County schools are the draw.',
+    image: '/assets/images/neighborhood-fit/raleigh-brier-creek.jpg',
+    imageAlt: 'Brier Creek in Raleigh',
+    learnMoreUrl: '/explore-the-area/raleigh/'
+  },
+  {
+    suburb: 'Falls River',
+    summary: 'Falls River is a master-planned upper North Raleigh neighborhood with a strong community feel.',
+    why: 'If you want an active neighborhood that still feels practical and established, Falls River is a strong fit.',
+    homes: 'Townhomes, detached homes, and larger estate pockets.',
+    priceRange: '$500K to $1M+',
+    homeAge: 'Mostly 2000s homes.',
+    access: 'Convenient to North Raleigh shopping, schools, Falls Lake, and the broader Raleigh commute network.',
+    amenities: 'A pool, tennis courts, playgrounds, greenways, nearby shops and restaurants, and access to the hospital hub are the draw.',
+    image: '/assets/images/neighborhood-fit/raleigh-falls-river.jpg',
+    imageAlt: 'Falls River in Raleigh',
+    learnMoreUrl: '/explore-the-area/raleigh/'
+  }
+];
+
+const SUBURB_HERO_VIDEO_IDS = {
+  'Inside-the-Beltline Raleigh': 'UVWafIUp0BQ',
+  'Northwest Raleigh': 'qqnyJVTXzB8',
+  'North Raleigh': 'qqnyJVTXzB8',
+  'Northeast Raleigh': 'UVWafIUp0BQ',
+  'East Raleigh': 'UVWafIUp0BQ',
+  'Southeast Raleigh': 'UVWafIUp0BQ',
+  'Cary': 'JwIeO7j6dZI',
+  'Apex': 'ZDmRAdvyKdw',
+  'Morrisville': 'L9skutTltYk',
+  'Holly Springs': 'y4KfQO_8hj8',
+  'Fuquay-Varina': 'ec3TjmQBx-E',
+  'Garner': 'qqnyJVTXzB8',
+  'Knightdale': 'Uh87TsIIFQY',
+  'Wendell': 'A1fwu8OjZyQ',
+  'Rolesville': 'cEa_EK2Y4Kg',
+  'Zebulon': 'qqnyJVTXzB8',
+  'Wake Forest': 'qEjCunD8Yho',
+  'Youngsville': 'cEa_EK2Y4Kg',
+  'Downtown Durham': 'HRygIJl3zzQ',
+  'Central Durham': 'HRygIJl3zzQ',
+  'South Durham': 'HRygIJl3zzQ',
+  'East Durham': 'HRygIJl3zzQ',
+  'Clayton': 'xK8vIJLSiMk'
+};
+
 const SUBURB_LIBRARY = {
   'Inside-the-Beltline Raleigh': { imageUrl: 'https://i.ytimg.com/vi/aJOhOV7EtFk/maxresdefault.jpg', strongFit: 'If you light up when you can walk to coffee, dinner, and parks, this is one of the most rewarding places to live in the Triangle.', vibe: 'It feels lively, established, and full of personality, with real neighborhood character block to block.', homes: 'You will mostly see older homes with charm, plus selective high-end renovations and newer infill options.', schools: 'School choices vary by micro-area, and many buyers here also look closely at charter, magnet, or private options.', access: 'You are closest to downtown Raleigh, with manageable drives to RTP and RDU depending on time of day.', amenities: 'From Village District to local restaurants, museums, greenways, and parks, your lifestyle options are excellent.', videoUrl: 'https://www.youtube.com/watch?v=aJOhOV7EtFk' },
   'Northwest Raleigh': { imageUrl: 'https://i.ytimg.com/vi/lhQltOJ3UXk/maxresdefault.jpg', strongFit: 'This is a great match if you want a proven, comfortable suburb feel without feeling too far from everything.', vibe: 'It feels polished and practical, with mature neighborhoods and a steady, family-friendly rhythm.', homes: 'You will find many established homes in mid-to-high price ranges, often with larger lots and updated interiors.', schools: 'A lot of buyers choose this area specifically for school reputation, though exact zoning still matters.', access: 'You get strong connectivity to Raleigh, RTP, and RDU, especially compared with farther-out suburbs.', amenities: 'Daily convenience is easy with nearby retail, parks, trails, and multiple shopping corridors.', videoUrl: 'https://www.youtube.com/watch?v=lhQltOJ3UXk' },
@@ -507,5 +783,67 @@ const SUBURB_LIBRARY = {
   'Clayton': { imageUrl: 'https://i.ytimg.com/vi/xK8vIJLSiMk/maxresdefault.jpg', strongFit: 'Clayton is a strong fit for buyers who want more space and value while still having suburban conveniences nearby.', vibe: 'It feels family-oriented and steadily growing, without losing its approachable pace.', homes: 'You will find plenty of newer communities along with resale options that can be budget-friendly.', schools: 'School quality can range from mixed to strong depending on the exact neighborhood.', access: 'Raleigh is typically manageable, while RTP and Durham are longer drives for most commuters.', amenities: 'Parks, shopping centers, and continued growth around Cleveland and surrounding areas support daily life well.', videoUrl: 'https://www.youtube.com/watch?v=xK8vIJLSiMk' },
 };
 
+function sendNeighborhoodResultsEmail_(lead, isTest) {
+  const toEmail = clean_(lead.email || CONFIG.TEST_EMAIL);
+  const firstName = clean_(lead.first_name) || 'there';
+  const quizTitle = clean_(lead.quiz_title) || 'Neighborhood Fit';
+  const quizCity = clean_(lead.quiz_city) || 'Raleigh';
+  const results = parseQuizResultsPayload_(lead.quiz_results_json);
+  if (!results.length) {
+    throw new Error('Missing neighborhood results.');
+  }
 
+  const textBody = [
+    'Hi ' + firstName + ',',
+    '',
+    'Your neighborhood fit results are in for ' + quizCity + '.',
+    '',
+    results.map(function (result, index) {
+      return (index + 1) + '. ' + result.suburb + ' - ' + result.summary;
+    }).join('\n'),
+    '',
+    'Book your free strategy call: ' + CONFIG.BASE_SITE_URL + '/consult/',
+    '',
+    CONFIG.CONTACT_PHONE + ' | ' + CONFIG.CONTACT_EMAIL
+  ].join('\n');
 
+  const htmlBody =
+    '<div style="background:#f4f4ef;padding:24px 12px;font-family:Arial,sans-serif;color:#1F2937;">' +
+      '<div style="max-width:760px;margin:0 auto;background:#ffffff;border-radius:18px;overflow:hidden;border:1px solid #e5e7eb;">' +
+        '<div style="padding:18px 20px 8px;text-align:center;background:#ffffff;">' +
+          '<a href="' + CONFIG.BASE_SITE_URL + '/" target="_blank" rel="noopener noreferrer" style="display:inline-block;text-decoration:none;">' +
+            '<img src="' + escapeHtml_(resolvePublicUrl_(CONFIG.LOGO_URL)) + '" alt="Living in Raleigh Team" style="max-width:180px;width:100%;height:auto;display:block;margin:0 auto;">' +
+          '</a>' +
+        '</div>' +
+        '<div style="padding:0 22px 10px;text-align:center;">' +
+          '<p style="margin:0;color:#2F5233;font-size:14px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Your results are in</p>' +
+          '<h1 style="margin:8px 0 6px;font-size:30px;line-height:1.15;color:#1F2937;">' + escapeHtml_(quizTitle) + '</h1>' +
+          '<p style="margin:0 0 12px;font-size:16px;color:#4b5563;">Hi ' + escapeHtml_(firstName) + ', these are the top neighborhoods that best fit your answers.</p>' +
+        '</div>' +
+        results.map(function (result, index) {
+          return buildNeighborhoodFitBlockHtml_(result, index, quizCity);
+        }).join('') +
+        '<div style="padding:0 22px 10px;">' +
+          '<div style="margin:8px 0 18px;padding:22px 18px;border-radius:16px;background:#f7f0cf;border:1px solid #e3c75d;text-align:center;">' +
+            '<p style="margin:0 0 10px;font-size:17px;font-weight:700;color:#1F2937;">Want help choosing the best fit?</p>' +
+            '<p style="margin:0 0 16px;color:#4b5563;">We can help you compare commute, schools, home styles, and budget in no time. If you are moving to ' + escapeHtml_(quizCity) + ', do not move alone.</p>' +
+            '<a href="' + CONFIG.BASE_SITE_URL + '/consult/" style="display:block;max-width:320px;margin:0 auto;background:#D8B13A;color:#ffffff;text-decoration:none;padding:16px 30px;border-radius:999px;font-weight:800;font-size:18px;text-align:center;">Book Your Free Strategy Call</a>' +
+          '</div>' +
+        '</div>' +
+        '<div style="padding:0 22px 22px;text-align:center;color:#667085;font-size:13px;">' +
+          '<p style="margin:0 0 8px;"><a href="' + CONFIG.BASE_SITE_URL + '/" style="color:#2F5233;font-weight:700;text-decoration:none;">' + CONFIG.BASE_SITE_URL + '</a></p>' +
+          '<p style="margin:0 0 8px;"><a href="tel:+19197377896" style="color:#2F5233;font-weight:700;text-decoration:none;">' + CONFIG.CONTACT_PHONE + '</a> · <a href="mailto:' + CONFIG.CONTACT_EMAIL + '" style="color:#2F5233;font-weight:700;text-decoration:none;">' + CONFIG.CONTACT_EMAIL + '</a></p>' +
+          '<p style="margin:0;">If you would rather not receive these emails, reply with unsubscribe and we will take care of it.</p>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  MailApp.sendEmail({
+    to: toEmail,
+    name: CONFIG.EMAIL_FROM_NAME,
+    subject: 'Your ' + quizCity + ' Neighborhood Quiz Results Are In!',
+    body: textBody,
+    htmlBody: htmlBody,
+    replyTo: CONFIG.ADMIN_EMAIL
+  });
+}

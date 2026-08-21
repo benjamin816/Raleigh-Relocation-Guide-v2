@@ -1,5 +1,11 @@
 const SPREADSHEET_ID = '1V-4tnKUm22SXO9qTkBpC027gUU1eY_YwS6M2BplU8Uo';
 const SHEET_NAME = 'Website Direct Leads';
+const RELO_GUIDE_SOURCE_LABEL = 'Relo Guide Direct from Website';
+const RELO_GUIDE_SOURCE_KEY = 'relo_guide_direct_from_website';
+const RELO_GUIDE_DOWNLOAD_URL = 'https://raleighncguide.com/assets/downloads/your-2026-raleigh-relocation-guide.pdf';
+const RELO_GUIDE_ATTACHMENT_URL = RELO_GUIDE_DOWNLOAD_URL;
+const RELO_GUIDE_UNSUBSCRIBE_URL = 'mailto:livinginraleighteam@gmail.com?subject=Unsubscribe';
+const RELO_GUIDE_PREFERENCES_URL = 'mailto:livinginraleighteam@gmail.com?subject=Update%20Preferences';
 const ALERT_EMAIL = 'livinginraleighteam@gmail.com';
 const ALERT_FROM_ALIAS = 'benjamin.carver@exprealty.com';
 
@@ -13,6 +19,7 @@ function doPost(e) {
   try {
     const raw = parseBody_(e);
     const lead = normalizeLead_(raw);
+    const isReloGuideLead = isReloGuideLead_(lead);
 
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
     const sheet = getOrCreateSheet_(ss, SHEET_NAME);
@@ -28,7 +35,9 @@ function doPost(e) {
       });
     }
     const rowNumber = appendLead_(sheet, lead, raw);
-    const emailResult = sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, raw);
+    const emailResult = isReloGuideLead
+      ? sendReloGuideEmailAndUpdateStatus_(sheet, rowNumber, lead, raw)
+      : sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, raw);
 
     return json_({
       ok: true,
@@ -60,8 +69,8 @@ function parseBody_(e) {
 function normalizeLead_(p) {
   const legacyRequestedContactName = clean_(p.requested_contact_name);
   const splitRequestedContactName = splitName_(legacyRequestedContactName);
-  const normalizedFirstName = clean_(p.first_name) || clean_(p.requested_contact_first_name) || splitRequestedContactName.first;
-  const normalizedLastName = clean_(p.last_name) || clean_(p.requested_contact_last_name) || splitRequestedContactName.last;
+  const normalizedFirstName = clean_(p.first_name) || clean_(p.firstName) || clean_(p.requested_contact_first_name) || splitRequestedContactName.first;
+  const normalizedLastName = clean_(p.last_name) || clean_(p.lastName) || clean_(p.requested_contact_last_name) || splitRequestedContactName.last;
   const normalizedRequestedContactName = clean_(
     legacyRequestedContactName || [normalizedFirstName, normalizedLastName].join(' ')
   );
@@ -88,23 +97,28 @@ function normalizeLead_(p) {
   const quizSlug = clean_(p.quiz_slug);
   const sourcePage = clean_(p.source_page) || clean_(p.source);
   const normalizedSourceForQuiz = sourcePage.toLowerCase();
+  const isNeighborhoodQuizLead = Boolean(
+    quizType === 'neighborhood_fit' ||
+    /neighborhood fit/i.test(quizTitle)
+  );
   const isSuburbQuizLead = Boolean(
     quizType ||
     quizTitle ||
     clean_(p.quiz_results_json) ||
     normalizedSourceForQuiz.indexOf('/quiz') !== -1 ||
     normalizedSourceForQuiz.indexOf('raleigh-suburb-quiz') !== -1
-  );
+  ) && !isNeighborhoodQuizLead;
 
   return {
     submitted_at: clean_(p.submitted_at) || new Date().toISOString(),
     source_page: sourcePage,
     source_key: clean_(p.source_key) || sourcePage,
-    lead_type: isSuburbQuizLead ? 'suburb_quiz' : leadType,
+    lead_type: isNeighborhoodQuizLead ? 'neighborhood_quiz' : (isSuburbQuizLead ? 'suburb_quiz' : leadType),
     quiz_type: quizType,
     quiz_title: quizTitle,
     quiz_city: quizCity,
     quiz_slug: quizSlug,
+    location: clean_(p.location) || clean_(p.current_location) || clean_(p.city) || clean_(p.current_city),
 
     requested_contact_source: clean_(p.requested_contact_source),
     requested_contact_name: normalizedRequestedContactName,
@@ -218,7 +232,10 @@ function getOrCreateSheet_(ss, name) {
 
 function ensureHeaders_(sheet) {
   removeDeprecatedColumns_(sheet);
-  const required = headers_();
+  ensureHeadersPresent_(sheet, headers_());
+}
+
+function ensureHeadersPresent_(sheet, required) {
   const lastCol = Math.max(1, sheet.getLastColumn());
   const headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
   const normalized = headerRow.map(function (h) { return clean_(h).toLowerCase(); });
@@ -409,12 +426,15 @@ function sendUnsentWebsiteLeadEmails() {
 
     const rowNumber = rowOffset + 2;
     const rowContext = leadContextFromSheetRow_(row, indexes);
-    if (!leadHasPhoneNumber_(rowContext.lead)) {
+    const isReloGuideLead = isReloGuideLead_(rowContext.lead);
+    if (!isReloGuideLead && !leadHasPhoneNumber_(rowContext.lead)) {
       updateLeadEmailStatus_(sheet, rowNumber, 'skipped_no_phone', '', 'No phone number provided for admin email.');
       return;
     }
     pendingRows += 1;
-    const result = sendLeadEmailAndUpdateStatus_(sheet, rowNumber, rowContext.lead, rowContext.raw);
+    const result = isReloGuideLead
+      ? sendReloGuideEmailAndUpdateStatus_(sheet, rowNumber, rowContext.lead, rowContext.raw)
+      : sendLeadEmailAndUpdateStatus_(sheet, rowNumber, rowContext.lead, rowContext.raw);
 
     if (result.status === 'sent') {
       sentCount += 1;
@@ -606,6 +626,132 @@ function findLeadRowBySubmissionId_(sheet, submissionId) {
   return 0;
 }
 
+function backfillMissingWebsiteLeadNames() {
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = getOrCreateSheet_(ss, SHEET_NAME);
+  ensureHeaders_(sheet);
+
+  const indexes = headerIndexes_(sheet);
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+
+  if (lastRow < 2) {
+    return {
+      ok: true,
+      scanned_rows: 0,
+      updated_rows: 0
+    };
+  }
+
+  let scannedRows = 0;
+  let updatedRows = 0;
+
+  for (let rowNumber = 2; rowNumber <= lastRow; rowNumber++) {
+    const row = sheet.getRange(rowNumber, 1, 1, lastCol).getValues()[0];
+    scannedRows += 1;
+
+    const currentFirstName = clean_(row[indexes.first_name]);
+    const currentLastName = clean_(row[indexes.last_name]);
+    if (hasText_(currentFirstName) && hasText_(currentLastName)) {
+      continue;
+    }
+
+    const raw = parseRawJsonFromRow_(row, indexes);
+    const guessedName = guessLeadNameFromRaw_(raw, row, indexes);
+    if (!guessedName.first && !guessedName.last) {
+      continue;
+    }
+
+    const firstName = hasText_(currentFirstName) ? currentFirstName : guessedName.first;
+    const lastName = hasText_(currentLastName) ? currentLastName : guessedName.last;
+    if (!hasText_(firstName) && !hasText_(lastName)) {
+      continue;
+    }
+
+    if (indexes.first_name >= 0 && hasText_(firstName)) {
+      sheet.getRange(rowNumber, indexes.first_name + 1).setValue(firstName);
+    }
+    if (indexes.last_name >= 0 && hasText_(lastName)) {
+      sheet.getRange(rowNumber, indexes.last_name + 1).setValue(lastName);
+    }
+    updatedRows += 1;
+  }
+
+  return {
+    ok: true,
+    scanned_rows: scannedRows,
+    updated_rows: updatedRows
+  };
+}
+
+function parseRawJsonFromRow_(row, indexes) {
+  const rawJsonText = clean_(row[indexes.raw_json]) || findRawJsonInRow_(row);
+  if (!rawJsonText) {
+    return {};
+  }
+
+  try {
+    const parsed = JSON.parse(rawJsonText);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed;
+    }
+  } catch (_) {}
+  return {};
+}
+
+function guessLeadNameFromRaw_(raw, row, indexes) {
+  const candidates = [
+    raw && raw.first_name,
+    raw && raw.firstName,
+    raw && raw.requested_contact_first_name,
+    raw && raw.requestedContactFirstName,
+    raw && raw.home_eval_name,
+    raw && raw.requested_contact_name,
+    raw && raw.name,
+    raw && raw.full_name
+  ];
+
+  const combinedName = splitName_(candidates.find(function (value) {
+    return hasText_(value);
+  }));
+
+  let first = clean_(combinedName.first);
+  let last = clean_(combinedName.last);
+
+  if (!hasText_(first) && hasText_(row[indexes.first_name])) {
+    first = clean_(row[indexes.first_name]);
+  }
+  if (!hasText_(last) && hasText_(row[indexes.last_name])) {
+    last = clean_(row[indexes.last_name]);
+  }
+
+  if (!hasText_(first) && hasText_(raw && raw.first_name)) {
+    first = clean_(raw.first_name);
+  }
+  if (!hasText_(last) && hasText_(raw && raw.last_name)) {
+    last = clean_(raw.last_name);
+  }
+  if (!hasText_(first) && hasText_(raw && raw.firstName)) {
+    first = clean_(raw.firstName);
+  }
+  if (!hasText_(last) && hasText_(raw && raw.lastName)) {
+    last = clean_(raw.lastName);
+  }
+
+  if (!hasText_(first) && hasText_(raw && raw.requested_contact_name)) {
+    const splitRequested = splitName_(raw.requested_contact_name);
+    first = clean_(splitRequested.first);
+    if (!hasText_(last)) {
+      last = clean_(splitRequested.last);
+    }
+  }
+
+  return {
+    first: first,
+    last: last
+  };
+}
+
 function toIsoString_(value) {
   if (value instanceof Date && !isNaN(value.getTime())) {
     return value.toISOString();
@@ -626,12 +772,14 @@ function sendLeadEmail_(lead, raw) {
     home_eval: 'New Home Valuation Lead - Website',
     requested_contact: 'New Requested Contact Lead - Website',
     new_construction: 'New Construction Inquiry - Website',
-    suburb_quiz: 'New Raleigh Suburb Quiz Lead - Website'
+    suburb_quiz: 'New Raleigh Suburb Quiz Lead - Website',
+    neighborhood_quiz: 'New Raleigh Neighborhood Quiz Lead - Website',
+    relo_guide: 'New Raleigh Relocation Guide Request - Website'
   };
   let subject = subjectByType[lead.lead_type] || 'New Website Lead';
   if (hasText_(lead.quiz_title)) {
     subject = 'New ' + clean_(lead.quiz_title) + ' Lead - Website';
-  } else if (lead.lead_type === 'suburb_quiz' && hasText_(lead.quiz_city)) {
+  } else if ((lead.lead_type === 'suburb_quiz' || lead.lead_type === 'neighborhood_quiz') && hasText_(lead.quiz_city)) {
     subject = 'New ' + clean_(lead.quiz_city) + ' Neighborhood Fit Lead - Website';
   }
   if (lead.lead_type === 'requested_contact' && hasText_(requestedIntentLabel)) {
@@ -711,7 +859,7 @@ function sendLeadEmail_(lead, raw) {
     addFieldLineIfPresent_(newConstructionLines, 'Message', lead.new_construction_message || lead.requested_contact_notes);
     appendSectionIfAny_(lines, 'New Construction Inquiry', newConstructionLines);
   }
-  if (lead.lead_type === 'suburb_quiz' || hasText_(lead.quiz_top_pick) || hasText_(lead.quiz_results_json)) {
+  if (lead.lead_type === 'suburb_quiz' || lead.lead_type === 'neighborhood_quiz' || hasText_(lead.quiz_top_pick) || hasText_(lead.quiz_results_json)) {
     const quizLines = [];
     addFieldLineIfPresent_(quizLines, 'Quiz Type', lead.quiz_type);
     addFieldLineIfPresent_(quizLines, 'Quiz Title', lead.quiz_title);
@@ -720,13 +868,190 @@ function sendLeadEmail_(lead, raw) {
     addFieldLineIfPresent_(quizLines, 'Second Pick', lead.quiz_second_pick);
     addFieldLineIfPresent_(quizLines, 'Third Pick', lead.quiz_third_pick);
     addFieldLineIfPresent_(quizLines, 'Requested Team Call', lead.wants_consultation ? 'Yes' : 'No');
-    appendSectionIfAny_(lines, 'Raleigh Suburb Quiz Results', quizLines);
+    appendSectionIfAny_(lines, lead.lead_type === 'neighborhood_quiz' ? 'Raleigh Neighborhood Quiz Results' : 'Raleigh Suburb Quiz Results', quizLines);
   }
 
   lines.push('');
   lines.push('Please follow up as soon as possible.');
 
   sendAdminAlertEmail_(subject, lines.join('\n'));
+}
+
+function sendReloGuideEmailAndUpdateStatus_(sheet, rowNumber, lead, raw) {
+  try {
+    sendReloGuideEmail_(lead, raw);
+    updateLeadEmailStatus_(sheet, rowNumber, 'sent', new Date(), '');
+    return { status: 'sent', error: '' };
+  } catch (err) {
+    const message = clean_(err && err.message ? err.message : err);
+    updateLeadEmailStatus_(sheet, rowNumber, 'failed', '', message);
+    return { status: 'failed', error: message };
+  }
+}
+
+function sendReloGuideEmail_(lead, raw) {
+  const recipient = clean_(lead.email || lead.home_eval_email);
+  if (!recipient) {
+    throw new Error('No email address provided for Raleigh Relocation Guide delivery.');
+  }
+
+  const subject = 'Your Raleigh Relocation Guide!';
+  const htmlBody = buildReloGuideEmailHtml_(lead, raw);
+  const textBody = [
+    'Thanks for your interest in our 2026 Raleigh Relocation Guide.',
+    'BOOK YOUR RELOCATION CALL TODAY: https://raleighncguide.com/consult/',
+    '',
+    'Best,',
+    'The Living in Raleigh Team',
+    'raleighncguide.com | 919-737-7896',
+    'You received this email because you requested a free copy of the 2026 Raleigh Relocation Guide on our website.'
+  ].join('\n');
+
+  const options = {
+    name: 'Living in Raleigh Team',
+    htmlBody: htmlBody,
+    replyTo: ALERT_EMAIL
+  };
+
+  const guideFromAlias = getReloGuideFromAlias_();
+  if (guideFromAlias && GmailApp.getAliases().indexOf(guideFromAlias) !== -1) {
+    options.from = guideFromAlias;
+  }
+
+  const attachment = getReloGuideAttachment_();
+  if (attachment) {
+    options.attachments = [attachment];
+  }
+
+  GmailApp.sendEmail(recipient, subject, textBody, options);
+}
+
+function sendTestReloGuideEmail() {
+  const testRecipient = clean_(getScriptProperty_('RELO_GUIDE_TEST_EMAIL') || 'benjamin.raleighrealtor@gmail.com');
+  sendReloGuideEmail_({
+    first_name: 'Test',
+    last_name: 'Lead',
+    email: testRecipient,
+    phone: '',
+    source_page: '/2026/',
+    source_key: RELO_GUIDE_SOURCE_KEY,
+    lead_type: 'relo_guide',
+    submission_id: 'test-' + new Date().getTime()
+  }, {});
+  return 'Sent Raleigh Relocation Guide test email to ' + testRecipient + '.';
+}
+
+function getReloGuideAttachment_() {
+  const candidates = [
+    RELO_GUIDE_ATTACHMENT_URL,
+    RELO_GUIDE_ATTACHMENT_URL.indexOf('www.') === -1
+      ? RELO_GUIDE_ATTACHMENT_URL.replace('https://raleighncguide.com', 'https://www.raleighncguide.com')
+      : RELO_GUIDE_ATTACHMENT_URL
+  ];
+
+  for (let i = 0; i < candidates.length; i++) {
+    const url = candidates[i];
+    try {
+      const response = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+      if (response.getResponseCode() === 200) {
+        const blob = response.getBlob();
+        blob.setName('Your 2026 Raleigh Relocation Guide.pdf');
+        return blob;
+      }
+      Logger.log('Relo Guide attachment fetch skipped ' + url + ' -> ' + response.getResponseCode());
+    } catch (fetchErr) {
+      Logger.log('Relo Guide attachment fetch failed for ' + url + ': ' + String(fetchErr && fetchErr.message ? fetchErr.message : fetchErr));
+    }
+  }
+  return null;
+}
+
+function getReloGuideFromAlias_() {
+  return clean_(getScriptProperty_('RELO_GUIDE_FROM_ALIAS') || ALERT_FROM_ALIAS);
+}
+
+function getScriptProperty_(name) {
+  try {
+    return PropertiesService.getScriptProperties().getProperty(name) || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function buildReloGuideEmailHtml_(lead, raw) {
+  const html = [
+    '<html>',
+    '  <head>',
+    '    <meta charset="UTF-8" />',
+    '    <meta content="width=device-width, initial-scale=1.0" name="viewport" />',
+    '    <title>Your Raleigh Relocation Guide</title>',
+    '  </head>',
+    '',
+    '  <body style="margin:0; padding:0; background-color:#f4f1e9; font-family:Arial, Helvetica, sans-serif; color:#1f2a24;">',
+    '    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#f4f1e9; margin:0; padding:0;">',
+    '      <tr>',
+    '        <td align="center" style="padding:34px 16px;">',
+    '          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:1080px; background-color:#ffffff; border-radius:0; overflow:hidden;">',
+    '',
+    '            <tr>',
+    '              <td style="padding:52px 42px 48px 42px; background-color:#ffffff;">',
+    '                <p style="margin:0 0 34px 0; text-align:center;">',
+    '                  <a href="https://raleighncguide.com/" target="_blank" style="display:inline-block; text-decoration:none;">',
+    '                    <img src="https://raleighncguide.com/assets/images/email/living-in-raleigh-team-email-header.png" width="150" alt="Living in Raleigh Team" style="display:block; width:150px; max-width:100%; height:auto; border:0; margin:0 auto;" />',
+    '                  </a>',
+    '                </p>',
+    '',
+    '                <p style="margin:0 0 28px 0; font-size:18px; line-height:1.65; color:#1f2a24;">',
+    '                  Thanks for your interest in our 2026 Raleigh Relocation Guide. As promised, here it is!',
+    '                </p>',
+    '',
+    '                <p style="margin:0 0 48px 0; text-align:center;">',
+    '                  <a href="https://raleighncguide.com/consult/" target="_blank" style="display:inline-block; background-color:#c79b2d; color:#ffffff; font-size:18px; line-height:1.2; font-weight:700; text-transform:uppercase; text-decoration:none; padding:17px 34px; border-radius:14px;">',
+    '                    BOOK YOUR RELOCATION CALL TODAY',
+    '                  </a>',
+    '                </p>',
+    '',
+    '                <p style="margin:0 0 16px 0; font-size:18px; line-height:1.65; color:#1f2a24; font-style:italic;">',
+    '                  Best,',
+    '                </p>',
+    '',
+    '                <p style="margin:0 0 8px 0; font-size:32px; line-height:1.15; color:#1f2a24; font-family:\'Brush Script MT\', \'Segoe Script\', \'Snell Roundhand\', cursive; font-weight:700;">',
+    '                  The Living in Raleigh Team',
+    '                </p>',
+    '',
+    '                <p style="margin:0 0 14px 0; font-size:15px; line-height:1.55; color:#1f2a24;">',
+    '                  raleighncguide.com | <a href="tel:+19197377896" style="color:#1f2a24; text-decoration:none;">919-737-7896</a>',
+    '                </p>',
+    '',
+    '                <p style="margin:10px 0 0 0; font-size:12px; line-height:1.65; color:#4b5c52; font-style:italic;">',
+    '                  You received this email because you requested a free copy of the 2026 Raleigh Relocation Guide on our website.',
+    '                </p>',
+    '              </td>',
+    '            </tr>',
+    '',
+    '          </table>',
+    '        </td>',
+    '      </tr>',
+    '    </table>',
+    '  </body>',
+    '</html>'
+  ].join('\n');
+
+  return html;
+}
+
+function isReloGuideLead_(lead) {
+  if (!lead || typeof lead !== 'object') {
+    return false;
+  }
+  const leadType = clean_(lead.lead_type).toLowerCase();
+  const sourcePage = clean_(lead.source_page).toLowerCase();
+  const sourceKey = clean_(lead.source_key).toLowerCase();
+  return leadType === 'relo_guide' ||
+    sourcePage.indexOf('/2026/') === 0 ||
+    sourcePage.indexOf('/2026') === 0 ||
+    sourceKey.indexOf('relo_guide') !== -1 ||
+    clean_(lead.source).toLowerCase() === RELO_GUIDE_SOURCE_LABEL.toLowerCase();
 }
 
 function sendTestLeadAlertEmail() {

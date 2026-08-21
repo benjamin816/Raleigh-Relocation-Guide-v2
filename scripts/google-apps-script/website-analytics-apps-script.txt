@@ -1,4 +1,5 @@
 const CONFIG = {
+  SPREADSHEET_ID: "1onTitTejjU9UxZP6TW5pFj0TFdFq0cewPPIS52cieRE",
   TZ: Session.getScriptTimeZone() || "America/New_York",
   MAX_EVENTS_FOR_SUMMARY: 50000,
   MONTHLY_EMAIL: {
@@ -103,7 +104,12 @@ const RAW_INDEX = makeIndex_(CONFIG.RAW_HEADERS);
 
 function doGet(e) {
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = getAnalyticsSpreadsheet_();
+
+    if (e && e.parameter && e.parameter.diagnose === "1") {
+      return jsonResponse_(runWebsiteAnalyticsDiagnostics(e.parameter.payload || ""));
+    }
+
     ensureSheets_(ss);
 
     if (e && e.parameter && e.parameter.refresh === "1") {
@@ -125,48 +131,88 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  const lock = LockService.getScriptLock();
+  let lockAcquired = false;
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    lock.waitLock(10000);
+    lockAcquired = true;
+
+    const ss = getAnalyticsSpreadsheet_();
     ensureSheets_(ss);
+    const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
+    if (!rawSheet) {
+      throw new Error('Missing sheet: "' + CONFIG.SHEETS.RAW + '"');
+    }
+    if (rawSheet.getLastRow() === 0) {
+      rawSheet.getRange(1, 1, 1, CONFIG.RAW_HEADERS.length).setValues([CONFIG.RAW_HEADERS]);
+      rawSheet.setFrozenRows(1);
+    }
 
     const payload = parseJsonBody_(e);
     const events = normalizeEvents_(payload);
+    const payloadSummary = summarizeAnalyticsPayload_(payload, events);
 
     if (!events.length) {
       return jsonResponse_({ ok: false, message: "No events in payload." });
     }
 
-    const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
     appendRawEvents_(rawSheet, events);
+    SpreadsheetApp.flush();
     rebuildSummaries_(ss);
+
+    const successReport = {
+      ok: true,
+      phase: "doPost_success",
+      message: "Appended raw events and rebuilt summary tabs successfully.",
+      received_events: events.length,
+      payload_summary: payloadSummary
+    };
+    Logger.log(JSON.stringify(successReport, null, 2));
+    console.log(JSON.stringify(successReport));
 
     return jsonResponse_({
       ok: true,
       received_events: events.length
     });
   } catch (error) {
+    const errorReport = {
+      ok: false,
+      phase: "doPost_error",
+      message: "Website analytics ingestion failed.",
+      error: String(error && error.message ? error.message : error),
+      stack: String(error && error.stack ? error.stack : ""),
+      payload_summary: summarizeAnalyticsPayload_(e ? parseJsonBody_(e) : {}, [])
+    };
+    Logger.log(JSON.stringify(errorReport, null, 2));
+    console.error(JSON.stringify(errorReport));
     return jsonResponse_({
       ok: false,
       error: String(error && error.stack ? error.stack : error)
     });
+  } finally {
+    if (lockAcquired) {
+      lock.releaseLock();
+    }
   }
 }
 
 function setupAnalyticsSheets() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAnalyticsSpreadsheet_();
   ensureSheets_(ss);
+  SpreadsheetApp.flush();
   rebuildSummaries_(ss);
   ensureMonthlyDigestTrigger_();
 }
 
 function refreshAnalyticsSummaries() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAnalyticsSpreadsheet_();
   ensureSheets_(ss);
+  SpreadsheetApp.flush();
   rebuildSummaries_(ss);
 }
 
 function sendMonthlyAnalyticsEmail() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAnalyticsSpreadsheet_();
   ensureSheets_(ss);
 
   const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
@@ -203,7 +249,7 @@ function sendMonthlyAnalyticsEmailNow() {
 }
 
 function sendTestMonthlyAndWeeklyDigestEmailsNow() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = getAnalyticsSpreadsheet_();
   ensureSheets_(ss);
 
   const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
@@ -342,8 +388,9 @@ function appendRawEvents_(sheet, events) {
     ];
   });
 
-  const startRow = sheet.getLastRow() + 1;
-  sheet.getRange(startRow, 1, rows.length, CONFIG.RAW_HEADERS.length).setValues(rows);
+  const rowsToWrite = rows.slice().reverse();
+  sheet.insertRowsBefore(2, rowsToWrite.length);
+  sheet.getRange(2, 1, rowsToWrite.length, CONFIG.RAW_HEADERS.length).setValues(rowsToWrite);
 }
 
 function rebuildSummaries_(ss) {
@@ -384,14 +431,16 @@ function readRawEvents_(sheet) {
 
   const totalDataRows = lastRow - 1;
   const readRows = Math.min(totalDataRows, CONFIG.MAX_EVENTS_FOR_SUMMARY);
-  const startRow = lastRow - readRows + 1;
+  const startRow = 2;
   const values = sheet.getRange(startRow, 1, readRows, CONFIG.RAW_HEADERS.length).getValues();
 
   return values.map(function (row) {
+    const eventDateKey = normalizeDateKey_(row[RAW_INDEX.event_date]);
     return {
       received_at: row[RAW_INDEX.received_at],
       event_time: asString_(row[RAW_INDEX.event_time]),
-      event_date: asString_(row[RAW_INDEX.event_date]),
+      event_date: eventDateKey,
+      event_date_key: eventDateKey,
       event_name: asString_(row[RAW_INDEX.event_name]),
       session_id: asString_(row[RAW_INDEX.session_id]),
       page_view_id: asString_(row[RAW_INDEX.page_view_id]),
@@ -416,18 +465,18 @@ function buildPageMetricRows_(events) {
   const exitSeen = new Set();
 
   events.forEach(function (ev) {
-    const date = asString_(ev.event_date);
-    if (!date) {
+    const dateKey = normalizeDateKey_(ev.event_date_key || ev.event_date);
+    if (!dateKey) {
       return;
     }
 
     const pagePath = asString_(ev.page_path) || "(unknown)";
     const sessionId = asString_(ev.session_id);
-    const key = date + "|" + pagePath;
+    const key = dateKey + "|" + pagePath;
 
     const agg = getOrCreate_(pageMap, key, function () {
       return {
-        date: date,
+        date_key: dateKey,
         page_path: pagePath,
         sessions: new Set(),
         page_views: 0,
@@ -484,7 +533,7 @@ function buildPageMetricRows_(events) {
     }
 
     if (ev.event_name === "page_exit" && sessionId) {
-      const exitKey = date + "|" + pagePath + "|" + sessionId;
+      const exitKey = dateKey + "|" + pagePath + "|" + sessionId;
       if (!exitSeen.has(exitKey)) {
         exitSeen.add(exitKey);
         agg.exit_sessions.add(sessionId);
@@ -502,7 +551,7 @@ function buildPageMetricRows_(events) {
     const avgPageSeconds = exitCount ? round_(agg.page_time_ms_total / exitCount / 1000, 2) : 0;
 
     return [
-      agg.date,
+      dateKeyToDate_(agg.date_key),
       agg.page_path,
       sessionCount,
       agg.page_views,
@@ -520,10 +569,12 @@ function buildPageMetricRows_(events) {
   });
 
   rows.sort(function (a, b) {
-    if (a[0] === b[0]) {
-      return String(a[1]).localeCompare(String(b[1]));
+    const dateA = Date.parse(normalizeDateKey_(a[0]));
+    const dateB = Date.parse(normalizeDateKey_(b[0]));
+    if (dateA !== dateB) {
+      return dateB - dateA;
     }
-    return a[0] > b[0] ? -1 : 1;
+    return String(a[1]).localeCompare(String(b[1]));
   });
 
   return rows;
@@ -534,8 +585,8 @@ function buildPopupFunnelRows_(events) {
   const stepMap = new Map();
 
   events.forEach(function (ev) {
-    const date = asString_(ev.event_date);
-    if (!date) {
+    const dateKey = normalizeDateKey_(ev.event_date_key || ev.event_date);
+    if (!dateKey) {
       return;
     }
 
@@ -546,11 +597,11 @@ function buildPopupFunnelRows_(events) {
 
     const popupVariant = asString_(ev.popup_variant) || "unknown";
     const sessionId = asString_(ev.session_id);
-    const groupKey = date + "|" + popupLeadType + "|" + popupVariant;
+    const groupKey = dateKey + "|" + popupLeadType + "|" + popupVariant;
 
     const group = getOrCreate_(groupMap, groupKey, function () {
       return {
-        date: date,
+        date_key: dateKey,
         popup_lead_type: popupLeadType,
         popup_variant: popupVariant,
         started_sessions: new Set(),
@@ -579,7 +630,7 @@ function buildPopupFunnelRows_(events) {
 
     const stepAgg = getOrCreate_(stepMap, stepAggKey, function () {
       return {
-        date: date,
+        date: dateKey,
         popup_lead_type: popupLeadType,
         popup_variant: popupVariant,
         step_number: stepNumber,
@@ -610,7 +661,7 @@ function buildPopupFunnelRows_(events) {
   });
 
   const rows = Array.from(stepMap.values()).map(function (stepAgg) {
-    const groupKey = stepAgg.date + "|" + stepAgg.popup_lead_type + "|" + stepAgg.popup_variant;
+    const groupKey = stepAgg.date_key + "|" + stepAgg.popup_lead_type + "|" + stepAgg.popup_variant;
     const group = groupMap.get(groupKey);
 
     const startedCount = group ? group.started_sessions.size : 0;
@@ -620,7 +671,7 @@ function buildPopupFunnelRows_(events) {
     const submitSuccessCount = group ? group.submit_success_sessions.size : 0;
 
     return [
-      stepAgg.date,
+      dateKeyToDate_(stepAgg.date_key),
       stepAgg.popup_lead_type,
       stepAgg.popup_variant,
       stepAgg.step_number,
@@ -640,8 +691,10 @@ function buildPopupFunnelRows_(events) {
   });
 
   rows.sort(function (a, b) {
-    if (a[0] !== b[0]) {
-      return a[0] > b[0] ? -1 : 1;
+    const dateA = Date.parse(normalizeDateKey_(a[0]));
+    const dateB = Date.parse(normalizeDateKey_(b[0]));
+    if (dateA !== dateB) {
+      return dateB - dateA;
     }
     if (a[1] !== b[1]) {
       return String(a[1]).localeCompare(String(b[1]));
@@ -660,15 +713,15 @@ function buildDailyOverviewRows_(events) {
   const exitSeen = new Set();
 
   events.forEach(function (ev) {
-    const date = asString_(ev.event_date);
-    if (!date) {
+    const dateKey = normalizeDateKey_(ev.event_date_key || ev.event_date);
+    if (!dateKey) {
       return;
     }
 
     const sessionId = asString_(ev.session_id);
-    const agg = getOrCreate_(dayMap, date, function () {
+    const agg = getOrCreate_(dayMap, dateKey, function () {
       return {
-        date: date,
+        date_key: dateKey,
         sessions: new Set(),
         popup_impressions: new Set(),
         popup_interactions: new Set(),
@@ -721,7 +774,7 @@ function buildDailyOverviewRows_(events) {
 
     if (ev.event_name === "page_exit" && sessionId) {
       const pagePath = asString_(ev.page_path) || "(unknown)";
-      const exitKey = date + "|" + pagePath + "|" + sessionId;
+      const exitKey = dateKey + "|" + pagePath + "|" + sessionId;
       if (!exitSeen.has(exitKey)) {
         exitSeen.add(exitKey);
         agg.exit_sessions.add(sessionId);
@@ -739,7 +792,7 @@ function buildDailyOverviewRows_(events) {
     const avgTimeOnSiteSeconds = exitCount ? round_(agg.page_time_ms_total / exitCount / 1000, 2) : 0;
 
     return [
-      agg.date,
+      dateKeyToDate_(agg.date_key),
       sessionCount,
       avgEngagedSeconds,
       avgTimeOnSiteSeconds,
@@ -755,7 +808,9 @@ function buildDailyOverviewRows_(events) {
   });
 
   rows.sort(function (a, b) {
-    return a[0] > b[0] ? -1 : 1;
+    const dateA = Date.parse(normalizeDateKey_(a[0]));
+    const dateB = Date.parse(normalizeDateKey_(b[0]));
+    return dateB - dateA;
   });
 
   return rows;
@@ -932,7 +987,7 @@ function buildMonthlySummary_(events, range) {
 
     if (ev.event_name === "page_exit" && sessionId) {
       const pagePath = asString_(ev.page_path) || "(unknown)";
-      const dateKey = asString_(ev.event_date);
+      const dateKey = normalizeDateKey_(ev.event_date_key || ev.event_date);
       const dedupeKey = dateKey + "|" + pagePath + "|" + sessionId;
       if (!exitSeen.has(dedupeKey)) {
         exitSeen.add(dedupeKey);
@@ -1165,7 +1220,7 @@ function getLastCompleteWeekWindow_() {
 
 function filterEventsByDateRange_(events, startDateKey, endDateKey) {
   return events.filter(function (ev) {
-    const dateKey = asString_(ev.event_date);
+    const dateKey = normalizeDateKey_(ev.event_date_key || ev.event_date);
     return dateKey && dateKey >= startDateKey && dateKey <= endDateKey;
   });
 }
@@ -1235,6 +1290,77 @@ function writeTable_(sheet, headers, rows) {
   }
 
   sheet.setFrozenRows(1);
+}
+
+function runWebsiteAnalyticsDiagnostics(rawPayloadText) {
+  const ss = getAnalyticsSpreadsheet_();
+
+  const rawPayload = asString_(rawPayloadText);
+  const payload = rawPayload ? parseJsonSafely_(rawPayload) : buildAnalyticsDiagnosticSamplePayload_();
+  const events = normalizeEvents_(payload);
+  const summary = summarizeAnalyticsPayload_(payload, events);
+  const rawSheet = ss.getSheetByName(CONFIG.SHEETS.RAW);
+  const report = {
+    ok: true,
+    message: "Diagnostics completed.",
+    payload_summary: summary,
+    event_count: events.length,
+    sheet_name: CONFIG.SHEETS.RAW,
+    raw_sheet_exists: Boolean(rawSheet),
+    raw_sheet_last_row: rawSheet ? rawSheet.getLastRow() : -1
+  };
+
+  try {
+    if (!events.length) {
+      throw new Error("Payload normalized to zero events.");
+    }
+
+    if (!rawSheet) {
+      throw new Error('Missing sheet: "' + CONFIG.SHEETS.RAW + '"');
+    }
+
+    report.sample_event_name = asString_(events[0].event_name);
+    report.sample_session_id = asString_(events[0].session_id);
+    report.can_append = true;
+    report.can_rebuild = true;
+    report.message = "Full diagnostic passed. No issues found.";
+    Logger.log(JSON.stringify(report, null, 2));
+    console.log(JSON.stringify(report));
+    return report;
+  } catch (error) {
+    const errorReport = {
+      ok: false,
+      message: "Diagnostics failed.",
+      error: String(error && error.message ? error.message : error),
+      stack: String(error && error.stack ? error.stack : ""),
+      payload_summary: summary,
+      event_count: events.length
+    };
+    Logger.log(JSON.stringify(errorReport, null, 2));
+    console.error(JSON.stringify(errorReport));
+    return errorReport;
+  }
+}
+
+function buildAnalyticsDiagnosticSamplePayload_() {
+  return {
+    source: "website_analytics",
+    sent_at: new Date().toISOString(),
+    session_id: "diagnostic_session",
+    page_view_id: "diagnostic_page_view",
+    events: [
+      {
+        event_name: "page_view",
+        event_time: new Date().toISOString(),
+        session_id: "diagnostic_session",
+        page_view_id: "diagnostic_page_view",
+        page_path: "/diagnostic/",
+        page_url: "https://example.com/diagnostic/",
+        page_title: "Diagnostics",
+        page_type: "diagnostic"
+      }
+    ]
+  };
 }
 
 function normalizeEvents_(payload) {
@@ -1391,6 +1517,43 @@ function asString_(value) {
   return String(value).trim();
 }
 
+function normalizeDateKey_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return Utilities.formatDate(value, CONFIG.TZ, "yyyy-MM-dd");
+  }
+
+  const text = asString_(value);
+  if (!text) {
+    return "";
+  }
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(text)) {
+    return text;
+  }
+
+  const parsed = new Date(text);
+  if (!isNaN(parsed.getTime())) {
+    return Utilities.formatDate(parsed, CONFIG.TZ, "yyyy-MM-dd");
+  }
+
+  return text;
+}
+
+function dateKeyToDate_(dateKey) {
+  const normalized = normalizeDateKey_(dateKey);
+  if (!normalized) {
+    return new Date();
+  }
+
+  const parts = normalized.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (!parts) {
+    const fallback = new Date(normalized);
+    return isNaN(fallback.getTime()) ? new Date() : fallback;
+  }
+
+  return new Date(Number(parts[1]), Number(parts[2]) - 1, Number(parts[3]));
+}
+
 function safeJsonString_(obj) {
   try {
     return JSON.stringify(obj);
@@ -1399,11 +1562,41 @@ function safeJsonString_(obj) {
   }
 }
 
-function authorizeWebsiteAnalyticsScriptScopes() {
-  const active = SpreadsheetApp.getActiveSpreadsheet();
-  if (active) {
-    active.getName();
+function parseJsonSafely_(text) {
+  try {
+    return JSON.parse(String(text || ""));
+  } catch (error) {
+    return {};
   }
+}
+
+function summarizeAnalyticsPayload_(payload, events) {
+  const payloadKeys = payload && typeof payload === "object" ? Object.keys(payload) : [];
+  const firstEvent = Array.isArray(events) && events.length ? events[0] : null;
+  return {
+    payload_keys: payloadKeys.slice(0, 20),
+    payload_type: Array.isArray(payload) ? "array" : typeof payload,
+    has_events_array: Boolean(payload && Array.isArray(payload.events)),
+    normalized_event_count: Array.isArray(events) ? events.length : 0,
+    first_event_name: firstEvent ? asString_(firstEvent.event_name) : "",
+    first_session_id: firstEvent ? asString_(firstEvent.session_id) : "",
+    first_page_view_id: firstEvent ? asString_(firstEvent.page_view_id) : ""
+  };
+}
+
+function authorizeWebsiteAnalyticsScriptScopes() {
+  getAnalyticsSpreadsheet_().getName();
   MailApp.getRemainingDailyQuota();
   return "Authorization complete. Re-deploy web app after running this once.";
+}
+
+function getAnalyticsSpreadsheet_() {
+  if (CONFIG.SPREADSHEET_ID) {
+    return SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  }
+  const active = SpreadsheetApp.getActiveSpreadsheet();
+  if (!active) {
+    throw new Error("Analytics spreadsheet is unavailable. Set CONFIG.SPREADSHEET_ID.");
+  }
+  return active;
 }

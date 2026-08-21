@@ -1,0 +1,1621 @@
+const BOLDTRAIL_API_BASE = 'https://api.kvcore.com/v2/public';
+const BOLDTRAIL_NEWSLETTER_TAG = 'monthly_newsletter';
+const BOLDTRAIL_NO_PHONE_TAG = '30_day_blitz_no_phone';
+const BOLDTRAIL_RELO_TAG = '30_day_blitz_relo';
+const BOLDTRAIL_MIN_AGE_DAYS = 0;
+const BOLDTRAIL_MAX_ROWS_PER_RUN = 100;
+const BOLDTRAIL_SOURCE_TAG_BACKFILL_ROWS_PER_SHEET = 25;
+const BOLDTRAIL_TRIGGER_MINUTES = 5;
+const BOLDTRAIL_PROSPECT_STATUS = 7;
+const BOLDTRAIL_LEAD_STATUS = 0;
+const BOLDTRAIL_KIT_MIGRATION_COMPLETE_PROPERTY = 'BOLDTRAIL_KIT_MIGRATION_COMPLETE';
+const BOLDTRAIL_SOURCE_TAG_BACKFILL_COMPLETE_PROPERTY = 'BOLDTRAIL_SOURCE_TAG_BACKFILL_COMPLETE';
+const BOLDTRAIL_SOURCE_TAG_BACKFILL_CURSOR_PROPERTY = 'BOLDTRAIL_SOURCE_TAG_BACKFILL_CURSOR';
+const KIT_LEADS_SHEET_NAME = '2026 Relocation Guide - Kit';
+const WEBSITE_LEADS_SHEET_NAME = 'Website Direct Leads';
+const APPOINTMENTS_LEADS_SHEET_NAME = 'Appointments Booked Directly';
+
+var boldTrailContactCache_ = {};
+var boldTrailContactPhoneCache_ = {};
+
+function doGet() {
+  return json_({ ok: true, message: 'BoldTrail sync endpoint is live.' });
+}
+
+function syncUnsentWebsiteLeadsToBoldTrail() {
+  const ss = SpreadsheetApp.openById(getBoldTrailSpreadsheetId_());
+  const summaries = [];
+
+  const appointmentSummary = processAppointmentLeadSheet_(ss, APPOINTMENTS_LEADS_SHEET_NAME, BOLDTRAIL_MAX_ROWS_PER_RUN);
+  summaries.push(appointmentSummary);
+
+  const websiteSummary = processWebsiteLeadSheet_(ss, WEBSITE_LEADS_SHEET_NAME, BOLDTRAIL_MAX_ROWS_PER_RUN);
+  summaries.push(websiteSummary);
+
+  let totalRows = 0;
+  let totalFound = 0;
+  let totalProcessed = 0;
+  let totalSynced = 0;
+  let totalFailed = 0;
+
+  summaries.forEach(function (summary) {
+    totalRows += summary.total_rows || 0;
+    totalFound += summary.found_rows || 0;
+    totalProcessed += summary.pending_rows || 0;
+    totalSynced += summary.synced_count || 0;
+    totalFailed += summary.failed_count || 0;
+    Logger.log(summary.sheet_name + ': ' + summary.found_rows + ' found, ' + summary.pending_rows + ' processed out of ' + summary.scan_limit + ' limit. Next run in ' + BOLDTRAIL_TRIGGER_MINUTES + ' minutes.');
+  });
+
+  Logger.log(
+    totalFound + ' found, ' +
+    totalProcessed + ' processed with a ' +
+    BOLDTRAIL_MAX_ROWS_PER_RUN + '-row per-sheet limit. Next run in ' +
+    BOLDTRAIL_TRIGGER_MINUTES + ' minutes.'
+  );
+
+  return {
+    ok: true,
+    total_rows: totalRows,
+    found_rows: totalFound,
+    pending_rows: totalProcessed,
+    synced_count: totalSynced,
+    failed_count: totalFailed,
+    scan_limit_per_sheet: BOLDTRAIL_MAX_ROWS_PER_RUN,
+    next_run_minutes: BOLDTRAIL_TRIGGER_MINUTES
+  };
+}
+
+function syncLegacyKitLeadsToBoldTrailOnce() {
+  const properties = PropertiesService.getScriptProperties();
+  if (clean_(properties.getProperty(BOLDTRAIL_KIT_MIGRATION_COMPLETE_PROPERTY)).toLowerCase() === 'true') {
+    return {
+      ok: true,
+      already_complete: true,
+      message: 'The one-time Kit-to-BoldTrail migration has already completed.'
+    };
+  }
+
+  const ss = SpreadsheetApp.openById(getBoldTrailSpreadsheetId_());
+  const summary = processKitLeadSheet_(ss, KIT_LEADS_SHEET_NAME, BOLDTRAIL_MAX_ROWS_PER_RUN);
+  const reachedRunLimit = (summary.pending_rows || 0) >= BOLDTRAIL_MAX_ROWS_PER_RUN;
+  const migrationComplete = !reachedRunLimit && (summary.failed_count || 0) === 0;
+
+  if (migrationComplete) {
+    properties.setProperty(BOLDTRAIL_KIT_MIGRATION_COMPLETE_PROPERTY, 'true');
+  }
+
+  return Object.assign({}, summary, {
+    ok: migrationComplete,
+    migration_complete: migrationComplete,
+    run_again_required: !migrationComplete,
+    message: migrationComplete
+      ? 'The one-time Kit-to-BoldTrail migration is complete. The scheduled trigger will not scan the Kit tab.'
+      : 'The Kit migration has more rows or failures remaining. Run this function again after reviewing the failures.'
+  });
+}
+
+function backfillBoldTrailLeadSourceHashtagsOnce() {
+  const properties = PropertiesService.getScriptProperties();
+  if (clean_(properties.getProperty(BOLDTRAIL_SOURCE_TAG_BACKFILL_COMPLETE_PROPERTY)).toLowerCase() === 'true') {
+    return {
+      ok: true,
+      already_complete: true,
+      message: 'The one-time BoldTrail lead-source hashtag backfill has already completed.'
+    };
+  }
+
+  const ss = SpreadsheetApp.openById(getBoldTrailSpreadsheetId_());
+  let cursors = {};
+  try {
+    cursors = JSON.parse(properties.getProperty(BOLDTRAIL_SOURCE_TAG_BACKFILL_CURSOR_PROPERTY) || '{}');
+  } catch (_) {
+    cursors = {};
+  }
+  const summaries = [
+    backfillBoldTrailSourceTagsForSheet_(ss, KIT_LEADS_SHEET_NAME, 'kit', cursors[KIT_LEADS_SHEET_NAME] || 2, BOLDTRAIL_SOURCE_TAG_BACKFILL_ROWS_PER_SHEET),
+    backfillBoldTrailSourceTagsForSheet_(ss, WEBSITE_LEADS_SHEET_NAME, 'website', cursors[WEBSITE_LEADS_SHEET_NAME] || 2, BOLDTRAIL_SOURCE_TAG_BACKFILL_ROWS_PER_SHEET),
+    backfillBoldTrailSourceTagsForSheet_(ss, APPOINTMENTS_LEADS_SHEET_NAME, 'appointment', cursors[APPOINTMENTS_LEADS_SHEET_NAME] || 2, BOLDTRAIL_SOURCE_TAG_BACKFILL_ROWS_PER_SHEET)
+  ];
+  const failedCount = summaries.reduce(function (total, summary) {
+    return total + (summary.failed_count || 0);
+  }, 0);
+  const hasMore = summaries.some(function (summary) { return Boolean(summary.has_more); });
+  const complete = failedCount === 0 && !hasMore;
+
+  summaries.forEach(function (summary) {
+    if (summary.has_more) {
+      cursors[summary.sheet_name] = summary.next_row;
+    } else {
+      delete cursors[summary.sheet_name];
+    }
+  });
+
+  if (complete) {
+    properties.setProperty(BOLDTRAIL_SOURCE_TAG_BACKFILL_COMPLETE_PROPERTY, 'true');
+    properties.deleteProperty(BOLDTRAIL_SOURCE_TAG_BACKFILL_CURSOR_PROPERTY);
+  } else {
+    properties.setProperty(BOLDTRAIL_SOURCE_TAG_BACKFILL_CURSOR_PROPERTY, JSON.stringify(cursors));
+  }
+
+  return {
+    ok: complete,
+    backfill_complete: complete,
+    run_again_required: !complete,
+    failed_count: failedCount,
+    summaries: summaries,
+    message: complete
+      ? 'The one-time BoldTrail lead-source hashtag backfill is complete.'
+      : 'The source-tag backfill has more rows or failures remaining. Review the summary and run it again.'
+  };
+}
+
+function backfillBoldTrailSourceTagsForSheet_(ss, sheetName, sheetType, startRow, scanLimit) {
+  const sheet = requireSheetByName_(ss, sheetName);
+  const indexes = headerIndexes_(sheet);
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  const limit = Math.max(0, Math.min(Number(scanLimit) || 0, BOLDTRAIL_MAX_ROWS_PER_RUN));
+  const availableRows = Math.max(0, lastRow - 1);
+  let scanned = 0;
+  let processed = 0;
+  let synced = 0;
+  let failed = 0;
+  let skipped = 0;
+  let retryRow = 0;
+
+  let rowNumber = Math.max(2, Number(startRow) || 2);
+  for (; rowNumber <= lastRow && scanned < limit; rowNumber++) {
+    scanned += 1;
+    const row = sheet.getRange(rowNumber, 1, 1, lastCol).getValues()[0];
+    let context = null;
+    if (sheetType === 'kit') {
+      context = kitLeadContextFromSheetRow_(row, indexes);
+    } else if (sheetType === 'appointment') {
+      context = appointmentLeadContextFromSheetRow_(row, indexes);
+    } else {
+      context = leadContextFromSheetRow_(row, indexes);
+    }
+
+    const lead = context && context.lead;
+    if (!lead || !hasText_(lead.email)) {
+      skipped += 1;
+      continue;
+    }
+
+    const isReloGuideLead = sheetType === 'kit' || isReloGuideLead_(lead);
+    const tagName = isReloGuideLead
+      ? BOLDTRAIL_RELO_TAG
+      : (sheetType === 'appointment'
+        ? BOLDTRAIL_NEWSLETTER_TAG
+        : (leadHasPhoneNumber_(lead) ? BOLDTRAIL_NEWSLETTER_TAG : BOLDTRAIL_NO_PHONE_TAG));
+    const result = syncLeadToBoldTrail_(lead, tagName, {
+      forceTag: isReloGuideLead,
+      preferEmailLookup: true
+    });
+    processed += 1;
+
+    if (result.status === 'synced') {
+      synced += 1;
+    } else {
+      failed += 1;
+      retryRow = rowNumber;
+      break;
+    }
+  }
+
+  return {
+    sheet_name: sheetName,
+    total_rows: availableRows,
+    scanned_rows: scanned,
+    processed_rows: processed,
+    synced_count: synced,
+    failed_count: failed,
+    skipped_count: skipped,
+    scan_limit: limit,
+    next_row: retryRow || rowNumber,
+    has_more: Boolean(retryRow) || rowNumber <= lastRow
+  };
+}
+
+function syncLeadToBoldTrail_(lead, tagName, options) {
+  try {
+    if (!lead || typeof lead !== 'object') {
+      return { status: 'skipped_invalid_lead', error: 'Lead payload was not a valid object.' };
+    }
+
+    const email = clean_(lead.email || lead.home_eval_email);
+    const phoneDigits = phoneFromFullPhone_(lead.phone || lead.home_eval_phone);
+    if (!email) {
+      return { status: 'skipped_no_email', error: 'No email address provided for BoldTrail sync.' };
+    }
+
+    const apiToken = getBoldTrailApiKey_();
+    if (!apiToken) {
+      return { status: 'skipped_no_api_key', error: 'BOLDTRAIL_API_KEY is not configured in Script properties.' };
+    }
+
+    let existingContacts = [];
+    if (options && options.preferEmailLookup) {
+      existingContacts = boldTrailFindContactsByEmail_(apiToken, email);
+      if (!existingContacts.length && phoneDigits) {
+        existingContacts = boldTrailFindContactsByPhone_(apiToken, phoneDigits);
+      }
+    } else {
+      existingContacts = boldTrailFindMatchingContacts_(apiToken, email, phoneDigits);
+    }
+    const existingContact = existingContacts.length ? existingContacts[0] : null;
+    const existingHasPhone = existingContacts.some(function (contact) {
+      return boldTrailContactHasPhone_(contact);
+    });
+    const incomingHasPhone = leadHasPhoneNumber_(lead);
+    const hasPhone = incomingHasPhone || existingHasPhone;
+    const forceTag = Boolean(options && options.forceTag);
+    const resolvedTag = forceTag ? clean_(tagName) : (clean_(tagName) || boldTrailTagForLead_(lead));
+    const resolvedTags = boldTrailUniqueTagNames_([resolvedTag].concat(boldTrailSourceTagsForLead_(lead)));
+    const finalStatus = hasPhone ? BOLDTRAIL_PROSPECT_STATUS : BOLDTRAIL_LEAD_STATUS;
+    const contactPayload = boldTrailContactPayload_(lead, existingContact, hasPhone, finalStatus, incomingHasPhone);
+    const targetContacts = existingContacts.slice();
+    let createdContact = null;
+
+    if (!targetContacts.length) {
+      createdContact = boldTrailCreateContact_(apiToken, contactPayload);
+      delete boldTrailContactCache_[email.toLowerCase()];
+      if (phoneDigits) {
+        delete boldTrailContactPhoneCache_[phoneDigits];
+      }
+      targetContacts.push.apply(targetContacts, boldTrailFindMatchingContacts_(apiToken, email, phoneDigits));
+    }
+
+    if (!targetContacts.length && createdContact && createdContact.id) {
+      targetContacts.push(createdContact);
+    }
+
+    const uniqueContacts = boldTrailUniqueContacts_(targetContacts);
+    if (!uniqueContacts.length) {
+      throw new Error('BoldTrail contact ID could not be resolved for ' + email + '.');
+    }
+
+    const contactStatePayload = {
+      status: finalStatus,
+      phone_on: hasPhone ? 1 : 0,
+      text_on: hasPhone ? 1 : 0,
+      email_optin: 1
+    };
+    if (incomingHasPhone) {
+      contactStatePayload.tcpa_optin_date = boldTrailNowUtcString_();
+    }
+
+    uniqueContacts.forEach(function (contact) {
+      const contactId = String(contact.id || '');
+      if (!contactId) {
+        return;
+      }
+      boldTrailUpdateContact_(apiToken, contactId, Object.assign({}, contactPayload, contactStatePayload));
+      boldTrailEnsureContactStatus_(apiToken, contactId, finalStatus, contactPayload, contactStatePayload);
+      resolvedTags.forEach(function (resolvedTagName) {
+        boldTrailAddHashtag_(apiToken, contactId, resolvedTagName);
+      });
+    });
+
+    return {
+      status: 'synced',
+      error: '',
+      route: 'boldtrail',
+      contact_id: String(uniqueContacts[0].id || ''),
+      tags: resolvedTags
+    };
+  } catch (err) {
+    return {
+      status: 'failed',
+      error: clean_(err && err.message ? err.message : err),
+      route: '',
+      contact_id: ''
+    };
+  }
+}
+
+function processKitLeadSheet_(ss, sheetName, scanLimit) {
+  const sheet = requireSheetByName_(ss, sheetName);
+  ensureLeadSheetBoldTrailHeaders_(sheet);
+
+  const indexes = headerIndexes_(sheet);
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  const limit = Math.max(0, Math.min(Number(scanLimit) || 0, BOLDTRAIL_MAX_ROWS_PER_RUN));
+
+  let found = 0;
+  let processed = 0;
+  let synced = 0;
+  let failed = 0;
+
+  for (let rowNumber = 2; rowNumber <= lastRow && processed < limit; rowNumber++) {
+    const row = sheet.getRange(rowNumber, 1, 1, lastCol).getValues()[0];
+    const syncStatus = clean_(row[indexes.boldtrail_sync_status]).toLowerCase();
+    if (syncStatus === 'synced' || syncStatus === 'skipped_no_email') {
+      continue;
+    }
+
+    const context = kitLeadContextFromSheetRow_(row, indexes);
+    const lead = context.lead;
+    if (!lead) {
+      continue;
+    }
+
+    if (!hasText_(lead.email)) {
+      updateLeadSheetBoldTrailStatus_(sheet, rowNumber, 'skipped_no_email', '', '', 'No email address provided for BoldTrail sync.');
+      continue;
+    }
+
+    if (!isEligibleForBoldTrail_(lead)) {
+      if (syncStatus !== 'waiting_1_day') {
+        updateLeadSheetBoldTrailStatus_(sheet, rowNumber, 'waiting_1_day', '', '', 'Waiting for 1-day hold to expire before syncing to BoldTrail.');
+      }
+      continue;
+    }
+
+    found += 1;
+    const result = syncLeadToBoldTrail_(lead, BOLDTRAIL_RELO_TAG, { forceTag: true });
+    processed += 1;
+
+    if (result.status === 'synced') {
+      synced += 1;
+      updateLeadSheetBoldTrailStatus_(sheet, rowNumber, 'synced', result.contact_id || '', new Date(), '');
+    } else {
+      failed += 1;
+      updateLeadSheetBoldTrailStatus_(sheet, rowNumber, 'failed', '', '', result.error || 'Unknown BoldTrail sync error.');
+    }
+  }
+
+  return {
+    sheet_name: sheetName,
+    total_rows: Math.max(0, lastRow - 1),
+    found_rows: found,
+    pending_rows: processed,
+    synced_count: synced,
+    failed_count: failed,
+    scan_limit: limit
+  };
+}
+
+function processWebsiteLeadSheet_(ss, sheetName, scanLimit) {
+  const sheet = requireSheetByName_(ss, sheetName);
+  ensureBoldTrailHeaders_(sheet);
+
+  const indexes = headerIndexes_(sheet);
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  const limit = Math.max(0, Math.min(Number(scanLimit) || 0, BOLDTRAIL_MAX_ROWS_PER_RUN));
+
+  let found = 0;
+  let processed = 0;
+  let synced = 0;
+  let failed = 0;
+
+  for (let rowNumber = 2; rowNumber <= lastRow && processed < limit; rowNumber++) {
+    const row = sheet.getRange(rowNumber, 1, 1, lastCol).getValues()[0];
+    const syncStatus = clean_(row[indexes.boldtrail_status]).toLowerCase();
+    if (syncStatus === 'synced' || syncStatus === 'skipped_no_email') {
+      continue;
+    }
+
+    const context = leadContextFromSheetRow_(row, indexes);
+    const lead = context.lead;
+    if (!lead) {
+      continue;
+    }
+
+    if (!hasText_(lead.email)) {
+      updateBoldTrailStatus_(sheet, rowNumber, 'skipped_no_email', '', 'No email address provided for BoldTrail sync.');
+      continue;
+    }
+
+    found += 1;
+    const isReloGuideLead = isReloGuideLead_(lead);
+    const tagName = isReloGuideLead
+      ? BOLDTRAIL_RELO_TAG
+      : (leadHasPhoneNumber_(lead) ? BOLDTRAIL_NEWSLETTER_TAG : BOLDTRAIL_NO_PHONE_TAG);
+    const result = syncLeadToBoldTrail_(lead, tagName, { forceTag: isReloGuideLead });
+    processed += 1;
+
+    if (result.status === 'synced') {
+      synced += 1;
+      updateBoldTrailStatus_(sheet, rowNumber, 'synced', new Date(), '');
+    } else {
+      failed += 1;
+      updateBoldTrailStatus_(sheet, rowNumber, 'failed', '', result.error || 'Unknown BoldTrail sync error.');
+    }
+  }
+
+  return {
+    sheet_name: sheetName,
+    total_rows: Math.max(0, lastRow - 1),
+    found_rows: found,
+    pending_rows: processed,
+    synced_count: synced,
+    failed_count: failed,
+    scan_limit: limit
+  };
+}
+
+function processAppointmentLeadSheet_(ss, sheetName, scanLimit) {
+  const sheet = requireSheetByName_(ss, sheetName);
+  ensureLeadSheetBoldTrailHeaders_(sheet);
+
+  const indexes = headerIndexes_(sheet);
+  const lastRow = sheet.getLastRow();
+  const lastCol = sheet.getLastColumn();
+  const limit = Math.max(0, Math.min(Number(scanLimit) || 0, BOLDTRAIL_MAX_ROWS_PER_RUN));
+
+  let found = 0;
+  let processed = 0;
+  let synced = 0;
+  let failed = 0;
+
+  for (let rowNumber = 2; rowNumber <= lastRow && processed < limit; rowNumber++) {
+    const row = sheet.getRange(rowNumber, 1, 1, lastCol).getValues()[0];
+    const syncStatus = clean_(row[indexes.boldtrail_sync_status]).toLowerCase();
+    if (syncStatus === 'synced' || syncStatus === 'skipped_no_email') {
+      continue;
+    }
+
+    const context = appointmentLeadContextFromSheetRow_(row, indexes);
+    const lead = context.lead;
+    if (!lead) {
+      continue;
+    }
+
+    if (!hasText_(lead.email)) {
+      updateLeadSheetBoldTrailStatus_(sheet, rowNumber, 'skipped_no_email', '', '', 'No email address provided for BoldTrail sync.');
+      continue;
+    }
+
+    found += 1;
+    const result = syncLeadToBoldTrail_(lead, BOLDTRAIL_NEWSLETTER_TAG);
+    processed += 1;
+
+    if (result.status === 'synced') {
+      synced += 1;
+      updateLeadSheetBoldTrailStatus_(sheet, rowNumber, 'synced', result.contact_id || '', new Date(), '');
+    } else {
+      failed += 1;
+      updateLeadSheetBoldTrailStatus_(sheet, rowNumber, 'failed', '', '', result.error || 'Unknown BoldTrail sync error.');
+    }
+  }
+
+  return {
+    sheet_name: sheetName,
+    total_rows: Math.max(0, lastRow - 1),
+    found_rows: found,
+    pending_rows: processed,
+    synced_count: synced,
+    failed_count: failed,
+    scan_limit: limit
+  };
+}
+
+function isEligibleForBoldTrail_(lead) {
+  if (!lead || typeof lead !== 'object') {
+    return false;
+  }
+  if (BOLDTRAIL_MIN_AGE_DAYS <= 0) {
+    return true;
+  }
+  const submittedAt = new Date(lead.submitted_at || '');
+  if (isNaN(submittedAt.getTime())) {
+    return false;
+  }
+  const minAgeMs = BOLDTRAIL_MIN_AGE_DAYS * 24 * 60 * 60 * 1000;
+  return (Date.now() - submittedAt.getTime()) >= minAgeMs;
+}
+
+function kitLeadContextFromSheetRow_(row, indexes) {
+  const lead = normalizeLead_({
+    submitted_at: row[indexes.timestamp],
+    source_page: KIT_LEADS_SHEET_NAME,
+    source_key: 'kit',
+    lead_type: row[indexes.lead_type] || 'relo_guide',
+    first_name: row[indexes.first_name],
+    last_name: row[indexes.last_name],
+    email: row[indexes.email],
+    location: row[indexes.location],
+    source: row[indexes.source],
+    submission_id: row[indexes.submission_id] || row[indexes.gmail_message_id] || row[indexes.gmail_thread_id],
+    headliner: row[indexes.headliner]
+  });
+
+  return { lead: lead, raw: {} };
+}
+
+function appointmentLeadContextFromSheetRow_(row, indexes) {
+  const requestedIntent = appointmentRequestedContactIntent_(row, indexes);
+  const lead = normalizeLead_({
+    submitted_at: row[indexes.logged_at] || row[indexes.scheduled_at] || row[indexes.event_start] || row[indexes.send_at],
+    source_page: APPOINTMENTS_LEADS_SHEET_NAME,
+    source_key: 'appointment',
+    lead_type: 'requested_contact',
+    requested_contact_source: 'direct_booking',
+    requested_contact_intent: requestedIntent,
+    first_name: row[indexes.first_name],
+    last_name: row[indexes.last_name],
+    email: row[indexes.email],
+    phone: row[indexes.phone],
+    submission_id: row[indexes.event_id]
+  });
+
+  return { lead: lead, raw: {} };
+}
+
+function appointmentRequestedContactIntent_(row, indexes) {
+  const haystack = [
+    row[indexes.title],
+    row[indexes.preference_note],
+    row[indexes.pre_call_notes]
+  ].map(clean_).join(' ').toLowerCase();
+
+  if (!haystack) {
+    return '';
+  }
+  if (/\b(sell|seller|listing|list)\b/.test(haystack)) {
+    return 'looking_to_sell';
+  }
+  if (/\b(buy|buyer|purchase|home search)\b/.test(haystack)) {
+    return 'looking_to_buy';
+  }
+  return '';
+}
+
+function ensureHeadersPresent_(sheet, requiredHeaders) {
+  const lastCol = Math.max(1, sheet.getLastColumn());
+  const headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const normalized = headerRow.map(function (h) { return clean_(h).toLowerCase(); });
+
+  requiredHeaders.forEach(function (headerName) {
+    const key = clean_(headerName).toLowerCase();
+    if (normalized.indexOf(key) !== -1) {
+      return;
+    }
+
+    const blankIndex = normalized.indexOf('');
+    if (blankIndex !== -1) {
+      sheet.getRange(1, blankIndex + 1).setValue(headerName);
+      normalized[blankIndex] = key;
+      return;
+    }
+
+    const appendAt = sheet.getLastColumn() + 1;
+    sheet.getRange(1, appendAt).setValue(headerName);
+    normalized.push(key);
+  });
+
+  if (sheet.getFrozenRows() !== 1) {
+    sheet.setFrozenRows(1);
+  }
+}
+
+function ensureLeadSheetBoldTrailHeaders_(sheet) {
+  ensureHeadersPresent_(sheet, [
+    'BoldTrail Sync Status',
+    'BoldTrail Contact ID',
+    'BoldTrail Synced At',
+    'BoldTrail Sync Error'
+  ]);
+}
+
+function leadContextFromSheetRow_(row, indexes) {
+  const rawJsonText = clean_(row[indexes.raw_json]) || findRawJsonInRow_(row);
+  let raw = {};
+  if (rawJsonText) {
+    try {
+      raw = JSON.parse(rawJsonText);
+    } catch (_) {
+      raw = {};
+    }
+  }
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
+    raw = {};
+  }
+
+  const rowPayload = {
+    submitted_at: toIsoString_(row[indexes.timestamp]),
+    source_page: row[indexes.source_page],
+    source_key: row[indexes.source_key],
+    submission_id: row[indexes.submission_id],
+    lead_type: row[indexes.lead_type],
+    requested_contact_source: row[indexes.requested_contact_source],
+    requested_contact_intent: row[indexes.requested_contact_intent],
+    requested_contact_notes: row[indexes.requested_contact_notes],
+    first_name: row[indexes.first_name],
+    last_name: row[indexes.last_name],
+    email: row[indexes.email],
+    phone_country: row[indexes.phone_country],
+    phone: row[indexes.phone],
+    sms_opt_in: row[indexes.sms_opt_in],
+    timeframe: row[indexes.timeframe],
+    budget: row[indexes.budget],
+    pre_approval: row[indexes.pre_approval],
+    area_interests: row[indexes.area_interests],
+    home_description: row[indexes.home_description],
+    home_bedrooms: row[indexes.home_bedrooms],
+    home_bathrooms: row[indexes.home_bathrooms],
+    year_built: row[indexes.year_built],
+    square_footage: row[indexes.square_footage],
+    property_address_line1: row[indexes.property_address_line1],
+    property_city: row[indexes.property_city],
+    property_state: row[indexes.property_state],
+    property_zip: row[indexes.property_zip],
+    full_address: row[indexes.full_address],
+    home_eval_name: row[indexes.home_eval_name],
+    home_eval_email: row[indexes.home_eval_email],
+    home_eval_phone: row[indexes.home_eval_phone],
+    home_eval_property_address: row[indexes.home_eval_property_address],
+    quiz_top_pick: row[indexes.quiz_top_pick],
+    quiz_second_pick: row[indexes.quiz_second_pick],
+    quiz_third_pick: row[indexes.quiz_third_pick],
+    quiz_type: row[indexes.quiz_type],
+    quiz_title: row[indexes.quiz_title],
+    quiz_city: row[indexes.quiz_city],
+    quiz_slug: row[indexes.quiz_slug],
+    quiz_results_json: row[indexes.quiz_results_json],
+    quiz_answers_json: row[indexes.quiz_answers_json],
+    new_construction_message: row[indexes.new_construction_message]
+  };
+
+  const mergedPayload = Object.assign({}, rowPayload, raw);
+  const lead = normalizeLead_(mergedPayload);
+  return { lead: lead, raw: Object.keys(raw).length ? raw : mergedPayload };
+}
+
+function normalizeLead_(p) {
+  const normalizedFirstName = clean_(p.first_name);
+  const normalizedLastName = clean_(p.last_name);
+  const normalizedPhone = clean_(p.phone) || phoneFromFullPhone_(p.full_phone);
+  const sourcePage = clean_(p.source_page) || clean_(p.source);
+  const sourceKey = clean_(p.source_key) || sourcePage;
+  const leadType = clean_(p.lead_type).toLowerCase() || 'buyer';
+  const requestedIntent = normalizeRequestedContactIntent_(clean_(p.requested_contact_intent) || clean_(p.requested_contact_interest));
+
+  return {
+    submitted_at: clean_(p.submitted_at) || new Date().toISOString(),
+    source_page: sourcePage,
+    source_key: sourceKey,
+    submission_id: clean_(p.submission_id),
+    lead_type: leadType,
+    requested_contact_source: clean_(p.requested_contact_source),
+    requested_contact_intent: requestedIntent,
+    first_name: normalizedFirstName,
+    last_name: normalizedLastName,
+    email: clean_(p.email) || clean_(p.home_eval_email),
+    phone_country: clean_(p.phone_country),
+    phone: normalizedPhone,
+    sms_opt_in: toBoolean_(p.sms_opt_in),
+    property_address_line1: clean_(p.property_address_line1),
+    property_city: clean_(p.property_city),
+    property_state: clean_(p.property_state),
+    property_zip: clean_(p.property_zip),
+    full_address: clean_(p.full_address) || clean_(p.home_eval_property_address),
+    home_eval_name: clean_(p.home_eval_name),
+    home_eval_email: clean_(p.home_eval_email),
+    home_eval_phone: clean_(p.home_eval_phone),
+    home_eval_property_address: clean_(p.home_eval_property_address),
+    quiz_top_pick: clean_(p.quiz_top_pick),
+    quiz_second_pick: clean_(p.quiz_second_pick),
+    quiz_third_pick: clean_(p.quiz_third_pick),
+    quiz_type: clean_(p.quiz_type),
+    quiz_title: clean_(p.quiz_title),
+    quiz_city: clean_(p.quiz_city),
+    quiz_slug: clean_(p.quiz_slug),
+    quiz_results_json: clean_(p.quiz_results_json),
+    quiz_answers_json: clean_(p.quiz_answers_json),
+    new_construction_message: clean_(p.new_construction_message)
+  };
+}
+
+function boldTrailContactPayload_(lead, existingContact, hasPhone, statusOverride, incomingHasPhone) {
+  const payload = {
+    source: 'Living in Raleigh Website',
+    email_optin: 1,
+    phone_on: hasPhone ? 1 : 0,
+    text_on: hasPhone ? 1 : 0,
+    status: typeof statusOverride === 'number' ? statusOverride : (hasPhone ? BOLDTRAIL_PROSPECT_STATUS : BOLDTRAIL_LEAD_STATUS)
+  };
+
+  const incomingEmail = clean_(lead.email);
+  const existingEmail = clean_(existingContact && existingContact.email);
+  if (existingEmail && incomingEmail && existingEmail.toLowerCase() !== incomingEmail.toLowerCase()) {
+    payload.email = existingEmail;
+    payload.second_email = incomingEmail;
+  } else {
+    payload.email = incomingEmail || existingEmail;
+  }
+
+  const firstName = clean_(lead.first_name || lead.home_eval_name);
+  const lastName = clean_(lead.last_name);
+  const phoneDigits = phoneFromFullPhone_(lead.phone || lead.home_eval_phone);
+
+  if (hasText_(firstName)) payload.first_name = firstName;
+  if (hasText_(lastName)) payload.last_name = lastName;
+  if (hasText_(phoneDigits)) payload.cell_phone_1 = phoneDigits;
+  if (hasText_(lead.full_address || lead.home_eval_property_address || lead.property_address_line1)) {
+    payload.primary_address = clean_(lead.full_address || lead.home_eval_property_address || lead.property_address_line1);
+  }
+  if (hasText_(lead.property_city)) payload.primary_city = clean_(lead.property_city);
+  if (hasText_(lead.property_state)) payload.primary_state = clean_(lead.property_state);
+  if (hasText_(lead.property_zip)) payload.primary_zip = clean_(lead.property_zip);
+  payload.deal_type = boldTrailDealType_(lead);
+  if (hasText_(lead.submission_id)) payload.external_vendor_id = clean_(lead.submission_id);
+  if (incomingHasPhone) {
+    payload.tcpa_optin_date = boldTrailNowUtcString_();
+  }
+  return payload;
+}
+
+function boldTrailDealType_(lead) {
+  const leadType = clean_(lead && lead.lead_type).toLowerCase();
+  const requestedIntent = clean_(lead && lead.requested_contact_intent).toLowerCase();
+  if (leadType === 'seller' || leadType === 'home_eval') {
+    return 'seller';
+  }
+  if (leadType === 'requested_contact' && requestedIntent.indexOf('sell') !== -1) {
+    return 'seller';
+  }
+  return 'buyer';
+}
+
+function boldTrailTagForLead_(lead) {
+  if (isReloGuideLead_(lead)) {
+    return BOLDTRAIL_RELO_TAG;
+  }
+  if (leadHasPhoneNumber_(lead)) {
+    return BOLDTRAIL_NEWSLETTER_TAG;
+  }
+  return BOLDTRAIL_NO_PHONE_TAG;
+}
+
+function boldTrailSourceTagsForLead_(lead) {
+  if (!lead || typeof lead !== 'object') {
+    return [];
+  }
+
+  const tags = [];
+  const leadType = clean_(lead.lead_type).toLowerCase();
+  const requestedSource = clean_(lead.requested_contact_source).toLowerCase();
+  const sourcePage = clean_(lead.source_page);
+  const sourceKey = clean_(lead.source_key);
+  const sourceText = [sourcePage, sourceKey].join(' ').toLowerCase();
+  const sourcePaths = [sourcePage, sourceKey].map(boldTrailSourcePath_).filter(Boolean);
+
+  if (isReloGuideLead_(lead)) {
+    tags.push('lead_source_relocation_guide');
+  }
+
+  if (
+    leadType === 'requested_contact' && requestedSource.indexOf('home_call_me_popup') !== -1
+  ) {
+    tags.push('lead_source_call_me_popup');
+  }
+
+  if (leadType === 'suburb_quiz') {
+    tags.push('lead_source_suburb_quiz');
+  }
+
+  if (leadType === 'neighborhood_quiz' || clean_(lead.quiz_type).toLowerCase() === 'neighborhood_fit') {
+    tags.push('lead_source_neighborhood_quiz');
+    const quizCitySlug = boldTrailTagSlug_(lead.quiz_city);
+    if (quizCitySlug) {
+      tags.push('lead_source_' + quizCitySlug + '_neighborhood_quiz');
+    }
+  }
+
+  if (leadType === 'new_construction' || requestedSource.indexOf('new_construction') !== -1) {
+    tags.push('lead_source_new_construction');
+  }
+
+  if (leadType === 'home_eval') {
+    tags.push('lead_source_home_valuation');
+  }
+
+  if (
+    leadType === 'requested_contact' &&
+    (clean_(lead.source_key).toLowerCase() === 'appointment' || sourceText.indexOf('appointments booked directly') !== -1)
+  ) {
+    tags.push('lead_source_consult_booking');
+  }
+
+  if (sourcePaths.some(function (path) { return path === '/buy' || path.indexOf('/buy/') === 0; })) {
+    tags.push('lead_source_buyer_page');
+  }
+  if (sourcePaths.some(function (path) { return path === '/sell' || path.indexOf('/sell/') === 0; })) {
+    tags.push('lead_source_seller_page');
+  }
+  if (sourcePaths.some(function (path) { return path === '/consult' || path.indexOf('/consult/') === 0; })) {
+    tags.push('lead_source_consult_page');
+  }
+  if (sourcePaths.some(function (path) { return path === '/relocation' || path.indexOf('/relocation/') === 0; })) {
+    tags.push('lead_source_relocation_page');
+  }
+  if (sourcePaths.some(function (path) { return path === '/'; })) {
+    tags.push('lead_source_homepage');
+  }
+
+  if (!tags.length) {
+    tags.push('lead_source_website_form');
+  }
+
+  return boldTrailUniqueTagNames_(tags);
+}
+
+function boldTrailSourcePath_(value) {
+  const normalized = clean_(value).toLowerCase();
+  if (!normalized) {
+    return '';
+  }
+  let path = normalized.replace(/^https?:\/\/[^/]+/i, '');
+  path = path.split('#')[0].split('?')[0];
+  if (!path) {
+    return '/';
+  }
+  if (path.charAt(0) !== '/') {
+    return '';
+  }
+  return path.replace(/\/+$/, '') || '/';
+}
+
+function boldTrailTagSlug_(value) {
+  return clean_(value)
+    .toLowerCase()
+    .replace(/&/g, ' and ')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function boldTrailUniqueTagNames_(tagNames) {
+  const seen = {};
+  return (Array.isArray(tagNames) ? tagNames : []).map(function (tagName) {
+    return boldTrailTagSlug_(tagName);
+  }).filter(function (tagName) {
+    if (!tagName || seen[tagName]) {
+      return false;
+    }
+    seen[tagName] = true;
+    return true;
+  });
+}
+
+function boldTrailFindContactByEmail_(apiToken, email) {
+  const contacts = boldTrailFindContactsByEmail_(apiToken, email);
+  return contacts.length ? contacts[0] : null;
+}
+
+function boldTrailFindContactsByEmail_(apiToken, email) {
+  const normalizedEmail = clean_(email);
+  if (!normalizedEmail) {
+    return [];
+  }
+
+  const cacheKey = normalizedEmail.toLowerCase();
+  if (boldTrailContactCache_[cacheKey]) {
+    return [boldTrailContactCache_[cacheKey]];
+  }
+
+  const response = boldTrailRequest_(
+    apiToken,
+    BOLDTRAIL_API_BASE + '/contacts?filter[email]=' + encodeURIComponent(normalizedEmail) + '&limit=10&includeArchived=1',
+    'get'
+  );
+  const contacts = Array.isArray(response) ? response : (response && response.data) ? response.data : [];
+  const matches = contacts.filter(function (contact) {
+    return clean_(contact && contact.email).toLowerCase() === cacheKey;
+  });
+  if (matches.length) {
+    boldTrailContactCache_[cacheKey] = matches[0];
+  }
+  return matches;
+}
+
+function boldTrailFindContactByPhone_(apiToken, phoneDigits) {
+  const contacts = boldTrailFindContactsByPhone_(apiToken, phoneDigits);
+  return contacts.length ? contacts[0] : null;
+}
+
+function boldTrailFindContactsByPhone_(apiToken, phoneDigits) {
+  const normalizedPhone = phoneFromFullPhone_(phoneDigits);
+  if (!normalizedPhone) {
+    return [];
+  }
+
+  const cacheKey = normalizedPhone;
+  if (boldTrailContactPhoneCache_[cacheKey]) {
+    return [boldTrailContactPhoneCache_[cacheKey]];
+  }
+
+  const matches = [];
+  const pageSize = 500;
+  for (let page = 1; page <= 20; page++) {
+    const response = boldTrailRequest_(
+      apiToken,
+      BOLDTRAIL_API_BASE + '/contacts?limit=' + pageSize + '&page=' + page + '&includeArchived=1',
+      'get'
+    );
+    const contacts = Array.isArray(response) ? response : (response && response.data) ? response.data : [];
+    if (!contacts.length) {
+      break;
+    }
+
+    const pageMatches = contacts.filter(function (contact) {
+      const contactPhones = [
+        contact && contact.phone,
+        contact && contact.cell_phone_1,
+        contact && contact.cell_phone,
+        contact && contact.mobile_phone,
+        contact && contact.home_phone
+      ].map(phoneFromFullPhone_).filter(Boolean);
+      return contactPhones.indexOf(normalizedPhone) !== -1;
+    });
+
+    if (pageMatches.length) {
+      matches.push.apply(matches, pageMatches);
+    }
+
+    if (contacts.length < pageSize) {
+      break;
+    }
+  }
+
+  if (matches.length) {
+    boldTrailContactPhoneCache_[cacheKey] = matches[0];
+  }
+  return matches;
+}
+
+function boldTrailFindMatchingContacts_(apiToken, email, phoneDigits) {
+  const emailMatches = boldTrailFindContactsByEmail_(apiToken, email);
+  const phoneMatches = phoneDigits ? boldTrailFindContactsByPhone_(apiToken, phoneDigits) : [];
+  return boldTrailUniqueContacts_(emailMatches.concat(phoneMatches));
+}
+
+function boldTrailUniqueContacts_(contacts) {
+  const seen = {};
+  return (Array.isArray(contacts) ? contacts : []).filter(function (contact) {
+    const id = String(contact && contact.id ? contact.id : '');
+    if (!id || seen[id]) {
+      return false;
+    }
+    seen[id] = true;
+    return true;
+  });
+}
+
+function boldTrailContactHasPhone_(contact) {
+  if (!contact || typeof contact !== 'object') {
+    return false;
+  }
+  return hasText_(contact.phone) ||
+    hasText_(contact.cell_phone_1) ||
+    hasText_(contact.cell_phone) ||
+    hasText_(contact.mobile_phone) ||
+    hasText_(contact.home_phone);
+}
+
+function boldTrailCreateContact_(apiToken, payload) {
+  return boldTrailRequest_(apiToken, BOLDTRAIL_API_BASE + '/contact', 'post', payload);
+}
+
+function boldTrailUpdateContact_(apiToken, contactId, payload) {
+  if (!hasText_(contactId)) {
+    return {};
+  }
+  return boldTrailRequest_(apiToken, BOLDTRAIL_API_BASE + '/contact/' + encodeURIComponent(contactId), 'put', payload);
+}
+
+function boldTrailEnsureContactStatus_(apiToken, contactId, expectedStatus, contactPayload, contactStatePayload) {
+  const statusValue = Number(expectedStatus);
+  if (!hasText_(contactId) || !Number.isFinite(statusValue)) {
+    return {};
+  }
+
+  const delays = [0, 1000, 2000];
+  let lastContact = {};
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i]) {
+      Utilities.sleep(delays[i]);
+    }
+    lastContact = boldTrailGetContact_(apiToken, contactId) || {};
+    if (Number(lastContact && lastContact.status) === statusValue) {
+      return { ok: true };
+    }
+    boldTrailRequest_(apiToken, BOLDTRAIL_API_BASE + '/contact/' + encodeURIComponent(contactId), 'put', Object.assign({}, contactPayload, contactStatePayload, { status: statusValue }));
+  }
+
+  throw new Error('BoldTrail contact status ' + statusValue + ' was not visible on contact ' + contactId + '. Current contact: ' + JSON.stringify(lastContact));
+}
+
+function boldTrailAddHashtag_(apiToken, contactId, tagName) {
+  if (!hasText_(contactId) || !hasText_(tagName)) {
+    return {};
+  }
+  const normalizedTag = clean_(tagName);
+  const baseUrl = BOLDTRAIL_API_BASE + '/contact/' + encodeURIComponent(contactId) + '/tags';
+  const attempts = [
+    { tags: [normalizedTag] },
+    { tags: [{ name: normalizedTag, locked: 0 }] }
+  ];
+  let lastResponse = {};
+  let lastError = '';
+
+  for (let i = 0; i < attempts.length; i++) {
+    try {
+      lastResponse = boldTrailRequest_(apiToken, baseUrl, 'put', attempts[i]);
+      if (boldTrailTagExists_(lastResponse, normalizedTag)) {
+        return { ok: true };
+      }
+      if (boldTrailTagExists_(boldTrailGetContactTags_(apiToken, contactId), normalizedTag)) {
+        return { ok: true };
+      }
+    } catch (err) {
+      lastError = clean_(err && err.message ? err.message : err);
+    }
+  }
+  return boldTrailEnsureContactTag_(apiToken, contactId, normalizedTag, lastError);
+}
+
+function boldTrailGetContact_(apiToken, contactId) {
+  if (!hasText_(contactId)) {
+    return {};
+  }
+  return boldTrailRequest_(apiToken, BOLDTRAIL_API_BASE + '/contact/' + encodeURIComponent(contactId), 'get');
+}
+
+function boldTrailGetContactTags_(apiToken, contactId) {
+  if (!hasText_(contactId)) {
+    return [];
+  }
+  const response = boldTrailRequest_(apiToken, BOLDTRAIL_API_BASE + '/contact/' + encodeURIComponent(contactId) + '/tags', 'get');
+  if (Array.isArray(response)) {
+    return response;
+  }
+  if (response && Array.isArray(response.tags)) {
+    return response.tags;
+  }
+  if (response && Array.isArray(response.data)) {
+    return response.data;
+  }
+  return [];
+}
+
+function boldTrailEnsureContactTag_(apiToken, contactId, tagName, priorError) {
+  const delays = [0, 1000, 2000];
+  let lastTags = [];
+
+  for (let i = 0; i < delays.length; i++) {
+    if (delays[i]) {
+      Utilities.sleep(delays[i]);
+    }
+    const currentTags = boldTrailGetContactTags_(apiToken, contactId);
+    lastTags = currentTags;
+    if (boldTrailTagExists_(currentTags, tagName)) {
+      return { ok: true };
+    }
+  }
+
+  throw new Error((priorError ? priorError + ' ' : '') + 'BoldTrail tag "' + tagName + '" was not visible on contact ' + contactId + '. Current tags: ' + JSON.stringify(lastTags));
+}
+
+function boldTrailTagExists_(tags, tagName) {
+  const target = clean_(tagName).toLowerCase();
+  if (!target) {
+    return false;
+  }
+  const collection = Array.isArray(tags)
+    ? tags
+    : (tags && Array.isArray(tags.tags))
+      ? tags.tags
+      : (tags && tags.data && Array.isArray(tags.data.tags))
+        ? tags.data.tags
+      : (tags && Array.isArray(tags.data))
+        ? tags.data
+        : [];
+  return collection.some(function (tag) {
+    if (typeof tag === 'string') {
+      return clean_(tag).toLowerCase() === target;
+    }
+    return clean_(tag && (tag.name || tag.tag || tag.tag_name || tag.hashtag || tag.label || tag.slug || tag.value)).toLowerCase() === target;
+  });
+}
+
+function boldTrailRequest_(apiToken, url, method, payload) {
+  const options = {
+    method: String(method || 'get').toLowerCase(),
+    muteHttpExceptions: true,
+    headers: {
+      Authorization: 'Bearer ' + clean_(apiToken),
+      Accept: 'application/json'
+    }
+  };
+
+  if (payload && Object.keys(payload).length) {
+    options.contentType = 'application/json';
+    options.payload = JSON.stringify(payload);
+  }
+
+  const response = UrlFetchApp.fetch(url, options);
+  const code = response.getResponseCode();
+  const bodyText = response.getContentText() || '';
+  if (code < 200 || code >= 300) {
+    throw new Error('BoldTrail API ' + options.method.toUpperCase() + ' ' + url + ' failed (' + code + '): ' + bodyText);
+  }
+  if (!bodyText) {
+    return {};
+  }
+  try {
+    return JSON.parse(bodyText);
+  } catch (_) {
+    return {};
+  }
+}
+
+function ensureBoldTrailHeaders_(sheet) {
+  const required = headers_();
+  const lastCol = Math.max(1, sheet.getLastColumn());
+  const headerRow = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+  const normalized = headerRow.map(function (h) { return clean_(h).toLowerCase(); });
+
+  required.forEach(function (headerName) {
+    const key = clean_(headerName).toLowerCase();
+    if (normalized.indexOf(key) !== -1) {
+      return;
+    }
+
+    const blankIndex = normalized.indexOf('');
+    if (blankIndex !== -1) {
+      sheet.getRange(1, blankIndex + 1).setValue(headerName);
+      normalized[blankIndex] = key;
+      return;
+    }
+
+    const appendAt = sheet.getLastColumn() + 1;
+    sheet.getRange(1, appendAt).setValue(headerName);
+    normalized.push(key);
+  });
+
+  if (sheet.getFrozenRows() !== 1) {
+    sheet.setFrozenRows(1);
+  }
+}
+
+function headers_() {
+  return [
+    'Timestamp',
+    'Lead Type',
+    'Source Page',
+    'Source Key',
+    'Submission ID',
+    'Requested Contact Source',
+    'Requested Contact Intent',
+    'Requested Contact Notes',
+    'First Name',
+    'Last Name',
+    'Email',
+    'Phone Country',
+    'Phone',
+    'SMS Opt In',
+    'Timeframe',
+    'Budget / Est. Value',
+    'Pre-Approval',
+    'Area Interests',
+    'Home Description',
+    'Home Bedrooms',
+    'Home Bathrooms',
+    'Year Built',
+    'Square Footage',
+    'Property Address Line 1',
+    'Property City',
+    'Property State',
+    'Property ZIP',
+    'Full Address',
+    'Home Eval Name',
+    'Home Eval Email',
+    'Home Eval Phone',
+    'Home Eval Property Address',
+    'Raw JSON',
+    'Email Status',
+    'Email Sent At',
+    'Email Error',
+    'Quiz Top Pick',
+    'Quiz Second Pick',
+    'Quiz Third Pick',
+    'Quiz Results JSON',
+    'Quiz Answers JSON',
+    'BoldTrail Status',
+    'BoldTrail Sent At',
+    'BoldTrail Error'
+  ];
+}
+
+function headerIndexes_(sheet) {
+  const lastCol = Math.max(1, sheet.getLastColumn());
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function (h) { return clean_(h); });
+  const byName = {};
+  headers.forEach(function (h, i) {
+    if (h) byName[h] = i + 1;
+  });
+  const idx = function (name) {
+    const col = byName[name];
+    return col ? col - 1 : -1;
+  };
+  return {
+    headers: headers,
+    byName: byName,
+    timestamp: idx('Timestamp'),
+    lead_type: idx('Lead Type'),
+    source_page: idx('Source Page'),
+    source_key: idx('Source Key'),
+    submission_id: idx('Submission ID'),
+    location: idx('Location'),
+    source: idx('Source'),
+    gmail_thread_id: idx('Gmail Thread ID'),
+    gmail_message_id: idx('Gmail Message ID'),
+    headliner: idx('Headliner'),
+    logged_at: idx('Logged At'),
+    event_start: idx('Event Start'),
+    event_end: idx('Event End'),
+    title: idx('Title'),
+    preference_note: idx('Preference Note (Phone/In-Person)'),
+    pre_call_notes: idx('Pre-Call Notes'),
+    event_id: idx('Event ID'),
+    appointment_status: idx('Status'),
+    send_at: idx('Send At'),
+    scheduled_at: idx('Scheduled At'),
+    sent_at: idx('Sent At'),
+    error: idx('Error'),
+    quo_sync_status: idx('Quo Sync Status'),
+    quo_contact_id: idx('Quo Contact ID'),
+    quo_synced_at: idx('Quo Synced At'),
+    quo_sync_error: idx('Quo Sync Error'),
+    requested_contact_source: idx('Requested Contact Source'),
+    requested_contact_intent: idx('Requested Contact Intent'),
+    requested_contact_notes: idx('Requested Contact Notes'),
+    first_name: idx('First Name'),
+    last_name: idx('Last Name'),
+    email: idx('Email'),
+    phone_country: idx('Phone Country'),
+    phone: idx('Phone'),
+    sms_opt_in: idx('SMS Opt In'),
+    timeframe: idx('Timeframe'),
+    budget: idx('Budget / Est. Value'),
+    pre_approval: idx('Pre-Approval'),
+    area_interests: idx('Area Interests'),
+    home_description: idx('Home Description'),
+    home_bedrooms: idx('Home Bedrooms'),
+    home_bathrooms: idx('Home Bathrooms'),
+    year_built: idx('Year Built'),
+    square_footage: idx('Square Footage'),
+    property_address_line1: idx('Property Address Line 1'),
+    property_city: idx('Property City'),
+    property_state: idx('Property State'),
+    property_zip: idx('Property ZIP'),
+    full_address: idx('Full Address'),
+    home_eval_name: idx('Home Eval Name'),
+    home_eval_email: idx('Home Eval Email'),
+    home_eval_phone: idx('Home Eval Phone'),
+    home_eval_property_address: idx('Home Eval Property Address'),
+    raw_json: idx('Raw JSON'),
+    email_status: idx('Email Status'),
+    email_sent_at: idx('Email Sent At'),
+    email_error: idx('Email Error'),
+    quiz_top_pick: idx('Quiz Top Pick'),
+    quiz_second_pick: idx('Quiz Second Pick'),
+    quiz_third_pick: idx('Quiz Third Pick'),
+    quiz_type: idx('Quiz Type'),
+    quiz_title: idx('Quiz Title'),
+    quiz_city: idx('Quiz City'),
+    quiz_slug: idx('Quiz Slug'),
+    quiz_results_json: idx('Quiz Results JSON'),
+    quiz_answers_json: idx('Quiz Answers JSON'),
+    boldtrail_status: idx('BoldTrail Status'),
+    boldtrail_sent_at: idx('BoldTrail Sent At'),
+    boldtrail_error: idx('BoldTrail Error'),
+    boldtrail_sync_status: idx('BoldTrail Sync Status'),
+    boldtrail_contact_id: idx('BoldTrail Contact ID'),
+    boldtrail_synced_at: idx('BoldTrail Synced At'),
+    boldtrail_sync_error: idx('BoldTrail Sync Error')
+  };
+}
+
+function updateBoldTrailStatus_(sheet, rowNumber, status, sentAt, errorMessage) {
+  const indexes = headerIndexes_(sheet);
+  if (indexes.boldtrail_status < 0 || indexes.boldtrail_sent_at < 0 || indexes.boldtrail_error < 0) {
+    return;
+  }
+
+  let sentAtValue = '';
+  if (sentAt instanceof Date && !isNaN(sentAt.getTime())) {
+    sentAtValue = sentAt;
+  }
+
+  sheet
+    .getRange(rowNumber, indexes.boldtrail_status + 1, 1, 3)
+    .setValues([[clean_(status), sentAtValue, clean_(errorMessage)]]);
+}
+
+function updateLeadSheetBoldTrailStatus_(sheet, rowNumber, status, contactId, syncedAt, errorMessage) {
+  const indexes = headerIndexes_(sheet);
+  if (
+    indexes.boldtrail_sync_status < 0 ||
+    indexes.boldtrail_contact_id < 0 ||
+    indexes.boldtrail_synced_at < 0 ||
+    indexes.boldtrail_sync_error < 0
+  ) {
+    return;
+  }
+
+  let syncedAtValue = '';
+  if (syncedAt instanceof Date && !isNaN(syncedAt.getTime())) {
+    syncedAtValue = syncedAt;
+  }
+
+  sheet
+    .getRange(rowNumber, indexes.boldtrail_sync_status + 1, 1, 4)
+    .setValues([[clean_(status), clean_(contactId), syncedAtValue, clean_(errorMessage)]]);
+}
+
+function getBoldTrailSpreadsheetId_() {
+  const value = clean_(getScriptProperty_('BOLDTRAIL_SPREADSHEET_ID'));
+  if (value) {
+    return value;
+  }
+  throw new Error('BOLDTRAIL_SPREADSHEET_ID is not configured in Script properties.');
+}
+
+function getBoldTrailApiKey_() {
+  return clean_(getScriptProperty_('BOLDTRAIL_API_KEY'));
+}
+
+function getScriptProperty_(name) {
+  try {
+    return PropertiesService.getScriptProperties().getProperty(name) || '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function leadHasPhoneNumber_(lead) {
+  if (!lead || typeof lead !== 'object') {
+    return false;
+  }
+  return hasText_(lead.phone) || hasText_(lead.home_eval_phone);
+}
+
+function boldTrailNowUtcString_() {
+  return Utilities.formatDate(new Date(), 'UTC', 'yyyy-MM-dd HH:mm:ss');
+}
+
+function isReloGuideLead_(lead) {
+  if (!lead || typeof lead !== 'object') {
+    return false;
+  }
+  const haystack = [
+    lead.source_page,
+    lead.source_key,
+    lead.lead_type,
+    lead.requested_contact_source,
+    lead.submission_id
+  ].map(clean_).join(' ').toLowerCase();
+  return haystack.indexOf('relo') !== -1 || haystack.indexOf('relocation guide') !== -1 || haystack.indexOf('kit') !== -1;
+}
+
+function phoneFromFullPhone_(value) {
+  const digits = String(value == null ? '' : value).replace(/[^\d]/g, '');
+  if (!digits) {
+    return '';
+  }
+  if (digits.length > 10) {
+    return digits.slice(-10);
+  }
+  return digits;
+}
+
+function normalizeRequestedContactIntent_(value) {
+  const normalized = clean_(value).toLowerCase();
+  if (!normalized) {
+    return '';
+  }
+  if (
+    normalized === 'looking to buy' ||
+    normalized === 'looking_to_buy' ||
+    normalized === 'buyer'
+  ) {
+    return 'looking_to_buy';
+  }
+  if (
+    normalized === 'looking to sell' ||
+    normalized === 'looking_to_sell' ||
+    normalized === 'seller'
+  ) {
+    return 'looking_to_sell';
+  }
+  if (
+    normalized === 'looking to sell and purchase a home' ||
+    normalized === 'looking_to_sell_and_buy' ||
+    normalized === 'looking to sell and buy' ||
+    normalized === 'seller_and_buyer' ||
+    normalized === 'sell_and_buy'
+  ) {
+    return 'looking_to_sell_and_buy';
+  }
+  return normalized.replace(/\s+/g, '_');
+}
+
+function clean_(v) {
+  return String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
+}
+
+function hasText_(value) {
+  return clean_(value) !== '';
+}
+
+function toBoolean_(value, fallback) {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  const normalized = clean_(value).toLowerCase();
+  if (!normalized) {
+    return Boolean(fallback);
+  }
+  return normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'y';
+}
+
+function findRawJsonInRow_(row) {
+  for (var i = 0; i < row.length; i++) {
+    var candidate = clean_(row[i]);
+    if (!candidate || candidate.charAt(0) !== '{' || candidate.charAt(candidate.length - 1) !== '}') {
+      continue;
+    }
+    try {
+      var parsed = JSON.parse(candidate);
+      if (parsed && typeof parsed === 'object' && (parsed.submitted_at || parsed.source_page || parsed.email || parsed.lead_type)) {
+        return candidate;
+      }
+    } catch (_) {}
+  }
+  return '';
+}
+
+function toIsoString_(value) {
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value.toISOString();
+  }
+  const parsed = new Date(value);
+  if (!isNaN(parsed.getTime())) {
+    return parsed.toISOString();
+  }
+  return new Date().toISOString();
+}
+
+function getOrCreateSheet_(ss, name) {
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  return sh;
+}
+
+function requireSheetByName_(ss, name) {
+  const sh = ss.getSheetByName(name);
+  if (!sh) {
+    throw new Error('Sheet "' + name + '" was not found in the workbook.');
+  }
+  return sh;
+}
+
+function authorizeBoldTrailLeadScriptScopes() {
+  SpreadsheetApp.openById(getBoldTrailSpreadsheetId_()).getName();
+  UrlFetchApp.fetch('https://api.kvcore.com', { muteHttpExceptions: true });
+  return 'Authorization complete. Re-deploy the separate BoldTrail script after running this once.';
+}
+
+function resetBoldTrailLeadTrigger() {
+  const triggers = ScriptApp.getProjectTriggers();
+  let removed = 0;
+
+  triggers.forEach(function (trigger) {
+    if (trigger.getHandlerFunction() === 'syncUnsentWebsiteLeadsToBoldTrail') {
+      ScriptApp.deleteTrigger(trigger);
+      removed += 1;
+    }
+  });
+
+  return 'Removed ' + removed + ' BoldTrail trigger(s).';
+}
+
+function installBoldTrailLeadTrigger() {
+  resetBoldTrailLeadTrigger();
+
+  ScriptApp.newTrigger('syncUnsentWebsiteLeadsToBoldTrail')
+    .timeBased()
+    .everyMinutes(BOLDTRAIL_TRIGGER_MINUTES)
+    .create();
+
+  return 'BoldTrail trigger installed to run every ' + BOLDTRAIL_TRIGGER_MINUTES + ' minutes.';
+}
+
+function resetBoldTrailLeadSyncState() {
+  const ss = SpreadsheetApp.openById(getBoldTrailSpreadsheetId_());
+  const sheetNames = [
+    WEBSITE_LEADS_SHEET_NAME,
+    APPOINTMENTS_LEADS_SHEET_NAME
+  ];
+
+  let clearedSheets = 0;
+  let clearedCells = 0;
+
+  sheetNames.forEach(function (sheetName) {
+    const sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      return;
+    }
+
+    let indexes = null;
+    if (sheetName === WEBSITE_LEADS_SHEET_NAME) {
+      ensureBoldTrailHeaders_(sheet);
+    } else {
+      ensureLeadSheetBoldTrailHeaders_(sheet);
+    }
+
+    indexes = headerIndexes_(sheet);
+    const columns = [];
+    if (indexes.boldtrail_status >= 0) columns.push(indexes.boldtrail_status + 1);
+    if (indexes.boldtrail_sent_at >= 0) columns.push(indexes.boldtrail_sent_at + 1);
+    if (indexes.boldtrail_error >= 0) columns.push(indexes.boldtrail_error + 1);
+    if (indexes.boldtrail_sync_status >= 0) columns.push(indexes.boldtrail_sync_status + 1);
+    if (indexes.boldtrail_contact_id >= 0) columns.push(indexes.boldtrail_contact_id + 1);
+    if (indexes.boldtrail_synced_at >= 0) columns.push(indexes.boldtrail_synced_at + 1);
+    if (indexes.boldtrail_sync_error >= 0) columns.push(indexes.boldtrail_sync_error + 1);
+
+    if (!columns.length) {
+      return;
+    }
+
+    const lastRow = sheet.getLastRow();
+    if (lastRow <= 1) {
+      clearedSheets += 1;
+      return;
+    }
+
+    columns.forEach(function (columnNumber) {
+      sheet.getRange(2, columnNumber, lastRow - 1, 1).clearContent();
+      clearedCells += lastRow - 1;
+    });
+    clearedSheets += 1;
+  });
+
+  return 'Cleared BoldTrail sync state on ' + clearedSheets + ' sheet(s) across ' + clearedCells + ' cell(s).';
+}
+
+function resetLegacyKitBoldTrailMigration() {
+  const ss = SpreadsheetApp.openById(getBoldTrailSpreadsheetId_());
+  const sheet = requireSheetByName_(ss, KIT_LEADS_SHEET_NAME);
+  ensureLeadSheetBoldTrailHeaders_(sheet);
+  const indexes = headerIndexes_(sheet);
+  const columns = [
+    indexes.boldtrail_sync_status,
+    indexes.boldtrail_contact_id,
+    indexes.boldtrail_synced_at,
+    indexes.boldtrail_sync_error
+  ].filter(function (index) { return index >= 0; });
+  const lastRow = sheet.getLastRow();
+
+  if (lastRow > 1) {
+    columns.forEach(function (columnIndex) {
+      sheet.getRange(2, columnIndex + 1, lastRow - 1, 1).clearContent();
+    });
+  }
+
+  PropertiesService.getScriptProperties().deleteProperty(BOLDTRAIL_KIT_MIGRATION_COMPLETE_PROPERTY);
+  return 'Reset the legacy Kit migration state. Run syncLegacyKitLeadsToBoldTrailOnce() to migrate it again.';
+}
+
+function resetBoldTrailLeadSourceHashtagBackfill() {
+  const properties = PropertiesService.getScriptProperties();
+  properties.deleteProperty(BOLDTRAIL_SOURCE_TAG_BACKFILL_COMPLETE_PROPERTY);
+  properties.deleteProperty(BOLDTRAIL_SOURCE_TAG_BACKFILL_CURSOR_PROPERTY);
+  return 'Reset the lead-source hashtag backfill. Run backfillBoldTrailLeadSourceHashtagsOnce() to apply it again.';
+}

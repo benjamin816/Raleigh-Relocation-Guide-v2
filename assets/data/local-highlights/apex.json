@@ -31,183 +31,184 @@
   "items": {
     "dining": [
       {
-        "name": "Poole's Diner",
-        "tagline": "Downtown staple for elevated Southern comfort food.",
+        "name": "The Provincial",
+        "tagline": "Downtown Apex favorite with a fun local vibe.",
         "rating_text": "Highly rated on Google",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Poole%27s+Diner+Raleigh+NC",
-        "image_url": "https://www.cbs17.com/wp-content/uploads/sites/29/2025/08/Pooles-Double-Horseshoe-3-Forrest-Mason.jpg?resize=1536"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=The+Provincial+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/dining-the-provincial.jpg"
       },
       {
-        "name": "Crawford & Son",
-        "tagline": "Neighborhood fine-casual with chef-driven seasonal menus.",
+        "name": "Scratch Kitchen & Taproom",
+        "tagline": "Downtown Apex favorite for scratch-made food and a lively patio.",
         "rating_text": "Highly rated on Google",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Crawford+%26+Son+Raleigh+NC",
-        "image_url": "https://images.squarespace-cdn.com/content/v1/63345e6fd1f51674279d4f06/5e394426-258d-4ac2-8101-6e05919d2f3e/6.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Scratch+Kitchen+%26+Taproom+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/dining-scratch-kitchen-and-taproom.jpg"
       },
       {
-        "name": "Bida Manda",
-        "tagline": "Laotian-influenced dining right in the city core.",
+        "name": "Skipper's Fish Fry",
+        "tagline": "Long-running Apex favorite for seafood, sandwiches, and casual family meals.",
         "rating_text": "Highly rated on Google",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Bida+Manda+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/simpleview/image/upload/q_75/v1/crm/raleigh/Snapinsta.app_328529097_1353402882129558_4511442439618477002_n_1080-1-_C0240ADE-A4C9-2C6C-AFE784ADA4A82CC6-c024095ce15c08b_c0241651-9a4d-83e7-8204e71cebc37a56.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Skipper%27s+Fish+Fry+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/dining-skipper-s-fish-fry.jpg"
       },
       {
-        "name": "Death & Taxes",
-        "tagline": "Wood-fired plates and a polished date-night atmosphere.",
+        "name": "Anna's Pizzeria",
+        "tagline": "Easy family dinner choice in Apex.",
         "rating_text": "Highly rated on Google",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Death+%26+Taxes+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/simpleview/image/upload/c_limit,q_80,w_1200/v1/crm/raleigh/Death-and-Taxes-Exterior-Photo-Nick-Pironio_70ba7640-dae6-d399-b096b445fea5b2b4.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Anna%27s+Pizzeria+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/dining-anna-s-pizzeria.jpg"
       }
     ],
     "bars": [
       {
-        "name": "Watts & Ward",
-        "tagline": "Speakeasy-style cocktails in downtown Raleigh.",
+        "name": "Southern Peak Brewery",
+        "tagline": "Apex brewery with a local crowd and outdoor space.",
         "rating_text": "Top local bar",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Watts+%26+Ward+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/simpleview/image/fetch/q_75/https://assets.simpleviewinc.com/simpleview/image/upload/crm/raleigh/Watts-Ward_70b12b75-9edd-2388-5acdd7cee6be11e5.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Southern+Peak+Brewery+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/bars-southern-peak-brewery.jpg"
       },
       {
-        "name": "Foundation",
-        "tagline": "Classic cocktail destination on Fayetteville Street.",
+        "name": "Peak of the Vine",
+        "tagline": "Downtown Apex hangout for drinks and gatherings.",
         "rating_text": "Top local bar",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Foundation+Raleigh+NC+bar",
-        "image_url": "https://www.nctriangledining.com/wp-content/uploads/2019/02/FoundationBar-BarFront.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Peak+of+the+Vine+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/bars-peak-of-the-vine.jpg"
       },
       {
-        "name": "The Blind Barbour",
-        "tagline": "Neighborhood craft cocktails near downtown.",
+        "name": "Salem Street Pub",
+        "tagline": "Downtown pub known for burgers, drinks, and a lively local crowd.",
         "rating_text": "Top local bar",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=The+Blind+Barbour+Raleigh+NC",
-        "image_url": "https://i0.wp.com/duesouth.media/wp-content/uploads/2019/03/blind3.jpg?fit=3000%2C4000&ssl=1"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Salem+Street+Pub+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/bars-salem-street-pub.jpg"
       },
       {
-        "name": "Dram & Draught",
-        "tagline": "Whiskey-forward bar with broad spirit selection.",
+        "name": "TapStation",
+        "tagline": "Multi-level downtown hangout with rooftop seating, drinks, and casual food.",
         "rating_text": "Top local bar",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Dram+%26+Draught+Raleigh+NC",
-        "image_url": "https://res.cloudinary.com/the-infatuation/image/upload/c_fill,w_3840,ar_4:3,g_center,f_auto/cms/Dram_Draught_Interior_AnnaRouthBarzin_Raleigh_010"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=TapStation+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/bars-tapstation.jpg"
       }
     ],
     "coffee": [
       {
-        "name": "Jubala Coffee",
-        "tagline": "Local favorite for espresso and all-day cafe vibes.",
+        "name": "Common Grounds Coffee House",
+        "tagline": "Popular downtown Apex coffee stop.",
         "rating_text": "Top local coffee pick",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Jubala+Coffee+Raleigh+NC",
-        "image_url": "https://images.axios.com/tAru_9thKvO83hOe6-t740bSHzk=/2025/07/17/1752777709417.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Common+Grounds+Coffee+House+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/coffee-common-grounds-coffee-house.jpg"
       },
       {
-        "name": "Black & White Coffee",
-        "tagline": "Specialty coffee bar known for competition-level roasts.",
+        "name": "Mission Market",
+        "tagline": "Small-town Apex coffee shop feel.",
         "rating_text": "Top local coffee pick",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Black+%26+White+Coffee+Raleigh+NC",
-        "image_url": "https://img.restaurantguru.com/r33a-Black-and-White-Coffee-at-Videri-interior.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Mission+Market+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/coffee-mission-market.jpg"
       },
       {
-        "name": "Heirloom Brewshop",
-        "tagline": "Tea-forward cafe with standout matcha and pastries.",
+        "name": "Foxtail Coffee Co.",
+        "tagline": "Local coffee and breakfast stop near downtown.",
         "rating_text": "Top local coffee pick",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Heirloom+Brewshop+Raleigh+NC",
-        "image_url": "https://images.squarespace-cdn.com/content/v1/554cfb8be4b0ee9452bd55e4/1550520820764-7G6PM48IMF2WG2097IG2/Heirloom+Exterior+-+02+Final_Reduced.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Foxtail+Coffee+Co.+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/coffee-foxtail-coffee-co.jpg"
       },
       {
-        "name": "Pine State Coffee",
-        "tagline": "Raleigh roaster with a loyal neighborhood following.",
+        "name": "Bona Fide Bakeshop & Cafe",
+        "tagline": "Local bakery cafe for coffee, pastries, breakfast, and lunch.",
         "rating_text": "Top local coffee pick",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Pine+State+Coffee+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/sv-raleigh/image/fetch/c_limit,h_1200,q_75,w_1200/https://assets.simpleviewinc.com/simpleview/image/upload/crm/raleigh/308662003_544723727487806_3855140606844040710_n_2E03060B-E21C-CE62-AA901B240FAC126D-2e030512be58354_2e03106f-d0cb-4f1c-5c26475a82aeb2b9.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Bona+Fide+Bakeshop+%26+Cafe+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/coffee-bona-fide-bakeshop-and-cafe.jpg"
       }
     ],
     "explore": [
       {
-        "name": "NC Museum of Art",
-        "tagline": "Indoor galleries and a massive outdoor art park.",
-        "rating_text": "Top Raleigh attraction",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=North+Carolina+Museum+of+Art+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/simpleview/image/fetch/c_fill,h_801,q_75,w_1200/http://res.cloudinary.com/simpleview/image/upload/v1533656252/clients/raleigh/NCMA_gallery_june_2017_2_b8776cff-73df-4b1e-bcad-5e6fd8a149ed.jpg"
+        "name": "Downtown Apex Historic District",
+        "tagline": "Classic downtown core with shops and events.",
+        "rating_text": "Top local attraction",
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Downtown+Apex+Historic+District+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/explore-downtown-apex-historic-district.jpg"
       },
       {
-        "name": "NC Museum of Natural Sciences",
-        "tagline": "Family-friendly exhibits in the heart of downtown.",
-        "rating_text": "Top Raleigh attraction",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=North+Carolina+Museum+of+Natural+Sciences+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/simpleview/image/fetch/c_fill,h_719,q_75,w_1200/http://res.cloudinary.com/simpleview/image/upload/v1533661942/clients/raleigh/EX_ncmns_KarenSwain_06_25_2014_03_8f5438ba-dbbf-40ac-8cb9-edc47b5c2619.jpg"
+        "name": "Apex Community Park",
+        "tagline": "Big local park for trails, sports, and time outside.",
+        "rating_text": "Top local attraction",
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Apex+Community+Park+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/explore-apex-community-park.jpg"
       },
       {
-        "name": "Pullen Park",
-        "tagline": "Historic park with rides, lake views, and playgrounds.",
-        "rating_text": "Top Raleigh attraction",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Pullen+Park+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/simpleview/image/upload/q_75/v1/crm/raleigh/Pullen-Park-16_7b175170-c33d-468e-a02c6d3d40090c91.jpg"
+        "name": "Jordan Lake State Recreation Area",
+        "tagline": "Easy weekend escape for water and outdoors.",
+        "rating_text": "Top local attraction",
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Jordan+Lake+State+Recreation+Area+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/explore-jordan-lake-state-recreation-area.jpg"
       },
       {
-        "name": "Umstead State Park",
-        "tagline": "Go-to local escape for trails, biking, and nature.",
-        "rating_text": "Top Raleigh attraction",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=William+B+Umstead+State+Park+Raleigh+NC",
-        "image_url": "https://localwiki.org/raleigh/crabtree%20creek%20entrance%20-%20william%20b.%20umstead%20state%20park/_files/IMG_0725.JPG"
+        "name": "Halle Cultural Arts Center",
+        "tagline": "Local arts and event venue in downtown Apex.",
+        "rating_text": "Top local attraction",
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Halle+Cultural+Arts+Center+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/explore-halle-cultural-arts-center.jpg"
       }
     ],
     "shopping": [
       {
-        "name": "North Hills",
-        "tagline": "Walkable district with retail, dining, and events.",
+        "name": "Beaver Creek Commons",
+        "tagline": "Big Apex retail center for shopping and errands.",
         "rating_text": "Popular shopping district",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=North+Hills+Raleigh+NC",
-        "image_url": "https://images.axios.com/9SsydvuKGrKjDP6MkZip8SWx0x8=/1282x0:6907x3164/1920x1080/2024/11/01/1730465087756.jpg?w=3840"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Beaver+Creek+Commons+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/shopping-beaver-creek-commons.jpg"
       },
       {
-        "name": "Crabtree Valley Mall",
-        "tagline": "Major indoor mall with anchor stores and brands.",
+        "name": "Sweetwater Town Center",
+        "tagline": "Newer west Apex shopping and dining hub.",
         "rating_text": "Popular shopping district",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Crabtree+Valley+Mall+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/simpleview/image/fetch/c_limit,q_80,w_1200/https://assets.simpleviewinc.com/simpleview/image/upload/crm/raleigh/Crabtree-Valley-Mall_7ac83be6-e49d-cc59-6f4e76fa6858b7c4.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Sweetwater+Town+Center+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/shopping-sweetwater-town-center.jpg"
       },
       {
-        "name": "Village District",
-        "tagline": "Open-air, boutique-heavy district near NC State.",
+        "name": "Peakway Market Square",
+        "tagline": "Handy Apex corridor for daily convenience.",
         "rating_text": "Popular shopping district",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Village+District+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/sv-raleigh/image/fetch/c_limit,h_1200,q_75,w_1200/https://assets.simpleviewinc.com/simpleview/image/upload/crm/raleigh/312371981_806865944001215_2834293234904015290_n_ABE821AA-EADC-9AC6-09D9F50E0CC6D4D1-abe81e9df8a529c_abe832fc-9b99-030c-a7df49096f93bc45.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Peakway+Market+Square+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/shopping-peakway-market-square.jpg"
       },
       {
-        "name": "State Farmers Market",
-        "tagline": "Fresh produce, local goods, and year-round vendors.",
+        "name": "Downtown Apex Shops",
+        "tagline": "Local boutiques and small businesses downtown.",
         "rating_text": "Popular shopping district",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=State+Farmers+Market+Raleigh+NC",
-        "image_url": "https://assets.simpleviewinc.com/simpleview/image/fetch/c_limit,q_60,w_1200/https://assets.simpleviewinc.com/simpleview/image/upload/crm/raleigh/Farmers-Market-State-12_7b0a2a6f-f951-4147-a73f0ac66eec4a05.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Downtown+Apex+Shops+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/shopping-downtown-apex-shops.jpg"
       }
     ],
     "fitness": [
       {
-        "name": "O2 Fitness",
-        "tagline": "Full-service local gym with multiple Raleigh locations.",
+        "name": "Life Time Apex",
+        "tagline": "Full-service gym for Apex residents.",
         "rating_text": "Popular fitness pick",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=O2+Fitness+Raleigh+NC",
-        "image_url": "https://studio.o2fitnessclubs.com/hubfs/Seaboard.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Life+Time+Apex+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/fitness-life-time-apex.jpg"
       },
       {
-        "name": "Orangetheory Fitness",
-        "tagline": "Coach-led, heart-rate interval training sessions.",
+        "name": "John M. Brown Community Center",
+        "tagline": "Group training with a strong local following.",
         "rating_text": "Popular fitness pick",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Orangetheory+Fitness+Raleigh+NC",
-        "image_url": "https://www.freestufffinder.com/wp-content/uploads/2023/11/Inside-of-Orangetheory-Gym.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=John+M.+Brown+Community+Center+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/fitness-john-m-brown-community-center.jpg"
       },
       {
-        "name": "Burn Boot Camp",
-        "tagline": "High-energy group workouts and strength circuits.",
+        "name": "F45 Training Apex",
+        "tagline": "Quick, structured workouts in Apex.",
         "rating_text": "Popular fitness pick",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=Burn+Boot+Camp+Raleigh+NC",
-        "image_url": "https://www.buildhb.com/wp-content/uploads/2023/03/Burn-boot-camp_03.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=F45+Training+Apex+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/fitness-f45-training-apex.jpg"
       },
       {
-        "name": "F45 Training",
-        "tagline": "Fast-paced functional classes for busy schedules.",
+        "name": "Orangetheory Fitness Apex",
+        "tagline": "Coach-led interval training in town.",
         "rating_text": "Popular fitness pick",
-        "maps_url": "https://www.google.com/maps/search/?api=1&query=F45+Training+Raleigh+NC",
-        "image_url": "https://classpass-res.cloudinary.com/image/upload/f_auto/q_auto/kommy1bziio33tvlr0oz.jpg"
+        "maps_url": "https://www.google.com/maps/search/?api=1&query=Orangetheory+Fitness+Apex+Apex+NC",
+        "image_url": "/assets/images/local-highlights/apex/fitness-orangetheory-fitness-apex.jpg"
       }
     ]
   }
 }
+

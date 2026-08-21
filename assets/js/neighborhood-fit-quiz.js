@@ -56,11 +56,11 @@
       { label: "I want a good balance of all three", traits: { schools: 3, amenities: 2, quiet: 1 } }
     ],
     budget: [
-      { label: "I want the most premium option", traits: { luxury: 4, establishedCharm: 2 } },
-      { label: "I can stretch for the right home", traits: { luxury: 2, walkability: 2, downtownEnergy: 1 } },
       { label: "I want the best overall value", traits: { value: 5 } },
-      { label: "I want a lower-maintenance payment", traits: { lowMaintenance: 3, value: 2 } },
-      { label: "I want more space for the money", traits: { space: 4, value: 2 } }
+      { label: "I want a larger house with a larger lot", traits: { space: 4, luxury: 1, value: 1 } },
+      { label: "I want low-maintenance living", traits: { lowMaintenance: 5 } },
+      { label: "I want more space for the money", traits: { space: 4, value: 2 } },
+      { label: "I want to minimize my monthly payment", traits: { value: 5, lowMaintenance: 2 } }
     ],
     amenities: [
       { label: "Restaurants, coffee, and nightlife", traits: { socialLifestyle: 4, walkability: 3, amenities: 2, downtownEnergy: 2 } },
@@ -77,11 +77,11 @@
       { label: "I prefer low-maintenance living either way", traits: { lowMaintenance: 4 } }
     ],
     outdoors: [
-      { label: "Greenways and trails", traits: { outdoors: 5, quiet: 1 } },
-      { label: "Lakes and parks", traits: { outdoors: 4, space: 1 } },
-      { label: "Golf or country-club amenities", traits: { luxury: 2, amenities: 3, outdoors: 1 } },
-      { label: "Backyard space and room to spread out", traits: { space: 4, quiet: 2 } },
-      { label: "I mostly care about location and convenience", traits: { commuteRaleigh: 2, commuteRTP: 2, urban: 1 } }
+      { label: "Spending time outside on greenways and trails", traits: { outdoors: 5, quiet: 1 } },
+      { label: "Using HOA amenities, a country club, or a golf course", traits: { amenities: 4, luxury: 2, outdoors: 1 } },
+      { label: "Hanging out in my backyard with friends and family", traits: { space: 3, family: 2, quiet: 1 } },
+      { label: "Going into downtown for shopping, food, and local events", traits: { socialLifestyle: 4, walkability: 3, urban: 2, amenities: 2 } },
+      { label: "A mix of all of the above", traits: { outdoors: 2, amenities: 2, socialLifestyle: 2, quiet: 1 } }
     ],
     traffic: [
       { label: "I am highly traffic-sensitive", traits: { trafficSensitive: 5, quiet: 1 } },
@@ -91,15 +91,26 @@
       { label: "I want easy access to major roads and errands", traits: { amenities: 2, commuteRTP: 1, lowMaintenance: 1 } }
     ],
     growth: [
-      { label: "A well-established neighborhood feels right", traits: { resale: 4, establishedCharm: 4 } },
-      { label: "I like areas that are growing but grounded", traits: { growth: 4, value: 2 } },
-      { label: "I want the newest pockets of development", traits: { newConstruction: 4, growth: 2 } },
-      { label: "I want a neighborhood that already feels complete", traits: { quiet: 3, amenities: 2 } },
-      { label: "I want the best long-term upside", traits: { growth: 5, value: 2 } }
+      { label: "A well-established neighborhood", traits: { resale: 4, establishedCharm: 4, quiet: 1 } },
+      { label: "A neighborhood that's growing but grounded", traits: { growth: 4, value: 2 } },
+      { label: "The newest pockets of development", traits: { newConstruction: 4, growth: 2 } },
+      { label: "A neighborhood that already feels complete", traits: { quiet: 3, amenities: 2 } },
+      { label: "The best long-term upside", traits: { growth: 5, value: 2 } }
     ]
   };
 
-  const QUIZZES = {
+  const STANDARD_QUESTION_SPECS = [
+    { prompt: "What kind of home excites you?", optionSetKey: "homeStyle" },
+    { prompt: "What is most important to you in a community?", optionSetKey: "vibe" },
+    { prompt: "How important is it that your neighborhood feels family-friendly?", optionSetKey: "schools" },
+    { prompt: "How do you feel about new construction versus established neighborhoods?", optionSetKey: "newResale" },
+    { prompt: "Does commute matter to you?", optionSetKey: "commute" },
+    { prompt: "What matters most when choosing a home?", optionSetKey: "budget" },
+    { prompt: "What kind of neighborhood pace do you want?", optionSetKey: "growth" },
+    { prompt: "What does your ideal weekend look like?", optionSetKey: "outdoors" }
+  ];
+
+  const QUIZZES = window.NEIGHBORHOOD_FIT_QUIZZES || {
     raleigh: {
       slug: "raleigh",
       city: "Raleigh",
@@ -123,73 +134,89 @@
       neighborhoods: [
         {
           suburb: "Five Points",
-          image: "/assets/images/communities/itb.jpg",
-          imageAlt: "Five Points area in Raleigh",
-          typeLabel: "Resale-heavy",
+          image: "/assets/images/neighborhood-fit/raleigh-five-points.jpg",
+          imageAlt: "Five Points in Raleigh",
+          typeLabel: "Historic resale",
           group: "ITB",
-          summary: "Historic, central, and easy to love if you want a classic Raleigh resale neighborhood with personality.",
-          why: "Best for buyers who want character homes, mature streets, and quick access to downtown Raleigh.",
-          homes: "Bungalows, renovated cottages, and established single-family homes.",
-          access: "Strong Raleigh access with fast trips to downtown, North Hills, and the inner beltline.",
-          amenities: "Coffee, restaurants, parks, and neighborhood nightlife are all part of the draw.",
+          summary: "Classic close-in Raleigh with older homes and a strong neighborhood feel.",
+          why: "Best if you want character and a short hop to downtown Raleigh.",
+          homes: "Bungalows, cottages, and older single-family homes.",
+          access: "Quick access to downtown Raleigh and the inner beltline.",
+          amenities: "Coffee, restaurants, and parks are nearby.",
           learnMoreUrl: "/explore-the-area/raleigh/",
           traits: { resale: 5, walkability: 5, downtownEnergy: 4, urban: 4, socialLifestyle: 4, establishedCharm: 5, commuteRaleigh: 5, amenities: 3, family: 2, schools: 2, quiet: 1, space: 1, luxury: 2, value: 2, lowMaintenance: 1, growth: 1 }
         },
         {
-          suburb: "Historic Oakwood",
-          image: "/assets/images/communities/itb.jpg",
-          imageAlt: "Historic Oakwood area in Raleigh",
-          typeLabel: "Resale-heavy",
-          group: "ITB",
-          summary: "One of Raleigh’s signature historic neighborhoods with a preserved streetscape and a strong old-Raleigh feel.",
-          why: "Best if you want a true historic resale neighborhood with character, charm, and central convenience.",
-          homes: "Historic homes, renovated classics, and limited-inventory resale properties.",
-          access: "Close to downtown Raleigh, museums, and core city amenities.",
-          amenities: "Walkable access to eateries, events, and the kind of neighborhood energy that stays active.",
-          learnMoreUrl: "/explore-the-area/raleigh/",
-          traits: { resale: 5, walkability: 4, downtownEnergy: 5, urban: 4, socialLifestyle: 3, establishedCharm: 5, commuteRaleigh: 5, amenities: 3, family: 2, schools: 2, quiet: 1, space: 1, luxury: 2, value: 1, lowMaintenance: 1, growth: 1 }
-        },
-        {
           suburb: "North Hills",
-          image: "/assets/images/communities/north-raleigh.jpg",
-          imageAlt: "North Hills area in Raleigh",
+          image: "/assets/images/neighborhood-fit/raleigh-north-hills.jpg",
+          imageAlt: "North Hills in Raleigh",
           typeLabel: "Lifestyle mix",
           group: "Midtown",
-          summary: "Raleigh’s midtown energy with shopping, restaurants, and a mix of established homes and newer product.",
-          why: "Best for buyers who want polished convenience, a social feel, and a strong everyday amenities package.",
-          homes: "Updated resale homes, upscale condos, townhomes, and a smaller number of newer builds.",
-          access: "Excellent access to central Raleigh and major commute routes.",
-          amenities: "Restaurants, retail, entertainment, fitness, and everyday errands are right nearby.",
+          summary: "North Hills is often called Raleigh's second downtown. It is one of the best parts of Raleigh for shopping, dining, and easy day-to-day living. It feels lively and polished, with upscale stores, local businesses, and walkable streets around the core. It also connects to several surrounding neighborhoods, so it feels bigger than just one shopping district.",
+          why: "If you like being close to everything and want a neighborhood that feels walkable, easy to live in, and still premium, North Hills is a strong fit.",
+          homes: "You will find a real mix here, including older homes, newer homes, condos, and brand-new construction.",
+          access: "Walkable to the core, with easy access to surrounding neighborhoods and major Raleigh routes.",
+          amenities: "Upscale stores, local businesses, dining, and everyday conveniences are the draw.",
           learnMoreUrl: "/explore-the-area/raleigh/",
           traits: { resale: 3, walkability: 4, downtownEnergy: 4, urban: 3, socialLifestyle: 4, establishedCharm: 2, commuteRaleigh: 4, amenities: 5, family: 3, schools: 3, quiet: 2, space: 2, luxury: 4, value: 2, lowMaintenance: 3, growth: 2 }
         },
         {
-          suburb: "North Raleigh",
-          image: "/assets/images/communities/north-raleigh.jpg",
-          imageAlt: "North Raleigh area",
-          typeLabel: "Resale-heavy",
+          suburb: "Stonehenge",
+          image: "/assets/images/neighborhood-fit/raleigh-stonehenge.jpg",
+          imageAlt: "Stonehenge in Raleigh",
+          imageSecondary: "/assets/images/neighborhood-fit/raleigh-stonehenge-secondary.jpg",
+          imageSecondaryAlt: "Stonehenge neighborhood street in Raleigh",
+          typeLabel: "Established value",
           group: "North Raleigh",
-          summary: "A reliable choice if you want established neighborhoods, more space, and a family-friendly feel.",
-          why: "Best for buyers who care about schools, quieter streets, and classic Raleigh suburb comfort.",
-          homes: "Traditional single-family resale homes, larger lots, and updated established properties.",
-          access: "Solid access to downtown Raleigh, North Hills, and the RTP corridor.",
-          amenities: "Greenways, parks, schools, and convenient shopping are all part of the draw.",
+          summary: "A steady North Raleigh resale neighborhood with a classic suburban feel.",
+          why: "Best if you want more house, more yard, and a quieter daily pace.",
+          homes: "Traditional single-family homes and updated resale properties.",
+          access: "Good access to North Raleigh, Crabtree, and wider Raleigh routes.",
+          amenities: "Parks, greenways, and everyday shopping are nearby.",
           learnMoreUrl: "/explore-the-area/raleigh/",
-          traits: { resale: 5, family: 4, schools: 4, quiet: 4, space: 4, commuteRaleigh: 4, commuteRTP: 3, amenities: 3, establishedCharm: 4, value: 3, lowMaintenance: 2, growth: 2, luxury: 2, outdoors: 4, trafficSensitive: 3 }
+          traits: { resale: 5, family: 4, schools: 4, quiet: 4, space: 4, commuteRaleigh: 4, commuteRTP: 3, amenities: 3, establishedCharm: 4, value: 3, lowMaintenance: 2, growth: 2, luxury: 1, outdoors: 4, trafficSensitive: 3 }
         },
         {
-          suburb: "Inside the Beltline",
-          image: "/assets/images/communities/itb.jpg",
-          imageAlt: "Inside the Beltline Raleigh area",
-          typeLabel: "Resale-heavy",
-          group: "ITB",
-          summary: "The classic close-in Raleigh choice for buyers who want walkability, character, and a real city feel.",
-          why: "Best for people who care most about location, historic neighborhoods, and a short hop to downtown.",
-          homes: "Historic homes, renovated cottages, and premium resale properties.",
-          access: "The closest day-to-day access in the city for many downtown-oriented buyers.",
-          amenities: "Restaurants, parks, coffee, and neighborhood institutions keep the area feeling active.",
+          suburb: "Six Forks",
+          image: "/assets/images/neighborhood-fit/raleigh-six-forks.jpg",
+          imageAlt: "Six Forks in Raleigh",
+          typeLabel: "Entry-level resale",
+          group: "North Raleigh",
+          summary: "An approachable North Raleigh option with straightforward access and a familiar suburban feel.",
+          why: "Best if you want an established area without moving into the higher-end tier.",
+          homes: "Traditional homes, townhomes, and older resale properties.",
+          access: "Good access to north-south Raleigh routes and errands.",
+          amenities: "Local retail, services, and parks are the main conveniences.",
           learnMoreUrl: "/explore-the-area/raleigh/",
-          traits: { resale: 5, walkability: 5, downtownEnergy: 5, urban: 5, socialLifestyle: 4, establishedCharm: 4, commuteRaleigh: 5, amenities: 4, family: 2, schools: 2, quiet: 1, space: 1, luxury: 3, value: 1, lowMaintenance: 1, growth: 2 }
+          traits: { resale: 4, value: 5, family: 4, schools: 3, quiet: 3, space: 3, commuteRaleigh: 4, commuteRTP: 2, amenities: 2, establishedCharm: 3, lowMaintenance: 2, trafficSensitive: 2 }
+        },
+        {
+          suburb: "Brier Creek",
+          image: "/assets/images/neighborhood-fit/raleigh-brier-creek.jpg",
+          imageAlt: "Brier Creek in Raleigh",
+          typeLabel: "Convenience mix",
+          group: "Northwest Raleigh",
+          summary: "A practical Raleigh-area choice near RTP and the airport with newer homes and easy errands.",
+          why: "Best if you want convenience first and do not need a historic neighborhood feel.",
+          homes: "Townhomes, newer single-family homes, and suburban resale from the 2000s and 2010s.",
+          access: "Easy access to I-40, RTP, Durham, and the airport corridor.",
+          amenities: "Shopping, restaurants, and everyday services are the main draw.",
+          learnMoreUrl: "/explore-the-area/raleigh/",
+          traits: { newConstruction: 3, lowMaintenance: 4, commuteRTP: 5, commuteDurham: 3, commuteRaleigh: 2, amenities: 5, value: 3, family: 3, quiet: 2, space: 2, growth: 4, resale: 3, urban: 2, establishedCharm: 2 }
+        },
+        {
+          suburb: "Falls River",
+          image: "/assets/images/neighborhood-fit/raleigh-falls-river.jpg",
+          imageAlt: "Falls River in Raleigh",
+          typeLabel: "Established family",
+          group: "North Raleigh",
+          summary: "A settled North Raleigh neighborhood with traditional homes, sidewalks, and a residential feel.",
+          why: "Best if you want a family-friendly neighborhood with a steady suburban rhythm.",
+          homes: "Traditional single-family homes and some townhomes from the 1990s and 2000s.",
+          access: "Convenient to north Raleigh shopping, schools, and the broader Raleigh commute network.",
+          amenities: "Parks, greenways, and nearby daily conveniences are the main strengths.",
+          learnMoreUrl: "/explore-the-area/raleigh/",
+          traits: { resale: 4, family: 5, schools: 4, quiet: 4, space: 3, commuteRaleigh: 4, commuteRTP: 3, amenities: 3, establishedCharm: 4, value: 3, lowMaintenance: 2, growth: 2, outdoors: 4 }
         }
       ]
     },
@@ -234,11 +261,11 @@
           imageAlt: "Lochmere area in Cary",
           typeLabel: "Resale-heavy",
           group: "South Cary",
-          summary: "A long-loved Cary neighborhood with greenways, lakes, and a strong established-suburb feel.",
-          why: "Best for buyers who want family appeal, outdoor space, and a resale neighborhood with staying power.",
-          homes: "Traditional single-family homes and updated resale properties with mature landscaping.",
+          summary: "A long-loved Cary neighborhood with greenways, lakes, and a strong established feel.",
+          why: "Best for buyers who want a neighborhood that feels established, family-friendly, and close to everyday recreation.",
+          homes: "You'll mostly see 1980s and 1990s resale homes, many of them updated. Some homes back up to one of the community lakes, so you can be close to kayaking or fishing from home.",
           access: "Convenient to south Cary, Downtown Cary, and major routes toward Raleigh.",
-          amenities: "Greenways, lakes, neighborhood recreation, and nearby shopping make daily life easy.",
+          amenities: "Built-in shopping, nearby places to eat, and outdoor spaces make daily life easy here.",
           learnMoreUrl: "/explore-the-area/cary/",
           traits: { resale: 5, family: 5, schools: 4, outdoors: 5, quiet: 4, space: 3, commuteRaleigh: 3, commuteRTP: 4, amenities: 4, establishedCharm: 4, value: 3, lowMaintenance: 2, trafficSensitive: 3, growth: 2 }
         },
@@ -262,11 +289,11 @@
           imageAlt: "Carpenter Village in Cary",
           typeLabel: "Resale-heavy",
           group: "West Cary",
-          summary: "A new-urbanist Cary community with front porches, ponds, and a neighborhood identity that still feels established.",
-          why: "Best for buyers who want a prettier, walkable community without giving up Cary’s resale stability.",
-          homes: "Townhomes, single-family resale homes, and a mix of updated floor plans.",
-          access: "Convenient to west Cary shopping, greenways, and RTP-bound commutes.",
-          amenities: "Ponds, trails, sidewalks, and neighborhood gathering spaces shape the daily feel.",
+          summary: "Cary's favorite front-porch community, with ponds, amenities, and a strong neighborhood identity.",
+          why: "Best for buyers who want a pretty, walkable West Cary neighborhood that still feels practical and close to everything.",
+          homes: "You'll mostly see late-1990s and early-2000s homes, plus some townhomes and well-kept resale houses.",
+          access: "Convenient to West Cary shopping, greenways, RTP, RDU, and the airport.",
+          amenities: "Built-in ponds, sidewalks, neighborhood gathering spaces, and top-rated Wake County schools make daily life easy.",
           learnMoreUrl: "/explore-the-area/cary/",
           traits: { resale: 4, walkability: 4, family: 4, schools: 4, amenities: 4, outdoors: 4, socialLifestyle: 3, lowMaintenance: 3, commuteRTP: 4, commuteRaleigh: 2, establishedCharm: 4, quiet: 3, value: 3, growth: 2 }
         },
@@ -313,18 +340,20 @@
           imageAlt: "Heritage area in Wake Forest",
           typeLabel: "Resale-heavy",
           group: "Heritage",
-          summary: "Wake Forest’s signature master-planned neighborhood with a strong resale base and a big family draw.",
-          why: "Best for families who want schools, amenities, and a long-established Wake Forest address.",
-          homes: "Traditional single-family homes, updated resale properties, and some golf/community options.",
-          access: "Solid access to central Wake Forest and the main commuter routes south.",
-          amenities: "Golf, trails, lake life, and neighborhood recreation are central to the appeal.",
+          summary: "Wake Forest's longtime flagship neighborhood, known for larger homes, a golf-course setting, and a very established feel.",
+          why: "Best for buyers who want a classic Wake Forest address with room, amenities, and a strong community reputation.",
+          homes: "You'll find traditional single-family homes, updated resales, and some golf-community pockets.",
+          access: "Good access to central Wake Forest, Heritage's shopping and dining, and the main routes south.",
+          amenities: "Golf, trails, lake access, neighborhood recreation, and the broader Heritage village feel are a big part of the appeal.",
           learnMoreUrl: "/explore-the-area/wake-forest/",
           traits: { resale: 5, family: 5, schools: 5, amenities: 4, outdoors: 4, quiet: 4, establishedCharm: 4, commuteRaleigh: 3, commuteRTP: 2, value: 3, luxury: 3, lowMaintenance: 2, growth: 2, trafficSensitive: 3, newConstruction: 1 }
         },
         {
           suburb: "Holding Village",
-          image: "/assets/images/communities/wake-forest.jpg",
+          image: "/assets/images/neighborhood-fit/wake-forest-holding-village.jpg",
           imageAlt: "Holding Village in Wake Forest",
+          imageSecondary: "/assets/images/neighborhood-fit/wake-forest-holding-village-secondary.jpg",
+          imageSecondaryAlt: "Holding Village aerial amenity view",
           typeLabel: "New-construction mix",
           group: "North Wake Forest",
           summary: "A newer traditional-style community with lake, trails, and a more intentional neighborhood feel.",
@@ -337,8 +366,10 @@
         },
         {
           suburb: "Traditions at Wake Forest",
-          image: "/assets/images/communities/wake-forest.jpg",
-          imageAlt: "Traditions at Wake Forest",
+          image: "/assets/images/neighborhood-fit/wake-forest-traditions.jpg",
+          imageAlt: "Traditions at Wake Forest aerial amenity view",
+          imageSecondary: "/assets/images/neighborhood-fit/wake-forest-traditions-secondary.jpg",
+          imageSecondaryAlt: "Traditions at Wake Forest neighborhood street view",
           typeLabel: "New-construction friendly",
           group: "North Wake Forest",
           summary: "A newer, amenity-rich Wake Forest community that works well for buyers who want a more modern neighborhood setup.",
@@ -351,8 +382,10 @@
         },
         {
           suburb: "Wake Forest Historic District",
-          image: "/assets/images/communities/wake-forest.jpg",
-          imageAlt: "Wake Forest historic district",
+          image: "/assets/images/neighborhood-fit/wake-forest-wake-forest-historic-district.jpg",
+          imageAlt: "Wake Forest Historic District downtown street view",
+          imageSecondary: "/assets/images/neighborhood-fit/wake-forest-wake-forest-historic-district-secondary.jpg",
+          imageSecondaryAlt: "Wake Forest Historic District historic home front",
           typeLabel: "Resale-heavy",
           group: "Downtown Wake Forest",
           summary: "The classic downtown option for buyers who want older homes, local energy, and a walkable town center.",
@@ -365,8 +398,8 @@
         },
         {
           suburb: "Stonegate",
-          image: "/assets/images/communities/wake-forest.jpg",
-          imageAlt: "Stonegate area in Wake Forest",
+          image: "/assets/images/neighborhood-fit/wake-forest-stonegate.jpg",
+          imageAlt: "Stonegate exterior home in Wake Forest",
           typeLabel: "Resale-heavy",
           group: "North Wake Forest",
           summary: "A family-friendly Wake Forest pick when you want a mature neighborhood, schools, and a more classic suburban feel.",
@@ -402,8 +435,8 @@
       neighborhoods: [
         {
           suburb: "Kitts Creek",
-          image: "/assets/images/communities/morrisville.jpg",
-          imageAlt: "Kitts Creek in Morrisville",
+          image: "/assets/images/neighborhood-fit/morrisville-kitts-creek.jpg",
+          imageAlt: "Kitts Creek exterior home in Morrisville",
           typeLabel: "Resale and newer mix",
           group: "Morrisville Core",
           summary: "One of Morrisville’s most recognizable neighborhoods for commuters who want a convenient, amenity-rich base.",
@@ -416,8 +449,8 @@
         },
         {
           suburb: "Prestonwood",
-          image: "/assets/images/communities/morrisville.jpg",
-          imageAlt: "Prestonwood area in Morrisville",
+          image: "/assets/images/neighborhood-fit/morrisville-prestonwood.jpg",
+          imageAlt: "Prestonwood aerial neighborhood view",
           typeLabel: "Resale-heavy",
           group: "Morrisville Core",
           summary: "An established, higher-end Morrisville choice with country-club energy and strong RTP convenience.",
@@ -427,20 +460,6 @@
           amenities: "Golf, club amenities, and neighborhood recreation shape the appeal.",
           learnMoreUrl: "/explore-the-area/morrisville/",
           traits: { resale: 5, luxury: 4, commuteRTP: 5, commuteRaleigh: 3, family: 4, schools: 4, amenities: 4, quiet: 3, establishedCharm: 4, lowMaintenance: 2, value: 2, trafficSensitive: 2, growth: 2 }
-        },
-        {
-          suburb: "Carpenter Park",
-          image: "/assets/images/communities/morrisville.jpg",
-          imageAlt: "Carpenter Park area in Morrisville",
-          typeLabel: "Resale-heavy",
-          group: "Morrisville Core",
-          summary: "A family-friendly Morrisville neighborhood when schools, parks, and a comfortable suburban setting matter most.",
-          why: "Best for buyers who want a stable resale neighborhood with neighborhood recreation and a practical location.",
-          homes: "Traditional single-family homes and townhomes with a suburban layout.",
-          access: "Good access to Morrisville-Carpenter Road and the broader RTP corridor.",
-          amenities: "Parks, playgrounds, and nearby daily conveniences make it easy to live in.",
-          learnMoreUrl: "/explore-the-area/morrisville/",
-          traits: { resale: 4, family: 5, schools: 4, quiet: 3, space: 3, amenities: 4, commuteRTP: 4, commuteRaleigh: 2, outdoors: 3, lowMaintenance: 2, value: 3, establishedCharm: 3, growth: 2, trafficSensitive: 2 }
         },
         {
           suburb: "Village at Town Hall Commons",
@@ -765,6 +784,18 @@
     };
   }
 
+  function normalizeQuizConfig(config, slug) {
+    if (!config) return null;
+    const questions = STANDARD_QUESTION_SPECS.map((spec) => makeQuestion(spec.prompt, spec.optionSetKey));
+
+    return {
+      ...config,
+      slug: config.slug || slug,
+      sourcePage: config.sourcePage || `/explore-the-area/${slug}/`,
+      questions
+    };
+  }
+
   function escapeHtml(value) {
     return String(value == null ? "" : value)
       .replace(/&/g, "&amp;")
@@ -826,11 +857,17 @@
       summary: item.summary,
       why: item.why,
       homes: item.homes,
+      priceRange: item.priceRange,
+      homeAge: item.homeAge,
       access: item.access,
       amenities: item.amenities,
       learnMoreUrl: item.learnMoreUrl,
       image: item.image,
-      imageAlt: item.imageAlt || item.suburb
+      imageAlt: item.imageAlt || item.suburb,
+      imageSecondary: item.imageSecondary || null,
+      imageSecondaryAlt: item.imageSecondaryAlt || item.suburb,
+      videoUrl: index === 0 ? (config.videoUrl || item.videoUrl || "") : (item.videoUrl || ""),
+      videoTitle: index === 0 ? (config.videoTitle || config.title || item.videoTitle || item.suburb) : (item.videoTitle || "")
     }));
   }
 
@@ -858,19 +895,10 @@
 
     root.innerHTML = `
       <div class="neighborhood-fit-shell">
-        <div class="neighborhood-fit-hero">
+        <div class="neighborhood-fit-hero neighborhood-fit-hero--compact">
           <div class="neighborhood-fit-hero-copy">
             <p class="neighborhood-fit-script">Find Your Neighborhood Fit</p>
             <h2>${escapeHtml(config.city)} Neighborhood Fit Quiz</h2>
-            <p>${escapeHtml(config.intro)}</p>
-            <div class="neighborhood-fit-points">
-              <div class="neighborhood-fit-point"><strong>8 questions</strong><span>to narrow the field fast</span></div>
-              <div class="neighborhood-fit-point"><strong>3 top neighborhoods</strong><span>based on your answers</span></div>
-              <div class="neighborhood-fit-point"><strong>Resale-first or mix</strong><span>depending on the city</span></div>
-            </div>
-          </div>
-          <div class="neighborhood-fit-hero-media">
-            <img src="${escapeHtml(config.heroImage)}" alt="${escapeHtml(config.heroAlt)}" loading="eager">
           </div>
         </div>
 
@@ -1011,8 +1039,9 @@
       state.results = resultCards;
       const cardsHtml = resultCards.map((result) => `
         <article class="neighborhood-fit-result-card">
-          <div class="neighborhood-fit-result-media">
+          <div class="neighborhood-fit-result-media${result.imageSecondary ? " is-dual" : ""}">
             <img src="${escapeHtml(result.image)}" alt="${escapeHtml(result.imageAlt)}" loading="lazy">
+            ${result.imageSecondary ? `<img src="${escapeHtml(result.imageSecondary)}" alt="${escapeHtml(result.imageSecondaryAlt || result.suburb)}" loading="lazy">` : ""}
           </div>
           <div class="neighborhood-fit-result-body">
             <div class="neighborhood-fit-result-badges">
@@ -1023,8 +1052,25 @@
             <p class="neighborhood-fit-result-summary">${escapeHtml(result.summary)}</p>
             <p><strong>Why it fits:</strong> ${escapeHtml(result.why)}</p>
             <p><strong>Homes you usually see:</strong> ${escapeHtml(result.homes)}</p>
+            <p><strong>Typical single-family range:</strong> ${escapeHtml(result.priceRange || "Varies by home and finish level")}</p>
+            <p><strong>Home age:</strong> ${escapeHtml(result.homeAge || "Varies")}</p>
             <p><strong>Access:</strong> ${escapeHtml(result.access)}</p>
             <p><strong>Amenities:</strong> ${escapeHtml(result.amenities)}</p>
+            ${result.videoUrl ? `
+            <div class="neighborhood-fit-result-video">
+              <p class="neighborhood-fit-result-video-kicker">Featured video</p>
+              <h5>${escapeHtml(result.videoTitle || `${result.suburb} video tour`)}</h5>
+              <div class="neighborhood-fit-result-video-frame">
+                <iframe
+                  src="${escapeHtml(result.videoUrl)}"
+                  title="${escapeHtml(result.videoTitle || `${result.suburb} video tour`)}"
+                  loading="lazy"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  referrerpolicy="strict-origin-when-cross-origin"
+                  allowfullscreen
+                ></iframe>
+              </div>
+            </div>` : ""}
             <a class="neighborhood-fit-result-link" href="${escapeHtml(result.learnMoreUrl)}" target="_blank" rel="noopener noreferrer">Learn More</a>
           </div>
         </article>
@@ -1094,7 +1140,7 @@
 
       return {
         ...answerPayload,
-        lead_type: "suburb_quiz",
+        lead_type: "neighborhood_quiz",
         source_page: config.sourcePage,
         source_key: config.sourcePage,
         submitted_at: new Date().toISOString(),
@@ -1212,6 +1258,26 @@
     syncSubmitState();
   }
 
+  function injectSpotlightVideo(config) {
+    if (!config || !config.videoUrl) return;
+    const spotlightCopy = document.querySelector(".raleigh-spotlight-copy");
+    if (!spotlightCopy || spotlightCopy.querySelector(".raleigh-spotlight-video")) return;
+
+    const videoWrap = document.createElement("div");
+    videoWrap.className = "raleigh-spotlight-video";
+    videoWrap.innerHTML = `
+      <iframe
+        src="${escapeHtml(config.videoUrl)}"
+        title="${escapeHtml(config.videoTitle || `${config.city} neighborhood map tour video`)}"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen
+      ></iframe>
+    `;
+    spotlightCopy.appendChild(videoWrap);
+  }
+
   function renderVideo(root, config) {
     root.innerHTML = `
       <div class="neighborhood-fit-video-shell">
@@ -1233,19 +1299,18 @@
     `;
   }
 
+  window.NEIGHBORHOOD_FIT_QUIZZES = QUIZZES;
+
   document.querySelectorAll("[data-neighborhood-fit-quiz]").forEach((node) => {
     const slug = String(node.getAttribute("data-neighborhood-fit-quiz") || "").toLowerCase();
-    const config = QUIZZES[slug];
+    const config = normalizeQuizConfig(QUIZZES[slug], slug);
     if (config) {
       renderQuiz(node, config);
+      injectSpotlightVideo(config);
     }
   });
 
   document.querySelectorAll("[data-neighborhood-fit-video]").forEach((node) => {
-    const slug = String(node.getAttribute("data-neighborhood-fit-video") || "").toLowerCase();
-    const config = QUIZZES[slug];
-    if (config) {
-      renderVideo(node, config);
-    }
+    node.remove();
   });
 })();

@@ -9,180 +9,880 @@
   <link rel="preconnect" href="https://calendar.google.com" />
   <link rel="preconnect" href="https://www.google.com" />
   <link rel="preconnect" href="https://accounts.google.com" />
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20260821-mobilefix4" />
 
   <style>
-    :root{
-      --green:#16a34a;
-      --text:#111827;
-      --muted:#4b5563;
-      --bg:#ffffff;
-      --border:rgba(17,24,39,.10);
-      --shadow:0 10px 30px rgba(17,24,39,.08);
-
-      /* Responsive tuning knobs (JS will adjust these too) */
-      --crop:0px;   /* restored Google header */   /* trims Google header */
-      --frame:520px;  /* visible calendar height */
+    :root {
+      --green: #2F5233;
+      --text: #111827;
+      --muted: #4b5563;
+      --border: rgba(17, 24, 39, 0.10);
+      --shadow: 0 10px 30px rgba(17, 24, 39, 0.08);
+      --frame: 560px;
+      --desktop-consult-scale: 1;
     }
 
-    *{box-sizing:border-box}
+    * { box-sizing: border-box; }
 
-    body{
-      margin:0;
+    html, body {
+      margin: 0;
+      width: 100%;
+      overflow-x: hidden;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-      color:var(--text);
-      background:linear-gradient(180deg, #f8fafc 0%, #ffffff 60%);
+      color: var(--text);
+      background: linear-gradient(180deg, #f8fafc 0%, #ffffff 60%);
     }
 
-    .wrap{
-      max-width:980px;
-      margin:0 auto;
-      padding:28px 18px 40px;
+    body.page-consult {
+      overflow: hidden;
     }
 
-    .card{
-      background:#fff;
-      border:1px solid var(--border);
-      box-shadow:var(--shadow);
-      border-radius:18px;
-      padding:22px 18px 18px;
-      overflow:hidden;
+    body.page-consult .site-shell {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
 
-    .hero{
-      width:100%;
-      border-radius:14px;
-      border:1px solid var(--border);
-      margin-bottom:16px;
+    html.desktop-lock-consult body.page-consult {
+      overflow: hidden;
+      height: 100vh;
     }
 
-    h1{
-      margin:2px 0 8px;
-      font-size:clamp(26px, 3.2vw, 38px);
-      line-height:1.1;
-      letter-spacing:-0.02em;
+    html.desktop-lock-consult body.page-consult .site-shell {
+      position: fixed;
+      inset: 0 auto auto 0;
+      width: calc(100vw / var(--desktop-consult-scale));
+      min-height: calc(100vh / var(--desktop-consult-scale));
+      height: calc(100vh / var(--desktop-consult-scale));
+      transform: scale(var(--desktop-consult-scale));
+      transform-origin: top left;
+      margin: 0;
+      overflow: hidden;
     }
 
-    .green{color:var(--green); font-weight:800}
-
-    /* EMBED SHELL (single border + rounded corners) */
-    .embedShell{
-      margin-top:12px;
-      border:1px solid var(--border);
-      border-radius:12px;
-      overflow:hidden;
-      background:#fff;
+    html.desktop-lock-consult body.page-consult .site-shell > * {
+      flex-shrink: 0;
     }
 
-    /* Green bar (intro message) */
-    .embedHeader{
-      background:var(--green);
-      color:#fff;
-      padding:14px 16px;
-      font-size:14px;
-      line-height:1.45;
-      font-weight:500;
+    html.layout-editor-booting body {
+      visibility: hidden;
     }
 
-    /* Match Google inner calendar width */
-    .embedHeaderInner{
-      width:min(860px, 100%);
-      margin:0 auto;
-      padding:0 2px;
+    body.page-consult .home-header-stack {
+      --home-top-row-h: 14px;
+      --home-green-row-h: 50px;
+      --home-edge-gap: clamp(52px, 4vw, 88px);
     }
 
-    /* Wrapper that clips the iframe after we shift it up */
-    .embedWrap{
-      position:relative;
-      width:100%;
-      background:#fff;
-      overflow:hidden;     /* clips the extra iframe height */
-      height:var(--frame); /* visible embed height */
+    body.page-consult .home-header-stack {
+      margin-bottom: 0;
     }
 
-    iframe.frame{
-      display:block;
-      width:100%;
-      border:0;
-      position:relative;
-      top:0; /* no vertical shift */
-      height:var(--frame); /* iframe is taller; wrapper clips it */
-      background:#fff;
+    body.page-consult .team-strip {
+      display: none;
     }
 
-    @media (max-width:900px){
-      .wrap{padding:22px 14px 34px}
-      .card{padding:18px 14px 14px}
+    body.page-consult .utility-nav {
+      background: var(--green);
+      padding-top: 0;
+      padding-bottom: 0;
     }
 
-    @media (max-width:640px){
-      :root{ --crop:270px; --frame:680px; }
-      .embedHeader{font-size:13px; padding:12px 12px}
-      .embedHeaderInner{padding:0}
+    body.page-consult .utility-links {
+      display: none;
     }
 
-    @media (max-width:420px){
-      :root{ --crop:290px; --frame:760px; }
+    body.page-consult .utility-inner {
+      justify-content: flex-end;
+    }
+
+    body.page-consult .home-header-stack .utility-inner {
+      width: 100%;
+      max-width: none;
+      min-height: var(--home-green-row-h);
+      padding-inline: var(--home-edge-gap);
+      display: block;
+      position: relative;
+    }
+
+    body.page-consult .utility-nav::before {
+      content: '#1 RELOCATION TEAM IN RALEIGH';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 15px;
+      font-weight: 900;
+      letter-spacing: 0.12em;
+      line-height: 1;
+      text-align: center;
+      padding: 0;
+      pointer-events: none;
+    }
+
+    body.page-consult .consult-banner-link {
+      position: absolute;
+      left: calc(var(--home-edge-gap) + 40px);
+      top: -18px;
+      width: 224px;
+      height: 224px;
+      display: block;
+      text-decoration: none;
+      z-index: 1305;
+      box-sizing: border-box;
+      overflow: visible;
+    }
+
+    body.page-consult .consult-banner-square {
+      position: absolute;
+      inset: 0;
+      display: block;
+      background: var(--green);
+      z-index: 0;
+    }
+
+    body.page-consult .consult-banner-image {
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      width: 204px;
+      height: 204px;
+      display: block;
+      object-fit: contain;
+      object-position: center center;
+      transform: none;
+      z-index: 1;
+    }
+
+    body.page-consult .call-link {
+      position: absolute;
+      right: var(--home-edge-gap);
+      top: 50%;
+      transform: translate(-91.3px, -17.8px);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      min-width: 136px;
+      justify-content: center;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      font-weight: 800;
+      color: #fff;
+      text-decoration: none;
+      background: var(--brand-gold-500);
+      border: 1px solid rgba(255, 255, 255, 0.42);
+      border-radius: 4px;
+      text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+    }
+
+    body.page-consult .call-link:visited,
+    body.page-consult .call-link:hover,
+    body.page-consult .call-link:focus-visible {
+      color: #fff;
+      text-decoration: none;
+    }
+
+    body.page-consult .utility-links {
+      gap: 8px;
+    }
+
+    body.page-consult .utility-links a,
+    body.page-consult .utility-links .menu-trigger {
+      font-size: 0.9rem;
+      line-height: 1.05;
+    }
+
+    body.page-consult .menu-row {
+      gap: 2px;
+    }
+
+    body.page-consult .sep {
+      margin: 0 4px;
+    }
+
+    .wrap {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 6px 16px 8px;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      width: 100%;
+    }
+
+    .card {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: grid;
+      grid-template-columns: minmax(320px, 0.68fr) minmax(0, 1.32fr);
+      gap: 18px;
+      align-items: stretch;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .consult-copy {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-width: 0;
+      padding: 0 10px 0 2px;
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: clamp(30px, 2.5vw, 40px);
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      display: grid;
+      gap: 2px;
+      max-width: 23ch;
+      justify-items: center;
+    }
+
+    .consult-copy h1 span:first-child {
+      white-space: nowrap;
+    }
+
+    body.page-consult .consult-copy .green {
+      color: var(--green) !important;
+      font-weight: 800;
+      display: block;
+    }
+
+    .consult-or {
+      margin: 0;
+      font-size: 1.36rem;
+      line-height: 1.4;
+      color: #111827 !important;
+      font-weight: 600;
+      max-width: 20ch;
+      text-align: center;
+      margin-top: 22px;
+    }
+
+    body.page-consult .consult-copy .consult-or a {
+      color: var(--green) !important;
+      font-size: 1.18em;
+      font-weight: 800;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .consult-embed {
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      height: 100%;
+      padding: 0;
+    }
+
+    .embedShell {
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+
+    .embedHeader {
+      background: var(--green);
+      color: #fff;
+      padding: 10px 12px;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 500;
+    }
+
+    .embedHeaderInner {
+      width: min(860px, 100%);
+      margin: 0 auto;
+      padding: 0 2px;
+    }
+
+    .embedWrap {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      background: #fff;
+      height: 100%;
+    }
+
+    iframe.frame {
+      display: block;
+      position: absolute;
+      inset: 0;
+      width: 150%;
+      height: 118%;
+      border: 0;
+      background: #fff;
+      transform: scale(0.666667);
+      transform-origin: top left;
+    }
+
+    .site-footer {
+      margin-top: 0;
+    }
+
+    @media (max-width: 1100px) {
+      .consult-copy {
+        padding: 2px 2px 8px;
+      }
+
+      .consult-embed {
+        min-height: 70vh;
+      }
+    }
+
+    @media (max-width: 980px) {
+      body.page-consult {
+        overflow: auto;
+      }
+
+      .wrap {
+        padding: 12px;
+        height: auto;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .wrap {
+        padding: 10px;
+      }
+
+      .card {
+        padding: 12px;
+      }
+
+      h1 {
+        font-size: 1.45rem;
+      }
+
+      .consult-copy p {
+        font-size: 0.95rem;
+      }
+
+      .embedHeader {
+        font-size: 13px;
+        padding: 12px;
+      }
+
+      :root {
+        --frame: 680px;
+      }
+    }
+
+    html.desktop-lock-consult body.page-consult {
+      overflow: hidden !important;
+      height: 100vh !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .home-header-stack {
+      --home-top-row-h: 14px !important;
+      --home-green-row-h: 50px !important;
+      --home-edge-gap: clamp(52px, 4vw, 88px) !important;
+      margin-bottom: 0 !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .home-header-stack .utility-inner {
+      width: 100% !important;
+      max-width: none !important;
+      min-height: var(--home-green-row-h) !important;
+      padding-inline: var(--home-edge-gap) !important;
+      display: block !important;
+      position: relative !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .utility-mobile-toggle,
+    html.desktop-lock-consult body.page-consult .home-header-stack .utility-mobile-toggle {
+      display: none !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .home-header-stack .utility-links {
+      display: none !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .home-header-stack .call-link {
+      display: inline-flex !important;
+      position: absolute !important;
+      right: var(--home-edge-gap) !important;
+      top: 50% !important;
+      transform: translate(-91.3px, -17.8px) !important;
+      width: auto !important;
+      min-width: 136px !important;
+      max-width: none !important;
+      height: 34px !important;
+      justify-content: center !important;
+      flex: none !important;
+      box-sizing: border-box !important;
+      pointer-events: auto !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .consult-banner-link {
+      left: calc(var(--home-edge-gap) + 40px) !important;
+      top: -18px !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .wrap {
+      padding-top: calc(36px / var(--desktop-consult-scale)) !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .card {
+      padding: 10px !important;
+      gap: 18px !important;
+      grid-template-columns: minmax(320px, 0.68fr) minmax(0, 1.32fr) !important;
+      align-items: stretch !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .consult-copy--guide {
+      padding: 0 10px 0 2px !important;
+      align-items: stretch !important;
+      justify-content: flex-start !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .consult-copy--guide .guide-left {
+      min-height: 0 !important;
+      padding-top: 8.8rem !important;
+      padding-left: 5.85rem !important;
+      row-gap: 1rem !important;
+      column-gap: clamp(10px, 1.6vw, 22px) !important;
+      align-content: start !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .guide-left h1 {
+      font-size: clamp(2.45rem, 3.05vw, 3.85rem) !important;
+      margin-bottom: 0 !important;
+      max-width: 10ch !important;
+      transform: translateY(-6px) !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .guide-left h2 {
+      font-size: clamp(0.86rem, 1.0vw, 1.25rem) !important;
+      padding-top: 0.1rem !important;
+      margin-top: 0 !important;
+      letter-spacing: 0.28em !important;
+      transform: translateY(-6px) !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .guide-book-shell {
+      width: clamp(78px, 6.6vw, 108px) !important;
+      justify-self: end !important;
+      align-self: start !important;
+      margin-top: 5rem !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .download-btn {
+      min-width: 280px !important;
+      width: auto !important;
+      margin-top: 1.8rem !important;
+      align-self: start !important;
+      justify-self: start !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .consult-embed {
+      min-height: 0 !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .embedShell {
+      margin-top: 0 !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .embedHeader {
+      padding: 10px 12px !important;
+      font-size: 12px !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .embedHeaderInner {
+      padding: 0 2px !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .embedWrap::after {
+      height: 0 !important;
+    }
+
+    html.desktop-lock-consult body.page-consult .embedWrap::before {
+      width: 34px !important;
+    }
+
+    html.desktop-lock-consult body.page-consult iframe.frame {
+      width: 145.5% !important;
+      height: 130% !important;
+    }
+
+    @media (max-width: 980px) {
+      html,
+      body.page-consult {
+        width: 100%;
+        height: auto !important;
+        min-height: 100% !important;
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+      }
+
+      body.page-consult .site-shell {
+        position: relative !important;
+        inset: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 100dvh !important;
+        overflow: visible !important;
+        transform: none !important;
+      }
+
+      body.page-consult .home-header-stack {
+        --home-top-row-h: 0px;
+        --home-green-row-h: 95px;
+        --home-edge-gap: clamp(12px, 4vw, 18px);
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        min-height: 95px;
+      }
+
+      body.page-consult .utility-nav::before {
+        display: none;
+      }
+
+      body.page-consult .home-header-stack .utility-inner {
+        display: flex;
+        min-height: 95px;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 var(--home-edge-gap);
+      }
+
+      body.page-consult .utility-links,
+      body.page-consult .home-header-stack .utility-links {
+        display: flex;
+      }
+
+      body.page-consult .utility-mobile-toggle,
+      body.page-consult .home-header-stack .utility-mobile-toggle {
+        display: inline-flex !important;
+      }
+
+      body.page-consult .home-header-stack .call-link {
+        display: none !important;
+      }
+
+      body.page-consult .consult-banner-link {
+        position: absolute;
+        top: 0;
+        left: var(--home-edge-gap);
+        width: auto;
+        height: 95px;
+        display: flex;
+        align-items: center;
+        overflow: visible;
+      }
+
+      body.page-consult .consult-banner-square {
+        display: none;
+      }
+
+      body.page-consult .consult-banner-image {
+        position: relative;
+        inset: auto;
+        width: auto;
+        height: 70px;
+        max-width: 144px;
+        object-fit: contain;
+      }
+
+      body.page-consult .wrap {
+        display: block;
+        flex: none;
+        width: 100%;
+        max-width: 760px;
+        height: auto;
+        min-height: 0;
+        margin: 0 auto;
+        padding: 18px 10px 26px;
+      }
+
+      body.page-consult .card {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        gap: 14px;
+        padding: 10px;
+        overflow: visible;
+        border-radius: 14px;
+      }
+
+      body.page-consult .consult-copy {
+        padding: 1.5rem 1rem 1.1rem;
+      }
+
+      body.page-consult .consult-copy h1 {
+        max-width: 18ch;
+        font-size: clamp(1.65rem, 7.8vw, 2.3rem);
+        white-space: normal;
+      }
+
+      body.page-consult .consult-copy h1 span:first-child {
+        white-space: normal;
+      }
+
+      body.page-consult .consult-or {
+        margin-top: 0.8rem;
+        font-size: 1rem;
+      }
+
+      body.page-consult .consult-embed,
+      body.page-consult .embedShell {
+        width: 100%;
+        height: auto;
+        min-height: 0;
+      }
+
+      body.page-consult .embedWrap {
+        flex: none;
+        width: 100%;
+        height: 720px;
+        min-height: 720px;
+        overflow: hidden;
+      }
+
+      body.page-consult .embedWrap::before,
+      body.page-consult .embedWrap::after {
+        display: none;
+      }
+
+      body.page-consult iframe.frame {
+        position: static;
+        inset: auto;
+        width: 100%;
+        height: 720px;
+        transform: none;
+      }
+
+      body.page-consult .site-footer,
+      body.page-consult .legal-auto-footer {
+        position: static;
+        width: 100%;
+        margin-top: auto;
+        text-align: center;
+      }
+
+      body.page-consult .legal-auto-footer-inner {
+        align-items: center;
+        text-align: center;
+      }
+    }
+
+    @media (max-width: 420px) {
+      body.page-consult .wrap {
+        padding: 12px 8px 22px;
+      }
+
+      body.page-consult .card {
+        padding: 8px;
+      }
+
+      body.page-consult .consult-copy {
+        padding: 1.25rem 0.65rem 0.9rem;
+      }
+
+      body.page-consult .embedWrap,
+      body.page-consult iframe.frame {
+        height: 680px;
+        min-height: 680px;
+      }
     }
   </style>
+  <script>
+    (function () {
+      function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+      var params = new URLSearchParams(window.location.search);
+      if (params.get('layoutEditor') === '1' || params.get('edit') === '1') {
+        document.documentElement.classList.add('layout-editor-booting');
+      }
+
+      var baseDesktopWidth = 1366;
+      var baseDesktopHeight = 760;
+      var baseDevicePixelRatio = window.devicePixelRatio || 1;
+
+      function getViewportSize() {
+        var vv = window.visualViewport;
+        return {
+          width: Math.max(1, Math.round((vv && vv.width) || window.innerWidth || baseDesktopWidth)),
+          height: Math.max(1, Math.round((vv && vv.height) || window.innerHeight || baseDesktopHeight))
+        };
+      }
+
+      function syncDesktopLock() {
+        var desktopLock = window.innerWidth >= 981 && window.innerHeight >= 600;
+
+        if (!desktopLock) {
+          document.documentElement.classList.remove('desktop-lock-consult');
+          document.documentElement.style.setProperty('--desktop-consult-scale', '1');
+          return;
+        }
+
+        document.documentElement.classList.add('desktop-lock-consult');
+        var viewport = getViewportSize();
+        var fitScale = Math.min(viewport.width / baseDesktopWidth, viewport.height / baseDesktopHeight);
+        var currentDevicePixelRatio = window.devicePixelRatio || baseDevicePixelRatio;
+        var dprScale = currentDevicePixelRatio > 0 ? (baseDevicePixelRatio / currentDevicePixelRatio) : 1;
+        var viewportScale = (window.visualViewport && window.visualViewport.scale && isFinite(window.visualViewport.scale) && window.visualViewport.scale > 0)
+          ? (1 / window.visualViewport.scale)
+          : 1;
+        var zoomScale = Math.max(dprScale, viewportScale);
+        var scale = Math.min(fitScale, zoomScale);
+        if (!isFinite(scale) || scale <= 0) scale = 1;
+        document.documentElement.style.setProperty('--desktop-consult-scale', String(scale));
+      }
+
+      syncDesktopLock();
+      window.addEventListener('resize', syncDesktopLock);
+      window.addEventListener('orientationchange', syncDesktopLock);
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener('resize', syncDesktopLock);
+      }
+    })();
+  </script>
   <meta name="google-adsense-account" content="ca-pub-5221840001116187">
 </head>
-<body>
-  <main class="wrap">
-    <section class="card">
-      <img class="hero" src="green1.png" alt="Living in Raleigh Team" />
+<body class="page-consult">
+  <div class="site-shell">
+    <div class="home-header-stack">
+      <div class="team-strip">
+        <p>#1 RELOCATION TEAM IN RALEIGH</p>
+      </div>
+      <div class="utility-nav">
+        <div class="utility-inner">
+          <nav class="utility-links two-row" aria-label="Page links">
+            <div class="menu-row">
+              <a href="/buy/">BUY</a><span class="sep">/</span>
+              <a href="/sell/">SELL</a><span class="sep">/</span>
+              <a href="/explore-the-area/">EXPLORE THE AREA</a><span class="sep">/</span>
+              <a href="/about/">ABOUT</a>
+            </div>
+            <div class="menu-row">
+              <a href="/relocation/">RELOCATION</a><span class="sep">/</span>
+              <div class="menu-dropdown">
+                <a class="menu-trigger" href="/raleighs-hottest-deals/hottest-deals/">RALEIGH'S HOTTEST DEALS</a>
+                <div class="submenu">
+                  <a href="/raleighs-hottest-deals/hottest-deals/">HOTTEST DEALS</a>
+                  <a href="/raleighs-hottest-deals/new-construction-process/">NEW CONSTRUCTION PROCESS</a>
+                  <a href="/raleighs-hottest-deals/affordable-new-construction-hotlist/">AFFORDABLE NEW CONSTRUCTION HOTLIST</a>
+                </div>
+              </div>
+              <span class="sep">/</span>
+              <a href="/learning-center/">LEARNING CENTER</a>
+            </div>
+          </nav>
+          <a class="call-link" href="tel:+19197377896">Call Me</a>
+        </div>
+      </div>
+      <a href="/" class="home-stack-overlay-link consult-banner-link" aria-label="Go to home">
+        <span class="consult-banner-square" aria-hidden="true"></span>
+        <img src="/assets/images/consult-banner-bottom-left.png?v=20260818-perf1" alt="The Official Living in Raleigh NC Team" class="consult-banner-image">
+      </a>
+    </div>
 
-      <h1>Book a call with the <span class="green">Living in Raleigh Team</span></h1>
-
-      <!-- GREEN HEADER BAR -->
-      <div class="embedShell">
-        <div class="embedHeader">
-          <div class="embedHeaderInner">
-            Pick a time below. You’ll get an instant confirmation email plus a calendar invite. Choose from a video call, phone call, or meet with us in person. We look forward to meeting you!
-          </div>
+    <main class="wrap">
+      <section class="card">
+        <div class="consult-copy">
+          <h1>
+            <span>Book a call with the</span>
+            <span class="green">Living in Raleigh Team</span>
+          </h1>
+          <p class="consult-or">OR Text/Call us at <a href="tel:+19197377896">919-737-7896</a></p>
         </div>
 
-        <div class="embedWrap">
-        <iframe
-          class="frame"
-          src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true"
-          title="Google Calendar appointment scheduling"
-          loading="eager"
-          allow="camera; microphone; fullscreen"
-        ></iframe>
+        <div class="consult-embed">
+          <div class="embedShell">
+            <div class="embedHeader">
+              <div class="embedHeaderInner">
+                Pick a time below. You'll get an instant confirmation email plus a calendar invite. Choose from a video call, phone call, or meet with us in person. We look forward to meeting you!
               </div>
+            </div>
+            <div class="embedWrap">
+              <iframe
+                class="frame"
+                src="https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true"
+                title="Google Calendar appointment scheduling"
+                loading="eager"
+                allow="camera; microphone; fullscreen"
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer legal-auto-footer">
+      <div class="legal-auto-footer-inner">
+        <span>
+          &copy; <span data-year></span> Living in Raleigh LLC
+          | <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+          | <a href="/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a>
+        </span>
+        <span data-legal-footer-links="true">Email us at <a href="mailto:livinginraleighteam@gmail.com">livinginraleighteam@gmail.com</a></span>
       </div>
+    </footer>
+  </div>
 
-      <!-- BOTTOM NOTE REMOVED ENTIRELY -->
-
-    </section>
-  </main>
-  <footer class="site-footer legal-auto-footer">
-    <div class="legal-auto-footer-inner">
-      <span>&copy; <span data-year></span> Living in Raleigh LLC</span>
-      <span><a href="/consult/">Contact</a> | <a href="/privacy-policy/" target="_blank" rel="noopener noreferrer">Privacy Policy</a> | <a href="/terms-of-service/" target="_blank" rel="noopener noreferrer">Terms of Service</a></span>
-    </div>
-  </footer>
   <script>
-    // Bulletproofing: set iframe crop/frame based on viewport so mobile doesn't look broken.
-    // Note: we cannot read inside the Google iframe (cross-origin), so this is best-effort sizing.
-    (function () {
-      function clamp(n, min, max){ return Math.max(min, Math.min(max, n)); }
+    window.__LAYOUT_EDITOR_DEFAULT_STATE__ = {
+      "consult-banner-square": {
+        "tx": 140.63998413085938,
+        "ty": 16.959983825683594,
+        "w": 224,
+        "h": 224,
+        "fit": "contain",
+        "mode": "scale",
+        "scale": 1
+      },
+      "consult-banner-image": {
+        "tx": 140.3199920654297,
+        "ty": 17.279983520507812,
+        "w": 204,
+        "h": 204,
+        "fit": "contain",
+        "mode": "scale",
+        "scale": 1
+      }
+    };
+  </script>
+  <script src="/assets/js/layout-editor.js?v=20260611c" defer></script>
 
-      function setEmbedVars(){
+  <script>
+    (function () {
+      function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+      function setEmbedVars() {
         var vw = window.innerWidth || 1024;
         var vh = window.innerHeight || 800;
-
-        // Crop: slightly larger on small screens because Google header stacks taller.
-        var crop = (vw <= 420) ? 290 : (vw <= 640) ? 270 : 235;
-
-        // Frame: aim to show the full slot area without the Google footer.
-        // Use a % of viewport height, clamped so it doesn't get ridiculous.
         var frame;
-        if (vw <= 420) frame = clamp(Math.round(vh * 0.80), 680, 920);
-        else if (vw <= 640) frame = clamp(Math.round(vh * 0.78), 640, 900);
-        else frame = clamp(Math.round(vh * 0.70), 500, 720);
 
-        document.documentElement.style.setProperty('--crop', crop + 'px');
+        if (vw <= 420) frame = clamp(Math.round(vh * 0.80), 680, 920);
+        else if (vw <= 640) frame = clamp(Math.round(vh * 0.76), 620, 880);
+        else frame = clamp(Math.round(vh * 0.72), 520, 720);
+
         document.documentElement.style.setProperty('--frame', frame + 'px');
       }
 
@@ -191,8 +891,7 @@
       window.addEventListener('orientationchange', setEmbedVars);
     })();
   </script>
-  <script src="/assets/js/script.js?v=20260401-consent8" defer></script>
+  <script src="/assets/js/script.js?v=20260821-mobilefix1" defer></script>
 </body>
 </html>
-
 
