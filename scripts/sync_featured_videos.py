@@ -42,7 +42,7 @@ MANUAL_SUBURB_PLAYLIST_IDS: dict[str, str] = {
     "knightdale": "PLybPdL80h3XsHfOHTaRJeovlgQ9orDz0r",
     "morrisville": "PLybPdL80h3XsyTTWHZCZxWI-lL7e6tJ2U",
     "north-raleigh": "PLybPdL80h3XsclSgZPVBPCZX2LW9HhH0-",
-    "raleigh": "PLybPdL80h3XvCV-Hi72FLN48lgRlYju3t",
+    "raleigh": "PLybPdL80h3XsclSgZPVBPCZX2LW9HhH0-",
     "south-raleigh": "PLybPdL80h3XsclSgZPVBPCZX2LW9HhH0-",
     "wake-forest": "PLybPdL80h3XtKnazS__YppgjwM6W2FZzz",
     "wendell": "PLybPdL80h3Xt2uL8xk-1TNhShlq2Ry4km",
