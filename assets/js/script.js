@@ -2981,6 +2981,26 @@
       });
     });
 
+    if (!useInlinePopup) {
+      window.addEventListener("tawk-lead-popup-state", function (event) {
+        var detail = event && event.detail ? event.detail : {};
+        tawkBlocksLeadPopup = detail.blocked === true;
+        clearTimer();
+
+        if (tawkBlocksLeadPopup) {
+          if (!popupHost.hidden) {
+            closePopup(false, detail.reason || "tawk_chat_active");
+          }
+          return;
+        }
+
+        if (!hasSubmitted) {
+          setNextShowAt(Date.now() + leadPopupInitialDelayMs);
+          schedulePopup();
+        }
+      });
+    }
+
     if (devTrigger) {
       devTrigger.addEventListener("click", function () {
         markPopupTouched("dev_open");
@@ -4869,25 +4889,6 @@
       }
     });
 
-    if (!useInlinePopup) {
-      window.addEventListener("tawk-lead-popup-state", function (event) {
-        var detail = event && event.detail ? event.detail : {};
-        tawkBlocksLeadPopup = detail.blocked === true;
-        clearTimer();
-
-        if (tawkBlocksLeadPopup) {
-          if (!popupHost.hidden) {
-            closePopup(false, detail.reason || "tawk_chat_active");
-          }
-          return;
-        }
-
-        if (!hasSubmitted) {
-          setNextShowAt(Date.now() + leadPopupInitialDelayMs);
-          schedulePopup();
-        }
-      });
-    }
   })();
 
   (function () {
