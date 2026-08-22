@@ -2220,6 +2220,7 @@
       smsOptIn: popupHost.querySelector("[data-lead-input='smsOptIn']")
     };
     var timeoutId = 0;
+    var tawkBlocksLeadPopup = false;
     var currentScreen = "intro";
     var currentStep = 0;
     var popupOpenSource = useInlinePopup ? "inline_embed" : "timed_delay";
@@ -2624,6 +2625,10 @@
       if ((!forceOpen && hasSubmitted) || !popupHost.hidden) {
         return;
       }
+      if (!forceOpen && tawkBlocksLeadPopup) {
+        clearTimer();
+        return;
+      }
       popupOpenSource = openSource || (forceOpen ? "manual" : "timed_delay");
       clearTimer();
       popupHost.hidden = false;
@@ -2668,13 +2673,17 @@
     };
 
     var schedulePopup = function () {
-      if (hasSubmitted) {
+      if (hasSubmitted || tawkBlocksLeadPopup) {
         return;
       }
       clearTimer();
       var nextShowAt = ensureNextShowAt();
       var delay = Math.max(0, nextShowAt - Date.now());
       timeoutId = window.setTimeout(function () {
+        timeoutId = 0;
+        if (tawkBlocksLeadPopup) {
+          return;
+        }
         openPopup(false, "timed_delay");
       }, delay);
     };
@@ -4859,5 +4868,89 @@
         closeLegalModal();
       }
     });
+
+    if (!useInlinePopup) {
+      window.addEventListener("tawk-lead-popup-state", function (event) {
+        var detail = event && event.detail ? event.detail : {};
+        tawkBlocksLeadPopup = detail.blocked === true;
+        clearTimer();
+
+        if (tawkBlocksLeadPopup) {
+          if (!popupHost.hidden) {
+            closePopup(false, detail.reason || "tawk_chat_active");
+          }
+          return;
+        }
+
+        if (!hasSubmitted) {
+          setNextShowAt(Date.now() + leadPopupInitialDelayMs);
+          schedulePopup();
+        }
+      });
+    }
+  })();
+
+  (function () {
+    var tawkScriptUrl = "https://embed.tawk.to/6a88b5735bc858343e81403e/1k0j09in1";
+
+    if (document.querySelector("script[src='" + tawkScriptUrl + "']")) {
+      return;
+    }
+
+    window.Tawk_API = window.Tawk_API || {};
+    window.Tawk_LoadStart = new Date();
+
+    var notifyLeadPopupOfTawkState = function (blocked, reason) {
+      window.dispatchEvent(new CustomEvent("tawk-lead-popup-state", {
+        detail: {
+          blocked: blocked === true,
+          reason: reason || "tawk_state_change"
+        }
+      }));
+    };
+
+    var isTawkChatOngoing = function () {
+      return typeof window.Tawk_API.isChatOngoing === "function" && window.Tawk_API.isChatOngoing();
+    };
+
+    var isTawkChatMaximized = function () {
+      return typeof window.Tawk_API.isChatMaximized === "function" && window.Tawk_API.isChatMaximized();
+    };
+
+    window.Tawk_API.onLoad = function () {
+      notifyLeadPopupOfTawkState(isTawkChatOngoing() || isTawkChatMaximized(), "tawk_loaded");
+    };
+    window.Tawk_API.onChatMaximized = function () {
+      notifyLeadPopupOfTawkState(true, "tawk_chat_maximized");
+    };
+    window.Tawk_API.onChatStarted = function () {
+      notifyLeadPopupOfTawkState(true, "tawk_chat_started");
+    };
+    window.Tawk_API.onPrechatSubmit = function () {
+      notifyLeadPopupOfTawkState(true, "tawk_prechat_submitted");
+    };
+    window.Tawk_API.onChatMinimized = function () {
+      notifyLeadPopupOfTawkState(isTawkChatOngoing(), "tawk_chat_minimized");
+    };
+    window.Tawk_API.onChatHidden = function () {
+      notifyLeadPopupOfTawkState(isTawkChatOngoing(), "tawk_chat_hidden");
+    };
+    window.Tawk_API.onChatEnded = function () {
+      notifyLeadPopupOfTawkState(false, "tawk_chat_ended");
+    };
+
+    var tawkScript = document.createElement("script");
+    var firstScript = document.getElementsByTagName("script")[0];
+    tawkScript.async = true;
+    tawkScript.src = tawkScriptUrl;
+    tawkScript.charset = "UTF-8";
+    tawkScript.setAttribute("crossorigin", "*");
+
+    if (firstScript && firstScript.parentNode) {
+      firstScript.parentNode.insertBefore(tawkScript, firstScript);
+      return;
+    }
+
+    document.head.appendChild(tawkScript);
   })();
 })();

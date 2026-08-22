@@ -8,6 +8,9 @@ const RELO_GUIDE_UNSUBSCRIBE_URL = 'mailto:livinginraleighteam@gmail.com?subject
 const RELO_GUIDE_PREFERENCES_URL = 'mailto:livinginraleighteam@gmail.com?subject=Update%20Preferences';
 const ALERT_EMAIL = 'livinginraleighteam@gmail.com';
 const ALERT_FROM_ALIAS = 'benjamin.carver@exprealty.com';
+const TAWK_PROPERTY_ID = '6a88b5735bc858343e81403e';
+const TAWK_SOURCE_LABEL = 'Website Live Chat';
+const TAWK_SOURCE_KEY = 'website_live_chat';
 
 function doGet() {
   return json_({ ok: true, message: 'Lead endpoint is live.' });
@@ -18,6 +21,9 @@ function doPost(e) {
   lock.waitLock(10000);
   try {
     const raw = parseBody_(e);
+    if (isTawkWebhookPayload_(raw)) {
+      return handleTawkWebhook_(e, raw);
+    }
     const lead = normalizeLead_(raw);
     const isReloGuideLead = isReloGuideLead_(lead);
 
@@ -64,6 +70,135 @@ function parseBody_(e) {
 
   const params = (e && e.parameter) ? e.parameter : {};
   return params || {};
+}
+
+function isTawkWebhookPayload_(raw) {
+  const eventName = clean_(raw && raw.event).toLowerCase();
+  return eventName === 'chat:start' || eventName === 'chat:transcript_created';
+}
+
+function handleTawkWebhook_(e, raw) {
+  validateTawkWebhookRequest_(e, raw);
+
+  const eventName = clean_(raw.event).toLowerCase();
+  const chatId = clean_(raw.chatId) || clean_(raw.chat && raw.chat.id);
+  if (!chatId) {
+    throw new Error('Tawk webhook did not include a chat ID.');
+  }
+
+  const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
+  const sheet = getOrCreateSheet_(ss, SHEET_NAME);
+  ensureHeaders_(sheet);
+
+  const normalizedPayload = normalizeTawkWebhookLead_(raw, chatId);
+  const lead = normalizeLead_(normalizedPayload);
+  const existingRow = findLeadRowBySubmissionId_(sheet, lead.submission_id);
+
+  if (existingRow) {
+    updateTawkLeadRow_(sheet, existingRow, lead, raw, normalizedPayload);
+    return json_({
+      ok: true,
+      tawk_event: eventName,
+      updated: true,
+      row: existingRow,
+      chat_id: chatId
+    });
+  }
+
+  const rowNumber = appendLead_(sheet, lead, normalizedPayload);
+  updateTawkLeadRow_(sheet, rowNumber, lead, raw, normalizedPayload);
+  const emailResult = sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, normalizedPayload);
+
+  return json_({
+    ok: true,
+    tawk_event: eventName,
+    created: true,
+    row: rowNumber,
+    chat_id: chatId,
+    email_status: emailResult.status,
+    email_error: emailResult.error || ''
+  });
+}
+
+function validateTawkWebhookRequest_(e, raw) {
+  const expectedToken = clean_(PropertiesService.getScriptProperties().getProperty('TAWK_WEBHOOK_TOKEN'));
+  const suppliedToken = clean_(e && e.parameter && e.parameter.tawk_token);
+  if (!expectedToken) {
+    throw new Error('TAWK_WEBHOOK_TOKEN is not configured in Script Properties.');
+  }
+  if (!suppliedToken || suppliedToken !== expectedToken) {
+    throw new Error('Invalid Tawk webhook token.');
+  }
+
+  const propertyId = clean_(raw && raw.property && raw.property.id);
+  if (propertyId !== TAWK_PROPERTY_ID) {
+    throw new Error('Unexpected Tawk property ID.');
+  }
+}
+
+function normalizeTawkWebhookLead_(raw, chatId) {
+  const eventName = clean_(raw.event).toLowerCase();
+  const chat = raw.chat && typeof raw.chat === 'object' ? raw.chat : {};
+  const visitor = eventName === 'chat:transcript_created'
+    ? (chat.visitor || {})
+    : (raw.visitor || {});
+  const visitorName = clean_(visitor.name);
+  const splitVisitorName = /^v\d+$/i.test(visitorName) ? { first: '', last: '' } : splitName_(visitorName);
+  const transcript = tawkTranscriptText_(raw);
+  const firstMessage = clean_(raw && raw.message && raw.message.text);
+  const conversationText = transcript || firstMessage;
+  const phone = tawkPhoneFromText_(conversationText);
+  const domain = clean_(raw.domain);
+  const sourcePage = /^https?:\/\//i.test(domain)
+    ? domain
+    : (domain ? 'https://' + domain.replace(/^\/+/, '') : clean_(raw.referrer));
+
+  return {
+    submitted_at: clean_(raw.time) || new Date().toISOString(),
+    source_page: sourcePage,
+    source_key: TAWK_SOURCE_KEY,
+    lead_type: 'requested_contact',
+    requested_contact_source: TAWK_SOURCE_KEY,
+    requested_contact_name: visitorName,
+    requested_contact_intent: 'website_live_chat',
+    requested_contact_notes: conversationText,
+    new_construction_message: conversationText,
+    first_name: splitVisitorName.first,
+    last_name: splitVisitorName.last,
+    email: clean_(visitor.email),
+    phone: phone,
+    sms_opt_in: false,
+    submission_id: 'tawk_' + chatId,
+    tawk_chat_id: chatId,
+    tawk_event: eventName,
+    tawk_transcript: transcript,
+    tawk_visitor_city: clean_(visitor.city),
+    tawk_visitor_country: clean_(visitor.country),
+    tawk_referrer: clean_(raw.referrer),
+    tawk_property_name: clean_(raw.property && raw.property.name),
+    raw_tawk_payload: raw
+  };
+}
+
+function tawkTranscriptText_(raw) {
+  const messages = raw && raw.chat && Array.isArray(raw.chat.messages) ? raw.chat.messages : [];
+  return messages.map(function (message) {
+    const text = clean_(message && message.msg);
+    if (!text) return '';
+    const sender = message && message.sender ? message.sender : {};
+    const senderType = clean_(sender.t).toLowerCase();
+    const senderLabel = senderType === 'v'
+      ? 'Visitor'
+      : (senderType === 'a' ? (clean_(sender.n) || 'Agent') : (clean_(sender.n) || 'System'));
+    return senderLabel + ': ' + text;
+  }).filter(Boolean).join('\n');
+}
+
+function tawkPhoneFromText_(text) {
+  const normalized = clean_(text);
+  if (!normalized) return '';
+  const match = normalized.match(/(?:\+?1[\s.\-]?)?(?:\(?\d{3}\)?[\s.\-]?)\d{3}[\s.\-]?\d{4}/);
+  return match ? clean_(match[0]) : '';
 }
 
 function normalizeLead_(p) {
@@ -220,7 +355,14 @@ function headers_() {
     'Quiz Answers JSON',
     'Quiz Result Email Status',
     'Quiz Result Email Sent At',
-    'Quiz Result Email Error'
+    'Quiz Result Email Error',
+    'Tawk Chat ID',
+    'Tawk Event',
+    'Tawk Transcript',
+    'Tawk Visitor City',
+    'Tawk Visitor Country',
+    'Tawk Referrer',
+    'Tawk Property Name'
   ];
 }
 
@@ -322,10 +464,47 @@ function appendLead_(sheet, lead, raw) {
   put('Quiz Third Pick', lead.quiz_third_pick);
   put('Quiz Results JSON', lead.quiz_results_json);
   put('Quiz Answers JSON', lead.quiz_answers_json);
+  put('Tawk Chat ID', clean_(raw && raw.tawk_chat_id));
+  put('Tawk Event', clean_(raw && raw.tawk_event));
+  put('Tawk Transcript', clean_(raw && raw.tawk_transcript));
+  put('Tawk Visitor City', clean_(raw && raw.tawk_visitor_city));
+  put('Tawk Visitor Country', clean_(raw && raw.tawk_visitor_country));
+  put('Tawk Referrer', clean_(raw && raw.tawk_referrer));
+  put('Tawk Property Name', clean_(raw && raw.tawk_property_name));
 
   const nextRow = sheet.getLastRow() + 1;
   sheet.getRange(nextRow, 1, 1, width).setValues([row]);
   return nextRow;
+}
+
+function updateTawkLeadRow_(sheet, rowNumber, lead, raw, normalizedPayload) {
+  const indexes = headerIndexes_(sheet);
+  function set(headerName, value) {
+    const column = indexes.byName[headerName];
+    if (column < 1) return;
+    sheet.getRange(rowNumber, column).setValue(value);
+  }
+
+  if (hasText_(lead.first_name)) set('First Name', lead.first_name);
+  if (hasText_(lead.last_name)) set('Last Name', lead.last_name);
+  if (hasText_(lead.email)) set('Email', lead.email);
+  if (hasText_(lead.phone)) set('Phone', lead.phone);
+  if (hasText_(lead.requested_contact_notes)) set('Requested Contact Notes', lead.requested_contact_notes);
+  if (hasText_(lead.new_construction_message)) set('New Construction Message', lead.new_construction_message);
+  if (hasText_(lead.source_page)) set('Source Page', lead.source_page);
+
+  set('Source Key', TAWK_SOURCE_KEY);
+  set('Lead Type', 'requested_contact');
+  set('Requested Contact Source', TAWK_SOURCE_KEY);
+  set('Submission ID', lead.submission_id);
+  set('Raw JSON', JSON.stringify(raw));
+  set('Tawk Chat ID', clean_(normalizedPayload.tawk_chat_id));
+  set('Tawk Event', clean_(normalizedPayload.tawk_event));
+  set('Tawk Transcript', clean_(normalizedPayload.tawk_transcript));
+  set('Tawk Visitor City', clean_(normalizedPayload.tawk_visitor_city));
+  set('Tawk Visitor Country', clean_(normalizedPayload.tawk_visitor_country));
+  set('Tawk Referrer', clean_(normalizedPayload.tawk_referrer));
+  set('Tawk Property Name', clean_(normalizedPayload.tawk_property_name));
 }
 
 function sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, raw) {

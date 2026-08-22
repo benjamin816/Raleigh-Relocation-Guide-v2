@@ -405,6 +405,13 @@ function processWebsiteLeadSheet_(ss, sheetName, scanLimit) {
       continue;
     }
 
+    if (
+      clean_(lead.source_key).toLowerCase() === 'website_live_chat' &&
+      clean_(lead.tawk_event).toLowerCase() !== 'chat:transcript_created'
+    ) {
+      continue;
+    }
+
     if (!hasText_(lead.email)) {
       updateBoldTrailStatus_(sheet, rowNumber, 'skipped_no_email', '', 'No email address provided for BoldTrail sync.');
       continue;
@@ -658,7 +665,8 @@ function leadContextFromSheetRow_(row, indexes) {
     quiz_slug: row[indexes.quiz_slug],
     quiz_results_json: row[indexes.quiz_results_json],
     quiz_answers_json: row[indexes.quiz_answers_json],
-    new_construction_message: row[indexes.new_construction_message]
+    new_construction_message: row[indexes.new_construction_message],
+    tawk_event: row[indexes.tawk_event]
   };
 
   const mergedPayload = Object.assign({}, rowPayload, raw);
@@ -707,7 +715,8 @@ function normalizeLead_(p) {
     quiz_slug: clean_(p.quiz_slug),
     quiz_results_json: clean_(p.quiz_results_json),
     quiz_answers_json: clean_(p.quiz_answers_json),
-    new_construction_message: clean_(p.new_construction_message)
+    new_construction_message: clean_(p.new_construction_message),
+    tawk_event: clean_(p.tawk_event)
   };
 }
 
@@ -793,6 +802,13 @@ function boldTrailSourceTagsForLead_(lead) {
     leadType === 'requested_contact' && requestedSource.indexOf('home_call_me_popup') !== -1
   ) {
     tags.push('lead_source_call_me_popup');
+  }
+
+  if (
+    requestedSource === 'website_live_chat' ||
+    clean_(lead.source_key).toLowerCase() === 'website_live_chat'
+  ) {
+    tags.push('lead_source_website_live_chat');
   }
 
   if (leadType === 'suburb_quiz') {
@@ -1312,6 +1328,7 @@ function headerIndexes_(sheet) {
     quiz_slug: idx('Quiz Slug'),
     quiz_results_json: idx('Quiz Results JSON'),
     quiz_answers_json: idx('Quiz Answers JSON'),
+    tawk_event: idx('Tawk Event'),
     boldtrail_status: idx('BoldTrail Status'),
     boldtrail_sent_at: idx('BoldTrail Sent At'),
     boldtrail_error: idx('BoldTrail Error'),
