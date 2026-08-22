@@ -4893,6 +4893,9 @@
 
   (function () {
     var tawkScriptUrl = "https://embed.tawk.to/6a88b5735bc858343e81403e/1k0j09in1";
+    var tawkRestrictedPaths = ["/invest", "/consult", "/2026"];
+    var currentPath = window.location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "") || "/";
+    var isTawkRestrictedPage = tawkRestrictedPaths.indexOf(currentPath) !== -1;
 
     if (document.querySelector("script[src='" + tawkScriptUrl + "']")) {
       return;
@@ -4918,7 +4921,25 @@
       return typeof window.Tawk_API.isChatMaximized === "function" && window.Tawk_API.isChatMaximized();
     };
 
+    var syncTawkVisibility = function () {
+      if (!isTawkRestrictedPage) {
+        return;
+      }
+
+      if (isTawkChatOngoing()) {
+        if (typeof window.Tawk_API.showWidget === "function") {
+          window.Tawk_API.showWidget();
+        }
+        return;
+      }
+
+      if (typeof window.Tawk_API.hideWidget === "function") {
+        window.Tawk_API.hideWidget();
+      }
+    };
+
     window.Tawk_API.onLoad = function () {
+      syncTawkVisibility();
       notifyLeadPopupOfTawkState(isTawkChatOngoing() || isTawkChatMaximized(), "tawk_loaded");
     };
     window.Tawk_API.onChatMaximized = function () {
@@ -4937,6 +4958,7 @@
       notifyLeadPopupOfTawkState(isTawkChatOngoing(), "tawk_chat_hidden");
     };
     window.Tawk_API.onChatEnded = function () {
+      syncTawkVisibility();
       notifyLeadPopupOfTawkState(false, "tawk_chat_ended");
     };
 

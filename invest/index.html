@@ -286,6 +286,16 @@
   <script type="text/javascript">
     var Tawk_API = Tawk_API || {};
     var Tawk_LoadStart = new Date();
+    Tawk_API.onLoad = function () {
+      if (typeof Tawk_API.isChatOngoing === "function" && Tawk_API.isChatOngoing()) {
+        Tawk_API.showWidget();
+        return;
+      }
+      Tawk_API.hideWidget();
+    };
+    Tawk_API.onChatEnded = function () {
+      Tawk_API.hideWidget();
+    };
     (function () {
       var tawkScript = document.createElement("script");
       var firstScript = document.getElementsByTagName("script")[0];
