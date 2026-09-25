@@ -6,4 +6,4 @@ The calculator intake web app writes to the separate `INVESTOR MASTER LEAD SHEET
 
 Living in Raleigh newsletters must exclude contacts tagged `investor` or `investor_newsletter`, even if a contact also has the older `monthly_newsletter` tag. Investor campaigns must target `investor_newsletter` only. Verify these filters in BoldTrail before any campaign is scheduled or sent.
 
-Investor articles are staged from approved transcripts in `Investing in Raleigh Transcriptions/Ready To Go`. Review pages are noindex; public articles are added under `/invest/resources/` only after owner approval. Raw videos require transcription first.
+Investor articles use newly published videos from `https://www.youtube.com/@InvestinginRaleighNC/videos` (Saturday at 2 p.m. Eastern). The workflow obtains and verifies actual captions before drafting; the `Investing in Raleigh Transcriptions/Ready To Go` inbox is a fallback when captions are unavailable. Review pages are noindex; public articles are added under `/invest/resources/` only after owner approval.
