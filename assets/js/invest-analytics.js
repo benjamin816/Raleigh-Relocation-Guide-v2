@@ -39,4 +39,7 @@
   }
 
   send("page_view");
+  window.addEventListener("raleigh-investor-lead-saved", function () {
+    send("calculator_lead_submit_success");
+  });
 })();
