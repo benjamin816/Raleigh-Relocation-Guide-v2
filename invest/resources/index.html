@@ -28,7 +28,14 @@
     .topbar-actions a:hover,.topbar-actions a:focus-visible { color:#f3d476; }
     main { flex:1; width:min(1120px,100%); margin:0 auto; padding:46px 20px 80px; }
     h1 { color:var(--green); font-size:clamp(1.8rem,3vw,2.5rem); line-height:1.2; margin:0 0 18px; }
-    .empty { color:var(--muted); margin:0; padding:26px 0; border-top:1px solid var(--border); }
+    .articles { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:22px; margin-top:28px; }
+    .article-card { display:block; overflow:hidden; border:1px solid var(--border); border-radius:12px; background:#fff; color:var(--text); text-decoration:none; box-shadow:0 8px 24px rgba(17,24,39,.05); }
+    .article-card:hover,.article-card:focus-visible { box-shadow:0 12px 30px rgba(17,24,39,.12); }
+    .article-card img { display:block; width:100%; aspect-ratio:16/9; object-fit:cover; }
+    .article-card-content { padding:20px; }
+    .article-card h2 { color:var(--green); font-size:1.35rem; line-height:1.3; margin:0 0 9px; }
+    .article-card p { color:var(--muted); line-height:1.55; margin:0 0 12px; }
+    .article-card span { color:var(--muted); font-size:.83rem; }
     .footer {
       padding:0 20px 18px;
       color:#5b6770;
@@ -52,7 +59,12 @@
     </header>
     <main id="main">
       <h1>Investing in Raleigh Resources</h1>
-      <p class="empty">No articles have been published yet. Check back soon.</p>
+      <div class="articles">
+        <a class="article-card" href="/invest/resources/can-raleigh-rentals-cash-flow-2026/">
+          <img src="https://img.youtube.com/vi/ifQlI1c8yf8/maxresdefault.jpg" alt="Raleigh rental investing discussion" />
+          <div class="article-card-content"><h2>Can a Raleigh Rental Still Cash Flow in 2026?</h2><p>Compare rental strategies, financing choices, and the effort required to make a Raleigh investment work.</p><span>Published September 29, 2026</span></div>
+        </a>
+      </div>
     </main>
     <div class="footer">
       <strong>Living in Raleigh LLC</strong> · 919-343-5055 · benjamin.carver@exprealty.com
