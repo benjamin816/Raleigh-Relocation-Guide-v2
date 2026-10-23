@@ -4892,88 +4892,17 @@
   })();
 
   (function () {
-    var tawkScriptUrl = "https://embed.tawk.to/6a88b5735bc858343e81403e/1k0j09in1";
-    var tawkRestrictedPaths = ["/invest", "/consult", "/2026"];
-    var currentPath = window.location.pathname.replace(/\/index\.html$/, "").replace(/\/$/, "") || "/";
-    var isTawkRestrictedPage = tawkRestrictedPaths.indexOf(currentPath) !== -1;
-
-    if (document.querySelector("script[src='" + tawkScriptUrl + "']")) {
-      return;
-    }
-
-    window.Tawk_API = window.Tawk_API || {};
-    window.Tawk_LoadStart = new Date();
-
-    var notifyLeadPopupOfTawkState = function (blocked, reason) {
-      window.dispatchEvent(new CustomEvent("tawk-lead-popup-state", {
-        detail: {
-          blocked: blocked === true,
-          reason: reason || "tawk_state_change"
-        }
-      }));
+    var chatStyles = document.createElement("link");
+    chatStyles.rel = "stylesheet";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261023-test1";
+    document.head.appendChild(chatStyles);
+    var configScript = document.createElement("script");
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261023-test1";
+    configScript.onload = function () {
+      var chatScript = document.createElement("script");
+      chatScript.src = "/assets/js/raleigh-chat.js?v=20261023-test1";
+      document.head.appendChild(chatScript);
     };
-
-    var isTawkChatOngoing = function () {
-      return typeof window.Tawk_API.isChatOngoing === "function" && window.Tawk_API.isChatOngoing();
-    };
-
-    var isTawkChatMaximized = function () {
-      return typeof window.Tawk_API.isChatMaximized === "function" && window.Tawk_API.isChatMaximized();
-    };
-
-    var syncTawkVisibility = function () {
-      if (!isTawkRestrictedPage) {
-        return;
-      }
-
-      if (isTawkChatOngoing()) {
-        if (typeof window.Tawk_API.showWidget === "function") {
-          window.Tawk_API.showWidget();
-        }
-        return;
-      }
-
-      if (typeof window.Tawk_API.hideWidget === "function") {
-        window.Tawk_API.hideWidget();
-      }
-    };
-
-    window.Tawk_API.onLoad = function () {
-      syncTawkVisibility();
-      notifyLeadPopupOfTawkState(isTawkChatOngoing() || isTawkChatMaximized(), "tawk_loaded");
-    };
-    window.Tawk_API.onChatMaximized = function () {
-      notifyLeadPopupOfTawkState(true, "tawk_chat_maximized");
-    };
-    window.Tawk_API.onChatStarted = function () {
-      notifyLeadPopupOfTawkState(true, "tawk_chat_started");
-    };
-    window.Tawk_API.onPrechatSubmit = function () {
-      notifyLeadPopupOfTawkState(true, "tawk_prechat_submitted");
-    };
-    window.Tawk_API.onChatMinimized = function () {
-      notifyLeadPopupOfTawkState(isTawkChatOngoing(), "tawk_chat_minimized");
-    };
-    window.Tawk_API.onChatHidden = function () {
-      notifyLeadPopupOfTawkState(isTawkChatOngoing(), "tawk_chat_hidden");
-    };
-    window.Tawk_API.onChatEnded = function () {
-      syncTawkVisibility();
-      notifyLeadPopupOfTawkState(false, "tawk_chat_ended");
-    };
-
-    var tawkScript = document.createElement("script");
-    var firstScript = document.getElementsByTagName("script")[0];
-    tawkScript.async = true;
-    tawkScript.src = tawkScriptUrl;
-    tawkScript.charset = "UTF-8";
-    tawkScript.setAttribute("crossorigin", "*");
-
-    if (firstScript && firstScript.parentNode) {
-      firstScript.parentNode.insertBefore(tawkScript, firstScript);
-      return;
-    }
-
-    document.head.appendChild(tawkScript);
+    document.head.appendChild(configScript);
   })();
 })();
