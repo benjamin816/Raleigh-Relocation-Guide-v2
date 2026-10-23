@@ -4894,13 +4894,13 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261023-test1";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261023-test2";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261023-test1";
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261023-test2";
     configScript.onload = function () {
       var chatScript = document.createElement("script");
-      chatScript.src = "/assets/js/raleigh-chat.js?v=20261023-test1";
+      chatScript.src = "/assets/js/raleigh-chat.js?v=20261023-test2";
       document.head.appendChild(chatScript);
     };
     document.head.appendChild(configScript);
