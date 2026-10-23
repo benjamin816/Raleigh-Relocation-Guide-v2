@@ -10,10 +10,9 @@ window.RaleighChatConfig = {
     general: "/consult/",
     investing: "/invest/"
   },
-  // A verified, same-origin POST endpoint can be added later. Leave null on
-  // GitHub Pages: the existing Google Apps Script no-cors form cannot confirm delivery.
-  leadEndpoint: null,
-  emailAddress: "benjamin.carver@exprealty.com",
+  // Existing website lead receiver. Chat submissions are identified by
+  // source_key=website_rule_chat and appear in the Master Leads chat tab.
+  leadEndpoint: "https://script.google.com/macros/s/AKfycbwnqkPb6Nkp9owlDv_orcAId7cNHbKuQrf5ENMW4BvbUuaLFNHP-yANDdSwQ6Vjl41v/exec",
   excludedPaths: ["/consult/", "/2026/"],
   topics: [
     { id: "buying", label: "Buying a home" },

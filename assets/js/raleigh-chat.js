@@ -13,7 +13,7 @@
       '<header class="rchat-head"><img class="rchat-avatar" alt="" /><span class="rchat-head-copy"><strong class="rchat-head-title"></strong><span class="rchat-head-sub">Local guidance • automated answers</span></span><button class="rchat-close" type="button" aria-label="Close chat">×</button></header>' +
       '<div class="rchat-log" role="log" aria-live="polite" aria-relevant="additions"></div>' +
       '<form class="rchat-compose"><input class="rchat-input" type="text" maxlength="500" aria-label="Type a message" placeholder="Ask about Raleigh..." autocomplete="off" /><button class="rchat-send" type="submit" aria-label="Send message">➤</button></form>' +
-      '<div class="rchat-footnote">Automated guide, not a live chat. No messages are stored here.</div>' +
+      '<div class="rchat-footnote">Automated guide, not a live chat. Contact requests go to our team.</div>' +
     '</section>' +
     '<button class="rchat-launch" type="button" aria-label="Open Raleigh help chat" aria-expanded="false">' +
       '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 7h20a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H15l-8 5v-5H6a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3Z"/><path d="M10 14h12M10 19h8"/></svg>' +
@@ -159,55 +159,52 @@
     form.innerHTML =
       '<label>Your name<input name="name" type="text" maxlength="100" autocomplete="name" required /></label>' +
       '<label>Email<input name="email" type="email" maxlength="200" autocomplete="email" required /></label>' +
-      '<label>Phone (optional)<input name="phone" type="tel" maxlength="30" autocomplete="tel" /></label>' +
+      '<label>Phone<input name="phone" type="tel" maxlength="30" autocomplete="tel" required /></label>' +
       '<label>Your question<textarea name="question" maxlength="2000" required></textarea></label>' +
       '<label class="rchat-consent"><input name="consent" type="checkbox" required /> I agree to be contacted about my question.</label>' +
       '<button type="submit"></button><p class="rchat-form-note"></p>';
     var button = form.querySelector("button");
     var note = form.querySelector(".rchat-form-note");
-    var hasEndpoint = Boolean(safeLink(config.leadEndpoint));
-    button.textContent = hasEndpoint ? "Send my question" : "Open my email app";
+    var hasEndpoint = /^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(config.leadEndpoint || "");
+    button.textContent = "Send my question";
     note.textContent = hasEndpoint
-      ? "Your details will be submitted to this site's secure contact endpoint."
-      : "This site has no verified chat storage endpoint yet. This opens an email draft on your device; nothing is sent until you send it.";
+      ? "Your request will be recorded in our Master Leads sheet. This is not a live chat."
+      : "Contact requests are temporarily unavailable. Please book a call instead.";
+    var submissionId = "website-chat-" + Date.now() + "-" + Math.random().toString(36).slice(2);
     form.addEventListener("submit", function (event) {
       event.preventDefault();
       if (!form.reportValidity()) return;
       var data = new FormData(form);
+      var name = String(data.get("name") || "").trim();
+      var nameParts = name.split(/\s+/);
+      var question = String(data.get("question") || "").trim();
+      var notes = "Question: " + question + "\nConversation: " + state.answers.join(" / ");
       var payload = {
-        source: "website_rule_chat",
+        lead_type: "requested_contact",
+        source_key: "website_rule_chat",
         source_page: window.location.pathname,
-        intent: state.intent || "general",
-        answers: state.answers.slice(),
-        name: String(data.get("name") || "").trim(),
+        requested_contact_source: "Website rule-based chat",
+        requested_contact_intent: state.intent || "general",
+        requested_contact_notes: notes,
+        first_name: nameParts.shift() || "",
+        last_name: nameParts.join(" "),
         email: String(data.get("email") || "").trim(),
         phone: String(data.get("phone") || "").trim(),
-        question: String(data.get("question") || "").trim(),
-        consent: data.get("consent") === "on"
+        consent_to_contact: data.get("consent") === "on",
+        submission_id: submissionId
       };
-      if (!payload.consent || !payload.name || !payload.question) return;
-      if (!hasEndpoint) {
-        var subject = encodeURIComponent("Raleigh website question — " + payload.intent);
-        var body = encodeURIComponent("Name: " + payload.name + "\nEmail: " + payload.email + "\nPhone: " + payload.phone + "\nInterest: " + payload.intent + "\nAnswers: " + payload.answers.join(" / ") + "\nQuestion: " + payload.question);
-        window.location.href = "mailto:" + config.emailAddress + "?subject=" + subject + "&body=" + body;
-        message("Your email app should open with a draft. Please press Send there; this chat has not stored your details.", false);
-        return;
-      }
+      if (!payload.consent_to_contact || !name || !question || !hasEndpoint) return;
       button.disabled = true;
       window.fetch(config.leadEndpoint, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "same-origin",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=UTF-8" },
         body: JSON.stringify(payload)
-      }).then(function (response) {
-        if (!response.ok) throw new Error("Request failed");
-        return response.json();
-      }).then(function (result) {
-        if (!result || result.ok !== true) throw new Error("No confirmation");
+      }).then(function () {
         form.remove();
-        message("Your question reached our team. Thank you!", false);
+        message("Your request was submitted for processing. Thank you! If you need immediate help, please book a call.", false);
       }).catch(function () {
-        note.textContent = "We could not confirm delivery. Please try again or book a call.";
+        note.textContent = "We could not submit your request. Please try again or book a call.";
         button.disabled = false;
       });
     });
