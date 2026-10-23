@@ -2,9 +2,9 @@
 
 The website chat is a static, dependency-free, rule-based guide. It does not use Tawk, an LLM, a paid API, or an external chatbot platform. Its scripts, keywords, questions, and booking URLs live in `assets/js/raleigh-chat-config.js`. The runtime is `assets/js/raleigh-chat.js`; styles are in `assets/css/raleigh-chat.css`. Visitors type replies naturally; there are no quick-reply buttons.
 
-Open the local flow editor at `/tools/chat-flow-editor/`. It displays the four paths and lets you edit intent keywords, responses, qualification questions, contact prompts, and booking destination. The editor is a TEST authoring tool, not a visitor-facing page. Chrome's **Save flow file** button prompts you to choose the repository's `assets/js/raleigh-chat-config.js`; refresh the site tab afterward. It does not modify the chat until that file is saved.
+Open the local flow editor at `/tools/chat-flow-editor/`. The **Chat opening** card edits the starter message (the first message when a visitor opens chat), header title, unmatched-topic response, and same-browser memory duration. The four paths separately edit their topic-specific openings, intent keywords, qualification questions, contact prompts, and booking destination. The editor is a TEST authoring tool, not a visitor-facing page. Chrome's **Save flow file** button prompts you to choose the repository's `assets/js/raleigh-chat-config.js`; refresh the site tab afterward. It does not modify the chat until that file is saved.
 
-The widget runs on pages that load `assets/js/script.js`, plus the standalone `/invest/` page. It is hidden on `/consult/` and `/2026/` to avoid competing with those forms. The generated fictional avatar is `assets/images/chat/raleigh-guide-avatar.png`. It should not be represented as a real team member or live agent. Routine chat messages and qualification answers exist only in page memory; only an explicit contact request is transmitted.
+The widget runs on pages that load `assets/js/script.js`, plus the standalone `/invest/` page. It is hidden on `/consult/` and `/2026/` to avoid competing with those forms. The generated fictional avatar is `assets/images/chat/raleigh-guide-avatar.png`. It should not be represented as a real team member or live agent. A bounded, 180-day chat transcript and topic answers are saved in that browser's local storage, so a repeat visitor on the same browser can resume without another starter message. The bot can recap prior answers when the visitor revisits a topic or types `what do you remember`; `start over` restarts the current topic. `forget` erases this browser's saved chat. Email and phone patterns are redacted from saved chat history; the contact handoff's name, email, phone, and question are never stored in that browser history. This is not cross-device identity or a secure server-side conversation archive. Shared-device users can see the saved chat until they use `forget` or clear site data. Only an explicit contact request is transmitted.
 
 ## Lead storage
 
@@ -16,9 +16,10 @@ An end-to-end synthetic POST on October 23, 2026 returned `ok:true`, appeared on
 
 ## Smoke test
 
-1. Open the local TEST site and flow editor. Confirm the editor has four paths, editable questions and contact prompts, and Save flow file.
+1. Open the local TEST site and flow editor. Confirm the editor has a separately editable starter message, four paths, editable questions and contact prompts, and Save flow file.
 2. Open the chat on desktop and mobile. Confirm the gold launcher stays visible, hover/focus shadow, tall narrow panel, mobile layout, message timestamps, and Escape/close focus behavior.
 3. Type buying, selling, relocating, and investing requests; follow the free-text qualification questions and check general/investing booking links.
 4. Submit a synthetic contact request through a network-intercepted browser test. Verify `source_key=website_rule_chat`, interest, question/context, and that no mail client opens.
 5. For a real end-to-end storage test, use a clearly marked synthetic submission with no phone so it sends no admin alert, verify it on the Sheet's chat tab, then remove only that test row.
 6. Confirm no request to `embed.tawk.to` appears in network activity.
+7. Reload after a completed or partially answered chat. Confirm timestamps and prior messages return, a completed topic recalls previous answers rather than asking them again, and contact details do not appear in local storage. Type `forget`, reload, and confirm the fresh starter returns.

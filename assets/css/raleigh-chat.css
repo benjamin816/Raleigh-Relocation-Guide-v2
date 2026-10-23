@@ -15,6 +15,7 @@
 .rchat-close { width:34px; height:34px; border:0; border-radius:50%; color:#fff; background:rgba(255,255,255,.14); font-size:25px; line-height:1; cursor:pointer; }
 .rchat-log { flex:1; overflow:auto; padding:18px 16px 12px; background:#fff; scroll-behavior:smooth; overscroll-behavior:contain; }
 .rchat-row { display:flex; gap:8px; align-items:flex-start; margin-bottom:13px; animation:rchat-pop .27s cubic-bezier(.2,1.25,.35,1) both; }
+.rchat-row--restored { animation:none; }
 .rchat-row--user { justify-content:flex-end; }
 .rchat-row img { width:30px; height:30px; flex:none; object-fit:cover; border-radius:50%; }
 .rchat-content { display:flex; flex-direction:column; align-items:flex-start; max-width:83%; }

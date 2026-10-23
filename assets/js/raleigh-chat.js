@@ -29,7 +29,48 @@
   avatar.src = config.avatar;
   root.querySelector(".rchat-head-title").textContent = config.title;
 
-  var state = { intent: null, question: -1, answers: [], started: false, lastFocus: null, contact: null, submitting: false };
+  var storageKey = "raleigh-guide-chat-v1";
+  var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
+  var state = { intent: null, question: -1, answers: [], memories: {}, history: [], started: false, lastFocus: null, contact: null, submitting: false };
+  function redact(text) {
+    return String(text).replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email removed]")
+      .replace(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g, "[phone removed]").slice(0, 500);
+  }
+  function persist() {
+    try {
+      window.localStorage.setItem(storageKey, JSON.stringify({
+        version: 1, updatedAt: Date.now(), started: state.started,
+        intent: state.intent, question: state.question,
+        answers: state.answers.map(redact).slice(0, 12),
+        memories: state.memories, history: state.history.slice(-80)
+      }));
+    } catch (_) { /* Browsers may block local storage. Chat still works for this visit. */ }
+  }
+  function restore() {
+    try {
+      var saved = JSON.parse(window.localStorage.getItem(storageKey) || "null");
+      if (!saved || saved.version !== 1 || !Number.isFinite(saved.updatedAt) ||
+          Date.now() - saved.updatedAt > storageDays * 86400000 || saved.updatedAt > Date.now() + 86400000) return;
+      state.started = saved.started === true;
+      state.intent = Object.prototype.hasOwnProperty.call(config.flows, saved.intent) ? saved.intent : null;
+      state.question = Number.isInteger(saved.question) ? Math.max(-1, Math.min(saved.question, state.intent ? config.flows[state.intent].questions.length : -1)) : -1;
+      state.answers = Array.isArray(saved.answers) ? saved.answers.filter(function (item) { return typeof item === "string"; }).slice(0, 12).map(redact) : [];
+      if (saved.memories && typeof saved.memories === "object" && !Array.isArray(saved.memories)) {
+        Object.keys(config.flows).forEach(function (id) {
+          if (Array.isArray(saved.memories[id])) state.memories[id] = saved.memories[id]
+            .filter(function (item) { return typeof item === "string"; }).slice(0, config.flows[id].questions.length).map(redact);
+        });
+      }
+      if (Array.isArray(saved.history)) saved.history.slice(-80).forEach(function (item) {
+        if (!item || typeof item.text !== "string" || typeof item.byUser !== "boolean") return;
+        var entry = { text: redact(item.text), byUser: item.byUser, at: item.at };
+        if (item.link && safeLink(item.link.href) && typeof item.link.label === "string") entry.link = { href: item.link.href, label: item.link.label.slice(0, 80) };
+        state.history.push(entry);
+        message(entry.text, entry.byUser, { at: entry.at, link: entry.link, restoring: true });
+      });
+      if (!state.history.length) state.started = false;
+    } catch (_) { /* An invalid or unavailable local record is ignored. */ }
+  }
   var audioContext;
   function sound() {
     try {
@@ -50,9 +91,10 @@
     } catch (_) { /* Audio may be blocked by the browser. */ }
   }
   function scrollToEnd() { log.scrollTop = log.scrollHeight; }
-  function message(text, byUser) {
+  function message(text, byUser, options) {
+    options = options || {};
     var row = document.createElement("div");
-    row.className = "rchat-row" + (byUser ? " rchat-row--user" : "");
+    row.className = "rchat-row" + (byUser ? " rchat-row--user" : "") + (options.restoring ? " rchat-row--restored" : "");
     if (!byUser) {
       var img = document.createElement("img");
       img.src = config.avatar;
@@ -64,8 +106,16 @@
     var bubble = document.createElement("div");
     bubble.className = "rchat-bubble";
     bubble.textContent = text;
+    if (options.link && safeLink(options.link.href)) {
+      var anchor = document.createElement("a");
+      anchor.className = "rchat-link";
+      anchor.href = options.link.href;
+      anchor.textContent = options.link.label;
+      bubble.appendChild(anchor);
+      bubble.appendChild(document.createTextNode(" whenever you're ready."));
+    }
     var timestamp = document.createElement("time");
-    var now = new Date();
+    var now = options.at && !isNaN(Date.parse(options.at)) ? new Date(options.at) : new Date();
     timestamp.className = "rchat-time";
     timestamp.dateTime = now.toISOString();
     timestamp.textContent = now.toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
@@ -74,6 +124,11 @@
     row.appendChild(content);
     log.appendChild(row);
     scrollToEnd();
+    if (!options.restoring && options.remember !== false && !state.contact) {
+      state.history.push({ text: redact(text), byUser: !!byUser, at: now.toISOString(), link: options.link || null });
+      state.history = state.history.slice(-80);
+      persist();
+    }
     return bubble;
   }
   function safeLink(href) {
@@ -82,15 +137,7 @@
   function link(label, href) {
     var url = safeLink(href);
     if (!url) return;
-    var bubble = message("You can ", false);
-    var a = document.createElement("a");
-    a.className = "rchat-link";
-    a.href = url;
-    a.textContent = label.toLowerCase();
-    var timestamp = bubble.querySelector(".rchat-time");
-    bubble.insertBefore(a, timestamp);
-    bubble.insertBefore(document.createTextNode(" whenever you're ready."), timestamp);
-    scrollToEnd();
+    message("You can ", false, { link: { label: label.toLowerCase(), href: url } });
   }
   function detectIntent(text) {
     var lower = text.toLowerCase();
@@ -104,10 +151,26 @@
     });
     return best;
   }
-  function startFlow(id) {
+  function memorySummary(id) {
+    var flow = config.flows[id];
+    var answers = state.memories[id] || [];
+    if (!flow || !answers.length) return "";
+    return answers.slice(0, 3).map(function (answer, index) {
+      return "When I asked “" + flow.questions[index].text + "” you said “" + answer + "”.";
+    }).join(" ");
+  }
+  function startFlow(id, fresh) {
     var flow = config.flows[id];
     if (!flow) return;
     state.intent = id;
+    if (!fresh && state.memories[id] && state.memories[id].length) {
+      state.answers = state.memories[id].slice();
+      state.question = flow.questions.length;
+      message("I remember our earlier conversation about " + id + ". " + memorySummary(id) + " What would you like to explore next? Type 'start over' if you'd like to answer those questions again.", false);
+      link("Book a one-on-one call", config.bookingLinks[flow.booking]);
+      if (flow.secondaryLink) link(flow.secondaryLink.label, flow.secondaryLink.href);
+      return;
+    }
     state.question = 0;
     state.answers = [];
     message(flow.intro, false);
@@ -126,7 +189,8 @@
     message(question.text, false);
   }
   function acceptAnswer(answer) {
-    state.answers.push(String(answer));
+    state.answers.push(redact(answer));
+    state.memories[state.intent] = state.answers.slice();
     state.question += 1;
     askQuestion();
   }
@@ -220,18 +284,40 @@
   function handleText(text) {
     var value = text.trim();
     if (!value || state.submitting) return;
-    message(value, true);
+    if (/^(forget|forget me|clear chat|delete chat history)$/i.test(value)) {
+      try { window.localStorage.removeItem(storageKey); } catch (_) { /* Storage may be unavailable. */ }
+      state.intent = null;
+      state.question = -1;
+      state.answers = [];
+      state.memories = {};
+      state.history = [];
+      state.contact = null;
+      state.started = true;
+      input.maxLength = 500;
+      log.replaceChildren();
+      message("This browser's chat history is cleared. What would you like to discuss?", false, { remember: false });
+      sound();
+      return;
+    }
+    var contactCommand = /^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value);
+    message(value, true, { remember: !state.contact && !contactCommand });
     sound();
     if (state.contact) { handleContactAnswer(value); return; }
-    if (/^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value)) {
+    if (contactCommand) {
       showContact();
       return;
     }
     if (/^(start over|restart|reset)$/i.test(value)) {
-      state.intent = null;
-      state.question = -1;
-      state.answers = [];
-      message(config.welcome, false);
+      if (state.intent) {
+        var previous = state.intent;
+        delete state.memories[previous];
+        startFlow(previous, true);
+      } else message(config.welcome, false);
+      return;
+    }
+    if (/^(what do you remember|what did i tell you|my details)$/i.test(value)) {
+      var remembered = Object.keys(state.memories).filter(function (id) { return state.memories[id].length; });
+      message(remembered.length ? remembered.map(memorySummary).join(" ") : "I don't have any earlier answers saved on this browser yet.", false);
       return;
     }
     if (state.intent && state.question >= 0 && state.question < config.flows[state.intent].questions.length) {
@@ -272,4 +358,5 @@
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && !panel.hidden) close();
   });
+  restore();
 })();

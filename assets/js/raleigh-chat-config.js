@@ -4,6 +4,7 @@ window.RaleighChatConfig = {
   title: "Welcome to Raleigh NC Guide",
   avatar: "/assets/images/chat/raleigh-guide-avatar.png",
   welcome: "Thanks for stopping by! Are you looking to buy, sell, relocate, or invest in the Raleigh area?",
+  conversationMemoryDays: 180,
   fallback: "Tell me a little more about what you have in mind. Are you buying, selling, relocating, or investing? You can also type 'contact' to send our team a question.",
   contactPrompt: "I can pass your question to the team. I'll take a few details first.",
   contactQuestions: [
