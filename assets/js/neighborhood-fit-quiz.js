@@ -1242,6 +1242,7 @@
         const payload = buildLeadPayload();
         try {
           await postLead(payload);
+          window.dispatchEvent(new CustomEvent("raleigh-lead-form-submitted", { detail: { source: "neighborhood_fit_quiz" } }));
           sendAnalytics(payload.results && payload.results[0] ? payload.results[0].suburb : "unknown");
           showSuccessAndRedirect();
         } catch (error) {

@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://calendar.google.com" />
   <link rel="preconnect" href="https://www.google.com" />
   <link rel="preconnect" href="https://accounts.google.com" />
-  <link rel="stylesheet" href="/assets/css/styles.css?v=20260821-mobilefix4" />
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20261026-popup-test1" />
 
   <style>
     :root {
@@ -336,6 +336,24 @@
       background: #fff;
       transform: scale(0.666667);
       transform-origin: top left;
+    }
+
+    .booking-report {
+      flex: none;
+      padding: 6px 10px;
+      text-align: center;
+      background: #fff;
+      border-top: 1px solid var(--border);
+    }
+    .booking-report button {
+      border: 0;
+      background: transparent;
+      color: var(--green);
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: underline;
+      cursor: pointer;
     }
 
     .site-footer {
@@ -829,6 +847,7 @@
                 allow="camera; microphone; fullscreen"
               ></iframe>
             </div>
+            <div class="booking-report"><button type="button" data-booking-self-report>I received my booking confirmation email — stop reminders</button></div>
           </div>
         </div>
       </section>
@@ -891,7 +910,18 @@
       window.addEventListener('orientationchange', setEmbedVars);
     })();
   </script>
-  <script src="/assets/js/script.js?v=20261023-rchat-test1" defer></script>
+  <script src="/assets/js/script.js?v=20261026-popup-test1" defer></script>
+  <script>
+    (function () {
+      var button = document.querySelector('[data-booking-self-report]');
+      if (!button) return;
+      button.addEventListener('click', function () {
+        try { window.localStorage.setItem('livrBookingReportedAt', new Date().toISOString()); } catch (_) {}
+        button.textContent = 'Booking reminders stopped on this browser';
+        button.disabled = true;
+      });
+    })();
+  </script>
 </body>
 </html>
 

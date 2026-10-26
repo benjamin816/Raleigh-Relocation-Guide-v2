@@ -6347,6 +6347,22 @@ body.lead-popup-open .lead-popup-dev-trigger {
   transform-origin: top left;
 }
 
+.lead-popup-booked-button {
+  display: block;
+  margin: 0.7rem auto;
+  padding: 0.45rem 0.8rem;
+  border: 1px solid #187d45;
+  border-radius: 6px;
+  background: #fff;
+  color: #126737;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.lead-popup-booked-button:hover,
+.lead-popup-booked-button:focus-visible { background: #eaf7ed; }
+
 @keyframes lead-popup-choice-click {
   0% {
     transform: scale(1);

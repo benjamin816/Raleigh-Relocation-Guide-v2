@@ -31,7 +31,7 @@
 
   var storageKey = "raleigh-guide-chat-v1";
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
-  var state = { intent: null, question: -1, answers: [], memories: {}, history: [], started: false, lastFocus: null, contact: null, submitting: false };
+  var state = { intent: null, question: -1, answers: [], memories: {}, history: [], started: false, lastFocus: null, contact: null, submitting: false, sentMessageSinceOpen: false };
   function redact(text) {
     return String(text).replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email removed]")
       .replace(/(?:\+?1[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}/g, "[phone removed]").slice(0, 500);
@@ -238,6 +238,7 @@
     }).then(function () {
       state.contact = null;
       message("Your request was submitted for processing. Thank you!", false);
+      window.dispatchEvent(new CustomEvent("raleigh-lead-form-submitted", { detail: { source: "website_chat" } }));
       input.maxLength = 500;
     }).catch(function () {
       message("I couldn't submit that request. Reply yes to retry or no to cancel.", false);
@@ -284,6 +285,7 @@
   function handleText(text) {
     var value = text.trim();
     if (!value || state.submitting) return;
+    state.sentMessageSinceOpen = true;
     if (/^(forget|forget me|clear chat|delete chat history)$/i.test(value)) {
       try { window.localStorage.removeItem(storageKey); } catch (_) { /* Storage may be unavailable. */ }
       state.intent = null;
@@ -330,6 +332,7 @@
   }
   function open() {
     state.lastFocus = document.activeElement;
+    state.sentMessageSinceOpen = false;
     panel.hidden = false;
     launcher.setAttribute("aria-expanded", "true");
     launcher.setAttribute("aria-label", "Close Raleigh help chat");
@@ -344,7 +347,7 @@
     panel.hidden = true;
     launcher.setAttribute("aria-expanded", "false");
     launcher.setAttribute("aria-label", "Open Raleigh help chat");
-    window.dispatchEvent(new CustomEvent("tawk-lead-popup-state", { detail: { blocked: false, reason: "custom_chat_closed" } }));
+    window.dispatchEvent(new CustomEvent("tawk-lead-popup-state", { detail: { blocked: false, reason: "custom_chat_closed", sentMessage: state.sentMessageSinceOpen } }));
     (state.lastFocus && state.lastFocus.focus ? state.lastFocus : launcher).focus();
   }
   launcher.addEventListener("click", function () { panel.hidden ? open() : close(); });

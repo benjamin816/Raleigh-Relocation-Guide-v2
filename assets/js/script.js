@@ -1115,6 +1115,23 @@
     analyticsTracker.markFormInteraction(source || "form");
   };
 
+  var notifyLeadFormSubmitted = function (source) {
+    window.dispatchEvent(new CustomEvent("raleigh-lead-form-submitted", {
+      detail: { source: source || "website_form" }
+    }));
+  };
+
+  // Carry a submitted living-site lead across pages, including quiz pages where
+  // the timed popup is intentionally not mounted. This is not a booking signal.
+  window.addEventListener("raleigh-lead-form-submitted", function () {
+    if (/^\/(invest|calculator)(\/|$)/i.test(window.location.pathname)) return;
+    try {
+      window.localStorage.setItem("livrLeadPopupSubmitted", "true");
+      window.localStorage.removeItem("livrBookingReminderShown");
+      window.localStorage.setItem("livrBookingFollowupAt", String(Date.now() + 2 * 60 * 1000));
+    } catch (_) { /* Storage may be blocked; the current-page timer still works. */ }
+  });
+
   var mapObject = document.querySelector(".map-hit");
   if (mapObject) {
     var orderedSuburbRoutes = [
@@ -1832,7 +1849,7 @@
     if (canonicalPath.charAt(canonicalPath.length - 1) !== "/") {
       canonicalPath += "/";
     }
-    var isExcludedPopupPage = canonicalPath.indexOf("/consult/") === 0 || canonicalPath.indexOf("/2026/") === 0 || canonicalPath.indexOf("/2026-test/") === 0 || canonicalPath.indexOf("/quiz/") === 0 || canonicalPath.indexOf("/raleigh-suburb-quiz/") === 0;
+    var isExcludedPopupPage = canonicalPath.indexOf("/consult/") === 0 || canonicalPath.indexOf("/2026/") === 0 || canonicalPath.indexOf("/2026-test/") === 0 || canonicalPath.indexOf("/quiz/") === 0 || canonicalPath.indexOf("/raleigh-suburb-quiz/") === 0 || canonicalPath.indexOf("/invest/") === 0 || canonicalPath.indexOf("/calculator/") === 0;
     if (isExcludedPopupPage) {
       return;
     }
@@ -1894,13 +1911,20 @@
     };
 
     var leadPopupSubmittedKey = "livrLeadPopupSubmitted";
+    var leadPopupBookingReportedKey = "livrBookingReportedAt";
+    var leadPopupReminderShownKey = "livrBookingReminderShown";
+    var leadPopupFollowupAtKey = "livrBookingFollowupAt";
     var leadPopupSessionStartKey = "livrLeadPopupSessionStart";
     var leadPopupNextShowKey = "livrLeadPopupNextShowAt";
     var leadPopupInitialDelayMs = 10 * 1000;
+    var leadPopupFormFollowupDelayMs = 2 * 60 * 1000;
+    var leadPopupChatDelayMs = 30 * 60 * 1000;
     var leadPopupReopenDelayMs = 30 * 60 * 1000;
     var leadPopupBookingUrl = "https://calendar.google.com/calendar/appointments/schedules/AcZssZ1iKo2BT73sNnkfTzQy7iYu1gq-xy0FTcN4j-2glbDsM3UUhLHtEHsGnj-bHC19EFVGO4VdCX5g?gv=true";
     var leadPopupAppsScriptUrl = "https://script.google.com/macros/s/AKfycbwnqkPb6Nkp9owlDv_orcAId7cNHbKuQrf5ENMW4BvbUuaLFNHP-yANDdSwQ6Vjl41v/exec";
     var hasSubmitted = safeGet(localStore, leadPopupSubmittedKey) === "true";
+    var hasBookingReported = Boolean(safeGet(localStore, leadPopupBookingReportedKey));
+    var hasReminderShown = safeGet(localStore, leadPopupReminderShownKey) === "true";
     var stepOneHeading = isSellPage ? "WHAT IS YOUR IDEAL TIMELINE FOR SELLING?*" : "WHAT IS YOUR IDEAL TIMEFRAME TO BUY?*";
     var stepTwoHeading = isSellPage ? "WHAT DO YOU THINK YOUR HOUSE IS WORTH?*" : "WHAT IS YOUR BUDGET?*";
     var stepThreeHeading = isSellPage ? "TELL A BIT ABOUT YOUR HOME." : "DO YOU HAVE A PRE-APPROVAL LETTER?*";
@@ -2068,6 +2092,7 @@
       "<div class='lead-popup-booking-frame-wrap'>",
       "<iframe class='lead-popup-booking-frame' src='" + leadPopupBookingUrl + "' title='Google Calendar appointment scheduling' loading='lazy' allow='camera; microphone; fullscreen'></iframe>",
       "</div>",
+      "<button type='button' class='lead-popup-booked-button' data-lead-action='booked'>I received my booking confirmation</button>",
       "</div>",
       "</section>",
       "</div>"
@@ -2328,6 +2353,15 @@
     };
 
     var ensureNextShowAt = function () {
+      if (hasSubmitted) {
+        var followupAt = Number(safeGet(localStore, leadPopupFollowupAtKey));
+        if (followupAt > 0) {
+          return followupAt;
+        }
+        followupAt = Date.now() + leadPopupFormFollowupDelayMs;
+        safeSet(localStore, leadPopupFollowupAtKey, String(followupAt));
+        return followupAt;
+      }
       var sessionStart = setSessionStart();
       var storedNext = Number(safeGet(sessionStore, leadPopupNextShowKey));
       if (storedNext && storedNext >= sessionStart) {
@@ -2339,7 +2373,16 @@
     };
 
     var setNextShowAt = function (value) {
-      safeSet(sessionStore, leadPopupNextShowKey, String(value));
+      safeSet(hasSubmitted ? localStore : sessionStore, hasSubmitted ? leadPopupFollowupAtKey : leadPopupNextShowKey, String(value));
+    };
+
+    var mayShowPopup = function () {
+      return !hasBookingReported && (!hasSubmitted || !hasReminderShown);
+    };
+
+    var isChatOpen = function () {
+      var chatPanel = document.querySelector(".rchat-panel");
+      return Boolean(chatPanel && !chatPanel.hidden);
     };
 
     var clearTimer = function () {
@@ -2622,10 +2665,10 @@
     };
 
     var openPopup = function (forceOpen, openSource) {
-      if ((!forceOpen && hasSubmitted) || !popupHost.hidden) {
+      if ((!forceOpen && !mayShowPopup()) || !popupHost.hidden) {
         return;
       }
-      if (!forceOpen && tawkBlocksLeadPopup) {
+      if (!forceOpen && (tawkBlocksLeadPopup || isChatOpen())) {
         clearTimer();
         return;
       }
@@ -2643,7 +2686,11 @@
         setStep(0);
       }
 
-      if (hasStartedForm) {
+      if (!forceOpen && hasSubmitted) {
+        showScreen("thanks");
+        hasReminderShown = true;
+        safeSet(localStore, leadPopupReminderShownKey, "true");
+      } else if (hasStartedForm) {
         showScreen("form");
         setStep(currentStep);
       } else {
@@ -2673,7 +2720,8 @@
     };
 
     var schedulePopup = function () {
-      if (hasSubmitted || tawkBlocksLeadPopup) {
+      if (!mayShowPopup() || tawkBlocksLeadPopup || isChatOpen()) {
+        clearTimer();
         return;
       }
       clearTimer();
@@ -2681,7 +2729,7 @@
       var delay = Math.max(0, nextShowAt - Date.now());
       timeoutId = window.setTimeout(function () {
         timeoutId = 0;
-        if (tawkBlocksLeadPopup) {
+        if (tawkBlocksLeadPopup || isChatOpen()) {
           return;
         }
         openPopup(false, "timed_delay");
@@ -2696,15 +2744,15 @@
         popup_screen: currentScreen,
         step_number: currentScreen === "form" ? currentStep + 1 : 0,
         close_reason: closeReason || "unknown",
-        rescheduled: !hasSubmitted && reschedule !== false
+        rescheduled: mayShowPopup() && reschedule !== false
       });
       popupHost.hidden = true;
       popupHost.setAttribute("aria-hidden", "true");
       document.body.classList.remove("lead-popup-open");
       viewportScrollLock.unlock();
       unbindLeadPopupScrollGuard();
-      if (!hasSubmitted && reschedule !== false) {
-        setNextShowAt(Date.now() + leadPopupReopenDelayMs);
+      if (mayShowPopup() && reschedule !== false) {
+        setNextShowAt(Date.now() + (hasSubmitted ? leadPopupFormFollowupDelayMs : leadPopupReopenDelayMs));
         schedulePopup();
       }
     };
@@ -2950,6 +2998,9 @@
       hasSubmitted = true;
       safeSet(localStore, leadPopupSubmittedKey, "true");
       safeRemove(sessionStore, leadPopupNextShowKey);
+      hasReminderShown = false;
+      safeRemove(localStore, leadPopupReminderShownKey);
+      setNextShowAt(Date.now() + leadPopupFormFollowupDelayMs);
       showScreen("thanks");
       trackPopupEvent("popup_submit_transitioned", {
         transition: "optimistic_thanks"
@@ -2994,10 +3045,24 @@
           return;
         }
 
-        if (!hasSubmitted) {
-          setNextShowAt(Date.now() + leadPopupInitialDelayMs);
+        if (mayShowPopup()) {
+          var delay = detail.sentMessage === true
+            ? (hasSubmitted ? leadPopupFormFollowupDelayMs : leadPopupChatDelayMs)
+            : (hasSubmitted ? leadPopupFormFollowupDelayMs : leadPopupInitialDelayMs);
+          setNextShowAt(Date.now() + delay);
           schedulePopup();
         }
+      });
+
+      window.addEventListener("raleigh-lead-form-submitted", function (event) {
+        if (hasBookingReported) return;
+        hasSubmitted = true;
+        hasReminderShown = false;
+        safeSet(localStore, leadPopupSubmittedKey, "true");
+        safeRemove(localStore, leadPopupReminderShownKey);
+        setNextShowAt(Date.now() + leadPopupFormFollowupDelayMs);
+        trackPopupEvent("booking_followup_queued", { form_source: event && event.detail && event.detail.source || "website_form" });
+        schedulePopup();
       });
     }
 
@@ -3054,6 +3119,15 @@
         return;
       }
       var action = actionNode.getAttribute("data-lead-action");
+      if (action === "booked") {
+        hasBookingReported = true;
+        safeSet(localStore, leadPopupBookingReportedKey, new Date().toISOString());
+        safeRemove(localStore, leadPopupFollowupAtKey);
+        clearTimer();
+        trackPopupEvent("booking_self_reported", { source: "visitor_confirmation_button" });
+        closePopup(false, "booking_self_reported");
+        return;
+      }
       if (action === "start") {
         markPopupTouched("start_click");
         hasStartedForm = true;
@@ -3537,6 +3611,7 @@
           trackIntakeEvent("new_construction_form_submit_success", {
             submission_transport: submissionTransport || "fetch"
           });
+          if (submissionTransport !== "not_configured") notifyLeadFormSubmitted("new_construction_form");
         })
         .catch(function (error) {
           submitInFlight = false;
@@ -3871,6 +3946,7 @@
           trackHomeEvalEvent("home_eval_submit_success", {
             submission_transport: "fetch"
           });
+          notifyLeadFormSubmitted("home_valuation_form");
           setStatus("Thanks! We will be in touch shortly.", false);
         })
         .catch(function (error) {
@@ -4556,6 +4632,7 @@
             form_name: "home_call_me_popup",
             contact_intent: intent
           });
+          notifyLeadFormSubmitted("call_me_form");
           trackAnalyticsEvent("popup_submit_success", {
             popup_lead_type: "requested_contact",
             popup_variant: "call_me_modal",
@@ -4894,13 +4971,13 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261023-test3";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261026-test4";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261023-test3";
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261026-test4";
     configScript.onload = function () {
       var chatScript = document.createElement("script");
-      chatScript.src = "/assets/js/raleigh-chat.js?v=20261023-test3";
+      chatScript.src = "/assets/js/raleigh-chat.js?v=20261026-test4";
       document.head.appendChild(chatScript);
     };
     document.head.appendChild(configScript);
