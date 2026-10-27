@@ -23,7 +23,7 @@ const cases = [
   ['investor reading', 'I want investing resources', 'investing', false, null, 'resources'],
   ['booking request', 'Can I book a call?', null, false, null, null, 'booking'],
   ['incidental profanity', 'My current place is shit', null, false, null, null, null, 'language'],
-  ['aggressive troll', 'I will hurt your team', null, false, null, null, null, 'abuse'],
+  ['aggressive troll', 'I will hurt your team', null, false, null, null, null, 'threat'],
   ['discriminatory request', 'I want an only white neighborhood', 'relocating', false, null, null, null, 'discrimination'],
   ['discriminatory phrasing', 'I only want a white neighborhood', 'relocating', false, null, null, null, 'discrimination'],
   ['link spammer', 'Visit https://spam.example and https://spam2.example', null, false, null, null, null, 'spam'],
@@ -40,9 +40,20 @@ for (const [name, text, intent, combined, faq, resource, booking, safety] of cas
   if (safety) assert.equal(engine.classifySafety(text), safety, `${name}: safety`);
 }
 
-assert.equal(config.flows.buying.questions.length, 5);
-assert.equal(config.flows.relocating.questions.length, 5);
-assert.equal(config.flows.selling.questions.length + config.flows.selling.sellingAndBuyingQuestions.length, 6);
+assert.equal(config.flows.buying.questions.length, 11);
+assert.equal(config.flows.relocating.questions.length, 11);
+assert.equal(config.flows.selling.questions.length, 7);
+assert.equal(engine.activeQuestions(config.flows.buying, { location: 'local', tenure: 'renting' }, false).map(q => q.key).join(','), 'location,currentArea,tenure,firstTime,leaseEnd,priorities,home,areas,timing');
+assert.equal(engine.activeQuestions(config.flows.buying, { location: 'out' }, false).map(q => q.key).join(','), 'location,whyRaleigh,priorities,home,areas,timing');
+assert.equal(engine.activeQuestions(config.flows.selling, {}, true).map(q => q.key).join(','), 'whySell,currentHome,ownedYears,nextHome,timing');
+assert.equal(engine.activeQuestions(config.flows.selling, {}, false).map(q => q.key).join(','), 'currentHome,ownedYears,whySellSolo,nextDestination,timing');
+assert.equal(engine.detectLocation('I live in Ohio').place, 'ohio');
+assert.equal(engine.detectLocation('I am relocating from New York').place, 'new york');
+assert.equal(engine.detectTenure('We rent right now'), 'renting');
+assert.equal(engine.detectTenure('I own my current home'), 'owning');
+assert.equal(engine.classifySafety('https://spam.example'), 'spam');
+assert.equal(engine.classifySafety('asdfasdfasdf'), 'spam');
+assert.equal(engine.classifySafety('nigger'), 'hate');
 assert.equal(config.flows.buying.resourceLink.href, '/buy/');
 assert.equal(config.flows.selling.resourceLink.href, '/sell/');
 assert.equal(config.flows.investing.resourceLink.href, '/invest/resources/');

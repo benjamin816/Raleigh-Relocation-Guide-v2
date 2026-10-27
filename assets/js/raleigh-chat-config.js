@@ -30,7 +30,7 @@ window.RaleighChatConfig = {
   ],
   "contactConsentPrompt": "May our team contact you about this question? Reply yes to submit your details, or no to cancel.",
   "bookingPrompt": "To put together a game plan for you, would a video or phone call work better?",
-  "bookingChoicePrompt": "Which works better? You can also ask for mornings, weekends, a specific day, Benjamin or Ricardo, or more times.",
+  "bookingChoicePrompt": "Would either of those work? I can also check another day, a morning or evening, a weekend, or Benjamin or Ricardo.",
   "bookingEmailPrompt": "What's the best email address for the invitation and everything you need before our call?",
   "bookingPhonePrompt": "And what's the best phone number to reach you?",
   "bookingNamePrompt": "What first and last name should I put on the invitation?",
@@ -76,26 +76,65 @@ window.RaleighChatConfig = {
         "buyer",
         "purchase",
         "home search",
+        "looking for a home",
         "mortgage",
         "preapproved",
         "pre-approved"
       ],
-      "intro": "Great! We can help you narrow the search to areas that fit your life and get you into the right home.",
+      "intro": "Awesome.",
       "questions": [
         {
+          "key": "location",
           "text": "Are you moving here from out of state, or are you already local?"
         },
         {
+          "key": "currentArea",
+          "when": "local",
+          "text": "Where do you live right now?"
+        },
+        {
+          "key": "tenure",
+          "when": "local",
+          "text": "Are you renting, or do you own your current home?"
+        },
+        {
+          "key": "firstTime",
+          "when": "renting",
+          "text": "Will this be your first time buying a home?"
+        },
+        {
+          "key": "leaseEnd",
+          "when": "renting",
+          "text": "When does your lease end?"
+        },
+        {
+          "key": "willSell",
+          "when": "owning",
+          "text": "Will you need to sell your current home as part of this move?"
+        },
+        {
+          "key": "whyRaleigh",
+          "when": "out",
+          "text": "What has you looking at moving to Raleigh?",
+          "alternatives": [
+            "What's drawing you to Raleigh?"
+          ]
+        },
+        {
+          "key": "priorities",
           "text": "What matters most to you in the place where you'll live?"
         },
         {
+          "key": "home",
           "text": "What are you looking for in a home?"
         },
         {
-          "text": "When are you hoping to purchase your new home?"
+          "key": "areas",
+          "text": "What areas are you considering so far, and why?"
         },
         {
-          "text": "Which area(s) of Raleigh interests you most and why?"
+          "key": "timing",
+          "text": "When are you hoping to move?"
         }
       ],
       "finish": "Thanks, that gives us a good starting point. A one-on-one conversation would help us build a game plan around your timing, home, and preferred areas.",
@@ -111,31 +150,44 @@ window.RaleighChatConfig = {
         "selling",
         "seller",
         "list my",
+        "list our",
         "home value",
         "valuation",
         "what is my home worth"
       ],
-      "intro": "We can help you think through pricing, preparation, and the timing of a Raleigh-area sale.",
+      "intro": "Awesome.",
       "questions": [
         {
+          "key": "whySell",
+          "when": "combined",
+          "text": "What has you looking to sell your current home?"
+        },
+        {
+          "key": "currentHome",
           "text": "Where is your current home?"
         },
         {
+          "key": "ownedYears",
           "text": "How long have you owned it?"
         },
         {
-          "text": "Is this your first time selling a home?"
+          "key": "whySellSolo",
+          "when": "solo",
+          "text": "What has you looking to sell?"
         },
         {
-          "text": "When would you like to move?"
-        }
-      ],
-      "sellingAndBuyingQuestions": [
-        {
-          "text": "Which Raleigh-area neighborhoods are you considering for your next home, and why?"
+          "key": "nextDestination",
+          "when": "solo",
+          "text": "Where would you like to go next?"
         },
         {
-          "text": "What would you like your next home to have that your current one doesn't?"
+          "key": "nextHome",
+          "when": "combined",
+          "text": "What's most important in the new home you're looking for?"
+        },
+        {
+          "key": "timing",
+          "text": "When would you like to make that move?"
         }
       ],
       "finish": "The right plan depends on your current home, timing, and next move. Let's talk it through together.",
@@ -143,7 +195,8 @@ window.RaleighChatConfig = {
         "label": "Explore selling resources",
         "href": "/sell/"
       },
-      "booking": "general"
+      "booking": "general",
+      "combinedIntro": "Awesome. We work with a lot of people who are selling and buying here in Raleigh."
     },
     "relocating": {
       "keywords": [
@@ -156,22 +209,57 @@ window.RaleighChatConfig = {
         "schools",
         "commute"
       ],
-      "intro": "Welcome! The Triangle has very different neighborhoods and suburbs, so let's start with your day-to-day priorities.",
+      "intro": "That's exciting.",
       "questions": [
         {
-          "text": "Are you moving from out of state, or are you already in the Triangle?"
+          "key": "location",
+          "text": "Where are you moving from?"
         },
         {
-          "text": "What matters most in the area where you'll live?"
+          "key": "whyRaleigh",
+          "when": "out",
+          "text": "What has you looking at moving down here?"
         },
         {
-          "text": "What are you hoping to find in a home?"
+          "key": "currentArea",
+          "when": "local",
+          "text": "Where do you live now?"
         },
         {
-          "text": "When do you expect to move?"
+          "key": "tenure",
+          "when": "local",
+          "text": "Are you renting, or do you own your current home?"
         },
         {
-          "text": "Which Raleigh-area places interest you so far, and why?"
+          "key": "firstTime",
+          "when": "renting",
+          "text": "Will this be your first time buying a home?"
+        },
+        {
+          "key": "leaseEnd",
+          "when": "renting",
+          "text": "When does your lease end?"
+        },
+        {
+          "key": "willSell",
+          "when": "owning",
+          "text": "Will you need to sell your current home as part of this move?"
+        },
+        {
+          "key": "priorities",
+          "text": "What matters most to you in a place to live?"
+        },
+        {
+          "key": "home",
+          "text": "What are you looking for in a home?"
+        },
+        {
+          "key": "areas",
+          "text": "What areas interest you so far, and why?"
+        },
+        {
+          "key": "timing",
+          "text": "When are you hoping to move?"
         }
       ],
       "finish": "Thanks. We can compare the areas and homes that fit your move, then put together a clear plan.",
@@ -193,13 +281,23 @@ window.RaleighChatConfig = {
         "dscr",
         "cap rate"
       ],
-      "intro": "Let's match the strategy to the property and numbers—not just a neighborhood name.",
+      "intro": "Great. We work with many investors, both local and out of state.",
       "questions": [
         {
-          "text": "Which investing approach are you considering?"
+          "key": "location",
+          "text": "Do you currently live here, or are you out of state?"
         },
         {
-          "text": "Where are you in the process?"
+          "key": "experience",
+          "text": "Is this your first investment, or have you done this before?"
+        },
+        {
+          "key": "strategy",
+          "text": "What kind of investment are you looking for?"
+        },
+        {
+          "key": "timing",
+          "text": "When are you hoping to make your next investment?"
         }
       ],
       "finish": "Our calculator is a useful first pass. For a property-specific strategy, book an investing exploration call.",
@@ -228,7 +326,7 @@ window.RaleighChatConfig = {
         "down payment",
         "how much down"
       ],
-      "answer": "The amount depends on the loan and your finances. A lender can give you a reliable number; we can help you plan the home search around it."
+      "answer": "The amount depends on the loan and your finances. A lender can give you a much more reliable number, and we can connect you with one of our trusted local lenders as part of the process."
     },
     {
       "keywords": [
@@ -364,5 +462,12 @@ window.RaleighChatConfig = {
       ],
       "answer": "That depends on your timeline, budget, and flexibility. Tell me how long you expect to stay and what monthly payment feels comfortable."
     }
-  ]
+  ],
+  "originAcknowledgements": {
+    "ohio": "Awesome. We've worked with multiple families relocating from Ohio.",
+    "new york": "That's awesome. We get a lot of people relocating from New York."
+  },
+  "safetyWarning": "Let's keep this focused on your real estate question. Are you looking to buy or sell in Raleigh?",
+  "safetyEnd": "I'm going to end this conversation for now. Please reach out in the future if you're thinking about buying or selling in Raleigh.",
+  "unknownQuestion": "That's a good question for our team. If you're early in the process, this page is a helpful place to start."
 };

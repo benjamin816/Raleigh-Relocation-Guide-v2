@@ -69,7 +69,7 @@
 
   var storageKey = "raleigh-guide-chat-v1";
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
-  var state = { intent: null, combined: false, question: -1, answers: [], memories: {}, history: [], started: false, lastFocus: null, contact: null, booking: null, submitting: false, sentMessageSinceOpen: false, previousInput: "" };
+  var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, lastFocus: null, contact: null, booking: null, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
   var safetyKey = "raleigh-guide-chat-safety-v1";
   function safetyRecord(reason) {
     if (window.__livrAnalyticsTracker && typeof window.__livrAnalyticsTracker.track === "function") {
@@ -78,14 +78,15 @@
     try {
       var saved = JSON.parse(window.localStorage.getItem(safetyKey) || "null") || { strikes: 0, events: [] };
       saved.events = (saved.events || []).concat({ at: new Date().toISOString(), reason: reason }).slice(-20);
-      if (reason !== "language") saved.strikes = (saved.strikes || 0) + 1;
+      if (reason === "hate" || reason === "threat") saved.strikes = 2;
+      else if (reason !== "language") saved.strikes = (saved.strikes || 0) + 1;
       window.localStorage.setItem(safetyKey, JSON.stringify(saved));
       return saved.strikes;
     } catch (_) { return 0; }
   }
   try {
     var priorSafety = JSON.parse(window.localStorage.getItem(safetyKey) || "null");
-    if (priorSafety && priorSafety.strikes >= 3) { root.hidden = true; return; }
+    if (priorSafety && priorSafety.strikes >= 2 && !/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) { root.hidden = true; return; }
   } catch (_) { /* Private browsing may disable local storage. */ }
   function redact(text) {
     return String(text).replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email removed]")
@@ -94,10 +95,11 @@
   function persist() {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify({
-        version: 1, updatedAt: Date.now(), started: state.started,
+        version: 2, updatedAt: Date.now(), started: state.started,
         intent: state.intent, combined: state.combined, question: state.question,
         answers: state.answers.map(redact).slice(0, 12),
-        memories: state.memories, history: state.history.slice(-80)
+        profile: state.profile, memories: state.memories, memoryProfiles: state.memoryProfiles,
+        history: state.history.slice(-80)
       }));
     } catch (_) { /* Browsers may block local storage. Chat still works for this visit. */ }
   }
@@ -122,17 +124,19 @@
   function restore() {
     try {
       var saved = JSON.parse(window.localStorage.getItem(storageKey) || "null");
-      if (!saved || saved.version !== 1 || !Number.isFinite(saved.updatedAt) ||
+      if (!saved || (saved.version !== 1 && saved.version !== 2) || !Number.isFinite(saved.updatedAt) ||
           Date.now() - saved.updatedAt > storageDays * 86400000 || saved.updatedAt > Date.now() + 86400000) return;
       state.started = saved.started === true;
-      state.intent = Object.prototype.hasOwnProperty.call(config.flows, saved.intent) ? saved.intent : null;
+      state.intent = saved.version === 2 && Object.prototype.hasOwnProperty.call(config.flows, saved.intent) ? saved.intent : null;
       state.combined = state.intent === "selling" && saved.combined === true;
+      state.profile = saved.version === 2 && saved.profile && typeof saved.profile === "object" ? saved.profile : {};
       state.question = Number.isInteger(saved.question) ? Math.max(-1, Math.min(saved.question, state.intent ? activeQuestions().length : -1)) : -1;
-      state.answers = Array.isArray(saved.answers) ? saved.answers.filter(function (item) { return typeof item === "string"; }).slice(0, 12).map(redact) : [];
-      if (saved.memories && typeof saved.memories === "object" && !Array.isArray(saved.memories)) {
+      state.answers = saved.version === 2 && Array.isArray(saved.answers) ? saved.answers.filter(function (item) { return typeof item === "string"; }).slice(0, 12).map(redact) : [];
+      if (saved.version === 2 && saved.memoryProfiles && typeof saved.memoryProfiles === "object" && !Array.isArray(saved.memoryProfiles)) state.memoryProfiles = saved.memoryProfiles;
+      if (saved.version === 2 && saved.memories && typeof saved.memories === "object" && !Array.isArray(saved.memories)) {
         Object.keys(config.flows).forEach(function (id) {
           if (Array.isArray(saved.memories[id])) state.memories[id] = saved.memories[id]
-            .filter(function (item) { return typeof item === "string"; }).slice(0, config.flows[id].questions.length + (id === "selling" ? (config.flows[id].sellingAndBuyingQuestions || []).length : 0)).map(redact);
+            .filter(function (item) { return typeof item === "string"; }).slice(0, config.flows[id].questions.length).map(redact);
         });
       }
       if (Array.isArray(saved.history)) saved.history.slice(-80).forEach(function (item) {
@@ -222,8 +226,8 @@
     }).finally(function () {
       pendingBotMessages -= 1;
       if (pendingBotMessages === 0 && !state.submitting) {
-        input.disabled = false;
-        sendButton.disabled = !input.value.trim();
+        input.disabled = state.ended;
+        sendButton.disabled = state.ended || !input.value.trim();
       }
     });
   }
@@ -406,8 +410,8 @@
       state.booking = null;
       return;
     }
-    message("I have " + state.booking.slots.map(function (slot, index) {
-      return (index === 0 ? "1) " : " or 2) ") + bookingLabel(slot.start);
+    message("We have " + state.booking.slots.map(function (slot, index) {
+      return (index === 0 ? "" : " or ") + bookingLabel(slot.start);
     }).join("") + (config.chatRoundRobinBookingEnabled
       ? ". " + (config.bookingChoicePrompt || "Which works better? You can also ask for mornings, weekends, a specific day, Benjamin or Ricardo, or more times.")
       : ". Which works better? You can also say 'more times' or suggest a day and time."), false);
@@ -441,8 +445,9 @@
     message(config.bookingPrompt || "Would a video or phone call work better for you?", false);
   }
   function loadBookingSlots(booking) {
+    var followUp = booking.step === "choose";
     booking.step = "loading";
-    message("Great. I'll check the team's next openings.", false);
+    message(followUp ? "Let me check those openings." : "Absolutely, let's get that set up. I'm checking the team's next openings.", false);
     bookingCall("slots", config.chatRoundRobinBookingEnabled ? [booking.preference] : []).then(function (slots) {
       if (state.booking === booking) offerBookingSlots(slots);
     }).catch(function (error) {
@@ -585,24 +590,24 @@
   }
   function activeQuestions() {
     if (!state.intent || !config.flows[state.intent]) return [];
-    var flow = config.flows[state.intent];
-    return flow.questions.concat(state.combined && state.intent === "selling" ? flow.sellingAndBuyingQuestions || [] : []);
+    return engine.activeQuestions(config.flows[state.intent], state.profile, state.combined);
   }
   function memorySummary(id) {
     var flow = config.flows[id];
     var answers = state.memories[id] || [];
     if (!flow || !answers.length) return "";
-    var questions = id === state.intent ? activeQuestions() : flow.questions;
+    var questions = id === state.intent ? activeQuestions() : engine.activeQuestions(flow, state.memoryProfiles[id] || {}, false);
     return answers.slice(0, Math.min(3, questions.length)).map(function (answer, index) {
       return "You told me “" + answer + "” about “" + questions[index].text + "”.";
     }).join(" ");
   }
-  function startFlow(id, fresh, combined) {
+  function startFlow(id, fresh, combined, sourceText) {
     var flow = config.flows[id];
     if (!flow) return;
     state.intent = id;
     state.combined = id === "selling" && combined === true;
     if (!fresh && state.memories[id] && state.memories[id].length) {
+      state.profile = Object.assign({}, state.memoryProfiles[id] || {});
       state.answers = state.memories[id].slice();
       state.question = Math.min(state.answers.length, activeQuestions().length);
       message("I remember what you've shared about " + id + ". " + memorySummary(id), false);
@@ -613,10 +618,26 @@
     }
     state.question = 0;
     state.answers = [];
-    message(flow.intro, false);
-    askQuestion();
+    state.profile = {};
+    var knownLocation = /^(buying|relocating|investing)$/.test(id) && sourceText && engine.detectLocation(sourceText);
+    if (knownLocation) {
+      state.profile.location = knownLocation.type;
+      state.profile.origin = knownLocation.place || "";
+      state.answers.push(redact(sourceText));
+      state.question = 1;
+      state.memories[id] = state.answers.slice();
+      state.memoryProfiles[id] = Object.assign({}, state.profile);
+    }
+    if (!knownLocation) message(state.combined && flow.combinedIntro ? flow.combinedIntro : flow.intro, false);
+    askQuestion(knownLocation ? locationAcknowledgement(knownLocation) : "");
   }
-  function askQuestion() {
+  function locationAcknowledgement(location) {
+    if (state.intent === "investing") return location.type === "local" ? "Great, it's helpful to know you're local." : "Got it. It's helpful to know you're investing from out of state.";
+    if (location.type === "local") return "Great.";
+    var place = (location.place || "").toLowerCase();
+    return (config.originAcknowledgements || {})[place] || "Awesome. Thanks for sharing where you're moving from.";
+  }
+  function askQuestion(prefix) {
     var flow = config.flows[state.intent];
     var questions = activeQuestions();
     if (state.question >= questions.length) {
@@ -626,13 +647,43 @@
       return;
     }
     var question = questions[state.question];
-    message(question.text, false);
+    var variants = [question.text].concat(Array.isArray(question.alternatives) ? question.alternatives.filter(Boolean) : []);
+    var wording = variants[state.answers.length % variants.length] || question.text;
+    message((prefix ? prefix + " " : "") + wording, false);
   }
   function acceptAnswer(answer) {
+    var question = activeQuestions()[state.question];
+    var acknowledgement = ["Got it.", "That helps.", "Thanks, that gives me a better picture."][state.answers.length % 3];
+    if (question && question.key === "location") {
+      var location = engine.detectLocation(answer);
+      if (!location && /^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/i.test(answer.trim())) location = { type: "local", place: "" };
+      if (!location && /^[A-Za-z][A-Za-z .-]{1,35}$/.test(answer.trim()) && !/^(?:not sure|i don't know|maybe|yes|no)$/i.test(answer.trim())) location = { type: "out", place: answer.trim().toLowerCase() };
+      if (!location) { message("Are you already local to Raleigh, or would you be moving from out of state?", false); return; }
+      state.profile.location = location.type;
+      state.profile.origin = location.place || "";
+      acknowledgement = locationAcknowledgement(location);
+    }
+    if (question && question.key === "tenure") {
+      var tenure = engine.detectTenure(answer);
+      if (!tenure) { message("Are you currently renting or do you own your home?", false); return; }
+      state.profile.tenure = tenure;
+      acknowledgement = tenure === "renting" ? "Great." : "Got it.";
+    }
+    if (question && question.key === "willSell" && /^(?:yes|yeah|yep|probably|likely|we (?:will|need to|plan to)|i (?:will|need to|plan to))/i.test(answer.trim())) {
+      state.intent = "selling";
+      state.combined = true;
+      state.question = 0;
+      state.answers = [];
+      state.profile = {};
+      message("Got it. Let's plan your sale and next purchase together.", false);
+      askQuestion();
+      return;
+    }
     state.answers.push(redact(answer));
     state.memories[state.intent] = state.answers.slice();
+    state.memoryProfiles[state.intent] = Object.assign({}, state.profile);
     state.question += 1;
-    askQuestion();
+    askQuestion(acknowledgement);
   }
   function showContact() {
     // The existing website receiver writes to the Living in Raleigh sheet.
@@ -740,7 +791,7 @@
   }
   function handleText(text) {
     var value = text.trim();
-    if (!value || state.submitting) return;
+    if (!value || state.submitting || state.ended) return;
     state.sentMessageSinceOpen = true;
     try { window.sessionStorage.setItem("livrChatQuietUntil", String(Date.now() + 30 * 60 * 1000)); } catch (_) {}
     if (/^(forget|forget me|clear chat|delete chat history)$/i.test(value)) {
@@ -751,18 +802,18 @@
     }
     var safety = engine.classifySafety(value, state.previousInput);
     state.previousInput = value;
-    if (safety) safetyRecord(safety);
+    var strikes = safety ? safetyRecord(safety) : 0;
     if (safety && safety !== "language") {
       message(value, true, { remember: false });
       sound();
-      if (safety === "discrimination") message("I can help compare areas by commute, budget, homes, and amenities. I can't steer housing choices by a person's identity.", false, { remember: false });
-      else message("Let's keep the conversation focused on your real estate question.", false, { remember: false });
-      try {
-        if (JSON.parse(window.localStorage.getItem(safetyKey) || "null").strikes >= 3) {
-          message("This chat is now unavailable on this browser.", false, { remember: false });
-          window.setTimeout(function () { root.hidden = true; }, 4500);
-        }
-      } catch (_) {}
+      if (strikes >= 2 || safety === "hate" || safety === "threat") {
+        state.ended = true;
+        input.disabled = true;
+        sendButton.disabled = true;
+        message(config.safetyEnd || "I'm going to end this conversation for now.", false, { remember: false });
+      } else if (safety === "discrimination") {
+        message("I can compare areas by budget, commute, homes, and amenities. " + (state.intent && state.question < activeQuestions().length ? activeQuestions()[state.question].text : config.safetyWarning), false, { remember: false });
+      } else message(config.safetyWarning || "Let's keep this focused on your real estate question.", false, { remember: false });
       return;
     }
     var contactCommand = /^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value);
@@ -778,6 +829,11 @@
       return;
     }
     if (state.contact) { handleContactAnswer(value); return; }
+    if (state.offTrackOffer) {
+      state.offTrackOffer = false;
+      if (/^(yes|yes please|sure|okay|ok|please do)$/i.test(value)) { startBooking(value); return; }
+      if (/^(no|no thanks|not now|later)$/i.test(value)) { if (state.intent && state.question < activeQuestions().length) askQuestion(); else message(config.fallback, false); return; }
+    }
     if (contactCommand) {
       showContact();
       return;
@@ -801,40 +857,61 @@
       return;
     }
     var detected = detectIntent(value);
+    if (/\bcalculator\b/i.test(value) && (state.intent === "investing" || detected && detected.id === "investing")) {
+      message("Yes, the investment calculator can help you run the numbers for different strategies.", false);
+      link("Open the investment calculator", config.flows.investing.secondaryLink.href);
+      if (state.intent && state.question < activeQuestions().length) askQuestion();
+      return;
+    }
     if (engine.wantsResources(value)) {
       var resourceId = detected ? detected.id : state.intent;
       var resource = resourceId && config.flows[resourceId] && config.flows[resourceId].resourceLink;
       if (resource) {
-        message("I can share that with you.", false);
+        message(resourceId === "selling" ? "Great, we have resources for Raleigh sellers on our site." : resourceId === "investing" ? "Great, our Investing in Raleigh resources are here." : "Great, our buying page is a helpful place to start.", false);
         link(resource.label, resource.href);
-        if (state.intent && state.question < activeQuestions().length) message(activeQuestions()[state.question].text, false);
+        if (state.intent && state.question < activeQuestions().length) askQuestion();
         return;
       }
     }
     if (faq) {
       message(faq.answer, false);
-      if (state.intent && state.question < activeQuestions().length) message(activeQuestions()[state.question].text, false);
-      else if (!state.intent && detected) startFlow(detected.id, false, detected.combined);
+      if (state.intent && state.question < activeQuestions().length) askQuestion();
+      else if (!state.intent && detected) startFlow(detected.id, false, detected.combined, value);
       else if (!state.intent) message(config.fallback, false);
       return;
     }
     if (engine.wantsBooking(value)) { startBooking(value); return; }
+    if (engine.asksQuestion(value) && state.intent) {
+      if (state.intent === "investing") {
+        message("That's a good question for our investing team. You can bring it to an investing exploration call.", false);
+        link("Book an investing exploration call", config.bookingLinks.investing);
+      } else {
+        message(config.unknownQuestion || "That's a good question for our team.", false);
+        var help = config.flows[state.intent].resourceLink;
+        if (help) link(help.label, help.href);
+        message("We can also answer it personally on a call. Would you like me to check openings?", false);
+        state.offTrackOffer = true;
+      }
+      return;
+    }
     if (state.intent && state.question >= 0 && state.question < activeQuestions().length) {
       var explicitTopicChange = /^(?:actually\b|also\b|switch\b|change\b|let's (?:talk|switch)\b|can we (?:talk|switch)\b|i (?:also )?(?:want|need|plan|intend|would like) to\b|we (?:also )?(?:want|need|plan) to\b|i(?:'m| am) (?:looking to|planning to|interested in)\b)/i.test(value);
       if (explicitTopicChange && state.intent === "selling" && detected && detected.id === "buying") {
         state.combined = true;
+        state.question = 0;
+        state.answers = [];
         message("Got it—we'll plan your sale and next purchase together.", false);
-        message(activeQuestions()[state.question].text, false);
+        askQuestion();
         return;
       }
-      if (explicitTopicChange && detected && detected.id !== state.intent && !((state.intent === "buying" && detected.id === "relocating") || (state.intent === "relocating" && detected.id === "buying"))) {
-        startFlow(detected.id, false, detected.combined);
+      if (explicitTopicChange && detected && detected.id !== state.intent && !(state.intent === "selling" && activeQuestions()[state.question].key === "nextDestination") && !((state.intent === "buying" && detected.id === "relocating") || (state.intent === "relocating" && detected.id === "buying"))) {
+        startFlow(detected.id, false, detected.combined, value);
         return;
       }
       acceptAnswer(value.slice(0, 160));
       return;
     }
-    if (detected) startFlow(detected.id, false, detected.combined);
+    if (detected) startFlow(detected.id, false, detected.combined, value);
     else if (engine.wantsBooking(value)) startBooking(value);
     else message(config.fallback, false);
   }
@@ -847,10 +924,14 @@
     state.combined = false;
     state.question = -1;
     state.answers = [];
+    state.profile = {};
     state.memories = {};
+    state.memoryProfiles = {};
     state.history = [];
     state.contact = null;
     state.booking = null;
+    state.offTrackOffer = false;
+    state.ended = false;
     state.previousInput = "";
     attachment = null;
     attachmentInput.value = "";
@@ -858,6 +939,7 @@
     state.started = true;
     state.sentMessageSinceOpen = false;
     input.value = "";
+    input.disabled = false;
     input.maxLength = 2000;
     sizeInput();
     sendButton.disabled = true;

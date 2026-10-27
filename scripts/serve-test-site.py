@@ -32,6 +32,15 @@ def validate_chat_config(config):
     for field in ("title", "welcome", "fallback", "contactPrompt", "contactConsentPrompt"):
         if not isinstance(config.get(field), str) or not 1 <= len(config[field]) <= 2000:
             raise ValueError(f"Invalid {field}.")
+    for field in ("unknownQuestion", "safetyWarning", "safetyEnd"):
+        if not isinstance(config.get(field), str) or not 1 <= len(config[field]) <= 1000:
+            raise ValueError(f"Invalid {field}.")
+    origins = config.get("originAcknowledgements")
+    if not isinstance(origins, dict) or not all(
+        isinstance(origins.get(place), str) and 1 <= len(origins[place]) <= 500
+        for place in ("ohio", "new york")
+    ):
+        raise ValueError("Invalid origin acknowledgements.")
     days = config.get("conversationMemoryDays")
     if not isinstance(days, int) or not 1 <= days <= 365:
         raise ValueError("Memory must be between 1 and 365 days.")
@@ -73,7 +82,12 @@ def validate_chat_config(config):
         questions = flow.get("questions")
         if not isinstance(questions, list) or len(questions) > 12 or not all(
             isinstance(question, dict) and isinstance(question.get("text"), str)
-            and 1 <= len(question["text"]) <= 500 for question in questions
+            and 1 <= len(question["text"]) <= 500
+            and isinstance(question.get("key", ""), str) and len(question.get("key", "")) <= 40
+            and question.get("when", "") in ("", "local", "out", "renting", "owning", "combined", "solo")
+            and isinstance(question.get("alternatives", []), list) and len(question.get("alternatives", [])) <= 3
+            and all(isinstance(text, str) and 1 <= len(text) <= 500 for text in question.get("alternatives", []))
+            for question in questions
         ):
             raise ValueError(f"Invalid {topic_id} questions.")
         secondary = flow.get("secondaryLink")
@@ -86,9 +100,8 @@ def validate_chat_config(config):
         if not isinstance(resource, dict) or not isinstance(resource.get("label"), str) or not 1 <= len(resource["label"]) <= 100 or not isinstance(resource.get("href"), str) or not LOCAL_PATH.fullmatch(resource["href"]):
             raise ValueError(f"Invalid {topic_id} resource link.")
         if topic_id == "selling":
-            combined = flow.get("sellingAndBuyingQuestions")
-            if not isinstance(combined, list) or len(combined) > 8 or not all(isinstance(item, dict) and isinstance(item.get("text"), str) and 1 <= len(item["text"]) <= 500 for item in combined):
-                raise ValueError("Invalid selling and buying questions.")
+            if not isinstance(flow.get("combinedIntro"), str) or not 1 <= len(flow["combinedIntro"]) <= 1000:
+                raise ValueError("Invalid selling and buying opening.")
     faq = config.get("faq")
     if not isinstance(faq, list) or len(faq) > 40 or not all(
         isinstance(item, dict) and isinstance(item.get("answer"), str) and 1 <= len(item["answer"]) <= 1000
