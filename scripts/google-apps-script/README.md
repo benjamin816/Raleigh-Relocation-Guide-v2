@@ -11,6 +11,17 @@ This folder keeps the website-facing Apps Script exports as plain text for easy 
 - `boldtrail-lead-sheet-apps-script.txt`
 - `boldtrail-lead-sheet-appsscript.json`
 
++## Website analytics runtime (October 27, 2026)
+
+- Live Apps Script project: https://script.google.com/home/projects/18DUT2ovTLBkHX-i7aX9gNxcanQKYXlQJnUpWdqVlCAVNu7LAcYZRoS3l/edit
+- Web app receiver: https://script.google.com/macros/s/AKfycbyHpfCG_6Dv9u_IopAZ9J5MbFF37AqgSBVsOJHDK2OsVQKzyNN_yw_nkYBpXIV-Ll12/exec
+- The public web app accepts analytics POSTs. Its GET is a health check; it does not run public diagnostics or summary rebuilds.
+- Raw events are inserted newest-first at row 2 of each audience's separate `Event Log`: Living sheet `1onTitTejjU9UxZP6TW5pFj0TFdFq0cewPPIS52cieRE`; Investing sheet `1KmVkIfisuPaOnkYdXygJh0BdA6na5uXksR6neiEB_do`.
+- Raw ingestion does not rebuild summary tabs on every visit. A Head time trigger runs `refreshAnalyticsSummaries` daily between 3 and 4 a.m. Eastern for both sheets and sends immediate failure notifications.
+- Weekly and monthly snapshot emails are handled by Codex automations reading raw events. No Apps Script email trigger is installed.
+- The checked-in `website-analytics-apps-script.txt` is an older reference export and lacks later investor routing. Export the live project before using it for a future deployment.
+
+
 ## Cross-check rule
 
 When a website change touches any form, field name, consent checkbox, payload key, or analytics event, review the matching script export here before publishing. Confirm that:
