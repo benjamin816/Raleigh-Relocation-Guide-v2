@@ -71,7 +71,8 @@ context.Utilities = {
 context.SpreadsheetApp = { openById() { return { getSheetByName(name) {
   return name === 'Appointment Assignments' ? ledger : sheet;
 }, insertSheet() { return sheet; } }; } };
-context.MailApp = { sendEmail() { throw new Error('Unexpected repair email'); } };
+const sentEmails = [];
+context.MailApp = { sendEmail(...args) { sentEmails.push(args); } };
 const sheet = { getLastRow() { return leadRows.length; }, appendRow(row) { leadRows.push(row); } };
 const ledger = { getLastRow() { return assignmentRows.length + 1; },
   getRange(row) { return { getDisplayValues() { return [assignmentHeaders]; },
@@ -94,6 +95,10 @@ assert.equal(context.chatBookingPreference_({host:'ricardo',daypart:'evening',we
 assert.equal(context.bookChatAppointment(details).booked, true);
 assert.equal(context.bookChatAppointment(details).booked, true, 'Retry returns the same receipt');
 assert.equal(createdEvents, 1, 'Retry cannot create a second event');
+assert.equal(sentEmails.length, 1, 'Retry cannot send a second pre-call email');
+assert.equal(sentEmails[0][0].subject, 'What To Know Before Our Call (Living in Raleigh Team)');
+assert.match(sentEmails[0][0].body, /meeting with Benjamin/);
+assert.equal(context.bookChatAppointment(details).preCallEmailSent, true);
 assert.equal(leadRows.length, 2, 'One booking row and one header');
 assert.equal(leadRows[1][6], "'=IMPORTXML(\"bad\")", 'Spreadsheet formula is escaped');
 assert.equal(assignmentRows[0][4], 'Benjamin', 'First tie goes to Benjamin');
@@ -112,6 +117,8 @@ assert.equal(videoPayload.conferenceData.createRequest.conferenceSolutionKey.typ
 assert.equal(videoPayload.attendees[1].email, 'ricardo@triangleexperts.com', 'Second call balances toward Ricardo');
 assert.equal(leadRows[2][7], 'Website chat · video');
 assert.equal(assignmentRows[1][4], 'Ricardo');
+assert.match(sentEmails[1][0].body, /meeting with Ricardo/);
+assert.match(sentEmails[1][0].body, /video call/);
 schedules.set('ricardo.collier90@gmail.com', [busy]);
 assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-request-444444444', preferredHost: 'Ricardo', email: 'unavailable@example.com' }), /no longer available/i);
 schedules.set('ricardo.collier90@gmail.com', []);
