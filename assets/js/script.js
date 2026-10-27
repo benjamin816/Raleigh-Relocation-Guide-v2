@@ -760,7 +760,7 @@
 
   var analyticsTracker = (function () {
     // Set this globally before script.js loads: window.__LIVR_ANALYTICS_ENDPOINT__ = "https://script.google.com/macros/s/.../exec";
-    var defaultAnalyticsEndpoint = "https://script.google.com/macros/s/AKfycbzBMxFBoQZBWSCdVCRnW4kFnjyoGZA2F-3ym2rqW-fVMFa1Wx5xT5SNMrvZdP3Xky0/exec";
+    var defaultAnalyticsEndpoint = "https://script.google.com/macros/s/AKfycbyHpfCG_6Dv9u_IopAZ9J5MbFF37AqgSBVsOJHDK2OsVQKzyNN_yw_nkYBpXIV-Ll12/exec";
     var configuredEndpoint = String(window.__LIVR_ANALYTICS_ENDPOINT__ || defaultAnalyticsEndpoint).trim();
     var localStore = null;
     var sessionStore = null;

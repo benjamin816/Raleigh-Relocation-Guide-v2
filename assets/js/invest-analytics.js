@@ -1,7 +1,7 @@
 (function () {
   "use strict";
 
-  var endpoint = "https://script.google.com/macros/s/AKfycbzBMxFBoQZBWSCdVCRnW4kFnjyoGZA2F-3ym2rqW-fVMFa1Wx5xT5SNMrvZdP3Xky0/exec";
+  var endpoint = "https://script.google.com/macros/s/AKfycbyHpfCG_6Dv9u_IopAZ9J5MbFF37AqgSBVsOJHDK2OsVQKzyNN_yw_nkYBpXIV-Ll12/exec";
   var sessionKey = "raleigh_invest_analytics_session";
   var sessionId;
   try {

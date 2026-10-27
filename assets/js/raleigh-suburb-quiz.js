@@ -1,6 +1,6 @@
 (() => {
   const LEAD_CAPTURE_ENDPOINT = "https://script.google.com/macros/s/AKfycbwnqkPb6Nkp9owlDv_orcAId7cNHbKuQrf5ENMW4BvbUuaLFNHP-yANDdSwQ6Vjl41v/exec";
-  const ANALYTICS_ENDPOINT = "https://script.google.com/macros/s/AKfycbzBMxFBoQZBWSCdVCRnW4kFnjyoGZA2F-3ym2rqW-fVMFa1Wx5xT5SNMrvZdP3Xky0/exec";
+  const ANALYTICS_ENDPOINT = "https://script.google.com/macros/s/AKfycbyHpfCG_6Dv9u_IopAZ9J5MbFF37AqgSBVsOJHDK2OsVQKzyNN_yw_nkYBpXIV-Ll12/exec";
   const QUIZ_SUCCESS_REDIRECT_MS = 3000;
   const TRAIT_KEYS = ["walkability","downtownEnergy","family","schools","luxury","affordability","valueGrowth","newConstruction","establishedCharm","spacePrivacy","quiet","commuteRaleigh","commuteRTP","commuteDurham","amenities","outdoors","lowMaintenance","socialLifestyle","ruralTolerance","trafficSensitive"];
   const OPTION_LETTERS = ["A", "B", "C", "D", "E"];
