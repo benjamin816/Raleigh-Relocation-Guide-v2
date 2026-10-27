@@ -30,7 +30,7 @@ window.RaleighChatConfig = {
   ],
   "contactConsentPrompt": "May our team contact you about this question? Reply yes to submit your details, or no to cancel.",
   "bookingPrompt": "To put together a game plan for you, would a video or phone call work better?",
-  "bookingChoicePrompt": "Would either of those work? I can also check another day, a morning or evening, a weekend, or Benjamin or Ricardo.",
+  "bookingChoicePrompt": "Would either of those work?",
   "bookingEmailPrompt": "What's the best email address for the invitation and everything you need before our call?",
   "bookingPhonePrompt": "And what's the best phone number to reach you?",
   "bookingNamePrompt": "What first and last name should I put on the invitation?",
@@ -121,23 +121,33 @@ window.RaleighChatConfig = {
           ]
         },
         {
-          "key": "priorities",
-          "text": "What matters most to you in the place where you'll live?"
+          "key": "familyNearby",
+          "when": "family",
+          "text": "Do you already have family or friends in the Raleigh area?"
         },
         {
-          "key": "home",
-          "text": "What are you looking for in a home?"
+          "key": "priorities",
+          "when": "outNeedsPriorities",
+          "text": "What matters most to you in the place where you'll live?"
         },
         {
           "key": "areas",
           "text": "What areas are you considering so far, and why?"
         },
         {
+          "key": "home",
+          "text": "What are you looking for in a home?"
+        },
+        {
           "key": "timing",
           "text": "When are you hoping to move?"
+        },
+        {
+          "key": "budget",
+          "text": "What's a comfortable price range for you?"
         }
       ],
-      "finish": "Thanks, that gives us a good starting point. A one-on-one conversation would help us build a game plan around your timing, home, and preferred areas.",
+      "finish": "A one-on-one conversation with the team would help us build a game plan around your timing and what you're looking for.",
       "resourceLink": {
         "label": "Explore buying resources",
         "href": "/buy/"
@@ -177,13 +187,26 @@ window.RaleighChatConfig = {
         },
         {
           "key": "nextDestination",
-          "when": "solo",
           "text": "Where would you like to go next?"
+        },
+        {
+          "key": "nextAreaReason",
+          "when": "combined",
+          "text": "What has you interested in that area?"
         },
         {
           "key": "nextHome",
           "when": "combined",
-          "text": "What's most important in the new home you're looking for?"
+          "text": "What are you looking for in your next home that your current home doesn't have?"
+        },
+        {
+          "key": "budget",
+          "when": "combined",
+          "text": "What's a comfortable price range for your next home?"
+        },
+        {
+          "key": "sellingExperience",
+          "text": "Would this be your first time selling a home, or have you sold before?"
         },
         {
           "key": "timing",
@@ -221,6 +244,11 @@ window.RaleighChatConfig = {
           "text": "What has you looking at moving down here?"
         },
         {
+          "key": "familyNearby",
+          "when": "family",
+          "text": "Do you already have family or friends in the Raleigh area?"
+        },
+        {
           "key": "currentArea",
           "when": "local",
           "text": "Where do you live now?"
@@ -247,22 +275,27 @@ window.RaleighChatConfig = {
         },
         {
           "key": "priorities",
+          "when": "outNeedsPriorities",
           "text": "What matters most to you in a place to live?"
-        },
-        {
-          "key": "home",
-          "text": "What are you looking for in a home?"
         },
         {
           "key": "areas",
           "text": "What areas interest you so far, and why?"
         },
         {
+          "key": "home",
+          "text": "What are you looking for in a home?"
+        },
+        {
           "key": "timing",
           "text": "When are you hoping to move?"
+        },
+        {
+          "key": "budget",
+          "text": "What's a comfortable price range for you?"
         }
       ],
-      "finish": "Thanks. We can compare the areas and homes that fit your move, then put together a clear plan.",
+      "finish": "A one-on-one conversation with the team would help us build a game plan around your move and the areas you're considering.",
       "resourceLink": {
         "label": "Explore buying resources",
         "href": "/buy/"
@@ -289,7 +322,7 @@ window.RaleighChatConfig = {
         },
         {
           "key": "experience",
-          "text": "Is this your first investment, or have you done this before?"
+          "text": "Would this be your first investment, or do you have experience investing?"
         },
         {
           "key": "strategy",
@@ -297,7 +330,23 @@ window.RaleighChatConfig = {
         },
         {
           "key": "timing",
-          "text": "When are you hoping to make your next investment?"
+          "text": "Are you looking to invest this year, or do you have a different timeline in mind?"
+        },
+        {
+          "key": "areas",
+          "text": "Are there particular areas you're considering, or are you flexible on location?"
+        },
+        {
+          "key": "goals",
+          "text": "Are you more focused on cash flow, long-term growth, or a mix of both?"
+        },
+        {
+          "key": "involvement",
+          "text": "Are you looking for something hands-on, or would you prefer a more passive investment?"
+        },
+        {
+          "key": "budget",
+          "text": "What's a comfortable investment budget for you?"
         }
       ],
       "finish": "Our calculator is a useful first pass. For a property-specific strategy, book an investing exploration call.",
@@ -469,5 +518,5 @@ window.RaleighChatConfig = {
   },
   "safetyWarning": "Let's keep this focused on your real estate question. Are you looking to buy or sell in Raleigh?",
   "safetyEnd": "I'm going to end this conversation for now. Please reach out in the future if you're thinking about buying or selling in Raleigh.",
-  "unknownQuestion": "That's a good question for our team. If you're early in the process, this page is a helpful place to start."
+  "unknownQuestion": "That's a great question for our team. We can go through your specific questions on an exploration call."
 };

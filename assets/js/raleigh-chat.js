@@ -447,7 +447,7 @@
   function loadBookingSlots(booking) {
     var followUp = booking.step === "choose";
     booking.step = "loading";
-    message(followUp ? "Let me check those openings." : "Absolutely, let's get that set up. I'm checking the team's next openings.", false);
+    message(followUp ? "Let me check." : "Awesome. Let me check the team's next openings.", false);
     bookingCall("slots", config.chatRoundRobinBookingEnabled ? [booking.preference] : []).then(function (slots) {
       if (state.booking === booking) offerBookingSlots(slots);
     }).catch(function (error) {
@@ -565,7 +565,7 @@
         state.booking = null;
         try { window.localStorage.setItem("livrBookingReportedAt", new Date().toISOString()); } catch (_) {}
         window.dispatchEvent(new CustomEvent("raleigh-booking-confirmed", { detail: { source: "website_chat" } }));
-        message("Wonderful, " + booking.details.name.split(/\s+/)[0] + ". You're booked " + (result.assignedHost ? "with " + result.assignedHost : "with our team") + " for a " + booking.details.callType + " call on " + bookingLabel(result.start) + ". Your invitation is on its way." + (booking.details.callType === "video" ? (result.videoUrl ? " The Google video link is included." : " Our team will add the Google video link before the call.") : "") + " If you need anything before then, you can message us here or call 919-737-7896.", false);
+        message("Great, " + booking.details.name.split(/\s+/)[0] + ", I've got you confirmed for " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". You'll get a calendar invitation." + (booking.details.callType === "video" ? (result.videoUrl ? " The Google Meet link is in the invitation." : " The team will add the video link before your call.") : "") + " If you need anything in the meantime, message me here or call or text the team at 919-737-7896.", false);
       }).catch(function (error) {
         if (state.booking !== booking) return;
         if (error && /time was taken|choose another|no longer available/i.test(error.message || "")) {
@@ -632,7 +632,7 @@
     askQuestion(knownLocation ? locationAcknowledgement(knownLocation) : "");
   }
   function locationAcknowledgement(location) {
-    if (state.intent === "investing") return location.type === "local" ? "Great, it's helpful to know you're local." : "Got it. It's helpful to know you're investing from out of state.";
+    if (state.intent === "investing") return location.type === "local" ? "Great!" : "Awesome.";
     if (location.type === "local") return "Great.";
     var place = (location.place || "").toLowerCase();
     return (config.originAcknowledgements || {})[place] || "Awesome. Thanks for sharing where you're moving from.";
@@ -651,9 +651,32 @@
     var wording = variants[state.answers.length % variants.length] || question.text;
     message((prefix ? prefix + " " : "") + wording, false);
   }
+  function answerAcknowledgement(question, answer) {
+    if (!question) return "Got it.";
+    var text = String(answer || "").toLowerCase();
+    switch (question.key) {
+      case "currentArea": return /north raleigh/.test(text) ? "North Raleigh is a great area!" : "Okay, great.";
+      case "firstTime": return /\b(yes|first|never)\b/.test(text) ? "That's super exciting!" : "Got it.";
+      case "leaseEnd": return "Got it.";
+      case "whyRaleigh": return /\b(warm|weather|commute)\b/.test(text) ? "That makes sense!" : "I totally understand.";
+      case "familyNearby": return /\b(yes|yeah|they do|here|raleigh|cary)\b/.test(text) ? "That's wonderful!" : "Got it.";
+      case "currentHome": return /north raleigh/.test(text) ? "North Raleigh is a great area!" : "Okay, great.";
+      case "ownedYears": { var years = parseInt(text, 10); return years >= 5 || /\b(five|six|seven|eight|nine|ten|eleven|twelve)\b/.test(text) ? "Wow, you've been there a while!" : "Okay, got it."; }
+      case "whySell": case "whySellSolo": return /\b(family|relatives)\b/.test(text) ? "I totally understand." : "That makes sense.";
+      case "nextDestination": return "That's exciting!";
+      case "nextAreaReason": return "I can see why that appeals to you.";
+      case "experience": return /\b(first|new|never)\b/.test(text) ? "That's super exciting!" : "Great, good to know.";
+      case "strategy": return "Okay, got it.";
+      case "sellingExperience": return /\b(first|never)\b/.test(text) ? "Okay, wonderful." : "Great, good to know.";
+      case "timing": return /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Got it.";
+      case "areas": return "Okay, great.";
+      case "home": case "nextHome": return "That gives me a better picture.";
+      default: return "Got it.";
+    }
+  }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
-    var acknowledgement = ["Got it.", "That helps.", "Thanks, that gives me a better picture."][state.answers.length % 3];
+    var acknowledgement = answerAcknowledgement(question, answer);
     if (question && question.key === "location") {
       var location = engine.detectLocation(answer);
       if (!location && /^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/i.test(answer.trim())) location = { type: "local", place: "" };
@@ -667,7 +690,7 @@
       var tenure = engine.detectTenure(answer);
       if (!tenure) { message("Are you currently renting or do you own your home?", false); return; }
       state.profile.tenure = tenure;
-      acknowledgement = tenure === "renting" ? "Great." : "Got it.";
+      acknowledgement = tenure === "renting" ? "Okay, great." : "Got it.";
     }
     if (question && question.key === "willSell" && /^(?:yes|yeah|yep|probably|likely|we (?:will|need to|plan to)|i (?:will|need to|plan to))/i.test(answer.trim())) {
       state.intent = "selling";
@@ -678,6 +701,10 @@
       message("Got it. Let's plan your sale and next purchase together.", false);
       askQuestion();
       return;
+    }
+    if (question && question.key === "whyRaleigh") {
+      state.profile.familyNearby = /\b(family|relatives|friends)\b/i.test(answer);
+      state.profile.prioritiesKnown = /\bcommute\b/i.test(answer);
     }
     state.answers.push(redact(answer));
     state.memories[state.intent] = state.answers.slice();
@@ -838,6 +865,11 @@
       showContact();
       return;
     }
+    if (!state.intent && /\b(?:looking to rent|want to rent|need to rent|rent a (?:home|house|apartment)|looking for a rental|just renting)\b/i.test(value)) {
+      message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
+      link("Explore Raleigh guides", "/learning-center/");
+      return;
+    }
     if (/^(start over|restart|reset)$/i.test(value)) {
       if (state.intent) {
         var previous = state.intent;
@@ -886,11 +918,8 @@
         message("That's a good question for our investing team. You can bring it to an investing exploration call.", false);
         link("Book an investing exploration call", config.bookingLinks.investing);
       } else {
-        message(config.unknownQuestion || "That's a good question for our team.", false);
-        var help = config.flows[state.intent].resourceLink;
-        if (help) link(help.label, help.href);
-        message("We can also answer it personally on a call. Would you like me to check openings?", false);
-        state.offTrackOffer = true;
+        message(config.unknownQuestion || "That's a great question for our team.", false);
+        if (state.question < activeQuestions().length) askQuestion();
       }
       return;
     }

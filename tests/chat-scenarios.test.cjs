@@ -40,13 +40,13 @@ for (const [name, text, intent, combined, faq, resource, booking, safety] of cas
   if (safety) assert.equal(engine.classifySafety(text), safety, `${name}: safety`);
 }
 
-assert.equal(config.flows.buying.questions.length, 11);
-assert.equal(config.flows.relocating.questions.length, 11);
-assert.equal(config.flows.selling.questions.length, 7);
-assert.equal(engine.activeQuestions(config.flows.buying, { location: 'local', tenure: 'renting' }, false).map(q => q.key).join(','), 'location,currentArea,tenure,firstTime,leaseEnd,priorities,home,areas,timing');
-assert.equal(engine.activeQuestions(config.flows.buying, { location: 'out' }, false).map(q => q.key).join(','), 'location,whyRaleigh,priorities,home,areas,timing');
-assert.equal(engine.activeQuestions(config.flows.selling, {}, true).map(q => q.key).join(','), 'whySell,currentHome,ownedYears,nextHome,timing');
-assert.equal(engine.activeQuestions(config.flows.selling, {}, false).map(q => q.key).join(','), 'currentHome,ownedYears,whySellSolo,nextDestination,timing');
+assert.equal(config.flows.buying.questions.length, 13);
+assert.equal(config.flows.relocating.questions.length, 13);
+assert.equal(config.flows.selling.questions.length, 10);
+assert.equal(engine.activeQuestions(config.flows.buying, { location: 'local', tenure: 'renting' }, false).map(q => q.key).join(','), 'location,currentArea,tenure,firstTime,leaseEnd,areas,home,timing,budget');
+assert.equal(engine.activeQuestions(config.flows.buying, { location: 'out' }, false).map(q => q.key).join(','), 'location,whyRaleigh,priorities,areas,home,timing,budget');
+assert.equal(engine.activeQuestions(config.flows.selling, {}, true).map(q => q.key).join(','), 'whySell,currentHome,ownedYears,nextDestination,nextAreaReason,nextHome,budget,sellingExperience,timing');
+assert.equal(engine.activeQuestions(config.flows.selling, {}, false).map(q => q.key).join(','), 'currentHome,ownedYears,whySellSolo,nextDestination,sellingExperience,timing');
 assert.equal(engine.detectLocation('I live in Ohio').place, 'ohio');
 assert.equal(engine.detectLocation('I am relocating from New York').place, 'new york');
 assert.equal(engine.detectTenure('We rent right now'), 'renting');

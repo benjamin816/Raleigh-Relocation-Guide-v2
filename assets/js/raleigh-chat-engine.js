@@ -39,7 +39,7 @@
     });
     return best;
   }
-  function wantsResources(value) { return /\b(resources?|guides?|articles?|blogs?|read|learn more|website|web page|where can i learn|what do i need to know)\b/i.test(value); }
+  function wantsResources(value) { return /\b(resources?|guides?|articles?|blogs?|learn more|website|web page|where can i (?:read|learn))\b/i.test(value); }
   function wantsBooking(value) { return /\b(book|booking|schedule|appointment|call|talk to (you|the team)|meet with)\b/i.test(value); }
   function asksQuestion(value) { return /\?|^\s*(how|what|where|when|why|can|could|do|does|is|are|should|tell me|explain)\b/i.test(value); }
   function detectLocation(value) {
@@ -64,6 +64,9 @@
         case "out": return profile.location === "out";
         case "renting": return profile.location === "local" && profile.tenure === "renting";
         case "owning": return profile.location === "local" && profile.tenure === "owning";
+        case "family": return profile.familyNearby === true;
+        case "needsPriorities": return profile.prioritiesKnown !== true;
+        case "outNeedsPriorities": return profile.location === "out" && profile.prioritiesKnown !== true;
         case "combined": return combined === true;
         case "solo": return combined !== true;
         default: return true;

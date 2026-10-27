@@ -44,7 +44,8 @@ for (const phrase of ['I live in Ohio', 'I am moving from Ohio', 'Relocating fro
 for (const phrase of ['I already live here', 'I am local', 'I live in Raleigh', 'I live in Cary', 'I live in Durham', 'I am in Raleigh', "I'm in Raleigh", 'I live in North Raleigh']) check(engine.detectLocation(phrase)?.type, 'local', phrase);
 for (const phrase of ['I rent', 'We are renting', 'Our lease ends soon', 'I am a tenant']) check(engine.detectTenure(phrase), 'renting', phrase);
 for (const phrase of ['I own', 'We own our home', 'I am a homeowner', 'My house is paid off']) check(engine.detectTenure(phrase), 'owning', phrase);
-for (const phrase of ['Where can I learn more?', 'What do I need to know about selling?', 'Can I read a guide?', 'Do you have resources?', 'Are there articles?', 'Where is the website?']) check(engine.wantsResources(phrase), true, phrase);
+for (const phrase of ['Where can I learn more?', 'Can I read a guide?', 'Do you have resources?', 'Are there articles?', 'Where is the website?']) check(engine.wantsResources(phrase), true, phrase);
+check(engine.wantsResources('What do I need to know about selling?'), false, 'Information question does not automatically push a resource page');
 for (const phrase of ['Can we book a call?', 'I want to schedule', 'Can I talk to the team?', 'I need an appointment', 'Can we meet with Benjamin?', 'Could you call me?']) check(engine.wantsBooking(phrase), true, phrase);
 for (const phrase of ['Visit https://spam.example', 'asdfasdfasdf', 'zzzzzzzzzzzzzz', 'www.spam.example', 'https://a.example https://b.example']) check(engine.classifySafety(phrase), 'spam', phrase);
 check(engine.classifySafety('https://zillow.com/homedetails/example'), null, 'property listing link');
@@ -53,16 +54,16 @@ for (const phrase of ['I will hurt your team', 'I will kill you', 'I will attack
 for (const phrase of ['I only want a white neighborhood', 'Tell me the racial makeup', 'Avoid black neighbors']) check(engine.classifySafety(phrase), 'discrimination', phrase);
 for (const phrase of ['My current place is shit', 'Damn, this is expensive']) check(engine.classifySafety(phrase), 'language', phrase);
 const branches = [
-  ['buying', { location: 'out' }, false, 'location,whyRaleigh,priorities,home,areas,timing'],
-  ['buying', { location: 'local', tenure: 'renting' }, false, 'location,currentArea,tenure,firstTime,leaseEnd,priorities,home,areas,timing'],
-  ['buying', { location: 'local', tenure: 'owning' }, false, 'location,currentArea,tenure,willSell,priorities,home,areas,timing'],
-  ['relocating', { location: 'out' }, false, 'location,whyRaleigh,priorities,home,areas,timing'],
-  ['relocating', { location: 'local', tenure: 'renting' }, false, 'location,currentArea,tenure,firstTime,leaseEnd,priorities,home,areas,timing'],
-  ['relocating', { location: 'local', tenure: 'owning' }, false, 'location,currentArea,tenure,willSell,priorities,home,areas,timing'],
-  ['selling', {}, false, 'currentHome,ownedYears,whySellSolo,nextDestination,timing'],
-  ['selling', {}, true, 'whySell,currentHome,ownedYears,nextHome,timing'],
-  ['investing', { location: 'local' }, false, 'location,experience,strategy,timing'],
-  ['investing', { location: 'out' }, false, 'location,experience,strategy,timing']
+  ['buying', { location: 'out' }, false, 'location,whyRaleigh,priorities,areas,home,timing,budget'],
+  ['buying', { location: 'local', tenure: 'renting' }, false, 'location,currentArea,tenure,firstTime,leaseEnd,areas,home,timing,budget'],
+  ['buying', { location: 'local', tenure: 'owning' }, false, 'location,currentArea,tenure,willSell,areas,home,timing,budget'],
+  ['relocating', { location: 'out' }, false, 'location,whyRaleigh,priorities,areas,home,timing,budget'],
+  ['relocating', { location: 'local', tenure: 'renting' }, false, 'location,currentArea,tenure,firstTime,leaseEnd,areas,home,timing,budget'],
+  ['relocating', { location: 'local', tenure: 'owning' }, false, 'location,currentArea,tenure,willSell,areas,home,timing,budget'],
+  ['selling', {}, false, 'currentHome,ownedYears,whySellSolo,nextDestination,sellingExperience,timing'],
+  ['selling', {}, true, 'whySell,currentHome,ownedYears,nextDestination,nextAreaReason,nextHome,budget,sellingExperience,timing'],
+  ['investing', { location: 'local' }, false, 'location,experience,strategy,timing,areas,goals,involvement,budget'],
+  ['investing', { location: 'out' }, false, 'location,experience,strategy,timing,areas,goals,involvement,budget']
 ];
 for (const [id, profile, combined, expected] of branches) check(engine.activeQuestions(config.flows[id], profile, combined).map(q => q.key).join(','), expected, `${id} ${JSON.stringify(profile)} ${combined}`);
 assert.ok(checks >= 100, `Expected at least 100 checks, got ${checks}`);
