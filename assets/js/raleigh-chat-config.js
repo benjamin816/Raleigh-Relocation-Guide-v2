@@ -18,8 +18,9 @@ window.RaleighChatConfig = {
     general: "/consult/",
     investing: "/invest/"
   },
+  investorContactUrl: "/calculator/",
   // Existing website lead receiver. Chat submissions are identified by
-  // source_key=website_rule_chat and appear in the Master Leads chat tab.
+  // source_key=website_rule_chat and appear in the Living in Raleigh Master Leads chat tab.
   leadEndpoint: "https://script.google.com/macros/s/AKfycbwnqkPb6Nkp9owlDv_orcAId7cNHbKuQrf5ENMW4BvbUuaLFNHP-yANDdSwQ6Vjl41v/exec",
   excludedPaths: ["/consult/", "/2026/"],
   topics: [

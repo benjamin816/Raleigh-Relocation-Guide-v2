@@ -1,6 +1,6 @@
 # TEST: chat, lead-form, and booking-popup timing
 
-The Living in Raleigh timed lead popup never opens while the custom chat is open. If a popup is already open when chat starts, it closes. Closing an unused chat restarts the original 10-second timer; closing after sending a message defers the popup for 30 minutes. A completed contact request in chat counts as a form submission and uses the form-follow-up rule instead.
+The Living in Raleigh timed lead popup never opens while the custom chat is open. If a popup is already open when chat starts, it closes. Closing an unused chat restarts the original 10-second timer; closing after sending a message defers the popup for 30 minutes. That quiet period survives a page reload in the same browser session. A completed contact request in chat counts as a form submission and uses the form-follow-up rule instead.
 
 After a Living in Raleigh form's browser request completes, the site records a local lead-captured flag and schedules a booking-only follow-up two minutes later. The popup opens directly to its calendar screen, not to the already-completed lead form. The follow-up is shown at most once on that browser. The website popup form also follows this rule after its thank-you screen is closed. The covered forms are the timed lead popup, call-me form, home-valuation form, new-construction form, neighborhood-fit quiz, suburb quiz, and chat contact handoff. Because the existing Google Apps Script transport uses `no-cors`, browser completion alone does not prove the backend accepted a lead row.
 

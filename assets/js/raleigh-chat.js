@@ -155,7 +155,7 @@
     var flow = config.flows[id];
     var answers = state.memories[id] || [];
     if (!flow || !answers.length) return "";
-    return answers.slice(0, 3).map(function (answer, index) {
+    return answers.slice(0, Math.min(3, flow.questions.length)).map(function (answer, index) {
       return "When I asked “" + flow.questions[index].text + "” you said “" + answer + "”.";
     }).join(" ");
   }
@@ -195,6 +195,15 @@
     askQuestion();
   }
   function showContact() {
+    // The existing website receiver writes to the Living in Raleigh sheet.
+    // Investor enquiries must never be sent there while a separate,
+    // acknowledged investor receiver is not configured for this widget.
+    if (state.intent === "investing" || /^\/invest(?:\/|$)/i.test(window.location.pathname)) {
+      message("For an investing question, use the message form in our investment calculator. You can also book an investing exploration call.", false);
+      link("Send an investing question", config.investorContactUrl);
+      link("Book an investing call", config.bookingLinks.investing);
+      return;
+    }
     state.contact = {
       step: 0,
       data: {},
@@ -286,6 +295,7 @@
     var value = text.trim();
     if (!value || state.submitting) return;
     state.sentMessageSinceOpen = true;
+    try { window.sessionStorage.setItem("livrChatQuietUntil", String(Date.now() + 30 * 60 * 1000)); } catch (_) {}
     if (/^(forget|forget me|clear chat|delete chat history)$/i.test(value)) {
       try { window.localStorage.removeItem(storageKey); } catch (_) { /* Storage may be unavailable. */ }
       state.intent = null;
@@ -322,11 +332,20 @@
       message(remembered.length ? remembered.map(memorySummary).join(" ") : "I don't have any earlier answers saved on this browser yet.", false);
       return;
     }
-    if (state.intent && state.question >= 0 && state.question < config.flows[state.intent].questions.length) {
-      acceptAnswer(value.slice(0, 160));
+    if (/^(book|book a call|schedule|schedule a call|appointment|talk to the team)$/i.test(value)) {
+      var currentFlow = state.intent && config.flows[state.intent];
+      link("Book a one-on-one call", config.bookingLinks[currentFlow ? currentFlow.booking : "general"]);
       return;
     }
     var detected = detectIntent(value);
+    if (state.intent && state.question >= 0 && state.question < config.flows[state.intent].questions.length) {
+      if (detected && detected !== state.intent) {
+        startFlow(detected);
+        return;
+      }
+      acceptAnswer(value.slice(0, 160));
+      return;
+    }
     if (detected) startFlow(detected);
     else message(config.fallback, false);
   }
@@ -336,7 +355,7 @@
     panel.hidden = false;
     launcher.setAttribute("aria-expanded", "true");
     launcher.setAttribute("aria-label", "Close Raleigh help chat");
-    window.dispatchEvent(new CustomEvent("tawk-lead-popup-state", { detail: { blocked: true, reason: "custom_chat_open" } }));
+    window.dispatchEvent(new CustomEvent("raleigh-chat-state", { detail: { blocked: true, reason: "custom_chat_open" } }));
     if (!state.started) {
       state.started = true;
       message(config.welcome, false);
@@ -347,7 +366,7 @@
     panel.hidden = true;
     launcher.setAttribute("aria-expanded", "false");
     launcher.setAttribute("aria-label", "Open Raleigh help chat");
-    window.dispatchEvent(new CustomEvent("tawk-lead-popup-state", { detail: { blocked: false, reason: "custom_chat_closed", sentMessage: state.sentMessageSinceOpen } }));
+    window.dispatchEvent(new CustomEvent("raleigh-chat-state", { detail: { blocked: false, reason: "custom_chat_closed", sentMessage: state.sentMessageSinceOpen } }));
     (state.lastFocus && state.lastFocus.focus ? state.lastFocus : launcher).focus();
   }
   launcher.addEventListener("click", function () { panel.hidden ? open() : close(); });

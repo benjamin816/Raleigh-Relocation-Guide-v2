@@ -1916,6 +1916,7 @@
     var leadPopupFollowupAtKey = "livrBookingFollowupAt";
     var leadPopupSessionStartKey = "livrLeadPopupSessionStart";
     var leadPopupNextShowKey = "livrLeadPopupNextShowAt";
+    var leadPopupChatQuietUntilKey = "livrChatQuietUntil";
     var leadPopupInitialDelayMs = 10 * 1000;
     var leadPopupFormFollowupDelayMs = 2 * 60 * 1000;
     var leadPopupChatDelayMs = 30 * 60 * 1000;
@@ -2245,7 +2246,7 @@
       smsOptIn: popupHost.querySelector("[data-lead-input='smsOptIn']")
     };
     var timeoutId = 0;
-    var tawkBlocksLeadPopup = false;
+    var chatBlocksLeadPopup = false;
     var currentScreen = "intro";
     var currentStep = 0;
     var popupOpenSource = useInlinePopup ? "inline_embed" : "timed_delay";
@@ -2365,11 +2366,11 @@
       var sessionStart = setSessionStart();
       var storedNext = Number(safeGet(sessionStore, leadPopupNextShowKey));
       if (storedNext && storedNext >= sessionStart) {
-        return storedNext;
+        return Math.max(storedNext, Number(safeGet(sessionStore, leadPopupChatQuietUntilKey)) || 0);
       }
       var nextShowAt = sessionStart + leadPopupInitialDelayMs;
       safeSet(sessionStore, leadPopupNextShowKey, String(nextShowAt));
-      return nextShowAt;
+      return Math.max(nextShowAt, Number(safeGet(sessionStore, leadPopupChatQuietUntilKey)) || 0);
     };
 
     var setNextShowAt = function (value) {
@@ -2668,7 +2669,7 @@
       if ((!forceOpen && !mayShowPopup()) || !popupHost.hidden) {
         return;
       }
-      if (!forceOpen && (tawkBlocksLeadPopup || isChatOpen())) {
+      if (!forceOpen && (chatBlocksLeadPopup || isChatOpen())) {
         clearTimer();
         return;
       }
@@ -2720,7 +2721,7 @@
     };
 
     var schedulePopup = function () {
-      if (!mayShowPopup() || tawkBlocksLeadPopup || isChatOpen()) {
+      if (!mayShowPopup() || chatBlocksLeadPopup || isChatOpen()) {
         clearTimer();
         return;
       }
@@ -2729,7 +2730,7 @@
       var delay = Math.max(0, nextShowAt - Date.now());
       timeoutId = window.setTimeout(function () {
         timeoutId = 0;
-        if (tawkBlocksLeadPopup || isChatOpen()) {
+        if (chatBlocksLeadPopup || isChatOpen()) {
           return;
         }
         openPopup(false, "timed_delay");
@@ -3033,14 +3034,14 @@
     });
 
     if (!useInlinePopup) {
-      window.addEventListener("tawk-lead-popup-state", function (event) {
+      window.addEventListener("raleigh-chat-state", function (event) {
         var detail = event && event.detail ? event.detail : {};
-        tawkBlocksLeadPopup = detail.blocked === true;
+        chatBlocksLeadPopup = detail.blocked === true;
         clearTimer();
 
-        if (tawkBlocksLeadPopup) {
+        if (chatBlocksLeadPopup) {
           if (!popupHost.hidden) {
-            closePopup(false, detail.reason || "tawk_chat_active");
+            closePopup(false, detail.reason || "custom_chat_active");
           }
           return;
         }
@@ -4971,13 +4972,13 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261026-test4";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261027-test7";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261026-test4";
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261027-test7";
     configScript.onload = function () {
       var chatScript = document.createElement("script");
-      chatScript.src = "/assets/js/raleigh-chat.js?v=20261026-test4";
+      chatScript.src = "/assets/js/raleigh-chat.js?v=20261027-test7";
       document.head.appendChild(chatScript);
     };
     document.head.appendChild(configScript);
