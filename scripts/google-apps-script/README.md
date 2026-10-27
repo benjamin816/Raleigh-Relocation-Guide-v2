@@ -11,7 +11,7 @@ This folder keeps the website-facing Apps Script exports as plain text for easy 
 - `boldtrail-lead-sheet-apps-script.txt`
 - `boldtrail-lead-sheet-appsscript.json`
 
-+## Website analytics runtime (October 27, 2026)
+## Website analytics runtime (October 27, 2026)
 
 - Live Apps Script project: https://script.google.com/home/projects/18DUT2ovTLBkHX-i7aX9gNxcanQKYXlQJnUpWdqVlCAVNu7LAcYZRoS3l/edit
 - Web app receiver: https://script.google.com/macros/s/AKfycbyHpfCG_6Dv9u_IopAZ9J5MbFF37AqgSBVsOJHDK2OsVQKzyNN_yw_nkYBpXIV-Ll12/exec
@@ -42,7 +42,16 @@ The in-browser layout editor now keeps a per-page snapshot trail in localStorage
 
 The `Reset` button returns the layout to its default baseline and records that as a new snapshot, so the history stays intact.
 
-## BoldTrail lead sheet sync
+## Current Living newsletter subscriber sync (October 27, 2026)
+
+- The live `LEAD SHEET to BoldTrail` Apps Script project now also contains `LivingSenderSync.gs`, sourced from this folder. Its `livingSenderSyncLeads` trigger runs every 15 minutes.
+- The Sender API token is stored only in the project's `SENDER_API_TOKEN` Script Property and an optional current-user encrypted Windows credential for approved campaign scheduling. Never commit it or paste it into a source file.
+- The Sender audience is the `Living in Raleigh Weekly Newsletter` group, ID `dJ2y5D`. The sync reads only the Living Master Leads spreadsheet and excludes local test records and investor paths or lead types. It never opens the Investor Master Lead Sheet or reactivates suppressed subscribers.
+- The historical Living-to-BoldTrail trigger `syncUnsentWebsiteLeadsToBoldTrail` was removed. The separate investor BoldTrail trigger remains active.
+- New Living newsletter campaigns are prepared from explicitly approved HTML through `scripts/sender/Publish-LivingNewsletter.ps1`, in Thursday 10 a.m. Eastern slots. The publisher checks the approved file hash, Sender unsubscribe link, group ID, and existing scheduled campaigns. It needs a current-user encrypted Sender token installed with `scripts/sender/Install-SenderToken.ps1`.
+- Sending-domain authentication in Squarespace DNS must be verified before any campaign is scheduled. The existing Squarespace email-forwarding SPF preset must not be duplicated or removed casually.
+
+## Historical BoldTrail lead sheet sync
 
 The separate BoldTrail script is tracked here as its own export so it stays independent from the website intake webhook.
 
