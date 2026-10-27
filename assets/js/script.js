@@ -755,8 +755,7 @@
     });
   });
 
-  var smsConsentDisclosureText = "I agree to be contacted by The Official Living in Raleigh NC Team via call, email, and text for real estate services. We use SMS to confirm appointments, send reminders, and notify clients of schedule updates or important changes. You can opt out at any time by replying STOP, or reply HELP for assistance. Message and data rates may apply. Message frequency may vary.";
-  var smsConsentOptionalNoteText = "SMS consent is required to submit this form.";
+  var contactRequestDisclosureText = "By submitting, you ask The Official Living in Raleigh NC Team to contact you by phone or email about your request. We do not enroll you in marketing texts.";
 
   var analyticsTracker = (function () {
     // Set this globally before script.js loads: window.__LIVR_ANALYTICS_ENDPOINT__ = "https://script.google.com/macros/s/.../exec";
@@ -2055,7 +2054,7 @@
       "<option value='+44'>+44</option>",
       "<option value='+61'>+61</option>",
       "</select>",
-      "<input type='tel' class='lead-popup-field-input' data-lead-input='phone' placeholder='(201) 555-0123' autocomplete='tel'>",
+      "<input type='tel' class='lead-popup-field-input' data-lead-input='phone' placeholder='(919) 555-0123' autocomplete='tel' required>",
       "</span>",
       "</label>",
       "<label class='lead-popup-field'>",
@@ -2064,16 +2063,12 @@
       "</label>",
       "</div>",
       "<div class='lead-popup-consent-copy'>",
-      "<label class='lead-popup-consent-checkbox'>",
-      "<input type='checkbox' data-lead-input='smsOptIn'>",
-      "<span>" + smsConsentDisclosureText + "</span>",
-      "</label>",
+      "<p class='lead-popup-consent-note'>" + contactRequestDisclosureText + "</p>",
       "</div>",
       "<div class='lead-popup-step-actions'>",
       "<button type='button' class='lead-popup-button' data-lead-action='submit' data-submit-ready='false' data-submit-hint='Please complete the form to continue.'>Submit</button>",
       "</div>",
       "<div class='lead-popup-consent-meta'>",
-      "<p class='lead-popup-consent-note'>" + smsConsentOptionalNoteText + "</p>",
       "<p class='lead-popup-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>",
       "</div>",
       "<p class='lead-popup-step-error' data-lead-step-error></p>",
@@ -2470,8 +2465,7 @@
         normalizeValue(inputs.name && inputs.name.value) &&
         validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase()) &&
         sharedValidatePhoneNumber(inputs.phone && inputs.phone.value) &&
-        sharedValidateStreetAddress(inputs.propertyAddress && inputs.propertyAddress.value) &&
-        Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+        sharedValidateStreetAddress(inputs.propertyAddress && inputs.propertyAddress.value)
       );
     };
 
@@ -2533,8 +2527,7 @@
         normalizeValue(formState.firstName) &&
         normalizeValue(formState.lastName) &&
         sharedValidatePhoneNumber(formState.phone) &&
-        validateEmail(normalizeValue(formState.email).toLowerCase()) &&
-        Boolean(formState.smsOptIn)
+        validateEmail(normalizeValue(formState.email).toLowerCase())
       );
     };
 
@@ -2790,7 +2783,7 @@
         phone: phone,
         full_phone: phoneCountry + " " + phone,
         email: normalizeValue(formState.email),
-        sms_opt_in: Boolean(formState.smsOptIn)
+        sms_opt_in: false
       };
     };
 
@@ -2941,14 +2934,9 @@
           formInputs.email.classList.add("is-invalid");
         }
 
-        if (!formState.smsOptIn && formInputs.smsOptIn) {
-          firstInvalidInput = firstInvalidInput || formInputs.smsOptIn;
-          formInputs.smsOptIn.classList.add("is-invalid");
-        }
-
         if (firstInvalidInput) {
           firstInvalidInput.focus();
-          showStepError(stepIndex, !formState.smsOptIn ? "Please agree to be contacted to continue." : "Please complete all required contact fields with valid information.");
+          showStepError(stepIndex, "Please complete all required contact fields with valid information.");
           return false;
         }
       }
@@ -3325,8 +3313,7 @@
         normalizeValue(inputs.firstName && inputs.firstName.value) &&
         normalizeValue(inputs.lastName && inputs.lastName.value) &&
         sharedValidatePhoneNumber(inputs.phone && inputs.phone.value) &&
-        validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase()) &&
-        Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+        validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase())
       );
     };
 
@@ -3524,7 +3511,6 @@
       var phone = normalizeValue(inputs.phone && inputs.phone.value);
       var email = normalizeValue(inputs.email && inputs.email.value).toLowerCase();
       var message = normalizeValue(inputs.message && inputs.message.value);
-      var smsOptInChecked = Boolean(inputs.smsOptIn && inputs.smsOptIn.checked);
       var invalidFields = [];
       var firstInvalidInput = null;
       var validationMessage = "";
@@ -3555,13 +3541,6 @@
         invalidFields.push("email");
         firstInvalidInput = firstInvalidInput || inputs.email;
         validationMessage = validationMessage || "Please enter a valid email address.";
-      }
-
-      if (!smsOptInChecked && inputs.smsOptIn) {
-        inputs.smsOptIn.classList.add("is-invalid");
-        invalidFields.push("sms_opt_in");
-        firstInvalidInput = firstInvalidInput || inputs.smsOptIn;
-        validationMessage = validationMessage || "Please agree to be contacted to continue.";
       }
 
       if (invalidFields.length) {
@@ -3597,7 +3576,7 @@
         email: email,
         phone_country: "+1",
         phone: phone,
-        sms_opt_in: Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+        sms_opt_in: false
       };
 
       trackIntakeEvent("new_construction_form_submit_attempt", {});
@@ -3692,8 +3671,7 @@
         normalizeValue(inputs.name && inputs.name.value) &&
         validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase()) &&
         sharedValidatePhoneNumber(inputs.phone && inputs.phone.value) &&
-        sharedValidateStreetAddress(inputs.propertyAddress && inputs.propertyAddress.value) &&
-        Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+        sharedValidateStreetAddress(inputs.propertyAddress && inputs.propertyAddress.value)
       );
     };
 
@@ -3820,7 +3798,6 @@
       var email = normalizeValue(inputs.email && inputs.email.value).toLowerCase();
       var phone = normalizeValue(inputs.phone && inputs.phone.value);
       var propertyAddress = normalizeValue(inputs.propertyAddress && inputs.propertyAddress.value);
-      var smsOptInChecked = Boolean(inputs.smsOptIn && inputs.smsOptIn.checked);
       var firstInvalidInput = null;
       var invalidFields = [];
       var validationMessage = "";
@@ -3851,13 +3828,6 @@
         inputs.propertyAddress.classList.add("is-invalid");
         invalidFields.push("propertyAddress");
         validationMessage = validationMessage || "Please enter a valid property address.";
-      }
-
-      if (!smsOptInChecked && inputs.smsOptIn) {
-        firstInvalidInput = firstInvalidInput || inputs.smsOptIn;
-        inputs.smsOptIn.classList.add("is-invalid");
-        invalidFields.push("sms_opt_in");
-        validationMessage = validationMessage || "Please agree to be contacted to continue.";
       }
 
       if (firstInvalidInput) {
@@ -3895,7 +3865,7 @@
         email: email,
         phone: phone,
         full_address: propertyAddress,
-        sms_opt_in: Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+        sms_opt_in: false
       };
 
       if (!homeEvalAppsScriptUrl || typeof window.fetch !== "function") {
@@ -4069,7 +4039,7 @@
       "</label>",
       "<label>",
       "<span class='call-contact-label'>Phone*</span>",
-      "<input type='tel' class='call-contact-input' data-call-contact-input='phone' autocomplete='tel' placeholder='(919) 555-0123'>",
+      "<input type='tel' class='call-contact-input' data-call-contact-input='phone' autocomplete='tel' placeholder='(919) 555-0123' required>",
       "</label>",
       "<fieldset class='call-contact-intent' data-call-contact-intent-group>",
       "<legend class='call-contact-label'>What are you looking to do?*</legend>",
@@ -4084,17 +4054,13 @@
       "<textarea class='call-contact-textarea' data-call-contact-input='details' placeholder='Share your timeline, area, and any must-haves.'></textarea>",
       "</label>",
       "<div class='call-contact-consent' data-legal-consent='true'>",
-      "<label>",
-      "<input type='checkbox' data-call-contact-input='smsOptIn'>",
-      "<span>" + smsConsentDisclosureText + "</span>",
-      "</label>",
+      "<p>" + contactRequestDisclosureText + "</p>",
       "</div>",
       "<div class='call-contact-actions'>",
       "<button type='submit' class='call-contact-submit' data-call-contact-submit data-submit-ready='false' data-submit-hint='Please complete the form to continue.'>Contact Us</button>",
       "<a class='call-contact-direct-call' href='tel:+19197377896'>Prefer to call now? 919-737-7896</a>",
       "</div>",
       "<div class='call-contact-consent-meta'>",
-      "<p class='call-contact-consent-note'>" + smsConsentOptionalNoteText + "</p>",
       "<p class='call-contact-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>",
       "</div>",
       "<p class='call-contact-status' data-call-contact-status aria-live='polite'></p>",
@@ -4164,7 +4130,6 @@
         normalizeValue(inputs.lastName && inputs.lastName.value) &&
         validateEmail(normalizeValue(inputs.email && inputs.email.value).toLowerCase()) &&
         sharedValidatePhoneNumber(inputs.phone && inputs.phone.value) &&
-        Boolean(inputs.smsOptIn && inputs.smsOptIn.checked) &&
         Boolean(getIntentValue())
       );
     };
@@ -4529,15 +4494,6 @@
         validationMessage = validationMessage || "Please enter a valid phone number.";
       }
 
-      if (!inputs.smsOptIn || !inputs.smsOptIn.checked) {
-        if (inputs.smsOptIn) {
-          inputs.smsOptIn.classList.add("is-invalid");
-        }
-        firstInvalidInput = firstInvalidInput || inputs.smsOptIn;
-        invalidFields.push("sms_opt_in");
-        validationMessage = validationMessage || "Please agree to be contacted to continue.";
-      }
-
       if (!intent) {
         if (intentGroup) {
           intentGroup.classList.add("is-invalid");
@@ -4589,7 +4545,7 @@
         email: email,
         phone_country: "+1",
         phone: phone,
-        sms_opt_in: Boolean(inputs.smsOptIn && inputs.smsOptIn.checked)
+        sms_opt_in: false
       };
 
       trackAnalyticsEvent("requested_contact_submit_attempt", {
@@ -4794,8 +4750,8 @@
           "<h4>Service Availability</h4>",
           "<p>Real estate services are subject to market conditions, brokerage requirements, and applicable federal, state, and local laws, including fair housing requirements.</p>",
           "<h4>Communications Consent</h4>",
-          "<p>By submitting your information, you consent to communications regarding your request. SMS consent is optional. Reply STOP to unsubscribe and HELP for assistance. Message and data rates may apply. Message frequency varies.</p>",
-          "<p>We use SMS to confirm appointments, send reminders, and notify clients of schedule updates or important changes. Carriers are not liable for delayed or undelivered messages.</p>",
+          "<p>By submitting your contact information, you ask our team to respond to your request by phone or email. These forms do not enroll you in marketing text messages.</p>",
+          "<p>If you separately enroll in appointment texts, they may include confirmations, reminders, and schedule updates. Reply STOP to opt out or HELP for assistance. Message and data rates may apply. Carriers are not liable for delayed or undelivered messages.</p>",
           "<h4>Intellectual Property</h4>",
           "<p>Site content, branding, and media are owned by or licensed to " + legalBusinessName + ". Unauthorized copying or distribution is prohibited.</p>",
           "<h4>Limitation of Liability</h4>",
@@ -4914,13 +4870,8 @@
       var consentMetaNode = document.createElement("div");
       consentMetaNode.className = "legal-consent-meta";
 
-      if (hasPhoneInput) {
-        consentNode.innerHTML = "<label class='legal-consent-checkbox'><input type='checkbox' name='sms_opt_in'><span>" + smsConsentDisclosureText + "</span></label>";
-        consentMetaNode.innerHTML = "<p class='legal-consent-note'>" + smsConsentOptionalNoteText + "</p><p class='legal-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>";
-      } else {
-        consentNode.innerHTML = "<p class='legal-consent-note'>By submitting this form, you consent to call and email communications from " + legalDisplayName + " related to your request.</p>";
-        consentMetaNode.innerHTML = "<p class='legal-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>";
-      }
+      consentNode.innerHTML = "<p class='legal-consent-note'>" + contactRequestDisclosureText + "</p>";
+      consentMetaNode.innerHTML = "<p class='legal-consent-links'>Review our <a href='/privacy-policy/' target='_blank' rel='noopener noreferrer'>Privacy Policy</a> and <a href='/terms-of-service/' target='_blank' rel='noopener noreferrer'>Terms of Service</a>.</p>";
 
       var submitGroupNode = submitButton.closest("p, div") || submitButton;
       if (submitGroupNode && submitGroupNode.parentNode) {
@@ -4972,14 +4923,19 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261027-test7";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261027-test9";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261027-test7";
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261027-test16";
     configScript.onload = function () {
-      var chatScript = document.createElement("script");
-      chatScript.src = "/assets/js/raleigh-chat.js?v=20261027-test7";
-      document.head.appendChild(chatScript);
+      var engineScript = document.createElement("script");
+      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261027-test5";
+      engineScript.onload = function () {
+        var chatScript = document.createElement("script");
+        chatScript.src = "/assets/js/raleigh-chat.js?v=20261027-test17";
+        document.head.appendChild(chatScript);
+      };
+      document.head.appendChild(engineScript);
     };
     document.head.appendChild(configScript);
   })();

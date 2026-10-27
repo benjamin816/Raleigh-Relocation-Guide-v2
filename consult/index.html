@@ -126,10 +126,10 @@
 
     body.page-consult .consult-banner-link {
       position: absolute;
-      left: calc(var(--home-edge-gap) + 40px);
-      top: -18px;
-      width: 224px;
-      height: 224px;
+      left: var(--home-edge-gap);
+      top: -6px;
+      width: 152px;
+      height: 152px;
       display: block;
       text-decoration: none;
       z-index: 1305;
@@ -147,10 +147,10 @@
 
     body.page-consult .consult-banner-image {
       position: absolute;
-      left: 10px;
-      top: 10px;
-      width: 204px;
-      height: 204px;
+      left: 6px;
+      top: 6px;
+      width: 140px;
+      height: 140px;
       display: block;
       object-fit: contain;
       object-position: center center;
@@ -338,24 +338,6 @@
       transform-origin: top left;
     }
 
-    .booking-report {
-      flex: none;
-      padding: 6px 10px;
-      text-align: center;
-      background: #fff;
-      border-top: 1px solid var(--border);
-    }
-    .booking-report button {
-      border: 0;
-      background: transparent;
-      color: var(--green);
-      font: inherit;
-      font-size: 12px;
-      font-weight: 700;
-      text-decoration: underline;
-      cursor: pointer;
-    }
-
     .site-footer {
       margin-top: 0;
     }
@@ -378,6 +360,27 @@
       .wrap {
         padding: 12px;
         height: auto;
+      }
+    }
+
+    /* Browser zoom reduces the CSS viewport height before the mobile width breakpoint.
+       Let the calendar scroll instead of forcing its content into a clipped 100vh shell. */
+    @media (min-width: 981px) and (max-height: 599px) {
+      html:not(.desktop-lock-consult) body.page-consult { overflow-y: auto; }
+      html:not(.desktop-lock-consult) body.page-consult .site-shell {
+        height: auto;
+        min-height: 100dvh;
+        overflow: visible;
+      }
+      html:not(.desktop-lock-consult) body.page-consult .wrap {
+        flex: none;
+        min-height: 650px;
+      }
+      html:not(.desktop-lock-consult) body.page-consult .card {
+        min-height: 620px;
+      }
+      html:not(.desktop-lock-consult) body.page-consult .consult-embed {
+        min-height: 580px;
       }
     }
 
@@ -455,8 +458,19 @@
     }
 
     html.desktop-lock-consult body.page-consult .consult-banner-link {
-      left: calc(var(--home-edge-gap) + 40px) !important;
-      top: -18px !important;
+      left: var(--home-edge-gap) !important;
+      top: -6px !important;
+    }
+
+    /* Keep the header artwork centered over the left-column heading as zoom
+       narrows the desktop CSS viewport. The layout editor sets inline translate. */
+    @media (min-width: 981px) and (max-width: 1300px) {
+      body.page-consult .consult-banner-square {
+        translate: clamp(86px, calc(72vw - 795.36px), 140.64px) 16.96px !important;
+      }
+      body.page-consult .consult-banner-image {
+        translate: clamp(86px, calc(72vw - 796px), 140.32px) 17.28px !important;
+      }
     }
 
     html.desktop-lock-consult body.page-consult .wrap {
@@ -847,7 +861,6 @@
                 allow="camera; microphone; fullscreen"
               ></iframe>
             </div>
-            <div class="booking-report"><button type="button" data-booking-self-report>I received my booking confirmation email — stop reminders</button></div>
           </div>
         </div>
       </section>
@@ -911,17 +924,6 @@
     })();
   </script>
   <script src="/assets/js/script.js?v=20261026-popup-test1" defer></script>
-  <script>
-    (function () {
-      var button = document.querySelector('[data-booking-self-report]');
-      if (!button) return;
-      button.addEventListener('click', function () {
-        try { window.localStorage.setItem('livrBookingReportedAt', new Date().toISOString()); } catch (_) {}
-        button.textContent = 'Booking reminders stopped on this browser';
-        button.disabled = true;
-      });
-    })();
-  </script>
 </body>
 </html>
 

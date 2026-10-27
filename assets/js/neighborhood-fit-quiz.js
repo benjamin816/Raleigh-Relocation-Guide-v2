@@ -934,14 +934,11 @@
               <label class="neighborhood-fit-field"><span>First name</span><input type="text" name="firstName" autocomplete="given-name" required></label>
               <label class="neighborhood-fit-field"><span>Last name</span><input type="text" name="lastName" autocomplete="family-name" required></label>
               <label class="neighborhood-fit-field full"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
-              <label class="neighborhood-fit-field full neighborhood-fit-checkbox-row">
-                <input type="checkbox" name="wantsConsultation" id="wantsConsultation">
-                <span>I would like to speak with the Living in Raleigh team about my results.</span>
+              <label class="neighborhood-fit-field full" id="phoneConditional">
+                <span>Phone *</span>
+                <input type="tel" name="phone" id="phoneInput" autocomplete="tel" required>
               </label>
-              <label class="neighborhood-fit-field full neighborhood-fit-phone-conditional" id="phoneConditional">
-                <span>Phone</span>
-                <input type="tel" name="phone" id="phoneInput" autocomplete="tel">
-              </label>
+              <p class="neighborhood-fit-field full" data-legal-consent="true">By submitting, you ask the Living in Raleigh team to contact you by phone or email about your results.</p>
             </div>
             <div class="neighborhood-fit-submit-wrap">
               <div class="neighborhood-fit-submit-tooltip">Please complete the form to continue.</div>
@@ -1016,20 +1013,14 @@
     }
 
     function syncConsultationPhoneField() {
-      const wantsConsultation = Boolean(el.wantsConsultation && el.wantsConsultation.checked);
-      if (el.phoneConditional) el.phoneConditional.classList.toggle("active", wantsConsultation);
-      if (el.phoneInput) {
-        el.phoneInput.required = wantsConsultation;
-        if (!wantsConsultation) {
-          el.phoneInput.value = "";
-        }
-      }
+      if (el.phoneConditional) el.phoneConditional.classList.add("active");
+      if (el.phoneInput) el.phoneInput.required = true;
       syncSubmitState();
     }
 
     function syncSubmitState() {
       if (!el.submit) return;
-      const valid = el.form ? el.form.checkValidity() : false;
+      const valid = el.form ? el.form.checkValidity() && Boolean(el.phoneInput && el.phoneInput.value.replace(/\D/g, "").length >= 10) : false;
       el.submit.disabled = !valid;
       el.submitWrap.classList.toggle("is-disabled", !valid);
     }
@@ -1108,7 +1099,7 @@
         lastName: String(data.get("lastName") || ""),
         email: String(data.get("email") || ""),
         phone: String(data.get("phone") || ""),
-        wantsConsultation: data.get("wantsConsultation") === "on"
+        wantsConsultation: true
       };
     }
 
@@ -1149,7 +1140,7 @@
         last_name: String(formData.get("lastName") || "").trim(),
         email: String(formData.get("email") || "").trim(),
         phone: String(formData.get("phone") || "").trim(),
-        wantsConsultation: formData.get("wantsConsultation") === "on",
+        wantsConsultation: true,
         results,
         answers
       };
@@ -1217,12 +1208,6 @@
       window.setTimeout(() => el.nextWrap.classList.remove("show-tooltip"), 1200);
     });
 
-    if (el.wantsConsultation) {
-      el.wantsConsultation.addEventListener("change", () => {
-        syncConsultationPhoneField();
-      });
-    }
-
     if (el.form) {
       el.form.addEventListener("input", syncSubmitState);
       el.form.addEventListener("change", syncSubmitState);
@@ -1233,6 +1218,14 @@
         event.preventDefault();
         if (state.submitInFlight) return;
         if (!el.form.reportValidity()) return;
+        if (!el.phoneInput || el.phoneInput.value.replace(/\D/g, "").length < 10) {
+          if (el.phoneInput) {
+            el.phoneInput.setCustomValidity("Enter a phone number with at least 10 digits.");
+            el.form.reportValidity();
+            el.phoneInput.setCustomValidity("");
+          }
+          return;
+        }
 
         state.submitInFlight = true;
         el.submit.disabled = true;

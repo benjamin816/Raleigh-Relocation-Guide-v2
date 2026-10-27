@@ -88,8 +88,7 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
       firstName: String(data.get("firstName") || ""),
       lastName: String(data.get("lastName") || ""),
       email: String(data.get("email") || ""),
-      phone: String(data.get("phone") || ""),
-      wantsConsultation: data.get("wantsConsultation") === "on"
+      phone: String(data.get("phone") || "")
     };
   }
   function restoreLeadFormState(formState) {
@@ -102,7 +101,6 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     if (lastName) lastName.value = String(formState.lastName || "");
     if (email) email.value = String(formState.email || "");
     if (phone) phone.value = String(formState.phone || "");
-    if (el.wantsConsultation) el.wantsConsultation.checked = Boolean(formState.wantsConsultation);
   }
   function persistSessionState(view) {
     try {
@@ -210,8 +208,8 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     persistSessionState("quiz");
   }
   function answerPayload() { return quizQuestions.map((question, index) => { const choiceIndex = state.answers[index]; const letter = choiceIndex !== null ? OPTION_LETTERS[choiceIndex] : null; return { questionNumber: index + 1, question: question.q, selectedOptionLetter: letter, selectedOptionText: choiceIndex !== null ? question.options[choiceIndex] : null }; }); }
-  function getConsentInput() { return el.form ? el.form.querySelector("[data-legal-consent] input[type='checkbox'], input[name='sms_opt_in']") : null; }
-  function syncSubmitState() { if (!el.submit) return; const consentInput = getConsentInput(); el.submit.disabled = Boolean(consentInput && !consentInput.checked); }
+  function validPhone() { return Boolean(el.phoneInput && el.phoneInput.value.replace(/\D/g, "").length >= 10); }
+  function syncSubmitState() { if (!el.submit) return; el.submit.disabled = !el.form.checkValidity() || !validPhone(); }
   function getOrCreateSubmissionId() {
     if (state.submissionId) return state.submissionId;
     var generated = (window.crypto && typeof window.crypto.randomUUID === "function")
@@ -286,19 +284,9 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
     setTimeout(() => el.nextWrap.classList.remove("show-tooltip"), 1200);
   });
   function syncConsultationPhoneField() {
-    const wants = Boolean(el.wantsConsultation && el.wantsConsultation.checked);
-    if (el.phoneConditional) el.phoneConditional.classList.toggle("active", wants);
-    if (el.phoneInput) {
-      el.phoneInput.required = wants;
-      if (!wants) el.phoneInput.value = "";
-    }
-  }
-  if (el.wantsConsultation) {
-    el.wantsConsultation.addEventListener("change", () => {
-      syncConsultationPhoneField();
-      persistSessionState(el.leadGate.classList.contains("active") ? "leadGate" : "quiz");
-    });
-    syncConsultationPhoneField();
+    if (el.phoneConditional) el.phoneConditional.classList.add("active");
+    if (el.phoneInput) el.phoneInput.required = true;
+    syncSubmitState();
   }
   if (el.form) {
     el.form.addEventListener("input", () => {
@@ -308,19 +296,10 @@ const regionGroups = { raleighCore: ["Inside-the-Beltline Raleigh","East Raleigh
       if (el.leadGate.classList.contains("active")) persistSessionState("leadGate");
     });
   }
-  if (el.form && typeof MutationObserver !== "undefined") {
-    const observer = new MutationObserver(() => {
-      const consentInput = getConsentInput();
-      if (!consentInput) return;
-      consentInput.addEventListener("change", syncSubmitState);
-      syncSubmitState();
-      observer.disconnect();
-    });
-    observer.observe(el.form, { childList: true, subtree: true });
-  }
+  if (el.form) el.form.addEventListener("input", syncSubmitState);
   syncSubmitState();
   var quizSubmitInFlight = false;
-  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (quizSubmitInFlight) return; if (!el.form.reportValidity()) return; quizSubmitInFlight = true; el.submit.disabled = true; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: formData.get("wantsConsultation") === "on", source: "/quiz/", submittedAt: new Date().toISOString(), submission_id: getOrCreateSubmissionId(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); window.dispatchEvent(new CustomEvent("raleigh-lead-form-submitted", { detail: { source: "suburb_quiz" } })); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } showSuccessAndRedirect(); } catch (error) { quizSubmitInFlight = false; syncSubmitState(); el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; persistSessionState("leadGate"); } });
+  el.form.addEventListener("submit", async (event) => { event.preventDefault(); if (quizSubmitInFlight) return; if (!el.form.reportValidity()) return; if (!validPhone()) { el.phoneInput.setCustomValidity("Enter a phone number with at least 10 digits."); el.form.reportValidity(); el.phoneInput.setCustomValidity(""); return; } quizSubmitInFlight = true; el.submit.disabled = true; el.formMsg.hidden = true; el.formMsg.textContent = ""; const formData = new FormData(el.form); const payload = { firstName: String(formData.get("firstName") || "").trim(), lastName: String(formData.get("lastName") || "").trim(), email: String(formData.get("email") || "").trim(), phone: String(formData.get("phone") || "").trim(), wantsConsultation: true, source: "/quiz/", submittedAt: new Date().toISOString(), submission_id: getOrCreateSubmissionId(), answers: answerPayload(), results: state.finalResults }; try { await postQuizLead(payload); window.dispatchEvent(new CustomEvent("raleigh-lead-form-submitted", { detail: { source: "suburb_quiz" } })); if (ANALYTICS_ENDPOINT) { fetch(ANALYTICS_ENDPOINT, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ event: "raleigh_suburb_quiz_submit", submittedAt: payload.submittedAt, answerCount: payload.answers.length, topPick: state.finalResults[0]?.suburb || "unknown" }) }).catch(() => {}); } showSuccessAndRedirect(); } catch (error) { quizSubmitInFlight = false; syncSubmitState(); el.formMsg.hidden = false; el.formMsg.textContent = "We hit a connection issue. Your quiz answers are still here - please try again in a moment."; persistSessionState("leadGate"); } });
   if (el.startOver) {
     el.startOver.addEventListener("click", () => { clearSessionState(); window.location.reload(); });
   }

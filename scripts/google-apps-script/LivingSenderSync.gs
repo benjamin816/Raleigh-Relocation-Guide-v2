@@ -11,7 +11,8 @@ const LIVING_SENDER_SOURCES = [
   { name: 'Website Direct Leads', email: 'Email', first: 'First Name', last: 'Last Name', phone: 'Phone' },
   { name: '2026 Relocation Guide - Kit', email: 'Email', first: 'First Name', last: 'Last Name' },
   { name: 'Appointments Booked Directly', email: 'Email', first: 'First Name', last: 'Last Name', phone: 'Phone' },
-  { name: 'Website Chat Leads', email: 'Email', first: 'First name', last: 'Last name', phone: 'Phone' }
+  { name: 'Website Chat Leads', email: 'Email', first: 'First name', last: 'Last name', phone: 'Phone' },
+  { name: 'Chat Appointments', email: 'Email', full: 'Name', phone: 'Phone', optional: true }
 ];
 
 function livingSenderSyncLeads() {
@@ -24,6 +25,7 @@ function livingSenderSyncLeads() {
     const totals = { ok: true, scanned: 0, created: 0, added: 0, skipped: 0, suppressed: 0, errors: 0, sources: {} };
     for (const source of LIVING_SENDER_SOURCES) {
       const sheet = spreadsheet.getSheetByName(source.name);
+      if (!sheet && source.optional) continue;
       if (!sheet) throw new Error('Missing Living lead tab: ' + source.name);
       const result = livingSenderSyncSheet_(sheet, source, properties);
       totals.sources[source.name] = result;
@@ -52,6 +54,7 @@ function livingSenderSyncSheet_(sheet, source, properties) {
   const rows = sheet.getRange(start, 1, count, sheet.getLastColumn()).getValues();
   const firstColumn = index(source.first);
   const lastColumn = index(source.last);
+  const fullColumn = index(source.full);
   const phoneColumn = index(source.phone);
   const sourceColumn = index('Source Page');
   const leadTypeColumn = index('Lead Type');
@@ -67,10 +70,12 @@ function livingSenderSyncSheet_(sheet, source, properties) {
       continue;
     }
     try {
+      const fullName = fullColumn < 0 ? '' : String(row[fullColumn] || '').trim();
+      const splitName = fullName.split(/\s+/).filter(Boolean);
       const contact = {
         email: email,
-        firstname: firstColumn < 0 ? '' : String(row[firstColumn] || '').trim(),
-        lastname: lastColumn < 0 ? '' : String(row[lastColumn] || '').trim(),
+        firstname: firstColumn < 0 ? splitName[0] || '' : String(row[firstColumn] || '').trim(),
+        lastname: lastColumn < 0 ? splitName.slice(1).join(' ') : String(row[lastColumn] || '').trim(),
         phone: phoneColumn < 0 ? '' : livingSenderPhone_(row[phoneColumn])
       };
       const outcome = livingSenderUpsert_(contact);

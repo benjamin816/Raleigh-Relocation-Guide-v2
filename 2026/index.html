@@ -1728,13 +1728,12 @@
                                     <input type="email" name="email" autocomplete="email" placeholder="name@example.com" data-relo-guide-field="email" required>
                                 </label>
                                 <label class="relo-guide-field relo-guide-field--full">
-                                    <span class="relo-guide-phone-label">Phone <small>(optional)</small></span>
-                                    <input type="tel" name="phone" autocomplete="tel" placeholder="(919) 555-0123" data-relo-guide-field="phone">
+                                    <span class="relo-guide-phone-label">Phone *</span>
+                                    <input type="tel" name="phone" autocomplete="tel" placeholder="(919) 555-0123" data-relo-guide-field="phone" required>
                                 </label>
-                                <label class="relo-guide-consent relo-guide-field--full" data-relo-guide-consent-wrap data-legal-consent="true">
-                                    <input type="checkbox" name="sms_opt_in" data-relo-guide-field="sms_opt_in">
-                                    <span data-relo-guide-consent-text>I agree to be contacted by The Official Living in Raleigh team by email about my request.</span>
-                                </label>
+                                <div class="relo-guide-consent relo-guide-field--full" data-relo-guide-consent-wrap data-legal-consent="true">
+                                    <span data-relo-guide-consent-text>By submitting, you ask The Official Living in Raleigh team to contact you by phone or email about your guide request.</span>
+                                </div>
                             </div>
                             <div class="relo-guide-actions">
                                 <button type="submit" class="relo-guide-submit" data-relo-guide-submit data-ready="false">Send My Guide</button>
@@ -1844,7 +1843,6 @@
         last_name: modal.querySelector("[data-relo-guide-field='last_name']"),
         email: modal.querySelector("[data-relo-guide-field='email']"),
         phone: modal.querySelector("[data-relo-guide-field='phone']"),
-        sms_opt_in: modal.querySelector("[data-relo-guide-field='sms_opt_in']")
       };
       var consentText = modal.querySelector("[data-relo-guide-consent-text]");
       var invalidResetTimer = 0;
@@ -1863,17 +1861,11 @@
         return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value || "").trim().toLowerCase());
       }
 
-      function hasPhoneValue() {
-        return Boolean(digitsOnly(inputs.phone && inputs.phone.value));
-      }
-
       function updateConsentText() {
         if (!consentText) {
           return;
         }
-        consentText.textContent = hasPhoneValue()
-          ? "I agree to be contacted by The Official Living in Raleigh team by call, email, and text about my request."
-          : "I agree to be contacted by The Official Living in Raleigh team by email about my request.";
+        consentText.textContent = "By submitting, you ask The Official Living in Raleigh team to contact you by phone or email about your guide request.";
       }
 
       function makeSubmissionId() {
@@ -1914,7 +1906,7 @@
           trim(inputs.first_name && inputs.first_name.value) &&
           trim(inputs.last_name && inputs.last_name.value) &&
           isValidEmail(inputs.email && inputs.email.value) &&
-          Boolean(inputs.sms_opt_in && inputs.sms_opt_in.checked)
+          digitsOnly(inputs.phone && inputs.phone.value).length >= 10
         );
         submit.dataset.ready = ready ? "true" : "false";
         return ready;
@@ -1935,16 +1927,8 @@
           inputs.email.classList.add("is-invalid");
           missing = true;
         }
-        if (!(inputs.sms_opt_in && inputs.sms_opt_in.checked)) {
-          var consentWrap = inputs.sms_opt_in && inputs.sms_opt_in.closest("[data-relo-guide-consent-wrap]");
-          if (consentWrap) {
-            consentWrap.classList.add("is-invalid");
-          }
-          missing = true;
-        }
-
         var phoneValue = trim(inputs.phone && inputs.phone.value);
-        if (phoneValue && digitsOnly(phoneValue).length < 10 && inputs.phone) {
+        if (digitsOnly(phoneValue).length < 10 && inputs.phone) {
           inputs.phone.classList.add("is-invalid");
           missing = true;
         }
@@ -1968,7 +1952,7 @@
           email: trim(inputs.email && inputs.email.value).toLowerCase(),
           phone_country: "+1",
           phone: phoneValue,
-          sms_opt_in: Boolean(phoneValue && inputs.sms_opt_in && inputs.sms_opt_in.checked)
+          sms_opt_in: false
         };
       }
 

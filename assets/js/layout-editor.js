@@ -46,7 +46,9 @@
   var toolbarState = loadToolbarState();
   var toolbarDrag = null;
   var editorMode = enabled;
-  var shouldApplyLayout = editorMode || window.innerWidth > 1100;
+  // The consult logo's saved pixel offsets belong to the editor, not visitors.
+  // At browser zoom those offsets move the large image across the heading and calendar.
+  var shouldApplyLayout = editorMode || (!isConsultPage && window.innerWidth > 1100);
 
   if (!shouldApplyLayout) {
     return;

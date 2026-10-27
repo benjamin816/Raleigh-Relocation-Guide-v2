@@ -1,0 +1,34 @@
+<!doctype html>
+<html><head><meta charset="utf-8"></head><body>
+<script>
+  const channel = <?!= JSON.stringify(channel) ?>;
+  const origins = <?!= JSON.stringify(origins) ?>;
+  const protocol = 'raleigh-chat-booking-v1';
+  function send(target, origin, requestId, result, error) {
+    target.postMessage({ protocol, channel, requestId, result, error }, origin);
+  }
+  window.addEventListener('message', function (event) {
+    if (!origins.includes(event.origin) || !event.data || event.data.protocol !== protocol || event.data.channel !== channel) return;
+    const requestId = event.data.requestId;
+    const method = event.data.method;
+    const args = event.data.args || [];
+    if (!/^[a-z0-9-]{16,80}$/i.test(String(requestId)) || !Array.isArray(args)) return;
+    const methods = {
+      slots: 'getChatBookingSlots',
+      check: 'checkChatBookingSlot',
+      suggest: 'checkChatBookingSuggestion',
+      book: 'bookChatAppointment'
+    };
+    if (!methods[method]) return;
+    const runner = google.script.run.withSuccessHandler(function (result) {
+      send(event.source, event.origin, requestId, result, null);
+    }).withFailureHandler(function (error) {
+      send(event.source, event.origin, requestId, null, error && error.message || 'Booking is unavailable.');
+    });
+    runner[methods[method]].apply(runner, args);
+  });
+  origins.forEach(function (origin) {
+    window.top.postMessage({ protocol, channel, ready: true }, origin);
+  });
+</script>
+</body></html>

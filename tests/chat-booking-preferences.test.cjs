@@ -1,0 +1,30 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const vm = require('node:vm');
+
+const source = fs.readFileSync(__dirname + '/../assets/js/raleigh-chat.js', 'utf8');
+const start = source.indexOf('  function bookingPreferenceFromText(');
+const end = source.indexOf('  function bookingFailed(', start);
+assert(start >= 0 && end > start, 'booking preference functions are present');
+const code = source.slice(start, end) + '\n({ bookingPreferenceFromText, hasBookingPreference })';
+const { bookingPreferenceFromText: parse, hasBookingPreference: has } = vm.runInNewContext(code);
+
+const specific = parse('Could we meet with Ricardo on a Saturday evening?');
+assert.equal(specific.host, 'Ricardo');
+assert.equal(specific.daypart, 'evening');
+assert.deepEqual(Array.from(specific.weekdays), [6]);
+const weekend = parse('We need a weekend morning with Ben');
+assert.equal(weekend.host, 'Benjamin');
+assert.equal(weekend.daypart, 'morning');
+assert.deepEqual(Array.from(weekend.weekdays), [0, 6]);
+const revised = parse('Actually, Friday afternoon', weekend);
+assert.equal(revised.host, 'Benjamin');
+assert.equal(revised.daypart, 'afternoon');
+assert.deepEqual(Array.from(revised.weekdays), [5]);
+const open = parse('No preference', revised);
+assert.equal(open.host, '');
+assert.equal(open.daypart, '');
+assert.deepEqual(Array.from(open.weekdays), []);
+assert.equal(has('Do you have anything on Tuesday?'), true);
+assert.equal(has('The first one works'), false);
+console.log('Chat booking preference parsing passed');

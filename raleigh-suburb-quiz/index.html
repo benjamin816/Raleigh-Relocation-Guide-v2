@@ -122,8 +122,8 @@
               <label class="quiz-field"><span>First name</span><input type="text" name="firstName" autocomplete="given-name" required></label>
               <label class="quiz-field"><span>Last name</span><input type="text" name="lastName" autocomplete="family-name" required></label>
               <label class="quiz-field full"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
-              <label class="quiz-field full quiz-checkbox-row"><input type="checkbox" name="wantsConsultation" id="wantsConsultation"> <span>I would like to speak to someone on the Living in Raleigh team about making a move to Raleigh.</span></label>
-              <label class="quiz-field full quiz-phone-conditional" id="phoneConditional"><span>Phone</span><input type="tel" name="phone" id="phoneInput" autocomplete="tel"></label>
+              <label class="quiz-field full" id="phoneConditional"><span>Phone *</span><input type="tel" name="phone" id="phoneInput" autocomplete="tel" required></label>
+              <p class="quiz-field full" data-legal-consent="true">By submitting, you ask the Living in Raleigh team to contact you by phone or email about your results.</p>
             </div>
             <div class="quiz-submit-wrap"><button class="quiz-submit" type="submit">Send My Quiz Results</button></div>
             <p class="quiz-msg" id="formMsg" hidden></p>
