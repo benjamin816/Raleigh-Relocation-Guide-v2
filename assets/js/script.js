@@ -4930,16 +4930,16 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test11";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test12";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261028-test35";
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261028-test36";
     configScript.onload = function () {
       var engineScript = document.createElement("script");
-      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261028-test35";
+      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261028-test36";
       engineScript.onload = function () {
         var chatScript = document.createElement("script");
-        chatScript.src = "/assets/js/raleigh-chat.js?v=20261028-test35";
+        chatScript.src = "/assets/js/raleigh-chat.js?v=20261028-test36";
         document.head.appendChild(chatScript);
       };
       document.head.appendChild(engineScript);

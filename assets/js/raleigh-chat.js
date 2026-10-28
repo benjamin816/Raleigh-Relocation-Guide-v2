@@ -24,7 +24,7 @@
         '<input class="rchat-file-input" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" hidden />' +
         '<button class="rchat-send" type="submit" aria-label="Send message" disabled>➤</button></form>' +
     '</section>' +
-    '<span class="rchat-unread" role="status" hidden>One new message</span>' +
+    '<span class="rchat-unread" role="status" hidden><span class="rchat-unread-number">1</span> <span class="rchat-unread-copy">NEW MESSAGE</span></span>' +
     '<button class="rchat-launch" type="button" aria-label="Open Raleigh help chat" aria-expanded="false">' +
       '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 7h20a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H15l-8 5v-5H6a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3Z"/><path d="M10 14h12M10 19h8"/></svg>' +
     '</button>';
@@ -33,6 +33,8 @@
   var panel = root.querySelector(".rchat-panel");
   var launcher = root.querySelector(".rchat-launch");
   var unreadBadge = root.querySelector(".rchat-unread");
+  var unreadNumber = root.querySelector(".rchat-unread-number");
+  var unreadCopy = root.querySelector(".rchat-unread-copy");
   var closeButton = root.querySelector(".rchat-close");
   var log = root.querySelector(".rchat-log");
   var newMessageButton = root.querySelector(".rchat-new");
@@ -80,10 +82,11 @@
 
   var storageKey = "raleigh-guide-chat-v1";
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
-  var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, hasUserMessage: false, completed: false, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
+  var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, hasUserMessage: false, completed: false, unreadCount: 0, badgeReadyAt: 0, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
   var safetyKey = "raleigh-guide-chat-safety-v1";
   var pulseTimer = 0;
   var pulseEndTimer = 0;
+  var badgeTimer = 0;
   var attentionStartKey = "rchatAttentionStartedAt";
   var pulseNextKey = "rchatPulseNextAt";
   var openedWithoutReplyKey = "rchatOpenedWithoutReply";
@@ -114,7 +117,7 @@
       if (state.completed || state.hasUserMessage || !panel.hidden) return;
       if (document.visibilityState === "visible") {
         launcher.classList.add("rchat-launch--pulse");
-        pulseEndTimer = window.setTimeout(function () { launcher.classList.remove("rchat-launch--pulse"); pulseEndTimer = 0; }, 3000);
+        pulseEndTimer = window.setTimeout(function () { launcher.classList.remove("rchat-launch--pulse"); pulseEndTimer = 0; }, 5000);
       }
       attentionSessionSet(pulseNextKey, Date.now() + interval);
       schedulePulse();
@@ -122,11 +125,24 @@
   }
   function refreshAttention() {
     try { if (window.localStorage.getItem("livrBookingReportedAt")) state.completed = true; } catch (_) {}
-    if (state.completed) { cancelPulse(); unreadBadge.hidden = true; return; }
-    if (!panel.hidden) { cancelPulse(); unreadBadge.hidden = true; return; }
-    unreadBadge.hidden = !state.hasUserMessage;
-    if (state.hasUserMessage) cancelPulse();
-    else schedulePulse();
+    if (badgeTimer) { window.clearTimeout(badgeTimer); badgeTimer = 0; }
+    if (state.completed || !panel.hidden) { cancelPulse(); unreadBadge.hidden = true; return; }
+    if (state.hasUserMessage) {
+      cancelPulse();
+      var delay = Math.max(0, state.badgeReadyAt - Date.now());
+      if (delay) {
+        unreadBadge.hidden = true;
+        badgeTimer = window.setTimeout(refreshAttention, delay);
+        return;
+      }
+      var count = Math.max(1, state.unreadCount);
+      unreadNumber.textContent = count > 99 ? "99+" : String(count);
+      unreadCopy.textContent = count === 1 ? "NEW MESSAGE" : "NEW MESSAGES";
+      unreadBadge.hidden = false;
+      return;
+    }
+    unreadBadge.hidden = true;
+    schedulePulse();
   }
   function finishConversation() {
     state.completed = true;
@@ -158,6 +174,7 @@
     try {
       window.localStorage.setItem(storageKey, JSON.stringify({
         version: 2, updatedAt: Date.now(), started: state.started, hasUserMessage: state.hasUserMessage, completed: state.completed,
+        unreadCount: state.unreadCount, badgeReadyAt: state.badgeReadyAt,
         intent: state.intent, combined: state.combined, question: state.question, questionDetour: state.questionDetour,
         answers: state.answers.map(redact).slice(0, 12),
         profile: state.profile, memories: state.memories, memoryProfiles: state.memoryProfiles,
@@ -191,6 +208,8 @@
       state.started = saved.started === true;
       state.hasUserMessage = saved.hasUserMessage === true;
       state.completed = saved.completed === true;
+      state.unreadCount = Number.isInteger(saved.unreadCount) ? Math.max(0, Math.min(saved.unreadCount, 100)) : 0;
+      state.badgeReadyAt = Number.isFinite(saved.badgeReadyAt) ? Math.max(0, Math.min(saved.badgeReadyAt, Date.now() + 3000)) : 0;
       state.intent = saved.version === 2 && Object.prototype.hasOwnProperty.call(config.flows, saved.intent) ? saved.intent : null;
       state.combined = state.intent === "selling" && saved.combined === true;
       state.profile = saved.version === 2 && saved.profile && typeof saved.profile === "object" ? saved.profile : {};
@@ -413,6 +432,11 @@
       state.history.push({ text: redact(text), byUser: !!byUser, at: now.toISOString(), link: options.link || null });
       state.history = state.history.slice(-80);
       persist();
+    }
+    if (!byUser && !options.restoring && panel.hidden && state.hasUserMessage && !state.completed) {
+      state.unreadCount = Math.min(100, state.unreadCount + 1);
+      persist();
+      refreshAttention();
     }
     return bubble;
   }
@@ -1437,6 +1461,10 @@
     state.history = [];
     state.hasUserMessage = false;
     state.completed = false;
+    state.unreadCount = 0;
+    state.badgeReadyAt = 0;
+    if (badgeTimer) { window.clearTimeout(badgeTimer); badgeTimer = 0; }
+    unreadBadge.hidden = true;
     state.contact = null;
     state.booking = null;
     state.offTrackOffer = false;
@@ -1465,7 +1493,11 @@
   function open() {
     unlockAudio();
     cancelPulse();
+    if (badgeTimer) { window.clearTimeout(badgeTimer); badgeTimer = 0; }
     unreadBadge.hidden = true;
+    state.unreadCount = 0;
+    state.badgeReadyAt = 0;
+    persist();
     if (!state.hasUserMessage) {
       attentionSessionSet(openedWithoutReplyKey, 1);
       attentionSessionSet(pulseNextKey, Date.now() + 30000);
@@ -1490,6 +1522,11 @@
     launcher.setAttribute("aria-label", "Open Raleigh help chat");
     window.dispatchEvent(new CustomEvent("raleigh-chat-state", { detail: { blocked: false, reason: "custom_chat_closed", sentMessage: state.sentMessageSinceOpen } }));
     if (!state.hasUserMessage && !state.completed) attentionSessionSet(pulseNextKey, Date.now() + 30000);
+    if (state.hasUserMessage && !state.completed) {
+      state.unreadCount = 0;
+      state.badgeReadyAt = Date.now() + 3000;
+      persist();
+    }
     refreshAttention();
     (state.lastFocus && state.lastFocus.focus ? state.lastFocus : launcher).focus();
   }
