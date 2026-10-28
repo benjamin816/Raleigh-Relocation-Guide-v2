@@ -1918,6 +1918,7 @@
     var leadPopupSessionStartKey = "livrLeadPopupSessionStart";
     var leadPopupNextShowKey = "livrLeadPopupNextShowAt";
     var leadPopupChatQuietUntilKey = "livrChatQuietUntil";
+    var leadPopupPageReadyAt = Date.now() + 10 * 1000;
     var leadPopupInitialDelayMs = 10 * 1000;
     var leadPopupFormFollowupDelayMs = 2 * 60 * 1000;
     var leadPopupChatDelayMs = 30 * 60 * 1000;
@@ -2664,6 +2665,10 @@
       if ((!forceOpen && !mayShowPopup()) || !popupHost.hidden) {
         return;
       }
+      if (!forceOpen && Date.now() < leadPopupPageReadyAt) {
+        schedulePopup();
+        return;
+      }
       if (!forceOpen && (chatBlocksLeadPopup || isChatOpen())) {
         clearTimer();
         return;
@@ -2722,7 +2727,7 @@
       }
       clearTimer();
       var nextShowAt = ensureNextShowAt();
-      var delay = Math.max(0, nextShowAt - Date.now());
+      var delay = Math.max(0, nextShowAt - Date.now(), leadPopupPageReadyAt - Date.now());
       timeoutId = window.setTimeout(function () {
         timeoutId = 0;
         if (chatBlocksLeadPopup || isChatOpen()) {
@@ -4925,16 +4930,16 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test10";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test11";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261028-test34";
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261028-test35";
     configScript.onload = function () {
       var engineScript = document.createElement("script");
-      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261028-test34";
+      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261028-test35";
       engineScript.onload = function () {
         var chatScript = document.createElement("script");
-        chatScript.src = "/assets/js/raleigh-chat.js?v=20261028-test34";
+        chatScript.src = "/assets/js/raleigh-chat.js?v=20261028-test35";
         document.head.appendChild(chatScript);
       };
       document.head.appendChild(engineScript);

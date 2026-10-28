@@ -24,6 +24,7 @@
         '<input class="rchat-file-input" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" hidden />' +
         '<button class="rchat-send" type="submit" aria-label="Send message" disabled>➤</button></form>' +
     '</section>' +
+    '<span class="rchat-unread" role="status" hidden>One new message</span>' +
     '<button class="rchat-launch" type="button" aria-label="Open Raleigh help chat" aria-expanded="false">' +
       '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 7h20a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H15l-8 5v-5H6a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3Z"/><path d="M10 14h12M10 19h8"/></svg>' +
     '</button>';
@@ -31,6 +32,7 @@
 
   var panel = root.querySelector(".rchat-panel");
   var launcher = root.querySelector(".rchat-launch");
+  var unreadBadge = root.querySelector(".rchat-unread");
   var closeButton = root.querySelector(".rchat-close");
   var log = root.querySelector(".rchat-log");
   var newMessageButton = root.querySelector(".rchat-new");
@@ -78,8 +80,59 @@
 
   var storageKey = "raleigh-guide-chat-v1";
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
-  var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
+  var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, hasUserMessage: false, completed: false, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
   var safetyKey = "raleigh-guide-chat-safety-v1";
+  var pulseTimer = 0;
+  var pulseEndTimer = 0;
+  var attentionStartKey = "rchatAttentionStartedAt";
+  var pulseNextKey = "rchatPulseNextAt";
+  var openedWithoutReplyKey = "rchatOpenedWithoutReply";
+  function attentionSessionNumber(key) {
+    try { return Number(window.sessionStorage.getItem(key)) || 0; } catch (_) { return 0; }
+  }
+  function attentionSessionSet(key, value) {
+    try { window.sessionStorage.setItem(key, String(value)); } catch (_) { /* Timing stays page-local. */ }
+  }
+  function cancelPulse() {
+    if (pulseTimer) window.clearTimeout(pulseTimer);
+    if (pulseEndTimer) window.clearTimeout(pulseEndTimer);
+    pulseTimer = pulseEndTimer = 0;
+    launcher.classList.remove("rchat-launch--pulse");
+  }
+  function schedulePulse() {
+    if (pulseTimer) window.clearTimeout(pulseTimer);
+    pulseTimer = 0;
+    if (state.completed || state.hasUserMessage || !panel.hidden) return;
+    var openedWithoutReply = attentionSessionNumber(openedWithoutReplyKey) === 1;
+    var interval = openedWithoutReply ? 30000 : 60000;
+    var start = attentionSessionNumber(attentionStartKey);
+    if (!start || start > Date.now()) { start = Date.now(); attentionSessionSet(attentionStartKey, start); }
+    var next = attentionSessionNumber(pulseNextKey);
+    if (!next || next < start) { next = start + 30000; attentionSessionSet(pulseNextKey, next); }
+    pulseTimer = window.setTimeout(function () {
+      pulseTimer = 0;
+      if (state.completed || state.hasUserMessage || !panel.hidden) return;
+      if (document.visibilityState === "visible") {
+        launcher.classList.add("rchat-launch--pulse");
+        pulseEndTimer = window.setTimeout(function () { launcher.classList.remove("rchat-launch--pulse"); pulseEndTimer = 0; }, 3000);
+      }
+      attentionSessionSet(pulseNextKey, Date.now() + interval);
+      schedulePulse();
+    }, Math.max(0, next - Date.now()));
+  }
+  function refreshAttention() {
+    try { if (window.localStorage.getItem("livrBookingReportedAt")) state.completed = true; } catch (_) {}
+    if (state.completed) { cancelPulse(); unreadBadge.hidden = true; return; }
+    if (!panel.hidden) { cancelPulse(); unreadBadge.hidden = true; return; }
+    unreadBadge.hidden = !state.hasUserMessage;
+    if (state.hasUserMessage) cancelPulse();
+    else schedulePulse();
+  }
+  function finishConversation() {
+    state.completed = true;
+    persist();
+    refreshAttention();
+  }
   function safetyRecord(reason) {
     if (window.__livrAnalyticsTracker && typeof window.__livrAnalyticsTracker.track === "function") {
       window.__livrAnalyticsTracker.track("chat_moderation", { moderation_reason: reason, moderation_source: "website_rule_chat" });
@@ -104,7 +157,7 @@
   function persist() {
     try {
       window.localStorage.setItem(storageKey, JSON.stringify({
-        version: 2, updatedAt: Date.now(), started: state.started,
+        version: 2, updatedAt: Date.now(), started: state.started, hasUserMessage: state.hasUserMessage, completed: state.completed,
         intent: state.intent, combined: state.combined, question: state.question, questionDetour: state.questionDetour,
         answers: state.answers.map(redact).slice(0, 12),
         profile: state.profile, memories: state.memories, memoryProfiles: state.memoryProfiles,
@@ -136,6 +189,8 @@
       if (!saved || (saved.version !== 1 && saved.version !== 2) || !Number.isFinite(saved.updatedAt) ||
           Date.now() - saved.updatedAt > storageDays * 86400000 || saved.updatedAt > Date.now() + 86400000) return;
       state.started = saved.started === true;
+      state.hasUserMessage = saved.hasUserMessage === true;
+      state.completed = saved.completed === true;
       state.intent = saved.version === 2 && Object.prototype.hasOwnProperty.call(config.flows, saved.intent) ? saved.intent : null;
       state.combined = state.intent === "selling" && saved.combined === true;
       state.profile = saved.version === 2 && saved.profile && typeof saved.profile === "object" ? saved.profile : {};
@@ -157,6 +212,7 @@
         message(entry.text, entry.byUser, { at: entry.at, link: entry.link, restoring: true });
       });
       if (!state.history.length) state.started = false;
+      if (!state.hasUserMessage && state.history.some(function (item) { return item.byUser; })) state.hasUserMessage = true;
     } catch (_) { /* An invalid or unavailable local record is ignored. */ }
   }
   var audioContext;
@@ -654,6 +710,7 @@
         if (!result || !result.booked) throw new Error("Booking was not confirmed.");
         state.booking = null;
         try { window.localStorage.setItem("livrBookingReportedAt", new Date().toISOString()); } catch (_) {}
+        finishConversation();
         window.dispatchEvent(new CustomEvent("raleigh-booking-confirmed", { detail: { source: "website_chat" } }));
         message("Great, " + booking.details.name.split(/\s+/)[0] + ", I've got you confirmed for " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". You'll get a calendar invitation." + (booking.details.callType === "video" ? (result.videoUrl ? " The Google Meet link is in the invitation." : " The team will add the video link before your call.") : "") + (result.preCallEmailSent ? " Look out for an email titled What To Know Before Our Call, with a quick form and resources to help you prepare." : "") + " If you need anything in the meantime, message me here or call or text the team at 919-737-7896.", false);
       }).catch(function (error) {
@@ -830,6 +887,7 @@
     state.intent = null;
     state.question = -1;
     state.profile.pendingRentalPlan = false;
+    finishConversation();
     message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
     link("Explore Raleigh guides", "/learning-center/");
   }
@@ -1053,6 +1111,7 @@
       attachment = null;
       attachmentInput.value = "";
       showAttachment();
+      finishConversation();
       message("Your request was submitted for processing. Thank you!", false);
       window.dispatchEvent(new CustomEvent("raleigh-lead-form-submitted", { detail: { source: "website_chat" } }));
       input.maxLength = 2000;
@@ -1172,6 +1231,8 @@
   function handleText(text) {
     var value = text.trim();
     if (!value || state.submitting || state.ended) return;
+    state.hasUserMessage = true;
+    persist();
     lastUserSentAt = Date.now();
     cancelClarification();
     interruptBotQueue();
@@ -1192,6 +1253,7 @@
       sound();
       if (strikes >= 2 || safety === "hate" || safety === "threat") {
         state.ended = true;
+        finishConversation();
         input.disabled = true;
         sendButton.disabled = true;
         message(config.safetyEnd || "I'm going to end this conversation for now.", false, { remember: false });
@@ -1203,6 +1265,13 @@
     var contactCommand = /^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value);
     message(value, true, { remember: !state.contact && !contactCommand });
     sound();
+    if (/^(?:not interested|no longer interested|no thanks,?\s*(?:i'?m not interested)?|please (?:end|stop) (?:the )?chat)\s*[.!?]*$/i.test(value)) {
+      state.booking = null;
+      state.contact = null;
+      finishConversation();
+      message("Understood. I won't prompt you again. If you need us later, you can open this chat or call the team at 919-737-7896.", false);
+      return;
+    }
     if (!state.booking && !state.contact && /^(?:hi|hello|hey|good morning|good afternoon|good evening|one sec(?:ond)?|just a sec(?:ond)?|let me think|hmm|um+)\s*[.!?]*$/i.test(value)) {
       var pendingQuestion = state.intent && state.question >= 0 && state.question < activeQuestions().length
         ? activeQuestions()[state.question].text : config.fallback;
@@ -1366,6 +1435,8 @@
     state.memories = {};
     state.memoryProfiles = {};
     state.history = [];
+    state.hasUserMessage = false;
+    state.completed = false;
     state.contact = null;
     state.booking = null;
     state.offTrackOffer = false;
@@ -1393,6 +1464,12 @@
   }
   function open() {
     unlockAudio();
+    cancelPulse();
+    unreadBadge.hidden = true;
+    if (!state.hasUserMessage) {
+      attentionSessionSet(openedWithoutReplyKey, 1);
+      attentionSessionSet(pulseNextKey, Date.now() + 30000);
+    }
     state.lastFocus = document.activeElement;
     state.sentMessageSinceOpen = false;
     panel.hidden = false;
@@ -1412,6 +1489,8 @@
     launcher.setAttribute("aria-expanded", "false");
     launcher.setAttribute("aria-label", "Open Raleigh help chat");
     window.dispatchEvent(new CustomEvent("raleigh-chat-state", { detail: { blocked: false, reason: "custom_chat_closed", sentMessage: state.sentMessageSinceOpen } }));
+    if (!state.hasUserMessage && !state.completed) attentionSessionSet(pulseNextKey, Date.now() + 30000);
+    refreshAttention();
     (state.lastFocus && state.lastFocus.focus ? state.lastFocus : launcher).focus();
   }
   launcher.addEventListener("click", function () { panel.hidden ? open() : close(); });
@@ -1501,6 +1580,7 @@
     if (state.submitting) return;
     clearConversation();
     try { window.localStorage.removeItem(safetyKey); } catch (_) {}
+    try { window.localStorage.removeItem("livrBookingReportedAt"); } catch (_) {}
     root.hidden = false;
     message(config.welcome, false);
     input.focus();
@@ -1523,4 +1603,5 @@
   });
   restore();
   sizeInput();
+  refreshAttention();
 })();
