@@ -9070,3 +9070,19 @@ textarea {
     box-sizing: border-box;
   }
 }
+
+/* Browser zoom can trigger the tablet menu on a desktop viewport. Keep that
+   header in the document flow so it does not cover the page while scrolling. */
+@media (min-width: 641px) and (max-width: 980px) {
+  body.page-home {
+    padding-top: 0;
+  }
+
+  .page-home .home-header-stack {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    box-shadow: none;
+  }
+}
