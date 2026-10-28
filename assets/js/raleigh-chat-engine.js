@@ -94,12 +94,36 @@
     if (/\b(own|owner|homeowner|mortgage|my house|my home)\b/.test(text)) return "owning";
     return null;
   }
+  function classifyMoveTiming(value, now) {
+    var text = normalize(value);
+    if (/\b(?:not now|not soon|not sure|don't know)\b/.test(text)) return "";
+    if (/\b(now|asap|immediately|right away|this week|next week|this month|next month|soon)\b/.test(text)) return "soon";
+    var words = { one: 1, two: 2, three: 3, four: 4, six: 6 };
+    var relative = text.match(/\b(?:in|within|about|around|roughly|approximately)?\s*(\d+|one|two|three|four|six|a couple(?: of)?|a few)\s*(days?|weeks?|months?)\b/);
+    if (relative) {
+      var amount = /^a couple/.test(relative[1]) ? 2 : relative[1] === "a few" ? 3 : (words[relative[1]] || Number(relative[1]));
+      var unit = relative[2];
+      if (amount <= (unit.indexOf("day") === 0 ? 92 : unit.indexOf("week") === 0 ? 13 : 3)) return "soon";
+    }
+    var months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
+    var month = months.findIndex(function (name) { return new RegExp("\\b" + name + "\\b").test(text); });
+    var newYear = /\b(?:new year|new year's|jan(?:uary)?)\b/.test(text);
+    if (month < 0 && newYear) month = 0;
+    if (month < 0) return "";
+    var date = now instanceof Date && !isNaN(now.getTime()) ? now : new Date();
+    var yearMatch = text.match(/\b20\d{2}\b/);
+    var year = yearMatch ? Number(yearMatch[0]) : date.getFullYear() + (month < date.getMonth() ? 1 : 0);
+    if (!yearMatch && /\bnext year\b/.test(text)) year = date.getFullYear() + 1;
+    var monthsAway = (year - date.getFullYear()) * 12 + month - date.getMonth();
+    return monthsAway >= 0 && monthsAway <= 3 ? (newYear ? "newYear" : "soon") : "";
+  }
   function activeQuestions(flow, profile, combined) {
     return (flow && flow.questions || []).filter(function (question) {
       switch (question.when || "always") {
         case "local": return profile.location === "local";
         case "out": return profile.location === "out";
         case "newJob": return profile.newJob === true;
+        case "shortTiming": return !!profile.shortTiming;
         case "rentalClarificationNeeded": return profile.rentalClarificationNeeded === true;
         case "renting": return profile.location === "local" && profile.tenure === "renting";
         case "owning": return profile.location === "local" && profile.tenure === "owning";
@@ -138,5 +162,5 @@
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";
     return null;
   }
-  return { detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
+  return { detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
 });

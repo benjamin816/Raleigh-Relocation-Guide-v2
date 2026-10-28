@@ -834,7 +834,7 @@
     if (state.question >= questions.length) {
       var sellerSummer = state.intent === "selling" && /\bnext summer\b/i.test(state.profile.targetTiming || "");
       var buyerSummer = /^(buying|relocating)$/.test(state.intent) && /\bsummer\b/i.test(state.profile.targetTiming || "");
-      message(sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish, false);
+      message(state.profile.shortTiming ? "Well, great. Based on that timing, we should absolutely set up an exploration call with the team to help build you a game plan around your move." : sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish, false);
       if (flow.booking === "general") startBooking();
       else link("Book an investing exploration call", config.bookingLinks.investing);
       return;
@@ -893,7 +893,7 @@
       case "experience": return /\b(first|new|never)\b/.test(text) ? "That's super exciting!" : "Great, good to know.";
       case "strategy": return "Okay, got it.";
       case "sellingExperience": return /\b(first|never)\b/.test(text) ? "Okay, wonderful." : "Great, good to know.";
-      case "timing": return /\bsummer\b/.test(text) && /^(buying|relocating)$/.test(state.intent) ? "" : /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Great, that timing makes sense.";
+      case "timing": return state.profile.shortTiming === "newYear" ? "Looking to avoid the holiday craziness—smart!" : state.profile.shortTiming ? "Gotcha! That move is coming up super quick." : /\bsummer\b/.test(text) && /^(buying|relocating)$/.test(state.intent) ? "" : /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Great, that timing makes sense.";
       case "priorities": return state.profile.commuteMentioned ? "Got it." : state.profile.priorityPrice ? "Awesome." : state.profile.prioritySingle ? "Got it." : "Makes perfect sense.";
       case "priorityMore": return state.profile.commuteMentioned ? "Got it." : state.profile.priorityPrice ? "Awesome." : "Makes perfect sense.";
       case "commuteDestination": return "Got it.";
@@ -1069,7 +1069,10 @@
       state.profile.budgetAsked = true;
       state.profile.budgetKnown = !/\b(?:not sure|don't know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);
     }
-    if (question && question.key === "timing") state.profile.targetTiming = answer;
+    if (question && question.key === "timing") {
+      state.profile.targetTiming = answer;
+      state.profile.shortTiming = state.intent === "investing" ? "" : engine.classifyMoveTiming(answer, new Date());
+    }
     if (question && question.key !== "location" && question.key !== "tenure" && question.key !== "originHousing" && question.key !== "rentalPlan") {
       acknowledgement = answerAcknowledgement(question, answer);
     }

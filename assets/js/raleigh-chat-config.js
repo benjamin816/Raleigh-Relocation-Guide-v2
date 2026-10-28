@@ -186,6 +186,11 @@ window.RaleighChatConfig = {
         {
           "key": "timing",
           "text": "Lastly, when are you hoping to make the move, in an ideal world?"
+        },
+        {
+          "key": "timingReason",
+          "when": "shortTiming",
+          "text": "What's important to you about that timeline?"
         }
       ],
       "finish": "A one-on-one conversation with the team would help us build a game plan around your timing and what you're looking for.",
@@ -252,6 +257,11 @@ window.RaleighChatConfig = {
         {
           "key": "timing",
           "text": "When would you like to make that move?"
+        },
+        {
+          "key": "timingReason",
+          "when": "shortTiming",
+          "text": "What's important to you about that timeline?"
         }
       ],
       "finish": "Even if your move is a little way off, an exploration call with our team can help you make a game plan for selling and finding your next home.",
@@ -401,6 +411,11 @@ window.RaleighChatConfig = {
         {
           "key": "timing",
           "text": "Lastly, when are you hoping to make the move, in an ideal world?"
+        },
+        {
+          "key": "timingReason",
+          "when": "shortTiming",
+          "text": "What's important to you about that timeline?"
         }
       ],
       "finish": "A one-on-one conversation with the team would help us build a game plan around your move and the areas you're considering.",

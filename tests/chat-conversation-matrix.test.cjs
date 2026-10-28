@@ -7,6 +7,10 @@ vm.runInNewContext(fs.readFileSync(require.resolve('../assets/js/raleigh-chat-co
 const config = scope.window.RaleighChatConfig;
 let checks = 0;
 function check(actual, expected, phrase) { assert.equal(actual, expected, phrase); checks++; }
+const october = new Date(2026, 9, 28);
+for (const phrase of ['now', 'ASAP', 'in 3 months', 'within 90 days', 'December', 'December 2026']) check(engine.classifyMoveTiming(phrase, october), 'soon', phrase + ' is within three months');
+for (const phrase of ['January', 'in the new year', 'New Year']) check(engine.classifyMoveTiming(phrase, october), 'newYear', phrase + ' is a near-term new-year move');
+for (const phrase of ['next summer', 'in six months', 'February 2027', 'December 2027', 'not now']) check(engine.classifyMoveTiming(phrase, october), '', phrase + ' is not an immediate move');
 
 const intents = {
   buying: [
