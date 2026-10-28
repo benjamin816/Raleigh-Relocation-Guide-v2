@@ -419,9 +419,7 @@
     }
     message("We have " + state.booking.slots.map(function (slot, index) {
       return (index === 0 ? "" : " or ") + bookingLabel(slot.start);
-    }).join("") + (config.chatRoundRobinBookingEnabled
-      ? ". " + (config.bookingChoicePrompt || "Which works better? You can also ask for mornings, weekends, a specific day, Benjamin or Ricardo, or more times.")
-      : ". Which works better? You can also say 'more times' or suggest a day and time."), false);
+    }).join("") + ". " + (config.bookingChoicePrompt || "Which time works for you? Let me know if you'd prefer a video or phone call."), false);
   }
   function startBooking(request) {
     var currentFlow = state.intent && config.flows[state.intent];
@@ -444,17 +442,16 @@
       message("I can't guarantee a call with a specific team member from chat yet. Please call 919-737-7896 and we'll find a time with " + requestedPreference.host + ".", false);
       return;
     }
-    state.booking = { step: "format", slots: [], allSlots: [], offset: 0, details: {},
+    state.booking = { step: "loading", slots: [], allSlots: [], offset: 0, details: {},
       preference: requestedPreference };
     if (/\b(phone|telephone)\b/i.test(request || "")) state.booking.details.callType = "phone";
     else if (config.chatVideoBookingEnabled && /\b(video|zoom|google meet|virtual)\b/i.test(request || "")) state.booking.details.callType = "video";
-    if (state.booking.details.callType) { loadBookingSlots(state.booking); return; }
-    message(config.bookingPrompt || "Would a video or phone call work better for you?", false);
+    loadBookingSlots(state.booking);
   }
   function loadBookingSlots(booking) {
     var followUp = booking.step === "choose";
     booking.step = "loading";
-    message(followUp ? "Let me check." : "Awesome. Let me check the team's next openings.", false);
+    if (followUp) message("Let me check.", false);
     bookingCall("slots", config.chatRoundRobinBookingEnabled ? [booking.preference] : []).then(function (slots) {
       if (state.booking === booking) offerBookingSlots(slots);
     }).catch(function (error) {
@@ -463,28 +460,21 @@
   }
   function handleBookingAnswer(value) {
     var booking = state.booking;
+    if (/\b(video|zoom|meet|virtual)\b/i.test(value)) booking.details.callType = "video";
+    else if (/\b(phone|telephone|call me)\b/i.test(value)) booking.details.callType = "phone";
     if (/^(cancel|stop|never mind)$/i.test(value)) {
       state.booking = null;
       message("No call was booked. What else can I help with?", false);
       return;
     }
     if (booking.step === "format") {
-      booking.preference = bookingPreferenceFromText(value, booking.preference);
-      if (!config.chatRoundRobinBookingEnabled && booking.preference.host) {
-        state.booking = null;
-        message("I can't guarantee a call with a specific team member from chat yet. Please call 919-737-7896 and we'll find a time with " + booking.preference.host + ".", false);
+      if (!booking.details.callType) { message("Would you prefer video or phone for that time?", false); return; }
+      if (booking.details.callType === "video" && !config.chatVideoBookingEnabled) {
+        message("I can book a phone call now, or pass your video request to the team.", false);
         return;
       }
-      if (/\b(video|zoom|meet|virtual)\b/i.test(value)) {
-        if (!config.chatVideoBookingEnabled) {
-          message("Video invitations are still being connected on Test. I can book a phone call now, or you can leave the team a message about a video call.", false);
-          return;
-        }
-        booking.details.callType = "video";
-      }
-      else if (/\b(phone|telephone|call me)\b/i.test(value)) booking.details.callType = "phone";
-      else { message("Would you prefer a video call or a phone call?", false); return; }
-      loadBookingSlots(booking);
+      booking.step = "email";
+      message(config.bookingEmailPrompt || "What's your email address for the invitation?", false);
       return;
     }
     if (booking.step === "loading") { message("I'm still checking the calendar. One moment, please.", false); return; }
@@ -506,8 +496,9 @@
         showBookingPair();
         return;
       }
-      var choiceText = value.replace(/\s+(?:with|for)\s+(?:benjamin|ben|ricardo)$/i, "").trim();
-      var choiceIndex = /^(1|one|first|the first one)$/i.test(choiceText) ? 0 : /^(2|two|second|the second one)$/i.test(choiceText) ? 1 : -1;
+      var choiceText = value.replace(/\b(?:for|as|on|by)?\s*(?:a\s+)?(?:video|zoom|google meet|virtual|phone|telephone)\s*call\b|\b(?:video|zoom|google meet|virtual|phone|telephone)\b|\s+(?:with|for)\s+(?:benjamin|ben|ricardo)\b/gi, "").trim();
+      var isExplicitTime = /\b\d{1,2}(?::\d\d)?\s*(?:am|pm)\b|\b20\d{2}-\d\d-\d\d\b/i.test(choiceText);
+      var choiceIndex = !isExplicitTime && /\b(?:1|one|first)\b/i.test(choiceText) ? 0 : !isExplicitTime && /\b(?:2|two|second)\b/i.test(choiceText) ? 1 : -1;
       var choice = choiceIndex >= 0 ? booking.slots[choiceIndex] : null;
       if (choice) {
         if (config.chatRoundRobinBookingEnabled && booking.preference.host &&
@@ -517,8 +508,8 @@
           return;
         }
         booking.start = choice.start;
-        booking.step = "email";
-        message("Great, " + bookingLabel(booking.start) + " for a " + booking.details.callType + " call. " + (config.bookingEmailPrompt || "What's your email address for the invitation?"), false);
+        booking.step = booking.details.callType ? "email" : "format";
+        message("Great, " + bookingLabel(booking.start) + ". " + (booking.step === "email" ? (config.bookingEmailPrompt || "What's your email address for the invitation?") : "Would you prefer video or phone for that time?"), false);
         return;
       }
       booking.step = "checking";
@@ -532,8 +523,8 @@
           return;
         }
         booking.start = result.start;
-        booking.step = "email";
-        message("That works: " + bookingLabel(booking.start) + ". " + (config.bookingEmailPrompt || "What's your email address for the invitation?"), false);
+        booking.step = booking.details.callType ? "email" : "format";
+        message("That works: " + bookingLabel(booking.start) + ". " + (booking.step === "email" ? (config.bookingEmailPrompt || "What's your email address for the invitation?") : "Would you prefer video or phone for that time?"), false);
       }).catch(function (error) { if (state.booking === booking) bookingFailed(error); });
       return;
     }
@@ -648,7 +639,8 @@
     var flow = config.flows[state.intent];
     var questions = activeQuestions();
     if (state.question >= questions.length) {
-      message(flow.finish, false);
+      var sellerSummer = state.intent === "selling" && /\bnext summer\b/i.test(state.profile.targetTiming || "");
+      message(sellerSummer ? (flow.finishNextSummer || flow.finish) : (prefix ? prefix + " " : "") + flow.finish, false);
       if (flow.booking === "general") startBooking();
       else link("Book an investing exploration call", config.bookingLinks.investing);
       return;
@@ -732,6 +724,7 @@
     if (question && question.key === "budget" && /^(buying|relocating)$/.test(state.intent)) {
       state.profile.budgetKnown = !/\b(?:not sure|don't know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);
     }
+    if (question && question.key === "timing") state.profile.targetTiming = answer;
     if (question && question.key !== "location" && question.key !== "tenure") {
       acknowledgement = answerAcknowledgement(question, answer);
     }
@@ -883,7 +876,7 @@
     if (state.booking) {
       if (faq && state.booking.step !== "email" && state.booking.step !== "phone" && state.booking.step !== "name") {
         message(faq.answer, false);
-        if (state.booking.step === "format") message(config.bookingPrompt, false);
+        if (state.booking.step === "format") message("Would you prefer video or phone for that time?", false);
         else if (state.booking.step === "choose") showBookingPair();
       } else handleBookingAnswer(value);
       return;

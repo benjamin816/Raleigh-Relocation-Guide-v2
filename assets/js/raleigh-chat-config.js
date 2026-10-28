@@ -29,8 +29,7 @@ window.RaleighChatConfig = {
     }
   ],
   "contactConsentPrompt": "May our team contact you about this question? Reply yes to submit your details, or no to cancel.",
-  "bookingPrompt": "To put together a game plan for you, would a video or phone call work better?",
-  "bookingChoicePrompt": "Would either of those work?",
+  "bookingChoicePrompt": "Which time works for you? Let me know if you'd prefer a video or phone call.",
   "bookingEmailPrompt": "What's the best email address for the invitation and everything you need before our call?",
   "bookingPhonePrompt": "And what's the best phone number to reach you?",
   "bookingNamePrompt": "What first and last name should I put on the invitation?",
@@ -224,7 +223,8 @@ window.RaleighChatConfig = {
           "text": "When would you like to make that move?"
         }
       ],
-      "finish": "The right plan depends on your current home, timing, and next move. Let's talk it through together.",
+      "finish": "Even if your move is a little way off, an exploration call with our team can help you make a game plan for selling and finding your next home.",
+      "finishNextSummer": "Totally get it. Typically, late spring into early summer is the best time to list, and you'll also have the most options on the buy side. Even with you targeting next summer, we should start putting together a game plan on an exploration call with our team. We can go over the timing and make sure the transition into your next home is as smooth as possible.",
       "resourceLink": {
         "label": "Explore selling resources",
         "href": "/sell/"
