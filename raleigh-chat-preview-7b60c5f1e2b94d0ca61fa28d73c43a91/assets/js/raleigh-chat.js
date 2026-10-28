@@ -450,7 +450,16 @@
   }
   function showBookingPair() {
     if (!state.booking) return;
-    state.booking.slots = state.booking.allSlots.slice(state.booking.offset, state.booking.offset + 2);
+    var available = state.booking.allSlots.slice(state.booking.offset);
+    var first = available[0];
+    var firstDay = first && new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(first.start));
+    function isDifferentDay(slot) {
+      return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(slot.start)) !== firstDay;
+    }
+    var differentDay = available.slice(1).find(function (slot) { return isDifferentDay(slot) && slot.daypart !== first.daypart; }) ||
+      available.slice(1).find(isDifferentDay);
+    var second = differentDay || available[1];
+    state.booking.slots = first ? [first].concat(second ? [second] : []) : [];
     state.booking.step = "choose";
     if (!state.booking.slots.length) {
       message("I don't see an open call time right now. You can leave a message for the team or call 919-737-7896.", false);
@@ -508,7 +517,14 @@
       return;
     }
     if (booking.step === "format") {
-      if (!booking.details.callType) { message("Would you prefer video or phone for that time?", false); return; }
+      if (!booking.details.callType && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 200) {
+        booking.details.callType = "video";
+        booking.details.email = value;
+        booking.step = "phone";
+        message(config.bookingPhonePrompt || "What phone number should we use for the call?", false);
+        return;
+      }
+      if (!booking.details.callType) { message("You can send your email for a video call, or say phone if you'd prefer a phone call.", false); return; }
       if (booking.details.callType === "video" && !config.chatVideoBookingEnabled) {
         message("I can book a phone call now, or pass your video request to the team.", false);
         return;
@@ -549,7 +565,7 @@
         }
         booking.start = choice.start;
         booking.step = booking.details.callType ? "email" : "format";
-        message("Great, " + bookingLabel(booking.start) + ". " + (booking.step === "email" ? (config.bookingEmailPrompt || "What's your email address for the invitation?") : "Would you prefer video or phone for that time?"), false);
+        message("Great, " + bookingLabel(booking.start) + ". " + (booking.step === "email" ? (config.bookingEmailPrompt || "What's your email address for the invitation?") : "We prefer a video call so we can meet face to face, open the map, and share the resources you need. If you'd rather have a phone call, just say phone. Otherwise, what's the best email for your invitation?"), false);
         return;
       }
       booking.step = "checking";
@@ -564,7 +580,7 @@
         }
         booking.start = result.start;
         booking.step = booking.details.callType ? "email" : "format";
-        message("That works: " + bookingLabel(booking.start) + ". " + (booking.step === "email" ? (config.bookingEmailPrompt || "What's your email address for the invitation?") : "Would you prefer video or phone for that time?"), false);
+        message("That works: " + bookingLabel(booking.start) + ". " + (booking.step === "email" ? (config.bookingEmailPrompt || "What's your email address for the invitation?") : "We prefer a video call so we can meet face to face, open the map, and share the resources you need. If you'd rather have a phone call, just say phone. Otherwise, what's the best email for your invitation?"), false);
       }).catch(function (error) { if (state.booking === booking) bookingFailed(error); });
       return;
     }
@@ -695,7 +711,8 @@
     var questions = activeQuestions();
     if (state.question >= questions.length) {
       var sellerSummer = state.intent === "selling" && /\bnext summer\b/i.test(state.profile.targetTiming || "");
-      message(sellerSummer ? (flow.finishNextSummer || flow.finish) : (prefix ? prefix + " " : "") + flow.finish, false);
+      var buyerSummer = /^(buying|relocating)$/.test(state.intent) && /\bsummer\b/i.test(state.profile.targetTiming || "");
+      message(sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish, false);
       if (flow.booking === "general") startBooking();
       else link("Book an investing exploration call", config.bookingLinks.investing);
       return;
@@ -709,6 +726,10 @@
       if (question.key === "areas") wording = "What areas around Raleigh are you interested in buying a home in?";
       if (question.key === "familyNearby") wording = state.profile.nearbyPerson === "friends" ? "What part of Raleigh are your friends in?" : "What part of Raleigh is your family in?";
     }
+    if (question.key === "home" && state.profile.homeDetailsGiven) wording = "You mentioned some things you're looking for in a home earlier. Is there anything else that's important to you about the home itself?";
+    if ((question.key === "priorityFinancing" || question.key === "financing") && state.profile.originSale) wording = "Do you think you'll buy with cash from the sale of your current home, or use financing?";
+    else if (question.key === "priorityFinancing" || question.key === "financing") wording = "Do you plan on using financing, or will you be buying in cash?";
+    if (question.key === "areasReason" && state.profile.familyArea && state.profile.areasMentionFamilyArea) wording += " I know you mentioned having family in " + state.profile.familyArea + ".";
     if (question.key === "areas" && state.profile.priorityAnswered) wording = "Are there any specific areas around Raleigh that you're interested in buying a home in?";
     if (question.key === "areasReason" && state.profile.areasPlural) wording = "What was it about those areas that stood out to you?";
     message((prefix ? prefix + " " : "") + wording, false);
@@ -743,17 +764,18 @@
       case "experience": return /\b(first|new|never)\b/.test(text) ? "That's super exciting!" : "Great, good to know.";
       case "strategy": return "Okay, got it.";
       case "sellingExperience": return /\b(first|never)\b/.test(text) ? "Okay, wonderful." : "Great, good to know.";
-      case "timing": return /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Great, that timing makes sense.";
+      case "timing": return /\bsummer\b/.test(text) && /^(buying|relocating)$/.test(state.intent) ? "" : /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Great, that timing makes sense.";
       case "priorities": return state.profile.priorityPrice ? "Awesome." : state.profile.prioritySingle ? "Got it." : "Makes perfect sense.";
       case "priorityMore": return state.profile.priorityPrice ? "Awesome." : "Makes perfect sense.";
-      case "priorityBudget": return state.profile.priorityBudgetAmount >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "Okay, great.";
+      case "priorityBudget": return state.profile.priorityBudgetAmount >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "👍";
       case "priorityFinancing": return "Great!";
-      case "areas": return state.profile.areasNeedFollowup ?
+      case "areas": return state.profile.areasMentionFamilyArea ? "That makes sense." : state.profile.areasNeedFollowup ?
         (state.profile.areasPlural ? "Awesome, those are great areas!" : "Awesome, that's a great area!") : "That makes sense!";
       case "areasReason": return "Makes perfect sense!";
       case "home": return state.profile.budgetKnown ? "That gives me a good picture!" : "Got it.";
+      case "homeMore": return "Got it.";
       case "nextHome": return "That gives me a better picture.";
-      case "budget": return state.profile.budgetKnown ? "Awesome!" : "That's totally fine. We can connect you with a lender to get a clearer picture of your buying power.";
+      case "budget": return state.profile.budgetKnown ? (priceAmount(answer) >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "👍") : "That's totally fine. We can connect you with a lender to get a clearer picture of your buying power.";
       case "financing": return "Great!";
       default: return "Got it.";
     }
@@ -779,6 +801,10 @@
     if (unit === "million" || unit === "m") amount *= 1000000;
     else if (unit === "thousand" || unit === "k") amount *= 1000;
     return amount >= 10000 ? amount : 0;
+  }
+  function homeDetailCount(value) {
+    var text = String(value || "").toLowerCase();
+    return [/\b(?:bed|bedroom)/, /\b(?:bath|bathroom)/, /\b(?:sq\.?\s?ft|square feet|square footage)/, /\b(?:yard|backyard|lot)/, /\b(?:ranch|one.story|single.story|two.story|layout)/, /\b(?:garage|pool|office|basement)/].filter(function (pattern) { return pattern.test(text); }).length;
   }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
@@ -862,10 +888,15 @@
       state.profile.newJob = state.intent === "relocating" && /\b(new job|job offer|for (?:a|my) job|for work|work transfer|transferred|new position|starting (?:a|my) job)\b/i.test(answer);
       state.profile.prioritiesKnown = /\bcommute\b/i.test(answer);
     }
+    if (question && question.key === "familyNearby") {
+      var familyPlace = answer.trim().replace(/[.!?]+$/, "");
+      state.profile.familyArea = /^(?:yes|no|yeah|yep|here|not sure)$/i.test(familyPlace) ? "" : familyPlace.slice(0, 60);
+    }
     if (question && (question.key === "priorities" || question.key === "priorityMore")) {
       state.profile.priorityAnswered = true;
       state.profile.priorityPrice = mentionsPrice(answer);
       state.profile.prioritySingle = question.key === "priorities" && !state.profile.priorityPrice && !/,|;|\band\b|\bplus\b|&/i.test(answer);
+      if (homeDetailCount(answer)) state.profile.homeDetailsGiven = true;
     }
     if (question && question.key === "priorityBudget") {
       state.profile.priorityBudgetAmount = priceAmount(answer);
@@ -877,10 +908,13 @@
       state.profile.rentalClarificationNeeded = state.intent === "relocating" && /\b(rent|renting|lease)\b/i.test(answer);
       state.profile.areasPlural = /,|\band\b|\bor\b|\//i.test(answer);
       state.profile.areasNeedFollowup = !/\b(?:because|since|near|close to|closer to|for the|for its|for their|due to|like the|love the|drawn to|appeals? to|commute|schools?|walkab|yard|family)\b/i.test(answer);
+      state.profile.areasMentionFamilyArea = !!state.profile.familyArea && answer.toLowerCase().indexOf(state.profile.familyArea.toLowerCase()) !== -1;
     }
     if (question && question.key === "home" && /^(buying|relocating)$/.test(state.intent)) {
       state.profile.budgetKnown = /\$\s?\d{3,7}|\b\d{3,4}\s?k\b|\b\d{6,7}\b/i.test(answer) && !/\b(?:not sure|don't know|unsure)\b/i.test(answer);
+      state.profile.homeSingle = !state.profile.homeDetailsGiven && homeDetailCount(answer) < 2 && !/,|;|\band\b|\bplus\b|&/i.test(answer);
     }
+    if (question && question.key === "homeMore") state.profile.homeSingle = false;
     if (question && question.key === "budget" && /^(buying|relocating)$/.test(state.intent)) {
       state.profile.budgetAsked = true;
       state.profile.budgetKnown = !/\b(?:not sure|don't know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);

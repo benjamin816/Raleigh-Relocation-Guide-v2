@@ -102,6 +102,7 @@
         case "prioritySingle": return profile.prioritySingle === true;
         case "priorityPrice": return profile.priorityPrice === true && profile.budgetAsked !== true;
         case "priorityFinancingNeeded": return profile.priorityPrice === true && profile.budgetAsked === true && profile.financingKnown !== true;
+        case "homeSingle": return profile.homeSingle === true;
         case "budgetNeeded": return profile.budgetKnown !== true && profile.budgetAsked !== true;
         case "budgetKnown": return profile.budgetKnown === true && profile.financingKnown !== true;
         case "combined": return combined === true;
