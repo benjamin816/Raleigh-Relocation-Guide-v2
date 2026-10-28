@@ -709,6 +709,7 @@
       if (question.key === "areas") wording = "What areas around Raleigh are you interested in buying a home in?";
       if (question.key === "familyNearby") wording = state.profile.nearbyPerson === "friends" ? "What part of Raleigh are your friends in?" : "What part of Raleigh is your family in?";
     }
+    if (question.key === "areas" && state.profile.priorityAnswered) wording = "Are there any specific areas around Raleigh that you're interested in buying a home in?";
     if (question.key === "areasReason" && state.profile.areasPlural) wording = "What was it about those areas that stood out to you?";
     message((prefix ? prefix + " " : "") + wording, false);
   }
@@ -743,7 +744,10 @@
       case "strategy": return "Okay, got it.";
       case "sellingExperience": return /\b(first|never)\b/.test(text) ? "Okay, wonderful." : "Great, good to know.";
       case "timing": return /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Great, that timing makes sense.";
-      case "priorities": return "Absolutely!";
+      case "priorities": return state.profile.priorityPrice ? "Awesome." : state.profile.prioritySingle ? "Got it." : "Makes perfect sense.";
+      case "priorityMore": return state.profile.priorityPrice ? "Awesome." : "Makes perfect sense.";
+      case "priorityBudget": return state.profile.priorityBudgetAmount >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "Okay, great.";
+      case "priorityFinancing": return "Great!";
       case "areas": return state.profile.areasNeedFollowup ?
         (state.profile.areasPlural ? "Awesome, those are great areas!" : "Awesome, that's a great area!") : "That makes sense!";
       case "areasReason": return "Makes perfect sense!";
@@ -763,6 +767,18 @@
   }
   function asksToRent(value) {
     return /\b(?:looking|want|need|plan|planning|going|hoping|thinking|interested)\s+to\s+rent\b|\brent(?:ing)?\s+(?:first|for now|instead|now)\b|\b(?:looking|searching)\s+for\s+(?:a\s+)?rental\b/i.test(value);
+  }
+  function mentionsPrice(value) {
+    return /\b(?:price|prices|pricing|budget|affordab\w*|cheap\w*|cost of living|costs? less|lower cost|lower price|more for (?:my|our|the) money)\b|(?:\$\s?\d[\d,]*|\b\d{3,4}\s?k\b)/i.test(value);
+  }
+  function priceAmount(value) {
+    var match = String(value || "").replace(/,/g, "").match(/\$?\s*(\d+(?:\.\d+)?)\s*(million|m|thousand|k)?\b/i);
+    if (!match) return 0;
+    var amount = Number(match[1]);
+    var unit = (match[2] || "").toLowerCase();
+    if (unit === "million" || unit === "m") amount *= 1000000;
+    else if (unit === "thousand" || unit === "k") amount *= 1000;
+    return amount >= 10000 ? amount : 0;
   }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
@@ -846,6 +862,17 @@
       state.profile.newJob = state.intent === "relocating" && /\b(new job|job offer|for (?:a|my) job|for work|work transfer|transferred|new position|starting (?:a|my) job)\b/i.test(answer);
       state.profile.prioritiesKnown = /\bcommute\b/i.test(answer);
     }
+    if (question && (question.key === "priorities" || question.key === "priorityMore")) {
+      state.profile.priorityAnswered = true;
+      state.profile.priorityPrice = mentionsPrice(answer);
+      state.profile.prioritySingle = question.key === "priorities" && !state.profile.priorityPrice && !/,|;|\band\b|\bplus\b|&/i.test(answer);
+    }
+    if (question && question.key === "priorityBudget") {
+      state.profile.priorityBudgetAmount = priceAmount(answer);
+      state.profile.budgetAsked = true;
+      state.profile.budgetKnown = state.profile.priorityBudgetAmount > 0;
+    }
+    if (question && (question.key === "priorityFinancing" || question.key === "financing")) state.profile.financingKnown = true;
     if (question && question.key === "areas" && /^(buying|relocating)$/.test(state.intent)) {
       state.profile.rentalClarificationNeeded = state.intent === "relocating" && /\b(rent|renting|lease)\b/i.test(answer);
       state.profile.areasPlural = /,|\band\b|\bor\b|\//i.test(answer);
@@ -855,6 +882,7 @@
       state.profile.budgetKnown = /\$\s?\d{3,7}|\b\d{3,4}\s?k\b|\b\d{6,7}\b/i.test(answer) && !/\b(?:not sure|don't know|unsure)\b/i.test(answer);
     }
     if (question && question.key === "budget" && /^(buying|relocating)$/.test(state.intent)) {
+      state.profile.budgetAsked = true;
       state.profile.budgetKnown = !/\b(?:not sure|don't know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);
     }
     if (question && question.key === "timing") state.profile.targetTiming = answer;

@@ -99,8 +99,11 @@
         case "needsPriorities": return profile.prioritiesKnown !== true;
         case "outNeedsPriorities": return profile.location === "out" && profile.prioritiesKnown !== true;
         case "areaReasonNeeded": return profile.areasNeedFollowup === true;
-        case "budgetNeeded": return profile.budgetKnown !== true;
-        case "budgetKnown": return profile.budgetKnown === true;
+        case "prioritySingle": return profile.prioritySingle === true;
+        case "priorityPrice": return profile.priorityPrice === true && profile.budgetAsked !== true;
+        case "priorityFinancingNeeded": return profile.priorityPrice === true && profile.budgetAsked === true && profile.financingKnown !== true;
+        case "budgetNeeded": return profile.budgetKnown !== true && profile.budgetAsked !== true;
+        case "budgetKnown": return profile.budgetKnown === true && profile.financingKnown !== true;
         case "combined": return combined === true;
         case "solo": return combined !== true;
         default: return true;
