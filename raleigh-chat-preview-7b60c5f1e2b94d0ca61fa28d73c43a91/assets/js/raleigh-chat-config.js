@@ -1,4 +1,4 @@
-// Raleigh chat conversation configuration. Edit in tools/chat-flow-editor/.
+// Raleigh chat conversation configuration. Update through the TEST branch chat workflow.
 window.RaleighChatConfig = {
   "title": "Welcome to Living in Raleigh",
   "avatar": "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/images/chat/raleigh-guide-avatar.png",
