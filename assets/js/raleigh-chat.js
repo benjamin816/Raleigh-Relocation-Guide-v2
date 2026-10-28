@@ -78,7 +78,7 @@
 
   var storageKey = "raleigh-guide-chat-v1";
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
-  var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, lastFocus: null, contact: null, booking: null, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
+  var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
   var safetyKey = "raleigh-guide-chat-safety-v1";
   function safetyRecord(reason) {
     if (window.__livrAnalyticsTracker && typeof window.__livrAnalyticsTracker.track === "function") {
@@ -105,7 +105,7 @@
     try {
       window.localStorage.setItem(storageKey, JSON.stringify({
         version: 2, updatedAt: Date.now(), started: state.started,
-        intent: state.intent, combined: state.combined, question: state.question,
+        intent: state.intent, combined: state.combined, question: state.question, questionDetour: state.questionDetour,
         answers: state.answers.map(redact).slice(0, 12),
         profile: state.profile, memories: state.memories, memoryProfiles: state.memoryProfiles,
         history: state.history.slice(-80)
@@ -140,6 +140,7 @@
       state.combined = state.intent === "selling" && saved.combined === true;
       state.profile = saved.version === 2 && saved.profile && typeof saved.profile === "object" ? saved.profile : {};
       state.question = Number.isInteger(saved.question) ? Math.max(-1, Math.min(saved.question, state.intent ? activeQuestions().length : -1)) : -1;
+      state.questionDetour = saved.questionDetour === true;
       state.answers = saved.version === 2 && Array.isArray(saved.answers) ? saved.answers.filter(function (item) { return typeof item === "string"; }).slice(0, 12).map(redact) : [];
       if (saved.version === 2 && saved.memoryProfiles && typeof saved.memoryProfiles === "object" && !Array.isArray(saved.memoryProfiles)) state.memoryProfiles = saved.memoryProfiles;
       if (saved.version === 2 && saved.memories && typeof saved.memories === "object" && !Array.isArray(saved.memories)) {
@@ -1037,6 +1038,40 @@
       input.maxLength = 30;
     }
   }
+  function isQuestionPreamble(value) {
+    return /^(?:i (?:have|had|got) (?:a |one |another |quick )?question|can i ask (?:you )?(?:a |one )?question|quick question|one question|question for you)\s*[.!?]*$/i.test(value);
+  }
+  function asksForBenjaminNumber(value) {
+    return /\b(?:benjamin|ben)\b.{0,70}\b(?:number|phone|call|text|reach)\b|\b(?:number|phone|call|text|reach)\b.{0,70}\b(?:benjamin|ben)\b/i.test(value);
+  }
+  function asksForTeamMember(value) {
+    return /\b(?:speak|talk|connect)\s+(?:with|to)\s+(?:a |the )?(?:team(?: member)?|person|agent|someone|benjamin|ben|ricardo)\b/i.test(value);
+  }
+  function resumeAfterQuestion() {
+    if (state.booking) {
+      var booking = state.booking;
+      if (booking.step === "choose" && booking.slots.length) {
+        message("Would " + booking.slots.map(function (slot) { return bookingLabel(slot.start); }).join(" or ") + " work for an introduction call, or would another time be better?", false);
+      } else if (booking.step === "format") message("Would you prefer a video call, or a phone call? You can also send your email to continue with video.", false);
+      else if (booking.step === "email") message(config.bookingEmailPrompt, false);
+      else if (booking.step === "phone") message(config.bookingPhonePrompt, false);
+      else if (booking.step === "name") message(config.bookingNamePrompt, false);
+      else if (booking.step === "notes") message("Anything you'd like us to know before the call? You can type skip.", false);
+      else message("I'm still checking the calendar. One moment, please.", false);
+    } else if (state.contact) {
+      var item = config.contactQuestions[state.contact.step];
+      if (item) message(item.prompt, false);
+      else message(config.contactConsentPrompt, false);
+    } else if (state.intent && state.question >= 0 && state.question < activeQuestions().length) askQuestion();
+    else message(config.fallback, false);
+  }
+  function answerSideQuestion(value, faq) {
+    if (asksForBenjaminNumber(value)) message("Benjamin's direct call and text line is " + config.benjaminDirectPhone + ". You can reach him there anytime.", false);
+    else if (asksForTeamMember(value)) message("Absolutely. You can call or text the Living in Raleigh team at 919-737-7896.", false);
+    else if (faq) message(faq.answer, false);
+    else message(config.unknownQuestion || "That's a great question for the team to cover on your call.", false);
+    resumeAfterQuestion();
+  }
   function handleText(text) {
     var value = text.trim();
     if (!value || state.submitting || state.ended) return;
@@ -1076,12 +1111,30 @@
       return;
     }
     var faq = engine.findFaq(value, config);
+    if (isQuestionPreamble(value)) {
+      state.questionDetour = true;
+      persist();
+      message("Absolutely, what's the question that you have?", false);
+      return;
+    }
+    var directContactQuestion = asksForBenjaminNumber(value) || asksForTeamMember(value);
+    var selectingTime = state.booking && state.booking.step === "choose" && /\b(?:first|second|one|two|1|2|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}(?::\d{2})?\s*(?:am|pm))\b/i.test(value);
+    if (state.questionDetour) {
+      state.questionDetour = false;
+      persist();
+      faq = faq || engine.findFaq(value + "?", config);
+      if (!selectingTime && (directContactQuestion || faq || engine.asksQuestion(value))) {
+        answerSideQuestion(value, faq);
+        return;
+      }
+    }
+    if (directContactQuestion || (state.booking && engine.asksQuestion(value) && !selectingTime)) {
+      answerSideQuestion(value, faq);
+      return;
+    }
     if (state.booking) {
-      if (faq && state.booking.step !== "email" && state.booking.step !== "phone" && state.booking.step !== "name") {
-        message(faq.answer, false);
-        if (state.booking.step === "format") message("Would you prefer video or phone for that time?", false);
-        else if (state.booking.step === "choose") showBookingPair();
-      } else handleBookingAnswer(value);
+      if (faq && !selectingTime) answerSideQuestion(value, faq);
+      else handleBookingAnswer(value);
       return;
     }
     if (state.contact) { handleContactAnswer(value); return; }

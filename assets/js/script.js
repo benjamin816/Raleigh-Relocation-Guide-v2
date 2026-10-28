@@ -4928,13 +4928,13 @@
     chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test10";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261028-test30";
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261028-test31";
     configScript.onload = function () {
       var engineScript = document.createElement("script");
-      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261028-test30";
+      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261028-test31";
       engineScript.onload = function () {
         var chatScript = document.createElement("script");
-        chatScript.src = "/assets/js/raleigh-chat.js?v=20261028-test30";
+        chatScript.src = "/assets/js/raleigh-chat.js?v=20261028-test31";
         document.head.appendChild(chatScript);
       };
       document.head.appendChild(engineScript);

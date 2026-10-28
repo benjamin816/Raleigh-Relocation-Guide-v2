@@ -30,6 +30,7 @@ window.RaleighChatConfig = {
   ],
   "contactConsentPrompt": "May our team contact you about this question? Reply yes to submit your details, or no to cancel.",
   "bookingChoicePrompt": "Which time works for you?",
+  "benjaminDirectPhone": "919-737-7896",
   "bookingEmailPrompt": "What's the best email address for the invitation and everything you need before our call?",
   "bookingPhonePrompt": "And what's the best phone number to reach you?",
   "bookingNamePrompt": "What first and last name should I put on the invitation?",
@@ -680,5 +681,5 @@ window.RaleighChatConfig = {
   },
   "safetyWarning": "Let's keep this focused on your real estate question. Are you looking to buy or sell in Raleigh?",
   "safetyEnd": "I'm going to end this conversation for now. Please reach out in the future if you're thinking about buying or selling in Raleigh.",
-  "unknownQuestion": "That's a great question for our team. We can go through your specific questions on an exploration call."
+  "unknownQuestion": "That's one of the many questions we can go over on an exploration call with the team."
 };
