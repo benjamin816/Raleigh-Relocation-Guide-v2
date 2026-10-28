@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import re
+import subprocess
 import tempfile
 from threading import Lock
 from urllib.parse import unquote, urlsplit
@@ -16,6 +17,40 @@ CALCULATOR_DIST = SITE_ROOT.parent / "One-Stop-Rental-App" / "dist"
 CHAT_CONFIG = SITE_ROOT / "assets" / "js" / "raleigh-chat-config.js"
 CONFIG_LOCK = Lock()
 LOCAL_PATH = re.compile(r"^/(?!/)[a-zA-Z0-9_/-]*$")
+
+
+def publish_chat_config():
+    """Share editor saves through Test-branch without including unrelated files."""
+    def git(*args, timeout=45):
+        return subprocess.run(["git", *args], cwd=SITE_ROOT, capture_output=True,
+                              text=True, timeout=timeout, check=False)
+
+    try:
+        branch = git("branch", "--show-current")
+        if branch.returncode or branch.stdout.strip() != "Test-branch":
+            return False, "Saved locally. The site is not on Test-branch, so the shared preview was not updated."
+        fetched = git("fetch", "origin", "Test-branch")
+        if fetched.returncode:
+            return False, "Saved locally. Could not check the remote Test branch; the shared preview was not updated."
+        head = git("rev-parse", "HEAD").stdout.strip()
+        remote = git("rev-parse", "origin/Test-branch").stdout.strip()
+        if not head or head != remote:
+            return False, "Saved locally. Test-branch changed elsewhere; ask Codex to sync before the shared preview updates."
+        changed = git("status", "--porcelain", "--", "assets/js/raleigh-chat-config.js")
+        if changed.returncode:
+            return False, "Saved locally. Could not check the flow file for sharing."
+        if not changed.stdout.strip():
+            return True, "Already shared with Ricardo's preview."
+        committed = git("commit", "--only", "-m", "Update Test chat flow from editor", "--",
+                        "assets/js/raleigh-chat-config.js")
+        if committed.returncode:
+            return False, "Saved locally. Could not commit the flow edit to Test-branch."
+        pushed = git("push", "origin", "Test-branch", timeout=60)
+        if pushed.returncode:
+            return False, "Saved locally. Could not push Test-branch; the shared preview was not updated."
+        return True, "Shared with Ricardo's preview. It may take a few minutes to refresh."
+    except (OSError, subprocess.TimeoutExpired):
+        return False, "Saved locally. Sharing timed out; the preview may still show the previous version."
 
 
 def read_current_chat_config():
@@ -55,7 +90,7 @@ def validate_chat_config(config):
     bridge = config.get("bookingBridgeUrl", "")
     if not isinstance(bridge, str) or (bridge and not re.fullmatch(r"https://script\.google\.com/macros/s/[A-Za-z0-9_-]+/exec", bridge)):
         raise ValueError("Booking bridge must be a deployed Google Apps Script URL.")
-    for field in ("bookingPrompt", "bookingEmailPrompt", "bookingPhonePrompt", "bookingNamePrompt"):
+    for field in ("bookingChoicePrompt", "bookingEmailPrompt", "bookingPhonePrompt", "bookingNamePrompt"):
         if not isinstance(config.get(field), str) or not 1 <= len(config[field]) <= 500:
             raise ValueError(f"Invalid {field}.")
     if not isinstance(config.get("investorQuestionUrl"), str) or not LOCAL_PATH.fullmatch(config["investorQuestionUrl"]):
@@ -80,11 +115,13 @@ def validate_chat_config(config):
         ):
             raise ValueError(f"Invalid {topic_id} intent keywords.")
         questions = flow.get("questions")
-        if not isinstance(questions, list) or len(questions) > 12 or not all(
+        if not isinstance(questions, list) or len(questions) > 20 or not all(
             isinstance(question, dict) and isinstance(question.get("text"), str)
             and 1 <= len(question["text"]) <= 500
             and isinstance(question.get("key", ""), str) and len(question.get("key", "")) <= 40
-            and question.get("when", "") in ("", "local", "out", "renting", "owning", "combined", "solo")
+            and question.get("when", "") in ("", "local", "out", "renting", "owning", "combined", "solo",
+                                               "family", "outNeedsPriorities", "areaReasonNeeded", "budgetNeeded",
+                                               "budgetKnown")
             and isinstance(question.get("alternatives", []), list) and len(question.get("alternatives", [])) <= 3
             and all(isinstance(text, str) and 1 <= len(text) <= 500 for text in question.get("alternatives", []))
             for question in questions
@@ -102,6 +139,8 @@ def validate_chat_config(config):
         if topic_id == "selling":
             if not isinstance(flow.get("combinedIntro"), str) or not 1 <= len(flow["combinedIntro"]) <= 1000:
                 raise ValueError("Invalid selling and buying opening.")
+            if not isinstance(flow.get("finishNextSummer"), str) or not 1 <= len(flow["finishNextSummer"]) <= 2000:
+                raise ValueError("Invalid next-summer selling close.")
     faq = config.get("faq")
     if not isinstance(faq, list) or len(faq) > 40 or not all(
         isinstance(item, dict) and isinstance(item.get("answer"), str) and 1 <= len(item["answer"]) <= 1000
@@ -159,7 +198,7 @@ class TestSiteHandler(SimpleHTTPRequestHandler):
                 config = read_current_chat_config()
                 editable = ("title", "welcome", "fallback", "conversationMemoryDays", "contactPrompt",
                             "contactConsentPrompt", "contactQuestions", "bookingLinks", "investorContactUrl",
-                            "investorQuestionUrl", "bookingPrompt", "bookingEmailPrompt", "bookingPhonePrompt",
+                            "investorQuestionUrl", "bookingChoicePrompt", "bookingEmailPrompt", "bookingPhonePrompt",
                             "bookingNamePrompt", "flows", "faq")
                 for field in editable:
                     if field in edits:
@@ -177,7 +216,9 @@ class TestSiteHandler(SimpleHTTPRequestHandler):
         except (ValueError, json.JSONDecodeError) as error:
             self.send_json(400, {"ok": False, "error": str(error)})
             return
-        self.send_json(200, {"ok": True, "saved": "assets/js/raleigh-chat-config.js"})
+        shared, note = publish_chat_config()
+        self.send_json(200, {"ok": True, "saved": "assets/js/raleigh-chat-config.js",
+                             "shared": shared, "note": note})
 
     def send_json(self, status, payload):
         body = json.dumps(payload).encode("utf-8")
