@@ -679,7 +679,10 @@
     if (state.intent === "investing") return location.type === "local" ? "Great!" : "Awesome.";
     if (location.type === "local") return "Great.";
     var place = (location.place || "").toLowerCase();
-    return (config.originAcknowledgements || {})[place] || (place ? "Awesome. Thanks for sharing where you're moving from." : "Awesome.");
+    return (config.originAcknowledgements || {})[place] || "Great.";
+  }
+  function originLabel() {
+    return (state.profile.origin || "").replace(/\b[a-z]/g, function (letter) { return letter.toUpperCase(); });
   }
   function askQuestion(prefix) {
     var flow = config.flows[state.intent];
@@ -694,6 +697,11 @@
     var question = questions[state.question];
     var variants = [question.text].concat(Array.isArray(question.alternatives) ? question.alternatives.filter(Boolean) : []);
     var wording = variants[state.answers.length % variants.length] || question.text;
+    if (state.intent === "relocating" && state.profile.location === "out") {
+      if (question.key === "whyRaleigh") wording = "What has you looking at moving to Raleigh" + (state.profile.origin ? " from " + originLabel() : "") + "?";
+      if (question.key === "originHousing") wording = "Do you have a home" + (state.profile.origin ? " in " + originLabel() : " there") + " that you'd need to sell, or are you currently renting?";
+      if (question.key === "areas") wording = "What areas around Raleigh are you interested in buying a home in?";
+    }
     if (question.key === "areasReason" && state.profile.areasPlural) wording = "What was it about those areas that stood out to you?";
     message((prefix ? prefix + " " : "") + wording, false);
   }
@@ -761,6 +769,27 @@
       state.profile.moveGoal = "buying";
       acknowledgement = "Got it.";
     }
+    if (question && question.key === "originHousing") {
+      state.profile.originSale = /\b(sell|selling|list|listing)\b/i.test(answer);
+      state.profile.originRenting = /\b(rent|renting|lease)\b/i.test(answer);
+      if (!state.profile.originSale && !state.profile.originRenting) { scheduleClarification("Do you currently own a home you'd need to sell, or are you renting?"); return; }
+      acknowledgement = "Got it.";
+    }
+    if (question && question.key === "rentalPlan") {
+      if (/\b(only|just|solely|not (?:looking|planning|ready) to buy|don't (?:want|plan) to buy)\b/i.test(answer) && /\b(rent|renting|lease)\b/i.test(answer)) {
+        state.intent = null;
+        state.question = -1;
+        message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
+        link("Explore Raleigh guides", "/learning-center/");
+        return;
+      }
+      if (!/\b(buy|buying|purchase|purchasing|permanent home|eventually|later|while|first|temporary|short.term|few months)\b/i.test(answer)) {
+        scheduleClarification("Are you planning to buy a home after renting briefly, or are you only looking to rent?");
+        return;
+      }
+      state.profile.rentalClarificationNeeded = false;
+      acknowledgement = "That makes sense.";
+    }
     if (question && question.key === "willSell" && /^(?:yes|yeah|yep|probably|likely|we (?:will|need to|plan to)|i (?:will|need to|plan to))/i.test(answer.trim())) {
       state.intent = "selling";
       state.combined = true;
@@ -776,6 +805,7 @@
       state.profile.prioritiesKnown = /\bcommute\b/i.test(answer);
     }
     if (question && question.key === "areas" && /^(buying|relocating)$/.test(state.intent)) {
+      state.profile.rentalClarificationNeeded = state.intent === "relocating" && /\b(rent|renting|lease)\b/i.test(answer);
       state.profile.areasPlural = /,|\band\b|\bor\b|\//i.test(answer);
       state.profile.areasNeedFollowup = !/\b(?:because|since|near|close to|closer to|for the|for its|for their|due to|like the|love the|drawn to|appeals? to|commute|schools?|walkab|yard|family)\b/i.test(answer);
     }
@@ -786,7 +816,7 @@
       state.profile.budgetKnown = !/\b(?:not sure|don't know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);
     }
     if (question && question.key === "timing") state.profile.targetTiming = answer;
-    if (question && question.key !== "location" && question.key !== "tenure") {
+    if (question && question.key !== "location" && question.key !== "tenure" && question.key !== "originHousing" && question.key !== "rentalPlan") {
       acknowledgement = answerAcknowledgement(question, answer);
     }
     state.answers.push(redact(answer));

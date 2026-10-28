@@ -62,6 +62,7 @@
       switch (question.when || "always") {
         case "local": return profile.location === "local";
         case "out": return profile.location === "out";
+        case "rentalClarificationNeeded": return profile.rentalClarificationNeeded === true;
         case "renting": return profile.location === "local" && profile.tenure === "renting";
         case "owning": return profile.location === "local" && profile.tenure === "owning";
         case "family": return profile.familyNearby === true;

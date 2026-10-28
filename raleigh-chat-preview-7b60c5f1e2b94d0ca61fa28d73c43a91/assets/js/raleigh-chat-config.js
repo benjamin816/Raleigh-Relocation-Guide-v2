@@ -251,6 +251,7 @@ window.RaleighChatConfig = {
         },
         {
           "key": "moveGoal",
+          "when": "local",
           "text": "Are you looking to buy a home here, sell a home here, or both?"
         },
         {
@@ -262,6 +263,11 @@ window.RaleighChatConfig = {
           "key": "familyNearby",
           "when": "family",
           "text": "Do you already have family or friends in the Raleigh area?"
+        },
+        {
+          "key": "originHousing",
+          "when": "out",
+          "text": "Do you have a home there that you'd need to sell, or are you currently renting?"
         },
         {
           "key": "currentArea",
@@ -296,6 +302,11 @@ window.RaleighChatConfig = {
         {
           "key": "areas",
           "text": "Do you have certain areas around Raleigh you're most interested in?"
+        },
+        {
+          "key": "rentalPlan",
+          "when": "rentalClarificationNeeded",
+          "text": "Are you thinking of renting for a few months while you look for a permanent home, or are you only interested in renting?"
         },
         {
           "key": "areasReason",
@@ -539,8 +550,8 @@ window.RaleighChatConfig = {
     }
   ],
   "originAcknowledgements": {
-    "ohio": "Awesome. We've worked with multiple families relocating from Ohio.",
-    "new york": "That's awesome. We get a lot of people relocating from New York."
+    "ohio": "Great. We've worked with multiple families relocating from Ohio.",
+    "new york": "Great. We get a lot of people relocating from New York."
   },
   "safetyWarning": "Let's keep this focused on your real estate question. Are you looking to buy or sell in Raleigh?",
   "safetyEnd": "I'm going to end this conversation for now. Please reach out in the future if you're thinking about buying or selling in Raleigh.",
