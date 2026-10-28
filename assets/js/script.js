@@ -1533,7 +1533,9 @@
             candidates.push("/assets/data/featured-videos/" + encodeURIComponent(feedKey) + ".json");
           }
 
-          candidates.push("/assets/data/featured-videos.json");
+          if (featuredVideosSection.getAttribute("data-video-feed-strict") !== "true") {
+            candidates.push("/assets/data/featured-videos.json");
+          }
           return candidates.filter(function (url, index, all) {
             return all.indexOf(url) === index;
           });

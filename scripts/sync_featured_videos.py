@@ -52,6 +52,10 @@ MANUAL_SUBURB_PLAYLIST_IDS: dict[str, str] = {
 # These feeds are not tied to explore-the-area slugs, but power sections on
 # the Learning Center page and must stay in sync with specific playlists.
 MANUAL_ADDITIONAL_FEEDS: dict[str, dict[str, str]] = {
+    "raleigh-map-tours": {
+        "playlist_id": "PLybPdL80h3XvCV-Hi72FLN48lgRlYju3t",
+        "playlist_title": "Raleigh Map Tours",
+    },
     "raleigh-affordable-hotlist": {
         "playlist_id": "PLybPdL80h3XuN1nLv3uQWKVX_3Dgb5UEc",
         "playlist_title": "Affordable New Construction Hotlist",
