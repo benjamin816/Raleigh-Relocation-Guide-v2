@@ -81,6 +81,7 @@
   root.querySelector(".rchat-head-title").textContent = config.title;
 
   var storageKey = "raleigh-guide-chat-v1";
+  var resumeQuestionOnOpen = false;
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
   var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, hasUserMessage: false, completed: false, unreadCount: 0, badgeReadyAt: 0, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
   var safetyKey = "raleigh-guide-chat-safety-v1";
@@ -232,6 +233,8 @@
       });
       if (!state.history.length) state.started = false;
       if (!state.hasUserMessage && state.history.some(function (item) { return item.byUser; })) state.hasUserMessage = true;
+      resumeQuestionOnOpen = !!(state.history.length && state.history[state.history.length - 1].byUser &&
+        state.intent && state.question >= 0 && state.question < activeQuestions().length);
     } catch (_) { /* An invalid or unavailable local record is ignored. */ }
   }
   var audioContext;
@@ -791,7 +794,7 @@
     state.answers = [];
     state.profile = {};
     if (sourceText) captureVisitorContext(sourceText);
-    var knownLocation = /^(buying|relocating|investing)$/.test(id) && sourceText && engine.detectLocation(sourceText);
+    var knownLocation = /^(buying|relocating|investing)$/.test(id) && sourceText && engine.detectLocation(sourceText, config);
     if (knownLocation) knownLocation = engine.resolveOrigin(knownLocation, config);
     if (knownLocation) {
       state.profile.location = knownLocation.type;
@@ -803,6 +806,7 @@
       state.memories[id] = state.answers.slice();
       state.memoryProfiles[id] = Object.assign({}, state.profile);
     }
+    persist();
     if (id === "relocating" && !knownLocation) {
       var opening = (flow.intro || "Awesome").replace(/[.,!?\s]+$/, "");
       var originQuestion = activeQuestions()[0].text;
@@ -954,9 +958,9 @@
       return;
     }
     if (question && question.key === "location") {
-      var location = engine.detectLocation(answer);
-      if (!location && /^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/i.test(answer.trim())) location = { type: "local", place: "" };
-      if (!location && /^[A-Za-z][A-Za-z ,.'-]{1,45}$/.test(answer.trim()) && !/^(?:not sure|i don't know|maybe|yes|no)$/i.test(answer.trim())) location = { type: "out", place: answer.trim().toLowerCase() };
+      var location = engine.detectLocation(answer, config);
+      var bareAnswer = answer.trim().replace(/[.!?]+$/, "").trim();
+      if (!location && /^[A-Za-z][A-Za-z ,.'-]{1,45}$/.test(bareAnswer) && !/^(?:not sure|i don't know|maybe|yes|no)$/i.test(bareAnswer)) location = { type: "out", place: bareAnswer.toLowerCase() };
       if (!location) { scheduleClarification("Are you already local to Raleigh, or would you be moving from out of state?"); return; }
       location = engine.resolveOrigin(location, config);
       state.profile.location = location.type;
@@ -1077,6 +1081,7 @@
       return flowQuestions.indexOf(candidate) > questionPosition;
     });
     if (state.question < 0) state.question = nextQuestions.length;
+    persist();
     askQuestion(acknowledgement);
   }
   function showContact() {
@@ -1474,6 +1479,7 @@
     attachmentInput.value = "";
     showAttachment();
     state.started = true;
+    resumeQuestionOnOpen = false;
     state.sentMessageSinceOpen = false;
     input.value = "";
     input.disabled = false;
@@ -1511,6 +1517,9 @@
     if (!state.started) {
       state.started = true;
       message(config.welcome, false);
+    } else if (resumeQuestionOnOpen) {
+      resumeQuestionOnOpen = false;
+      askQuestion();
     }
     scrollToLatest();
     input.focus();

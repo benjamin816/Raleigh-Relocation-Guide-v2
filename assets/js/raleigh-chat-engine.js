@@ -42,8 +42,16 @@
   function wantsResources(value) { return /\b(resources?|guides?|articles?|blogs?|learn more|website|web page|where can i (?:read|learn))\b/i.test(value); }
   function wantsBooking(value) { return /\b(book|booking|schedule|appointment|call|talk to (you|the team)|meet with)\b/i.test(value); }
   function asksQuestion(value) { return /\?|^\s*(how|what|where|when|why|can|could|do|does|is|are|should|tell me|explain)\b/i.test(value); }
-  function detectLocation(value) {
+  function detectLocation(value, config) {
     var text = normalize(value);
+    var barePlace = text.replace(/^[\s.,!?]+|[\s.,!?]+$/g, "");
+    if (/^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/.test(barePlace)) return { type: "local", place: "" };
+    if (config && Object.keys(config.originStates || {}).some(function (code) {
+      return barePlace === code.toLowerCase() || barePlace === normalize(config.originStates[code]);
+    })) return { type: "out", place: barePlace };
+    if (config && Object.keys(config.originCities || {}).some(function (code) {
+      return (config.originCities[code] || []).some(function (city) { return barePlace === normalize(city); });
+    })) return { type: "out", place: barePlace };
     if (/\b(already (?:live|living|here|local)|(?:i (?:live|am living|am)|i'm) (?:here|in (?:(?:north|south|east|west) )?(?:raleigh|cary|durham|the triangle))|i'm local|i am local|from (?:raleigh|cary|durham))\b/.test(text)) return { type: "local", place: "" };
     var from = text.match(/\b(?:from|live in|living in|moving from|relocating from|i am in|i'm in|we are in)\s+([a-z][a-z .-]{1,35}?)(?=\s*(?:,|\.|!|\?|$|\s+(?:and|because|but|to|for)\b))/);
     if (from && !/^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/.test(from[1].trim())) return { type: "out", place: from[1].trim().replace(/\s+/g, " ") };

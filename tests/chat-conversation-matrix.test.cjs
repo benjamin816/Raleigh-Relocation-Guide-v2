@@ -41,6 +41,11 @@ for (const [expected, phrases] of Object.entries(intents)) {
   for (const phrase of phrases) check(engine.detectIntent(phrase, config)?.id, expected, phrase);
 }
 for (const phrase of ['I live in Ohio', 'I am moving from Ohio', 'Relocating from New York', 'We live in Florida', 'I am out of state']) check(engine.detectLocation(phrase)?.type, 'out', phrase);
+for (const phrase of ['Idaho', 'Idaho.', 'ID', 'ID!', 'Delaware', 'DE', 'Boise']) {
+  const location = engine.detectLocation(phrase, config);
+  check(location?.type, 'out', phrase + ' is an out-of-state answer');
+  check(engine.resolveOrigin(location, config)?.place, /^(idaho|id|boise)/i.test(phrase) ? 'idaho' : 'delaware', phrase + ' resolves to a state');
+}
 for (const [origin, expected] of [['CA', 'california'], ['TX', 'texas'], ['Dallas', 'texas'], ['San Diego', 'california'], ['Delaware', 'delaware']]) check(engine.resolveOrigin({ type: 'out', place: origin }, config).place, expected, origin);
 for (const [code, name] of Object.entries(config.originStates)) check(engine.resolveOrigin({ type: 'out', place: code }, config).place, name.toLowerCase(), code);
 check(engine.resolveOrigin({ type: 'out', place: 'Portland' }, config).stateCode, '', 'Ambiguous city does not guess a state');
