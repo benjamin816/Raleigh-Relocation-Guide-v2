@@ -184,6 +184,11 @@ window.RaleighChatConfig = {
           "text": "Do you think you'll be buying with cash or using financing?"
         },
         {
+          "key": "preapproval",
+          "when": "needsPreapproval",
+          "text": "Are you already pre-approved with a lender, or would you like us to connect you with a trusted local lender?"
+        },
+        {
           "key": "timing",
           "text": "Lastly, when are you hoping to make the move, in an ideal world?"
         },
@@ -407,6 +412,11 @@ window.RaleighChatConfig = {
           "key": "financing",
           "when": "budgetKnown",
           "text": "Do you think you'll be buying with cash or using financing?"
+        },
+        {
+          "key": "preapproval",
+          "when": "needsPreapproval",
+          "text": "Are you already pre-approved with a lender, or would you like us to connect you with a trusted local lender?"
         },
         {
           "key": "timing",

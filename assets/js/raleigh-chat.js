@@ -20,7 +20,7 @@
       '<div class="rchat-file-status" hidden><span class="rchat-file-name"></span><button class="rchat-file-remove" type="button" aria-label="Remove attached file">×</button></div>' +
       '<form class="rchat-compose"><textarea class="rchat-input" rows="1" maxlength="2000" aria-label="Type a message" placeholder="Type a Message..." autocomplete="off"></textarea>' +
         '<button class="rchat-tool rchat-mic" type="button" aria-label="Speak a message" title="Speak a message"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4m-4 0h8"/></svg></button>' +
-        '<button class="rchat-tool rchat-attach" type="button" aria-label="Attach a photo or PDF" title="Attach a photo or PDF"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l9.2-9.2a3.5 3.5 0 0 1 5 5l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg></button>' +
+        '<button class="rchat-tool rchat-attach" type="button" aria-label="Attach a photo or PDF" title="Attach a photo or PDF" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m20 11.5-8.6 8.6a5 5 0 0 1-7.1-7.1l9.2-9.2a3.5 3.5 0 0 1 5 5l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg></button>' +
         '<input class="rchat-file-input" type="file" accept="image/jpeg,image/png,image/webp,application/pdf" hidden />' +
         '<button class="rchat-send" type="submit" aria-label="Send message" disabled>➤</button></form>' +
     '</section>' +
@@ -50,6 +50,18 @@
   var attachmentName = root.querySelector(".rchat-file-name");
   var attachmentRemove = root.querySelector(".rchat-file-remove");
   var attachment = null;
+  function updateAttachmentAvailability() {
+    attachmentButton.hidden = !(config.chatAttachmentsEnabled && state.profile.preApproved && state.profile.usingFinancing &&
+      (state.intent === "buying" || state.intent === "relocating" || state.intent === "selling" && state.combined) &&
+      !state.completed && !state.ended);
+  }
+  function offerPreapprovalUpload() {
+    updateAttachmentAvailability();
+    if (attachmentButton.hidden || state.profile.preapprovalUploadOffered) return;
+    state.profile.preapprovalUploadOffered = true;
+    persist();
+    message("If you'd like the team to review your pre-approval before the call, the paperclip is available now. It's completely optional, and I'll send the file with your details after the call is booked.", false);
+  }
   var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   var speech = null;
   function sizeInput(preserveConversation) {
@@ -148,6 +160,7 @@
   }
   function finishConversation() {
     state.completed = true;
+    updateAttachmentAvailability();
     persist();
     refreshAttention();
   }
@@ -202,6 +215,30 @@
       reader.readAsDataURL(file);
     });
   }
+  function submitBookingAttachment(file, booking, result) {
+    if (!file || !/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(config.leadEndpoint || "")) return;
+    var parts = booking.details.name.trim().split(/\s+/);
+    readAttachment(file).then(function (encoded) {
+      return window.fetch(config.leadEndpoint, {
+        method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=UTF-8" },
+        body: JSON.stringify({
+          lead_type: "requested_contact", source_key: "website_rule_chat",
+          source_page: window.location.pathname,
+          requested_contact_source: "Chat pre-approval for booked exploration call",
+          requested_contact_intent: state.intent || "buying",
+          requested_contact_notes: "Optional pre-approval for " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". Booking request: " + booking.requestId,
+          first_name: parts.shift() || "", last_name: parts.join(" "),
+          email: booking.details.email, phone: booking.details.phone,
+          consent_to_contact: true, submission_id: booking.requestId + "-preapproval",
+          chat_attachment: encoded
+        })
+      });
+    }).then(function () {
+      message("Your optional pre-approval was submitted for processing with your booking details.", false, { remember: false });
+    }).catch(function () {
+      message("Your call is booked, but I couldn't send the pre-approval file. Please email it to livinginraleighteam@gmail.com if you'd like the team to review it before your call.", false, { remember: false });
+    });
+  }
   function restore() {
     try {
       var saved = JSON.parse(window.localStorage.getItem(storageKey) || "null");
@@ -234,6 +271,7 @@
       });
       if (!state.history.length) state.started = false;
       if (!state.hasUserMessage && state.history.some(function (item) { return item.byUser; })) state.hasUserMessage = true;
+      updateAttachmentAvailability();
       resumeQuestionOnOpen = !!(state.history.length && state.history[state.history.length - 1].byUser &&
         (state.profile.awaitingVisitReason || (state.intent && state.question >= 0 && state.question < activeQuestions().length)));
     } catch (_) { /* An invalid or unavailable local record is ignored. */ }
@@ -736,11 +774,16 @@
       bookingCall("book", [{ requestId: booking.requestId, start: booking.start, name: booking.details.name, email: booking.details.email, phone: booking.details.phone, notes: booking.details.notes, callType: booking.details.callType, preferredHost: config.chatRoundRobinBookingEnabled ? booking.preference.host : "" }]).then(function (result) {
         if (state.booking !== booking) return;
         if (!result || !result.booked) throw new Error("Booking was not confirmed.");
+        var bookingFile = attachment;
+        attachment = null;
+        attachmentInput.value = "";
+        showAttachment();
         state.booking = null;
         try { window.localStorage.setItem("livrBookingReportedAt", new Date().toISOString()); } catch (_) {}
         finishConversation();
         window.dispatchEvent(new CustomEvent("raleigh-booking-confirmed", { detail: { source: "website_chat" } }));
         message("Great, " + booking.details.name.split(/\s+/)[0] + ", I've got you confirmed for " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". You'll get a calendar invitation." + (booking.details.callType === "video" ? (result.videoUrl ? " The Google Meet link is in the invitation." : " The team will add the video link before your call.") : "") + (result.preCallEmailSent ? " Look out for an email titled What To Know Before Our Call, with a quick form and resources to help you prepare." : "") + " If you need anything in the meantime, message me here or call or text the team at 919-737-7896.", false);
+        if (bookingFile) submitBookingAttachment(bookingFile, booking, result);
       }).catch(function (error) {
         if (state.booking !== booking) return;
         if (error && /time was taken|choose another|no longer available/i.test(error.message || "")) {
@@ -794,7 +837,8 @@
     state.question = 0;
     state.answers = [];
     state.profile = {};
-    if (sourceText) captureVisitorContext(sourceText);
+    if (sourceText) { captureVisitorContext(sourceText); markPreapproval(sourceText); }
+    updateAttachmentAvailability();
     var knownLocation = /^(buying|relocating|investing)$/.test(id) && sourceText && engine.detectLocation(sourceText, config);
     if (knownLocation) knownLocation = engine.resolveOrigin(knownLocation, config);
     if (knownLocation) {
@@ -815,6 +859,7 @@
       return;
     }
     if (!knownLocation) message(state.combined && flow.combinedIntro ? flow.combinedIntro : flow.intro, false);
+    offerPreapprovalUpload();
     askQuestion(knownLocation ? locationAcknowledgement(knownLocation) : "");
   }
   function locationAcknowledgement(location) {
@@ -857,6 +902,7 @@
         (examples.length === 2 ? examples.join(" or ") : examples.slice(0, -1).join(", ") + ", or " + examples[examples.length - 1]) + "?";
     }
     if (question.key === "home" && state.profile.homeDetailsGiven) wording = "You mentioned some things you're looking for in a home earlier. Is there anything else that's important to you about the home itself?";
+    if ((question.key === "budget" || question.key === "priorityBudget") && state.profile.preApproved) wording = "I know you said you're pre-approved. What price would feel comfortable to you, regardless of the pre-approval amount?";
     if ((question.key === "priorityFinancing" || question.key === "financing") && state.profile.originSale) wording = "Do you think you'll buy with cash from the sale of your current home, or use financing?";
     else if (question.key === "priorityFinancing" || question.key === "financing") wording = "Do you plan on using financing, or will you be buying in cash?";
     if (question.key === "areasReason" && state.profile.familyArea && state.profile.areasMentionFamilyArea) wording += " I know you mentioned having family in " + state.profile.familyArea + ".";
@@ -909,6 +955,7 @@
       case "nextHome": return "That gives me a better picture.";
       case "budget": return state.profile.budgetKnown ? (priceAmount(answer) >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "👍") : "That's totally fine. We can connect you with a lender to get a clearer picture of your buying power.";
       case "financing": return "Great!";
+      case "preapproval": return state.profile.preApproved ? "Great, thanks for letting me know." : "Got it. We can connect you with a trusted local lender.";
       default: return "Got it.";
     }
   }
@@ -946,11 +993,30 @@
     if (/\b(?:no kids|no children|don't have (?:any )?(?:kids|children)|just me|single person|single guy|single woman)\b/i.test(text)) state.profile.noChildren = true;
     else if (/\b(?:have kids|have children|our kids|our children)\b/i.test(text)) state.profile.noChildren = false;
   }
+  function markPreapproval(value) {
+    var text = String(value || "");
+    if (/\b(?:pre[- ]?approv(?:ed|al)|approval letter|approved (?:by|with) (?:a |my )?lender)\b/i.test(text) &&
+        !/\b(?:not|never|haven't|have not|need to|looking to|want to|trying to)\s+(?:been\s+|get\s+|be\s+)?pre[- ]?approv/i.test(text)) {
+      state.profile.preApproved = true;
+      state.profile.usingFinancing = true;
+      state.profile.financingKnown = true;
+    }
+  }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
     var flowQuestions = config.flows[state.intent].questions;
     var questionPosition = flowQuestions.indexOf(question);
+    markPreapproval(answer);
     var acknowledgement = answerAcknowledgement(question, answer);
+    if (question && (question.key === "budget" || question.key === "priorityBudget") &&
+        /\bpre[- ]?approv(?:ed|al)\b/i.test(answer) && !state.profile.awaitingComfortPrice) {
+      state.profile.awaitingComfortPrice = true;
+      persist();
+      offerPreapprovalUpload();
+      message("Thanks for sharing that. What price would feel comfortable to you, regardless of the pre-approval amount?", false);
+      return;
+    }
+    if (question && (question.key === "budget" || question.key === "priorityBudget")) state.profile.awaitingComfortPrice = false;
     if (question && /^(buying|relocating)$/.test(state.intent) &&
         !/^(location|tenure|originHousing|areas|rentalPlan)$/.test(question.key) && asksToRent(answer)) {
       state.profile.pendingRentalPlan = true;
@@ -1054,7 +1120,15 @@
       state.profile.budgetAsked = true;
       state.profile.budgetKnown = state.profile.priorityBudgetAmount > 0;
     }
-    if (question && (question.key === "priorityFinancing" || question.key === "financing")) state.profile.financingKnown = true;
+    if (question && (question.key === "priorityFinancing" || question.key === "financing")) {
+      state.profile.financingKnown = true;
+      state.profile.usingFinancing = (state.profile.preApproved || /\b(?:financ\w*|mortgage|loan|lender)\b/i.test(answer)) && !/\b(?:cash only|all cash|paying cash)\b/i.test(answer);
+    }
+    if (question && question.key === "preapproval") {
+      state.profile.preapprovalAsked = true;
+      state.profile.preApproved = /\b(?:yes|already|pre[- ]?approv(?:ed|al))\b/i.test(answer) && !/\b(?:not|no|haven't|have not)\b/i.test(answer);
+    }
+    offerPreapprovalUpload();
     if (question && question.key === "areas" && /^(buying|relocating)$/.test(state.intent)) {
       state.profile.rentalClarificationNeeded = state.intent === "relocating" && /\b(rent|renting|lease)\b/i.test(answer);
       state.profile.areasPlural = /,|\band\b|\bor\b|\//i.test(answer);
@@ -1304,6 +1378,7 @@
     var contactCommand = /^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value);
     message(value, true, { remember: !state.contact && !contactCommand });
     sound();
+    offerPreapprovalUpload();
     if (state.profile.browsingEnded) {
       state.profile.browsingEnded = false;
       state.completed = false;
@@ -1634,29 +1709,26 @@
     } catch (_) { speech = null; microphoneButton.classList.remove("rchat-mic--active"); }
   });
   attachmentButton.addEventListener("click", function () {
-    if (!config.chatAttachmentsEnabled) {
-      message("Photo and PDF attachments are being connected. Please type your question for now.", false);
-      return;
-    }
+    if (attachmentButton.hidden) return;
     attachmentInput.click();
   });
   attachmentInput.addEventListener("change", function () {
     var file = attachmentInput.files && attachmentInput.files[0];
     if (!file) return;
+    if (attachmentButton.hidden) { attachmentInput.value = ""; return; }
     if (!/^(image\/(jpeg|png|webp)|application\/pdf)$/.test(file.type) || file.size > 4 * 1024 * 1024) {
       attachmentInput.value = "";
       message("Please choose a JPG, PNG, WebP, or PDF under 4 MB.", false);
       return;
     }
-    if (state.booking || state.intent === "investing" || /^\/invest(?:\/|$)/i.test(window.location.pathname)) {
+    if (state.intent === "investing" || /^\/invest(?:\/|$)/i.test(window.location.pathname)) {
       attachmentInput.value = "";
       message("I can take a file with a Living in Raleigh contact request. For an investing question, please use the calculator message form.", false);
       return;
     }
     attachment = file;
     showAttachment();
-    message("I've attached " + file.name + ". I'll send it with your contact request after I get your name, email, phone, and question.", false, { remember: false });
-    if (!state.contact) showContact();
+    message("I've added " + file.name + ". I'll submit it for the team's review after your call is booked. If you choose to send a separate contact request instead, the file can go with that request.", false, { remember: false });
   });
   attachmentRemove.addEventListener("click", function () { attachment = null; attachmentInput.value = ""; showAttachment(); });
   newMessageButton.addEventListener("click", function () { log.scrollTop = log.scrollHeight; newMessageButton.hidden = true; });
