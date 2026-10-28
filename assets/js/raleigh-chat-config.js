@@ -243,11 +243,15 @@ window.RaleighChatConfig = {
         "schools",
         "commute"
       ],
-      "intro": "That's exciting.",
+      "intro": "Awesome",
       "questions": [
         {
           "key": "location",
           "text": "Where are you moving from?"
+        },
+        {
+          "key": "moveGoal",
+          "text": "Are you looking to buy a home here, sell a home here, or both?"
         },
         {
           "key": "whyRaleigh",

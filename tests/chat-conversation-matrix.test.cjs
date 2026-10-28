@@ -41,6 +41,7 @@ for (const [expected, phrases] of Object.entries(intents)) {
   for (const phrase of phrases) check(engine.detectIntent(phrase, config)?.id, expected, phrase);
 }
 for (const phrase of ['I live in Ohio', 'I am moving from Ohio', 'Relocating from New York', 'We live in Florida', 'I am out of state']) check(engine.detectLocation(phrase)?.type, 'out', phrase);
+for (const phrase of ["I'm moving to Raleigh", "I'm relocating"]) check(engine.detectLocation(phrase), null, phrase);
 for (const phrase of ['I already live here', 'I am local', 'I live in Raleigh', 'I live in Cary', 'I live in Durham', 'I am in Raleigh', "I'm in Raleigh", 'I live in North Raleigh']) check(engine.detectLocation(phrase)?.type, 'local', phrase);
 for (const phrase of ['I rent', 'We are renting', 'Our lease ends soon', 'I am a tenant']) check(engine.detectTenure(phrase), 'renting', phrase);
 for (const phrase of ['I own', 'We own our home', 'I am a homeowner', 'My house is paid off']) check(engine.detectTenure(phrase), 'owning', phrase);
@@ -57,11 +58,11 @@ const branches = [
   ['buying', { location: 'out' }, false, 'location,whyRaleigh,priorities,areas,home,budget,timing'],
   ['buying', { location: 'local', tenure: 'renting' }, false, 'location,currentArea,tenure,firstTime,leaseEnd,areas,home,budget,timing'],
   ['buying', { location: 'local', tenure: 'owning' }, false, 'location,currentArea,tenure,willSell,areas,home,budget,timing'],
-  ['relocating', { location: 'out' }, false, 'location,whyRaleigh,priorities,areas,home,budget,timing'],
-  ['relocating', { location: 'local', tenure: 'renting' }, false, 'location,currentArea,tenure,firstTime,leaseEnd,areas,home,budget,timing'],
-  ['relocating', { location: 'local', tenure: 'owning' }, false, 'location,currentArea,tenure,willSell,areas,home,budget,timing'],
+  ['relocating', { location: 'out' }, false, 'location,moveGoal,whyRaleigh,priorities,areas,home,budget,timing'],
+  ['relocating', { location: 'local', tenure: 'renting' }, false, 'location,moveGoal,currentArea,tenure,firstTime,leaseEnd,areas,home,budget,timing'],
+  ['relocating', { location: 'local', tenure: 'owning' }, false, 'location,moveGoal,currentArea,tenure,willSell,areas,home,budget,timing'],
   ['buying', { location: 'out', areasNeedFollowup: true, budgetKnown: true }, false, 'location,whyRaleigh,priorities,areas,areasReason,home,financing,timing'],
-  ['relocating', { location: 'out', areasNeedFollowup: true, budgetKnown: true }, false, 'location,whyRaleigh,priorities,areas,areasReason,home,financing,timing'],
+  ['relocating', { location: 'out', areasNeedFollowup: true, budgetKnown: true }, false, 'location,moveGoal,whyRaleigh,priorities,areas,areasReason,home,financing,timing'],
   ['selling', {}, false, 'currentHome,ownedYears,whySellSolo,nextDestination,sellingExperience,timing'],
   ['selling', {}, true, 'whySell,currentHome,ownedYears,nextDestination,nextAreaReason,nextHome,budget,sellingExperience,timing'],
   ['investing', { location: 'local' }, false, 'location,experience,strategy,timing,areas,goals,involvement,budget'],
