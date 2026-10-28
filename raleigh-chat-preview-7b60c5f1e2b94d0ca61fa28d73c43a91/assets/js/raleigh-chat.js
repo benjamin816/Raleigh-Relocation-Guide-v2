@@ -238,23 +238,32 @@
     pendingBotMessages = 0;
     log.querySelectorAll(".rchat-row--typing").forEach(function (row) { row.remove(); });
   }
-  function waitForVisitorPause(generation) {
+  function waitForVisitorPause(generation, minimumMs) {
     var started = Date.now();
     return new Promise(function (resolve) {
       function check() {
         if (generation !== messageGeneration || Date.now() - started >= 60000 ||
-            (Date.now() - started >= 1500 && !input.value.trim() && Date.now() - lastInputAt >= 1500)) {
+            (Date.now() - started >= minimumMs && !input.value.trim() && Date.now() - lastInputAt >= minimumMs)) {
           resolve();
         } else window.setTimeout(check, 250);
       }
       check();
     });
   }
-  function waitBeforeTyping(generation) {
+  function replyDelayMs() {
+    var roll = Math.random();
+    return Math.round(roll < .68 ? 2000 + roll / .68 * 3000 :
+      roll < .93 ? 5000 + (roll - .68) / .25 * 2500 :
+      7500 + (roll - .93) / .07 * 2500);
+  }
+  function waitMs(milliseconds) {
+    return new Promise(function (resolve) { window.setTimeout(resolve, milliseconds); });
+  }
+  function waitBeforeTyping(generation, replyDelay, betweenMessagesDelay) {
     return new Promise(function (resolve) {
       function check() {
         if (generation !== messageGeneration ||
-            (Date.now() - lastUserSentAt >= 3000 && Date.now() - lastBotDeliveredAt >= 900)) resolve();
+            (Date.now() - lastUserSentAt >= replyDelay && Date.now() - lastBotDeliveredAt >= betweenMessagesDelay)) resolve();
         else window.setTimeout(check, 100);
       }
       check();
@@ -262,8 +271,13 @@
   }
   function queueBotMessage(text, options) {
     var generation = messageGeneration;
+    var replyDelay = replyDelayMs();
+    var betweenMessagesDelay = 900 + Math.round(Math.random() * 1100);
+    var typingDuration = 1300 + Math.round(Math.random() * 1400);
+    var falseStart = Math.random() < .06;
     pendingBotMessages += 1;
-    botQueue = botQueue.then(function () { return waitBeforeTyping(generation); }).then(function () {
+    botQueue = botQueue.then(async function () {
+      await waitBeforeTyping(generation, replyDelay, betweenMessagesDelay);
       if (generation !== messageGeneration) return;
       var row = document.createElement("div");
       row.className = "rchat-row rchat-row--typing";
@@ -278,10 +292,17 @@
       row.append(img, dots);
       log.appendChild(row);
       if (!panel.hidden && !input.value.trim()) scrollToLatest();
-      return waitForVisitorPause(generation).then(function () {
+      if (falseStart) {
+        await waitMs(700 + Math.round(Math.random() * 500));
         row.remove();
-        if (generation === messageGeneration) renderMessage(text, false, options);
-      });
+        if (generation !== messageGeneration) return;
+        await waitMs(650 + Math.round(Math.random() * 550));
+        if (generation !== messageGeneration) return;
+        log.appendChild(row);
+      }
+      await waitForVisitorPause(generation, typingDuration);
+      row.remove();
+      if (generation === messageGeneration) renderMessage(text, false, options);
     }).finally(function () {
       if (generation !== messageGeneration) return;
       pendingBotMessages -= 1;
