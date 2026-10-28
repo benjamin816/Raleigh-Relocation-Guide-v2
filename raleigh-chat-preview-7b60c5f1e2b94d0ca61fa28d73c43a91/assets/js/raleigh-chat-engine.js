@@ -100,6 +100,8 @@
         case "outNeedsPriorities": return profile.location === "out" && profile.prioritiesKnown !== true;
         case "areaReasonNeeded": return profile.areasNeedFollowup === true;
         case "prioritySingle": return profile.prioritySingle === true;
+        case "commuteDestinationNeeded": return profile.commuteMentioned === true && profile.remoteWork !== true && profile.retired !== true && profile.commuteDestinationKnown !== true;
+        case "commuteRangeNeeded": return profile.commuteMentioned === true && profile.remoteWork !== true && profile.retired !== true && profile.commuteDestinationKnown === true && profile.commuteRangeKnown !== true;
         case "priorityPrice": return profile.priorityPrice === true && profile.budgetAsked !== true;
         case "priorityFinancingNeeded": return profile.priorityPrice === true && profile.budgetAsked === true && profile.financingKnown !== true;
         case "homeSingle": return profile.homeSingle === true;

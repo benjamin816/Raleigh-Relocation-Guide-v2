@@ -128,12 +128,22 @@ window.RaleighChatConfig = {
         {
           "key": "priorities",
           "when": "outNeedsPriorities",
-          "text": "What matters most to you in the place where you'll live?"
+          "text": "When it comes to the place that you end up calling home, what is most important to you?"
         },
         {
           "key": "priorityMore",
           "when": "prioritySingle",
-          "text": "Is there anything else that's super important to you about the area, like nearby amenities, shopping, or your commute?"
+          "text": "Is there anything else that's super important to you about the area, like nearby amenities, shopping, schools, or your commute?"
+        },
+        {
+          "key": "commuteDestination",
+          "when": "commuteDestinationNeeded",
+          "text": "Do you know where you'll be commuting to once you make the move?"
+        },
+        {
+          "key": "commuteRange",
+          "when": "commuteRangeNeeded",
+          "text": "And what's your comfort level for the commute? What's the farthest you'd be willing to drive, and what would be ideal?"
         },
         {
           "key": "priorityBudget",
@@ -328,12 +338,22 @@ window.RaleighChatConfig = {
         {
           "key": "priorities",
           "when": "outNeedsPriorities",
-          "text": "What matters most to you in a place to live?"
+          "text": "When it comes to the place that you end up calling home, what is most important to you?"
         },
         {
           "key": "priorityMore",
           "when": "prioritySingle",
-          "text": "Is there anything else that's super important to you about the area, like nearby amenities, shopping, or your commute?"
+          "text": "Is there anything else that's super important to you about the area, like nearby amenities, shopping, schools, or your commute?"
+        },
+        {
+          "key": "commuteDestination",
+          "when": "commuteDestinationNeeded",
+          "text": "Do you know where you'll be commuting to once you make the move?"
+        },
+        {
+          "key": "commuteRange",
+          "when": "commuteRangeNeeded",
+          "text": "And what's your comfort level for the commute? What's the farthest you'd be willing to drive, and what would be ideal?"
         },
         {
           "key": "priorityBudget",
