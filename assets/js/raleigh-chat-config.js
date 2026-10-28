@@ -29,7 +29,7 @@ window.RaleighChatConfig = {
     }
   ],
   "contactConsentPrompt": "May our team contact you about this question? Reply yes to submit your details, or no to cancel.",
-  "bookingChoicePrompt": "Which time works for you? Let me know if you'd prefer a video or phone call.",
+  "bookingChoicePrompt": "Which time works for you?",
   "bookingEmailPrompt": "What's the best email address for the invitation and everything you need before our call?",
   "bookingPhonePrompt": "And what's the best phone number to reach you?",
   "bookingNamePrompt": "What first and last name should I put on the invitation?",
@@ -132,7 +132,7 @@ window.RaleighChatConfig = {
         {
           "key": "priorityMore",
           "when": "prioritySingle",
-          "text": "Is there anything else that's super important to you, like number of beds and baths, square footage, or certain amenities?"
+          "text": "Is there anything else that's super important to you about the area, like nearby amenities, shopping, or your commute?"
         },
         {
           "key": "priorityBudget",
@@ -156,6 +156,11 @@ window.RaleighChatConfig = {
         {
           "key": "home",
           "text": "As far as the home goes, what's most important to you?"
+        },
+        {
+          "key": "homeMore",
+          "when": "homeSingle",
+          "text": "Is there anything else you'd want in the home, like a certain number of bedrooms or bathrooms, square footage, yard size, or a one- or two-story layout?"
         },
         {
           "key": "budget",
@@ -327,7 +332,7 @@ window.RaleighChatConfig = {
         {
           "key": "priorityMore",
           "when": "prioritySingle",
-          "text": "Is there anything else that's super important to you, like number of beds and baths, square footage, or certain amenities?"
+          "text": "Is there anything else that's super important to you about the area, like nearby amenities, shopping, or your commute?"
         },
         {
           "key": "priorityBudget",
@@ -356,6 +361,11 @@ window.RaleighChatConfig = {
         {
           "key": "home",
           "text": "As far as the home goes, what's most important to you?"
+        },
+        {
+          "key": "homeMore",
+          "when": "homeSingle",
+          "text": "Is there anything else you'd want in the home, like a certain number of bedrooms or bathrooms, square footage, yard size, or a one- or two-story layout?"
         },
         {
           "key": "budget",
