@@ -85,6 +85,10 @@ for (const id of ['buying', 'relocating']) {
   check(keys({ priorityPrice: true, budgetAsked: true }).includes('priorityFinancing'), true, `${id} early budget asks financing`);
   check(keys({ homeSingle: true }).includes('homeMore'), true, `${id} one home detail asks for more`);
   check(keys({ homeSingle: false }).includes('homeMore'), false, `${id} multiple home details move on`);
+  check(keys({ commuteMentioned: true }).includes('commuteDestination'), true, `${id} commute asks destination`);
+  check(keys({ commuteMentioned: true, commuteDestinationKnown: true }).includes('commuteRange'), true, `${id} commute asks comfort range`);
+  check(keys({ commuteMentioned: true, remoteWork: true }).includes('commuteDestination'), false, `${id} remote work skips commute`);
+  check(keys({ commuteMentioned: true, retired: true }).includes('commuteRange'), false, `${id} retirement skips commute`);
   const completed = keys({ priorityPrice: true, budgetAsked: true, budgetKnown: true, financingKnown: true });
   for (const key of ['priorityBudget', 'priorityFinancing', 'budget', 'financing']) check(completed.includes(key), false, `${id} no repeated ${key}`);
 }

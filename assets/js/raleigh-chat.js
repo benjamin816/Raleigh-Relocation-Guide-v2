@@ -211,6 +211,8 @@
   var messageGeneration = 0;
   var clarificationTimer = null;
   var lastInputAt = 0;
+  var lastUserSentAt = 0;
+  var lastBotDeliveredAt = 0;
   function cancelClarification() {
     if (clarificationTimer) window.clearTimeout(clarificationTimer);
     clarificationTimer = null;
@@ -241,9 +243,19 @@
     return new Promise(function (resolve) {
       function check() {
         if (generation !== messageGeneration || Date.now() - started >= 60000 ||
-            (Date.now() - started >= 3000 && !input.value.trim() && Date.now() - lastInputAt >= 2000)) {
+            (Date.now() - started >= 1500 && !input.value.trim() && Date.now() - lastInputAt >= 1500)) {
           resolve();
         } else window.setTimeout(check, 250);
+      }
+      check();
+    });
+  }
+  function waitBeforeTyping(generation) {
+    return new Promise(function (resolve) {
+      function check() {
+        if (generation !== messageGeneration ||
+            (Date.now() - lastUserSentAt >= 3000 && Date.now() - lastBotDeliveredAt >= 900)) resolve();
+        else window.setTimeout(check, 100);
       }
       check();
     });
@@ -251,7 +263,7 @@
   function queueBotMessage(text, options) {
     var generation = messageGeneration;
     pendingBotMessages += 1;
-    botQueue = botQueue.then(function () {
+    botQueue = botQueue.then(function () { return waitBeforeTyping(generation); }).then(function () {
       if (generation !== messageGeneration) return;
       var row = document.createElement("div");
       row.className = "rchat-row rchat-row--typing";
@@ -318,7 +330,7 @@
     content.appendChild(bubble);
     row.appendChild(content);
     log.appendChild(row);
-    if (!byUser && !options.restoring) incomingSound();
+    if (!byUser && !options.restoring) { lastBotDeliveredAt = Date.now(); incomingSound(); }
     if (!options.restoring && !panel.hidden && !input.value.trim()) scrollToLatest();
     if (!options.restoring && options.remember !== false && !state.contact && !state.booking) {
       state.history.push({ text: redact(text), byUser: !!byUser, at: now.toISOString(), link: options.link || null });
@@ -676,6 +688,7 @@
     state.question = 0;
     state.answers = [];
     state.profile = {};
+    if (sourceText) captureVisitorContext(sourceText);
     var knownLocation = /^(buying|relocating|investing)$/.test(id) && sourceText && engine.detectLocation(sourceText);
     if (knownLocation) knownLocation = engine.resolveOrigin(knownLocation, config);
     if (knownLocation) {
@@ -729,6 +742,13 @@
       if (question.key === "areas") wording = "What areas around Raleigh are you interested in buying a home in?";
       if (question.key === "familyNearby") wording = state.profile.nearbyPerson === "friends" ? "What part of Raleigh are your friends in?" : "What part of Raleigh is your family in?";
     }
+    if (question.key === "priorityMore" && (state.profile.remoteWork || state.profile.retired || state.profile.noChildren)) {
+      var examples = ["nearby amenities", "shopping"];
+      if (!state.profile.retired && !state.profile.noChildren) examples.push("schools");
+      if (!state.profile.remoteWork && !state.profile.retired) examples.push("your commute");
+      wording = "Is there anything else that's super important to you about the area, like " +
+        (examples.length === 2 ? examples.join(" or ") : examples.slice(0, -1).join(", ") + ", or " + examples[examples.length - 1]) + "?";
+    }
     if (question.key === "home" && state.profile.homeDetailsGiven) wording = "You mentioned some things you're looking for in a home earlier. Is there anything else that's important to you about the home itself?";
     if ((question.key === "priorityFinancing" || question.key === "financing") && state.profile.originSale) wording = "Do you think you'll buy with cash from the sale of your current home, or use financing?";
     else if (question.key === "priorityFinancing" || question.key === "financing") wording = "Do you plan on using financing, or will you be buying in cash?";
@@ -768,8 +788,10 @@
       case "strategy": return "Okay, got it.";
       case "sellingExperience": return /\b(first|never)\b/.test(text) ? "Okay, wonderful." : "Great, good to know.";
       case "timing": return /\bsummer\b/.test(text) && /^(buying|relocating)$/.test(state.intent) ? "" : /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Great, that timing makes sense.";
-      case "priorities": return state.profile.priorityPrice ? "Awesome." : state.profile.prioritySingle ? "Got it." : "Makes perfect sense.";
-      case "priorityMore": return state.profile.priorityPrice ? "Awesome." : "Makes perfect sense.";
+      case "priorities": return state.profile.commuteMentioned ? "Got it." : state.profile.priorityPrice ? "Awesome." : state.profile.prioritySingle ? "Got it." : "Makes perfect sense.";
+      case "priorityMore": return state.profile.commuteMentioned ? "Got it." : state.profile.priorityPrice ? "Awesome." : "Makes perfect sense.";
+      case "commuteDestination": return "Got it.";
+      case "commuteRange": return "That makes sense.";
       case "priorityBudget": return state.profile.priorityBudgetAmount >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "👍";
       case "priorityFinancing": return "Great!";
       case "areas": return state.profile.areasMentionFamilyArea ? "That makes sense." : state.profile.areasNeedFollowup ?
@@ -808,6 +830,13 @@
   function homeDetailCount(value) {
     var text = String(value || "").toLowerCase();
     return [/\b(?:bed|bedroom)/, /\b(?:bath|bathroom)/, /\b(?:sq\.?\s?ft|square feet|square footage)/, /\b(?:yard|backyard|lot)/, /\b(?:ranch|one.story|single.story|two.story|layout)/, /\b(?:garage|pool|office|basement)/].filter(function (pattern) { return pattern.test(text); }).length;
+  }
+  function captureVisitorContext(value) {
+    var text = String(value || "");
+    if (/\b(?:work(?:ing)? remotely|remote (?:job|work|position)|work(?:ing)? from home|fully remote|wfh)\b/i.test(text)) state.profile.remoteWork = true;
+    if (/\b(?:retired|retiring|in retirement)\b/i.test(text)) state.profile.retired = true;
+    if (/\b(?:no kids|no children|don't have (?:any )?(?:kids|children)|just me|single person|single guy|single woman)\b/i.test(text)) state.profile.noChildren = true;
+    else if (/\b(?:have kids|have children|our kids|our children)\b/i.test(text)) state.profile.noChildren = false;
   }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
@@ -889,8 +918,10 @@
       state.profile.familyNearby = /\b(family|relatives|friends|parents|siblings)\b/i.test(answer);
       state.profile.nearbyPerson = /\bfriends\b/i.test(answer) && !/\b(family|relatives|parents|siblings)\b/i.test(answer) ? "friends" : "family";
       state.profile.newJob = state.intent === "relocating" && /\b(new job|job offer|for (?:a|my) job|for work|work transfer|transferred|new position|starting (?:a|my) job)\b/i.test(answer);
-      state.profile.prioritiesKnown = /\bcommute\b/i.test(answer);
+      state.profile.commuteMentioned = /\bcommut(?:e|ing)\b/i.test(answer) && !state.profile.remoteWork && !state.profile.retired;
+      state.profile.prioritiesKnown = false;
     }
+    if (question && question.key === "jobLocation" && state.profile.commuteMentioned && !state.profile.remoteWork) state.profile.commuteDestinationKnown = true;
     if (question && question.key === "familyNearby") {
       var familyPlace = answer.trim().replace(/[.!?]+$/, "");
       state.profile.familyArea = /^(?:yes|no|yeah|yep|here|not sure)$/i.test(familyPlace) ? "" : familyPlace.slice(0, 60);
@@ -898,8 +929,17 @@
     if (question && (question.key === "priorities" || question.key === "priorityMore")) {
       state.profile.priorityAnswered = true;
       state.profile.priorityPrice = mentionsPrice(answer);
-      state.profile.prioritySingle = question.key === "priorities" && !state.profile.priorityPrice && !/,|;|\band\b|\bplus\b|&/i.test(answer);
+      if (/\bcommut(?:e|ing)\b/i.test(answer) && !state.profile.remoteWork && !state.profile.retired) state.profile.commuteMentioned = true;
+      state.profile.prioritySingle = question.key === "priorities" && !state.profile.priorityPrice && !state.profile.commuteMentioned && !/,|;|\band\b|\bplus\b|&/i.test(answer);
       if (homeDetailCount(answer)) state.profile.homeDetailsGiven = true;
+    }
+    if (question && question.key === "commuteDestination") {
+      state.profile.commuteDestinationKnown = true;
+      state.profile.commuteDestination = answer.slice(0, 120);
+    }
+    if (question && question.key === "commuteRange") {
+      state.profile.commuteRangeKnown = true;
+      state.profile.commuteComfort = answer.slice(0, 120);
     }
     if (question && question.key === "priorityBudget") {
       state.profile.priorityBudgetAmount = priceAmount(answer);
@@ -1111,6 +1151,7 @@
   function handleText(text) {
     var value = text.trim();
     if (!value || state.submitting || state.ended) return;
+    lastUserSentAt = Date.now();
     cancelClarification();
     interruptBotQueue();
     state.sentMessageSinceOpen = true;
@@ -1122,6 +1163,7 @@
       return;
     }
     var safety = engine.classifySafety(value, state.previousInput);
+    captureVisitorContext(value);
     state.previousInput = value;
     var strikes = safety ? safetyRecord(safety) : 0;
     if (safety && safety !== "language") {
