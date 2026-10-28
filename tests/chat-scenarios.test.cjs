@@ -41,7 +41,7 @@ for (const [name, text, intent, combined, faq, resource, booking, safety] of cas
 }
 
 assert.equal(config.flows.buying.questions.length, 15);
-assert.equal(config.flows.relocating.questions.length, 16);
+assert.equal(config.flows.relocating.questions.length, 18);
 assert.equal(config.flows.selling.questions.length, 10);
 assert.equal(engine.activeQuestions(config.flows.buying, { location: 'local', tenure: 'renting' }, false).map(q => q.key).join(','), 'location,currentArea,tenure,firstTime,leaseEnd,areas,home,budget,timing');
 assert.equal(engine.activeQuestions(config.flows.buying, { location: 'out' }, false).map(q => q.key).join(','), 'location,whyRaleigh,priorities,areas,home,budget,timing');
