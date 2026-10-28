@@ -208,11 +208,48 @@
   var botQueue = Promise.resolve();
   var pendingBotMessages = 0;
   var messageGeneration = 0;
+  var clarificationTimer = null;
+  var lastInputAt = 0;
+  function cancelClarification() {
+    if (clarificationTimer) window.clearTimeout(clarificationTimer);
+    clarificationTimer = null;
+  }
+  function scheduleClarification(text) {
+    cancelClarification();
+    var started = Date.now();
+    function check() {
+      if (panel.hidden) { clarificationTimer = null; return; }
+      if (Date.now() - started < 60000 &&
+          (input.value.trim() || Date.now() - lastInputAt < 2000)) {
+        clarificationTimer = window.setTimeout(check, 1000);
+        return;
+      }
+      clarificationTimer = null;
+      message(text, false);
+    }
+    clarificationTimer = window.setTimeout(check, 15000);
+  }
+  function interruptBotQueue() {
+    messageGeneration += 1;
+    botQueue = Promise.resolve();
+    pendingBotMessages = 0;
+    log.querySelectorAll(".rchat-row--typing").forEach(function (row) { row.remove(); });
+  }
+  function waitForVisitorPause(generation) {
+    var started = Date.now();
+    return new Promise(function (resolve) {
+      function check() {
+        if (generation !== messageGeneration || Date.now() - started >= 60000 ||
+            (Date.now() - started >= 3000 && !input.value.trim() && Date.now() - lastInputAt >= 2000)) {
+          resolve();
+        } else window.setTimeout(check, 250);
+      }
+      check();
+    });
+  }
   function queueBotMessage(text, options) {
     var generation = messageGeneration;
     pendingBotMessages += 1;
-    input.disabled = true;
-    sendButton.disabled = true;
     botQueue = botQueue.then(function () {
       if (generation !== messageGeneration) return;
       var row = document.createElement("div");
@@ -227,12 +264,13 @@
       dots.innerHTML = "<i></i><i></i><i></i>";
       row.append(img, dots);
       log.appendChild(row);
-      if (!panel.hidden) scrollToLatest();
-      return new Promise(function (resolve) { window.setTimeout(resolve, 1400); }).then(function () {
+      if (!panel.hidden && !input.value.trim()) scrollToLatest();
+      return waitForVisitorPause(generation).then(function () {
         row.remove();
         if (generation === messageGeneration) renderMessage(text, false, options);
       });
     }).finally(function () {
+      if (generation !== messageGeneration) return;
       pendingBotMessages -= 1;
       if (pendingBotMessages === 0 && !state.submitting) {
         input.disabled = state.ended;
@@ -280,7 +318,7 @@
     row.appendChild(content);
     log.appendChild(row);
     if (!byUser && !options.restoring) incomingSound();
-    if (!options.restoring && !panel.hidden) scrollToLatest();
+    if (!options.restoring && !panel.hidden && !input.value.trim()) scrollToLatest();
     if (!options.restoring && options.remember !== false && !state.contact && !state.booking) {
       state.history.push({ text: redact(text), byUser: !!byUser, at: now.toISOString(), link: options.link || null });
       state.history = state.history.slice(-80);
@@ -691,14 +729,14 @@
       var location = engine.detectLocation(answer);
       if (!location && /^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/i.test(answer.trim())) location = { type: "local", place: "" };
       if (!location && /^[A-Za-z][A-Za-z .-]{1,35}$/.test(answer.trim()) && !/^(?:not sure|i don't know|maybe|yes|no)$/i.test(answer.trim())) location = { type: "out", place: answer.trim().toLowerCase() };
-      if (!location) { message("Are you already local to Raleigh, or would you be moving from out of state?", false); return; }
+      if (!location) { scheduleClarification("Are you already local to Raleigh, or would you be moving from out of state?"); return; }
       state.profile.location = location.type;
       state.profile.origin = location.place || "";
       acknowledgement = locationAcknowledgement(location);
     }
     if (question && question.key === "tenure") {
       var tenure = engine.detectTenure(answer);
-      if (!tenure) { message("Are you currently renting or do you own your home?", false); return; }
+      if (!tenure) { scheduleClarification("Are you currently renting or do you own your home?"); return; }
       state.profile.tenure = tenure;
       acknowledgement = tenure === "renting" ? "Okay, great." : "Got it.";
     }
@@ -847,6 +885,8 @@
   function handleText(text) {
     var value = text.trim();
     if (!value || state.submitting || state.ended) return;
+    cancelClarification();
+    interruptBotQueue();
     state.sentMessageSinceOpen = true;
     try { window.sessionStorage.setItem("livrChatQuietUntil", String(Date.now() + 30 * 60 * 1000)); } catch (_) {}
     if (/^(forget|forget me|clear chat|delete chat history)$/i.test(value)) {
@@ -874,6 +914,12 @@
     var contactCommand = /^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value);
     message(value, true, { remember: !state.contact && !contactCommand });
     sound();
+    if (!state.booking && !state.contact && /^(?:hi|hello|hey|good morning|good afternoon|good evening|one sec(?:ond)?|just a sec(?:ond)?|let me think|hmm|um+)\s*[.!?]*$/i.test(value)) {
+      var pendingQuestion = state.intent && state.question >= 0 && state.question < activeQuestions().length
+        ? activeQuestions()[state.question].text : config.fallback;
+      scheduleClarification("Hi! " + pendingQuestion);
+      return;
+    }
     var faq = engine.findFaq(value, config);
     if (state.booking) {
       if (faq && state.booking.step !== "email" && state.booking.step !== "phone" && state.booking.step !== "name") {
@@ -970,12 +1016,12 @@
     }
     if (detected) startFlow(detected.id, false, detected.combined, value);
     else if (engine.wantsBooking(value)) startBooking(value);
-    else message(config.fallback, false);
+    else scheduleClarification(config.fallback);
   }
   function clearConversation() {
     stopVoiceTyping();
-    messageGeneration += 1;
-    log.querySelectorAll(".rchat-row--typing").forEach(function (row) { row.remove(); });
+    cancelClarification();
+    interruptBotQueue();
     try { window.localStorage.removeItem(storageKey); } catch (_) { /* Storage may be unavailable. */ }
     state.intent = null;
     state.combined = false;
@@ -1035,8 +1081,9 @@
   }
   launcher.addEventListener("click", function () { panel.hidden ? open() : close(); });
   input.addEventListener("input", function () {
+    lastInputAt = Date.now();
     sizeInput(true);
-    sendButton.disabled = state.submitting || pendingBotMessages > 0 || !input.value.trim();
+    sendButton.disabled = state.submitting || state.ended || !input.value.trim();
   });
   input.addEventListener("keydown", function (event) {
     if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
