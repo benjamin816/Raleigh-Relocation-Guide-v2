@@ -7017,12 +7017,12 @@ textarea {
   }
 
   .home-template .local-image-card {
-    width: min(calc(100% - 2rem), 680px);
-    aspect-ratio: 6 / 5;
+    width: min(calc(100% - 2rem), 500px);
+    aspect-ratio: 8 / 5;
   }
 
   .home-template .local-brand-image-card {
-    width: min(calc(100% - 2rem), 560px);
+    width: min(calc(100% - 2rem), 420px);
     aspect-ratio: 640 / 602;
   }
 
@@ -7093,6 +7093,12 @@ textarea {
 
   .home-template .home-partner-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-template .home-partner-card:last-child {
+    grid-column: 1 / -1;
+    width: calc(50% - 0.5rem);
+    justify-self: center;
   }
 
   .home-template .home-final-cta-inner,
@@ -7625,6 +7631,11 @@ textarea {
 
   .home-template .home-partner-cards {
     grid-template-columns: 1fr;
+  }
+
+  .home-template .home-partner-card:last-child {
+    grid-column: auto;
+    width: 100%;
   }
 
   .home-template .home-partner-card {
