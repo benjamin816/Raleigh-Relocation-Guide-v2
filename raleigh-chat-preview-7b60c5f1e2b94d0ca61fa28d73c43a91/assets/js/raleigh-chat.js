@@ -843,7 +843,9 @@
     }
     state.question = 0;
     state.answers = [];
-    state.profile = {};
+    var visitorName = state.profile.firstName;
+    var introAsked = state.profile.introAsked;
+    state.profile = { firstName: visitorName || "", introAsked: !!introAsked };
     if (sourceText) { captureVisitorContext(sourceText); markPreapproval(sourceText); }
     updateAttachmentAvailability();
     var knownLocation = /^(buying|relocating|investing)$/.test(id) && sourceText && engine.detectLocation(sourceText, config);
@@ -915,7 +917,9 @@
     if (question.key === "areasReason" && state.profile.familyArea && state.profile.areasMentionFamilyArea) wording += " I know you mentioned having family in " + state.profile.familyArea + ".";
     if (question.key === "areas" && state.profile.priorityAnswered) wording = "Are there any specific areas around Raleigh that you're interested in buying a home in?";
     if (question.key === "areasReason" && state.profile.areasPlural) wording = "What was it about those areas that stood out to you?";
-    message((prefix ? prefix + " " : "") + wording, false);
+    var personal = state.profile.firstName && (question.key === "areas" || question.key === "timing")
+      ? state.profile.firstName + ", " : "";
+    message((prefix ? prefix + " " : "") + personal + wording, false);
   }
   function answerAcknowledgement(question, answer) {
     if (!question) return "Got it.";
@@ -1090,7 +1094,7 @@
       state.combined = true;
       state.question = 0;
       state.answers = [];
-      state.profile = {};
+      state.profile = { firstName: state.profile.firstName || "", introAsked: !!state.profile.introAsked };
       message("Got it. Let's plan your sale and next purchase together.", false);
       askQuestion();
       return;
@@ -1348,14 +1352,16 @@
     finishConversation();
     message("Got it. A lot of people check out the site when they're still unsure about moving to Raleigh. Please don't hesitate to reach out if you have any questions that aren't answered by all our free resources here and on the Living in Raleigh YouTube channel.", false);
   }
-  function handleText(text) {
+  function handleText(text, replaying) {
     var value = text.trim();
     if (!value || state.submitting || state.ended) return;
     state.hasUserMessage = true;
     persist();
-    lastUserSentAt = Date.now();
-    cancelClarification();
-    interruptBotQueue();
+    if (!replaying) {
+      lastUserSentAt = Date.now();
+      cancelClarification();
+      interruptBotQueue();
+    }
     state.sentMessageSinceOpen = true;
     try { window.sessionStorage.setItem("livrChatQuietUntil", String(Date.now() + 30 * 60 * 1000)); } catch (_) {}
     if (/^(forget|forget me|clear chat|delete chat history)$/i.test(value)) {
@@ -1383,8 +1389,39 @@
       return;
     }
     var contactCommand = /^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value);
-    message(value, true, { remember: !state.contact && !contactCommand });
-    sound();
+    if (!replaying) {
+      message(value, true, { remember: !state.contact && !contactCommand });
+      sound();
+    }
+    if (state.profile.awaitingFirstName && !replaying) {
+      state.profile.awaitingFirstName = false;
+      if (!/^(?:no|no thanks|nope|rather not|prefer not to|skip)\s*[.!?]*$/i.test(value)) {
+        var firstName = value.replace(/[^a-zA-Z'\- ]/g, "").trim().split(/\s+/)[0];
+        if (!firstName || firstName.length < 2 || firstName.length > 35) {
+          state.profile.awaitingFirstName = true;
+          message("What first name should I use? You can also say no thanks.", false);
+          persist();
+          return;
+        }
+        state.profile.firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        message("Nice to meet you, " + state.profile.firstName + "!", false);
+      } else message("No worries!", false);
+      var pendingIntroReply = state.profile.pendingIntroReply;
+      delete state.profile.pendingIntroReply;
+      persist();
+      if (pendingIntroReply) handleText(pendingIntroReply, true);
+      return;
+    }
+    if (!replaying && !state.profile.introAsked && !state.intent && !state.booking && !state.contact &&
+        !/^(?:hi|hello|hey|good (?:morning|afternoon|evening)|no|nope|nah|not really|one sec(?:ond)?)\s*[.!?]*$/i.test(value)) {
+      state.profile.introAsked = true;
+      state.profile.awaitingFirstName = true;
+      state.profile.pendingIntroReply = value;
+      persist();
+      message("That sounds exciting!", false);
+      message("😊 I'm Sam, and I can help answer your questions about buying or selling in Raleigh. May I have your first name so I can personalize things for you?", false);
+      return;
+    }
     offerPreapprovalUpload();
     if (state.profile.browsingEnded) {
       state.profile.browsingEnded = false;
