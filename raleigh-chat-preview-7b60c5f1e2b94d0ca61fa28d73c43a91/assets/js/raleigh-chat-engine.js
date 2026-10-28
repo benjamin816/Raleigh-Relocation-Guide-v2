@@ -139,6 +139,7 @@
         case "homeSingle": return profile.homeSingle === true;
         case "budgetNeeded": return profile.budgetKnown !== true && profile.budgetAsked !== true;
         case "budgetKnown": return profile.budgetKnown === true && profile.financingKnown !== true;
+        case "needsPreapproval": return profile.usingFinancing === true && profile.preApproved !== true && profile.preapprovalAsked !== true;
         case "combined": return combined === true;
         case "solo": return combined !== true;
         default: return true;

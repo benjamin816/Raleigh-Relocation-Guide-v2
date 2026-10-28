@@ -46,6 +46,7 @@
 .rchat-compose { display:flex; gap:8px; align-items:flex-end; padding:12px 14px; border-top:1px solid #e2e8e2; background:#fff; }
 .rchat-input { min-width:0; min-height:42px; flex:1; height:42px; max-height:142px; border:1px solid #d3c7a2; border-radius:10px; padding:10px 12px; resize:none; overflow-y:hidden; background:#fff; font:14px/20px Manrope,Arial,sans-serif; color:#20342a; }
 .rchat-tool { display:flex; align-items:center; justify-content:center; width:30px; height:36px; flex:none; padding:0; border:0; border-radius:8px; background:transparent; color:#68777b; cursor:pointer; }
+.rchat-tool[hidden] { display:none; }
 .rchat-tool:hover,.rchat-mic--active { background:#f6edcf; color:var(--rchat-deep); }
 .rchat-tool svg { display:block; width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
 .rchat-file-status { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0 14px 8px; padding:5px 8px; border-radius:8px; background:#f8f2df; color:#283e30; font-size:11px; }
