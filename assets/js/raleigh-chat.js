@@ -563,8 +563,8 @@
   function requestedClock(value) {
     var text = String(value).toLowerCase();
     if (/\bnoon\b|\bmidday\b/.test(text)) return { hour: 12, minute: 0, meridiem: "pm" };
-    var match = /\b(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i.exec(text);
-    if (match) return { hour: Number(match[1]), minute: Number(match[2] || 0), meridiem: match[3].toLowerCase() };
+    var match = /\b(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm|a|p)\b/i.exec(text);
+    if (match) return { hour: Number(match[1]), minute: Number(match[2] || 0), meridiem: match[3].toLowerCase().charAt(0) + "m" };
     var implied = /\bat\s+(\d{1,2})(?::(\d{2}))?\b/.exec(text);
     if (!implied || Number(implied[1]) > 12) return null;
     return { hour: Number(implied[1]), minute: Number(implied[2] || 0), meridiem: Number(implied[1]) >= 9 && Number(implied[1]) < 12 ? "am" : "pm" };
@@ -596,7 +596,7 @@
   function normalizeSuggestedTime(value) {
     var dated = /\b(\d{4}-\d\d-\d\d\s+\d{1,2}(?::\d\d)?\s*(?:am|pm)(?:\s*(?:ET|Eastern))?)\b/i.exec(value);
     if (dated) return dated[1];
-    var match = /\b(today|tomorrow|next\s+(?:mon|tues|wednes|thurs|fri|satur|sun)day|(?:mon|tues|wednes|thurs|fri|satur|sun)day)\s+(?:at\s+)?(?:(\d{1,2})(?::(\d{2}))?\s*(am|pm)|(noon|midday)|at\s+(\d{1,2})(?::(\d{2}))?)\b/i.exec(value);
+    var match = /\b(today|tomorrow|next\s+(?:mon|tues|wednes|thurs|fri|satur|sun)day|(?:mon|tues|wednes|thurs|fri|satur|sun)day)\s+(?:at\s+)?(?:(\d{1,2})(?::(\d{2}))?\s*(am|pm|a|p)|(noon|midday)|at\s+(\d{1,2})(?::(\d{2}))?)\b/i.exec(value);
     if (!match) return value;
     var parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "numeric", day: "numeric", weekday: "long" }).formatToParts(new Date()).map(function (part) { return [part.type, part.value]; }));
     var date = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
@@ -609,7 +609,7 @@
       date.setUTCDate(date.getUTCDate() + (ahead || 7) + (/^next\s+/i.test(match[1]) && ahead ? 7 : 0));
     }
     var inferred = match[6] ? Number(match[6]) >= 9 && Number(match[6]) < 12 ? "am" : "pm" : "";
-    return date.toISOString().slice(0, 10) + " " + (match[5] ? "12pm" : match[6] ? match[6] + (match[7] ? ":" + match[7] : "") + inferred : match[2] + (match[3] ? ":" + match[3] : "") + match[4].toLowerCase()) + " ET";
+    return date.toISOString().slice(0, 10) + " " + (match[5] ? "12pm" : match[6] ? match[6] + (match[7] ? ":" + match[7] : "") + inferred : match[2] + (match[3] ? ":" + match[3] : "") + match[4].toLowerCase().charAt(0) + "m") + " ET";
   }
   function bookingPreferenceFromText(value, current) {
     var next = Object.assign({ host: "", daypart: "", weekdays: [], date: "" }, current || {});
@@ -673,7 +673,8 @@
         available = available.filter(function (slot) { return bookingDayKey(slot.start) === soonestDay; });
       }
     }
-    if (oneRequestedDay && state.booking.closestClock) {
+    var nearestRequested = oneRequestedDay && !!state.booking.closestClock;
+    if (nearestRequested) {
       var desired = state.booking.closestClock;
       var desiredMinutes = (desired.hour % 12 + (desired.meridiem === "pm" ? 12 : 0)) * 60 + desired.minute;
       available.sort(function (a, b) {
@@ -701,9 +702,9 @@
       message("I don't see an opening for that day. Is there another day that could work for you?", false);
       return;
     }
-    message("We have " + state.booking.slots.map(function (slot, index) {
+    message((nearestRequested ? "The closest opening I found is " : "We have ") + state.booking.slots.map(function (slot, index) {
       return (index === 0 ? "" : " or ") + bookingLabel(slot.start);
-    }).join("") + ". " + (config.bookingChoicePrompt || "Which time works for you? Let me know if you'd prefer a video or phone call."), false);
+    }).join("") + ". " + (nearestRequested ? "Would that work for you?" : (config.bookingChoicePrompt || "Which time works for you? Let me know if you'd prefer a video or phone call.")), false);
   }
   function startBooking(request) {
     var currentFlow = state.intent && config.flows[state.intent];

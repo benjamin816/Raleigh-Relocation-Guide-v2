@@ -36,6 +36,7 @@ assert.equal(choose('anything for Saturday?', [thursday, friday]), null);
 assert.equal(choose('Friday at noon', [thursday, friday]), null);
 assert.equal(dayKey(thursday.start), '2026-10-29');
 assert.match(normalize('Saturday at noon'), /^\d{4}-\d{2}-\d{2} 12pm ET$/);
+assert.match(normalize('Do you have a Saturday 1p slot?'), /^\d{4}-\d{2}-\d{2} 1pm ET$/);
 assert.match(normalize('today at 3pm'), /^\d{4}-\d{2}-\d{2} 3pm ET$/);
 assert.equal(parse('Saturday at noon', parse('evening')).daypart, '');
 assert.match(parse('next Saturday').date, /^\d{4}-\d{2}-\d{2}$/);
@@ -108,6 +109,12 @@ assert.equal(runBookingAnswer('anything for Saturday').booking.preference.weekda
 const exactRequest = runBookingAnswer('Saturday at noon');
 assert.equal(exactRequest.calls[0][0], 'suggest');
 assert.match(exactRequest.calls[0][1][0], /^\d{4}-\d{2}-\d{2} 12pm ET$/);
+const shorthandRequest = runBookingAnswer('Do you have a Saturday 1p slot?', [
+  { start: '2026-10-31T14:00:00.000Z', daypart: 'morning' },
+  { start: '2026-10-31T16:00:00.000Z', daypart: 'midday' }
+]);
+assert.equal(shorthandRequest.calls[0][0], 'suggest');
+assert.match(shorthandRequest.calls[0][1][0], /^\d{4}-\d{2}-\d{2} 1pm ET$/);
 const todayRequest = runBookingAnswer('Can we do today at 3?');
 assert.equal(todayRequest.calls[0][0], 'suggest');
 assert.match(todayRequest.calls[0][1][0], /^\d{4}-\d{2}-\d{2} 3pm ET$/);
