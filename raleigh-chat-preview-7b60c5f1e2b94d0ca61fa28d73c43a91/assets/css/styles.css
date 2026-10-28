@@ -4371,6 +4371,10 @@ main {
   min-height: var(--local-lower-row-height);
 }
 
+.home-template .local-brand-image-card {
+  background: #143e2e;
+}
+
 .home-template .local-image-card img {
   position: absolute;
   inset: 0;
@@ -4386,7 +4390,7 @@ main {
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   object-position: center;
   display: block;
 }
@@ -6999,6 +7003,11 @@ textarea {
   .home-template .local-image-card,
   .home-template .local-brand-image-card {
     min-height: clamp(250px, 58vw, 340px);
+  }
+
+  .home-template .local-brand-image-card {
+    min-height: 0;
+    aspect-ratio: 640 / 602;
   }
 
   .home-template .home-client-voices-grid {
