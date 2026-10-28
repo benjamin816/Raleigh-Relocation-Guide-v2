@@ -60,7 +60,7 @@
     if (attachmentButton.hidden || state.profile.preapprovalUploadOffered) return;
     state.profile.preapprovalUploadOffered = true;
     persist();
-    message("If you'd like the team to review your pre-approval before the call, the paperclip is available now. It's completely optional, and I'll send the file with your details after the call is booked.", false);
+    message("If you'd like the team to review your pre-approval before you meet, you can upload it using the paperclip below. That's completely optional.", false);
   }
   var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   var speech = null;
@@ -554,10 +554,49 @@
   function bookingLabel(start) {
     return new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZoneName: "short" }).format(new Date(start));
   }
+  function bookingDayKey(start) {
+    return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(start));
+  }
+  function bookingSlotParts(start) {
+    return Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "long", hour: "numeric", minute: "2-digit", hour12: true }).formatToParts(new Date(start)).map(function (part) { return [part.type, part.value]; }));
+  }
+  function requestedClock(value) {
+    var text = String(value).toLowerCase();
+    if (/\bnoon\b|\bmidday\b/.test(text)) return { hour: 12, minute: 0, meridiem: "pm" };
+    var match = /\b(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i.exec(text);
+    if (match) return { hour: Number(match[1]), minute: Number(match[2] || 0), meridiem: match[3].toLowerCase() };
+    var implied = /\bat\s+(\d{1,2})(?::(\d{2}))?\b/.exec(text);
+    if (!implied || Number(implied[1]) > 12) return null;
+    return { hour: Number(implied[1]), minute: Number(implied[2] || 0), meridiem: Number(implied[1]) >= 9 && Number(implied[1]) < 12 ? "am" : "pm" };
+  }
+  function offeredBookingChoice(value, slots) {
+    var text = String(value).toLowerCase();
+    var clock = requestedClock(text);
+    if (/\b(?:earlier|early)\b/.test(text)) return slots[0] || null;
+    if (/\b(?:later|late)\b/.test(text)) return slots[1] || null;
+    var index = !clock && /\b(?:2|two|second)\b/.test(text) ? 1 : !clock && /\b(?:1|one|first)\b/.test(text) ? 0 : -1;
+    if (index >= 0) return slots[index] || null;
+    var day = /\b(today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.exec(text);
+    var explicitDate = /\b20\d{2}-\d{2}-\d{2}\b/.exec(text);
+    if (!day && !explicitDate && !clock) return null;
+    var today = bookingDayKey(new Date());
+    var tomorrow = new Date(today + "T12:00:00Z");
+    tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+    var matches = slots.filter(function (slot) {
+      var parts = bookingSlotParts(slot.start);
+      var date = bookingDayKey(slot.start);
+      if (explicitDate && date !== explicitDate[0]) return false;
+      if (day && (day[1] === "today" ? date !== today : day[1] === "tomorrow" ? date !== tomorrow.toISOString().slice(0, 10) : parts.weekday.toLowerCase() !== day[1])) return false;
+      return !clock || Number(parts.hour) === clock.hour && Number(parts.minute) === clock.minute && parts.dayPeriod.toLowerCase() === clock.meridiem;
+    });
+    var accepting = /\b(?:works|good|fine|great|perfect|take|choose|pick|book|yes|let'?s do|let us do|can do|that time)\b/i.test(text) ||
+      /^(?:today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)[.!]?$/i.test(text.trim());
+    return (clock || accepting) && matches.length === 1 ? matches[0] : null;
+  }
   function normalizeSuggestedTime(value) {
     var dated = /\b(\d{4}-\d\d-\d\d\s+\d{1,2}(?::\d\d)?\s*(?:am|pm)(?:\s*(?:ET|Eastern))?)\b/i.exec(value);
     if (dated) return dated[1];
-    var match = /\b(today|tomorrow|next\s+(?:mon|tues|wednes|thurs|fri|satur|sun)day|(?:mon|tues|wednes|thurs|fri|satur|sun)day)\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b/i.exec(value);
+    var match = /\b(today|tomorrow|next\s+(?:mon|tues|wednes|thurs|fri|satur|sun)day|(?:mon|tues|wednes|thurs|fri|satur|sun)day)\s+(?:at\s+)?(?:(\d{1,2})(?::(\d{2}))?\s*(am|pm)|(noon|midday)|at\s+(\d{1,2})(?::(\d{2}))?)\b/i.exec(value);
     if (!match) return value;
     var parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "numeric", day: "numeric", weekday: "long" }).formatToParts(new Date()).map(function (part) { return [part.type, part.value]; }));
     var date = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
@@ -567,9 +606,10 @@
       var wanted = weekdays.findIndex(function (day) { return day.startsWith(match[1].replace(/^next\s+/i, "").toLowerCase().slice(0, 3)); });
       if (wanted < 0) return value;
       var ahead = (wanted - date.getUTCDay() + 7) % 7;
-      date.setUTCDate(date.getUTCDate() + (ahead || 7));
+      date.setUTCDate(date.getUTCDate() + (ahead || 7) + (/^next\s+/i.test(match[1]) && ahead ? 7 : 0));
     }
-    return date.toISOString().slice(0, 10) + " " + match[2] + (match[3] ? ":" + match[3] : "") + match[4].toLowerCase() + " ET";
+    var inferred = match[6] ? Number(match[6]) >= 9 && Number(match[6]) < 12 ? "am" : "pm" : "";
+    return date.toISOString().slice(0, 10) + " " + (match[5] ? "12pm" : match[6] ? match[6] + (match[7] ? ":" + match[7] : "") + inferred : match[2] + (match[3] ? ":" + match[3] : "") + match[4].toLowerCase()) + " ET";
   }
   function bookingPreferenceFromText(value, current) {
     var next = Object.assign({ host: "", daypart: "", weekdays: [], date: "" }, current || {});
@@ -579,6 +619,7 @@
     if (/\bmornings?\b/i.test(value)) next.daypart = "morning";
     if (/\bafternoons?\b/i.test(value)) next.daypart = "afternoon";
     if (/\bevenings?\b|\bafter (?:5|five)\b/i.test(value)) next.daypart = "evening";
+    if (requestedClock(value) && !/\b(?:mornings?|afternoons?|evenings?)\b/i.test(value)) next.daypart = "";
     if (/\bweekends?\b/i.test(value)) { next.weekdays = [0, 6]; next.date = ""; }
     else if (/\bweekdays?\b/i.test(value)) { next.weekdays = [1, 2, 3, 4, 5]; next.date = ""; }
     else {
@@ -588,6 +629,16 @@
     }
     var exactDate = /\b(20\d{2}-\d{2}-\d{2})\b/.exec(value);
     if (exactDate) { next.date = exactDate[1]; next.weekdays = []; }
+    var nextWeekday = /\bnext\s+(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.exec(value);
+    if (nextWeekday && !exactDate) {
+      var currentDay = bookingDayKey(new Date());
+      var nextDate = new Date(currentDay + "T12:00:00Z");
+      var names = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
+      var difference = (names.indexOf(nextWeekday[1].toLowerCase()) - nextDate.getUTCDay() + 7) % 7;
+      nextDate.setUTCDate(nextDate.getUTCDate() + (difference || 7) + (difference ? 7 : 0));
+      next.date = nextDate.toISOString().slice(0, 10);
+      next.weekdays = [];
+    }
     if (/\btomorrow\b/i.test(value) || /\btoday\b/i.test(value)) {
       var parts = Object.fromEntries(new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", year: "numeric", month: "numeric", day: "numeric" }).formatToParts(new Date()).map(function (part) { return [part.type, part.value]; }));
       var day = new Date(Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day)));
@@ -614,19 +665,27 @@
   function showBookingPair() {
     if (!state.booking) return;
     var available = state.booking.allSlots.slice(state.booking.offset);
-    var first = available[0];
-    var firstDay = first && new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(first.start));
-    function isDifferentDay(slot) {
-      return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(slot.start)) !== firstDay;
+    var oneRequestedDay = !!state.booking.preference.date || state.booking.preference.weekdays.length === 1;
+    if (oneRequestedDay) {
+      available.sort(function (a, b) { return new Date(a.start) - new Date(b.start); });
+      if (available.length) {
+        var soonestDay = bookingDayKey(available[0].start);
+        available = available.filter(function (slot) { return bookingDayKey(slot.start) === soonestDay; });
+      }
     }
-    var differentDay = available.slice(1).find(function (slot) { return isDifferentDay(slot) && slot.daypart !== first.daypart; }) ||
-      available.slice(1).find(isDifferentDay);
-    var second = differentDay || available[1];
+    var first = available[0];
+    var firstDay = first && bookingDayKey(first.start);
+    function isDifferentDay(slot) {
+      return bookingDayKey(slot.start) !== firstDay;
+    }
+    var differentDay = first && (available.slice(1).find(function (slot) { return isDifferentDay(slot) && slot.daypart !== first.daypart; }) ||
+      available.slice(1).find(isDifferentDay));
+    var sameDayVariety = first && available.slice(1).find(function (slot) { return slot.daypart !== first.daypart; });
+    var second = oneRequestedDay ? (sameDayVariety || available[1]) : (differentDay || sameDayVariety || available[1]);
     state.booking.slots = first ? [first].concat(second ? [second] : []) : [];
     state.booking.step = "choose";
     if (!state.booking.slots.length) {
-      message("I don't see an open call time right now. You can leave a message for the team or call 919-737-7896.", false);
-      state.booking = null;
+      message("I don't see an opening for that day. Is there another day that could work for you?", false);
       return;
     }
     message("We have " + state.booking.slots.map(function (slot, index) {
@@ -667,7 +726,16 @@
     booking.step = "loading";
     if (followUp) message("Let me check.", false);
     bookingCall("slots", config.chatRoundRobinBookingEnabled ? [booking.preference] : []).then(function (slots) {
-      if (state.booking === booking && booking.slotSearchId === searchId) offerBookingSlots(slots);
+      if (state.booking !== booking || booking.slotSearchId !== searchId) return;
+      if (config.chatRoundRobinBookingEnabled && booking.preference.weekdays.length === 1 &&
+          !booking.preference.date && Array.isArray(slots) && slots.length) {
+        var earliest = slots.map(function (slot) { return bookingDayKey(slot.start); }).sort()[0];
+        return bookingCall("slots", [{ host: booking.preference.host, daypart: booking.preference.daypart, date: earliest }])
+          .then(function (sameDaySlots) {
+            if (state.booking === booking && booking.slotSearchId === searchId) offerBookingSlots(sameDaySlots);
+          });
+      }
+      offerBookingSlots(slots);
     }).catch(function (error) {
       if (state.booking === booking && booking.slotSearchId === searchId) bookingFailed(error);
     });
@@ -704,23 +772,14 @@
         message("I can't guarantee a specific team member from chat yet. Please call 919-737-7896 if you'd like to meet with Benjamin or Ricardo.", false);
         return;
       }
-      if (config.chatRoundRobinBookingEnabled && hasBookingPreference(value)) {
-        booking.preference = bookingPreferenceFromText(value, booking.preference);
-      }
-      if (config.chatRoundRobinBookingEnabled && hasBookingPreference(value) && !/^\d{4}-\d\d-\d\d\s+\d/i.test(value) &&
-          !/\b(?:at\s+)?\d{1,2}(?::\d\d)?\s*(?:am|pm)\b/i.test(value)) {
-        loadBookingSlots(booking);
-        return;
-      }
       if (/^(more|more times|other times|another time|different time)$/i.test(value)) {
         booking.offset = booking.offset + 2 < booking.allSlots.length ? booking.offset + 2 : 0;
         showBookingPair();
         return;
       }
       var choiceText = value.replace(/\b(?:for|as|on|by)?\s*(?:a\s+)?(?:video|zoom|google meet|virtual|phone|telephone)\s*call\b|\b(?:video|zoom|google meet|virtual|phone|telephone)\b|\s+(?:with|for)\s+(?:benjamin|ben|ricardo)\b/gi, "").trim();
-      var isExplicitTime = /\b\d{1,2}(?::\d\d)?\s*(?:am|pm)\b|\b20\d{2}-\d\d-\d\d\b/i.test(choiceText);
-      var choiceIndex = !isExplicitTime && /\b(?:1|one|first)\b/i.test(choiceText) ? 0 : !isExplicitTime && /\b(?:2|two|second)\b/i.test(choiceText) ? 1 : -1;
-      var choice = choiceIndex >= 0 ? booking.slots[choiceIndex] : null;
+      var choice = offeredBookingChoice(choiceText, booking.slots);
+      if (config.chatRoundRobinBookingEnabled && hasBookingPreference(value)) booking.preference = bookingPreferenceFromText(value, booking.preference);
       if (choice) {
         if (config.chatRoundRobinBookingEnabled && booking.preference.host &&
             Array.isArray(choice.availableHosts) && choice.availableHosts.indexOf(booking.preference.host) === -1) {
@@ -733,6 +792,19 @@
         message("Great, " + bookingLabel(booking.start) + ". " + (booking.step === "email" ? (config.bookingEmailPrompt || "What's your email address for the invitation?") : "We prefer a video call so we can meet face to face, open the map, and share the resources you need. If you'd rather have a phone call, just say phone. Otherwise, what's the best email for your invitation?"), false);
         return;
       }
+      if ((/\b(?:works|good|fine|great|perfect|take|choose|pick|book|yes|let'?s do|let us do|can do)\b/i.test(choiceText) ||
+          /^(?:today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)[.!]?$/i.test(choiceText)) &&
+          /\b(?:today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.test(choiceText) &&
+          booking.slots.length > 1 && bookingDayKey(booking.slots[0].start) === bookingDayKey(booking.slots[1].start) &&
+          offeredBookingChoice(choiceText, [booking.slots[0]])) {
+        message("Both of those times are on that day. Would the earlier or later time work better?", false);
+        return;
+      }
+      if (config.chatRoundRobinBookingEnabled && hasBookingPreference(value) && !requestedClock(choiceText) &&
+          !/^\d{4}-\d\d-\d\d\s+\d/i.test(choiceText)) {
+        loadBookingSlots(booking);
+        return;
+      }
       booking.step = "checking";
       bookingCall("suggest", config.chatRoundRobinBookingEnabled
         ? [normalizeSuggestedTime(value), { host: booking.preference.host }]
@@ -740,7 +812,10 @@
         if (!state.booking || state.booking !== booking) return;
         if (!result || !result.available) {
           booking.step = "choose";
-          message("That time isn't available. You can choose 1 or 2, ask for more times, or suggest a time like Tuesday at 3pm Eastern.", false);
+          if (hasBookingPreference(value)) {
+            message("I don't see that exact time open. Let me check the nearest options on that day.", false);
+            loadBookingSlots(booking);
+          } else message("That time isn't available. Would one of the times I offered work, or is there another day you'd like me to check?", false);
           return;
         }
         booking.start = result.start;
@@ -919,6 +994,7 @@
     if (question.key === "areasReason" && state.profile.areasPlural) wording = "What was it about those areas that stood out to you?";
     var personal = state.profile.firstName && (question.key === "areas" || question.key === "timing")
       ? state.profile.firstName + ", " : "";
+    if (personal) wording = wording.charAt(0).toLowerCase() + wording.slice(1);
     message((prefix ? prefix + " " : "") + personal + wording, false);
   }
   function answerAcknowledgement(question, answer) {
@@ -966,7 +1042,7 @@
       case "nextHome": return "That gives me a better picture.";
       case "budget": return state.profile.budgetKnown ? (priceAmount(answer) >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "👍") : "That's totally fine. We can connect you with a lender to get a clearer picture of your buying power.";
       case "financing": return "Great!";
-      case "preapproval": return state.profile.preApproved ? "Great, thanks for letting me know." : "Got it. We can connect you with a trusted local lender.";
+      case "preapproval": return state.profile.preApproved ? "" : "Got it, noted.";
       default: return "Got it.";
     }
   }

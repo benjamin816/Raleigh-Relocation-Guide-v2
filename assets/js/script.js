@@ -4933,13 +4933,13 @@
     chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test13";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261028-test43";
+    configScript.src = "/assets/js/raleigh-chat-config.js?v=20261028-test45";
     configScript.onload = function () {
       var engineScript = document.createElement("script");
-      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261028-test43";
+      engineScript.src = "/assets/js/raleigh-chat-engine.js?v=20261028-test45";
       engineScript.onload = function () {
         var chatScript = document.createElement("script");
-        chatScript.src = "/assets/js/raleigh-chat.js?v=20261028-test43";
+        chatScript.src = "/assets/js/raleigh-chat.js?v=20261028-test45";
         document.head.appendChild(chatScript);
       };
       document.head.appendChild(engineScript);

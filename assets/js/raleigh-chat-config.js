@@ -186,7 +186,7 @@ window.RaleighChatConfig = {
         {
           "key": "preapproval",
           "when": "needsPreapproval",
-          "text": "Are you already pre-approved with a lender, or would you like us to connect you with a trusted local lender?"
+          "text": "Are you already pre-approved with a lender? If not, part of our process is connecting you with a trusted local lender we work with closely."
         },
         {
           "key": "timing",
@@ -416,7 +416,7 @@ window.RaleighChatConfig = {
         {
           "key": "preapproval",
           "when": "needsPreapproval",
-          "text": "Are you already pre-approved with a lender, or would you like us to connect you with a trusted local lender?"
+          "text": "Are you already pre-approved with a lender? If not, part of our process is connecting you with a trusted local lender we work with closely."
         },
         {
           "key": "timing",
