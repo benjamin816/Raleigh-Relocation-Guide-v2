@@ -130,13 +130,14 @@
     if (state.completed || !panel.hidden) { cancelPulse(); unreadBadge.hidden = true; return; }
     if (state.hasUserMessage) {
       cancelPulse();
+      if (!state.unreadCount) { unreadBadge.hidden = true; return; }
       var delay = Math.max(0, state.badgeReadyAt - Date.now());
       if (delay) {
         unreadBadge.hidden = true;
         badgeTimer = window.setTimeout(refreshAttention, delay);
         return;
       }
-      var count = Math.max(1, state.unreadCount);
+      var count = state.unreadCount;
       unreadNumber.textContent = count > 99 ? "99+" : String(count);
       unreadCopy.textContent = count === 1 ? "NEW MESSAGE" : "NEW MESSAGES";
       unreadBadge.hidden = false;
@@ -234,7 +235,7 @@
       if (!state.history.length) state.started = false;
       if (!state.hasUserMessage && state.history.some(function (item) { return item.byUser; })) state.hasUserMessage = true;
       resumeQuestionOnOpen = !!(state.history.length && state.history[state.history.length - 1].byUser &&
-        state.intent && state.question >= 0 && state.question < activeQuestions().length);
+        (state.profile.awaitingVisitReason || (state.intent && state.question >= 0 && state.question < activeQuestions().length)));
     } catch (_) { /* An invalid or unavailable local record is ignored. */ }
   }
   var audioContext;
@@ -1260,6 +1261,12 @@
     }
     resumeAfterQuestion();
   }
+  function endBrowsingConversation() {
+    state.profile.awaitingVisitReason = false;
+    state.profile.browsingEnded = true;
+    finishConversation();
+    message("Got it. A lot of people check out the site when they're still unsure about moving to Raleigh. Please don't hesitate to reach out if you have any questions that aren't answered by all our free resources here and on the Living in Raleigh YouTube channel.", false);
+  }
   function handleText(text) {
     var value = text.trim();
     if (!value || state.submitting || state.ended) return;
@@ -1297,12 +1304,39 @@
     var contactCommand = /^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value);
     message(value, true, { remember: !state.contact && !contactCommand });
     sound();
+    if (state.profile.browsingEnded) {
+      state.profile.browsingEnded = false;
+      state.completed = false;
+      persist();
+    }
     if (/^(?:not interested|no longer interested|no thanks,?\s*(?:i'?m not interested)?|please (?:end|stop) (?:the )?chat)\s*[.!?]*$/i.test(value)) {
       state.booking = null;
       state.contact = null;
       finishConversation();
       message("Understood. I won't prompt you again. If you need us later, you can open this chat or call the team at 919-737-7896.", false);
       return;
+    }
+    if (!state.intent && !state.booking && !state.contact && /^(?:no|nope|nah|not really)(?:[,\s]+(?:just browsing|just looking|only browsing))?\s*[.!?]*$/i.test(value)) {
+      if (state.profile.awaitingVisitReason) {
+        endBrowsingConversation();
+      } else {
+        state.profile.awaitingVisitReason = true;
+        persist();
+        message("What has you looking at our website today?", false);
+      }
+      return;
+    }
+    if (state.profile.awaitingVisitReason) {
+      state.profile.awaitingVisitReason = false;
+      persist();
+      if (!detectIntent(value) && !engine.asksQuestion(value) && !engine.wantsResources(value) && !engine.wantsBooking(value)) {
+        if (/\b(?:mov(?:e|ing)|relocat\w*|buy\w*|sell\w*|invest\w*|homes?|houses?|properties?|neighborhoods?)\b/i.test(value)) {
+          state.profile.awaitingVisitReason = true;
+          persist();
+          message("Are you thinking about a future move to Raleigh, or just exploring for now?", false);
+        } else endBrowsingConversation();
+        return;
+      }
     }
     if (!state.booking && !state.contact && /^(?:hi|hello|hey|good morning|good afternoon|good evening|one sec(?:ond)?|just a sec(?:ond)?|let me think|hmm|um+)\s*[.!?]*$/i.test(value)) {
       var pendingQuestion = state.intent && state.question >= 0 && state.question < activeQuestions().length
@@ -1522,7 +1556,8 @@
       message(config.welcome, false);
     } else if (resumeQuestionOnOpen) {
       resumeQuestionOnOpen = false;
-      askQuestion();
+      if (state.profile.awaitingVisitReason) message("What has you looking at our website today?", false);
+      else askQuestion();
     }
     scrollToLatest();
     input.focus();
