@@ -142,7 +142,6 @@
     if (state.completed || !panel.hidden) { cancelPulse(); unreadBadge.hidden = true; return; }
     if (state.hasUserMessage) {
       cancelPulse();
-      if (!state.unreadCount) { unreadBadge.hidden = true; return; }
       var delay = Math.max(0, state.badgeReadyAt - Date.now());
       if (delay) {
         unreadBadge.hidden = true;
@@ -150,8 +149,9 @@
         return;
       }
       var count = state.unreadCount;
+      unreadNumber.hidden = count === 0;
       unreadNumber.textContent = count > 99 ? "99+" : String(count);
-      unreadCopy.textContent = count === 1 ? "NEW MESSAGE" : "NEW MESSAGES";
+      unreadCopy.textContent = count === 0 ? "CONTINUE CHAT" : count === 1 ? "NEW MESSAGE" : "NEW MESSAGES";
       unreadBadge.hidden = false;
       return;
     }
