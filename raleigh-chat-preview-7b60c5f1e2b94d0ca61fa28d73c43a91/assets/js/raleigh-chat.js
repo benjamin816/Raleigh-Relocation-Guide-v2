@@ -658,9 +658,12 @@
     state.answers = [];
     state.profile = {};
     var knownLocation = /^(buying|relocating|investing)$/.test(id) && sourceText && engine.detectLocation(sourceText);
+    if (knownLocation) knownLocation = engine.resolveOrigin(knownLocation, config);
     if (knownLocation) {
       state.profile.location = knownLocation.type;
       state.profile.origin = knownLocation.place || "";
+      state.profile.originCode = knownLocation.stateCode || "";
+      state.profile.originCity = knownLocation.city || "";
       state.answers.push(redact(sourceText));
       state.question = 1;
       state.memories[id] = state.answers.slice();
@@ -678,10 +681,13 @@
   function locationAcknowledgement(location) {
     if (state.intent === "investing") return location.type === "local" ? "Great!" : "Awesome.";
     if (location.type === "local") return "Great.";
+    if (location.city && location.stateCode === "TX") return (config.relocationResponses || {}).cityTexas || "Oh, Texas? That's awesome.";
+    if (location.city && location.stateCode) return "Oh, " + config.originStates[location.stateCode] + "? That's awesome.";
     var place = (location.place || "").toLowerCase();
     return (config.originAcknowledgements || {})[place] || "Great.";
   }
   function originLabel() {
+    if (state.profile.originCode && (config.originStates || {})[state.profile.originCode]) return config.originStates[state.profile.originCode];
     return (state.profile.origin || "").replace(/\b[a-z]/g, function (letter) { return letter.toUpperCase(); });
   }
   function askQuestion(prefix) {
@@ -698,9 +704,10 @@
     var variants = [question.text].concat(Array.isArray(question.alternatives) ? question.alternatives.filter(Boolean) : []);
     var wording = variants[state.answers.length % variants.length] || question.text;
     if (state.intent === "relocating" && state.profile.location === "out") {
-      if (question.key === "whyRaleigh") wording = "What has you looking at moving to Raleigh" + (state.profile.origin ? " from " + originLabel() : "") + "?";
+      if (question.key === "whyRaleigh") wording = state.profile.originCity ? "What has you making the move?" : "What has you looking at moving to Raleigh" + (state.profile.origin ? " from " + originLabel() : "") + "?";
       if (question.key === "originHousing") wording = "Do you have a home" + (state.profile.origin ? " in " + originLabel() : " there") + " that you'd need to sell, or are you currently renting?";
       if (question.key === "areas") wording = "What areas around Raleigh are you interested in buying a home in?";
+      if (question.key === "familyNearby") wording = state.profile.nearbyPerson === "friends" ? "What part of Raleigh are your friends in?" : "What part of Raleigh is your family in?";
     }
     if (question.key === "areasReason" && state.profile.areasPlural) wording = "What was it about those areas that stood out to you?";
     message((prefix ? prefix + " " : "") + wording, false);
@@ -712,7 +719,20 @@
       case "currentArea": return /north raleigh/.test(text) ? "North Raleigh is a great area!" : "Okay, great.";
       case "firstTime": return /\b(yes|first|never)\b/.test(text) ? "That's super exciting!" : "Got it.";
       case "leaseEnd": return "Got it.";
-      case "whyRaleigh": return /\b(warm|weather|commute)\b/.test(text) ? "That makes sense!" : "I totally understand.";
+      case "whyRaleigh": {
+        if (state.intent === "relocating") {
+          var responses = config.relocationResponses || {};
+          if (state.profile.newJob) return responses.job || "Congrats! That's super exciting.";
+          if (state.profile.familyNearby) return responses.family || "Oh, awesome.";
+          if (/\b(price|prices|cost of living|affordab\w*|cheaper|less expensive|more for (?:my|the|our) money)\b/.test(text)) {
+            return state.profile.originCode === "CA" ? (responses.californiaPrice || responses.price || "Fair enough!") : (responses.price || "Fair enough!");
+          }
+          if (/\b(weather|warm|warmer|climate|seasons?|cold|winter)\b/.test(text)) return responses.weather || "Totally get that.";
+        }
+        return /\b(warm|weather|commute)\b/.test(text) ? "That makes sense!" : "I totally understand.";
+      }
+      case "jobLocation": return "Okay, awesome.";
+      case "jobStart": return "Great.";
       case "familyNearby": return /\b(yes|yeah|they do|here|raleigh|cary)\b/.test(text) ? "That's wonderful!" : "Got it.";
       case "currentHome": return /north raleigh/.test(text) ? "North Raleigh is a great area!" : "Okay, great.";
       case "ownedYears": { var years = parseInt(text, 10); return years >= 5 || /\b(five|six|seven|eight|nine|ten|eleven|twelve)\b/.test(text) ? "Wow, you've been there a while!" : "Okay, got it."; }
@@ -759,10 +779,13 @@
     if (question && question.key === "location") {
       var location = engine.detectLocation(answer);
       if (!location && /^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/i.test(answer.trim())) location = { type: "local", place: "" };
-      if (!location && /^[A-Za-z][A-Za-z .-]{1,35}$/.test(answer.trim()) && !/^(?:not sure|i don't know|maybe|yes|no)$/i.test(answer.trim())) location = { type: "out", place: answer.trim().toLowerCase() };
+      if (!location && /^[A-Za-z][A-Za-z ,.'-]{1,45}$/.test(answer.trim()) && !/^(?:not sure|i don't know|maybe|yes|no)$/i.test(answer.trim())) location = { type: "out", place: answer.trim().toLowerCase() };
       if (!location) { scheduleClarification("Are you already local to Raleigh, or would you be moving from out of state?"); return; }
+      location = engine.resolveOrigin(location, config);
       state.profile.location = location.type;
       state.profile.origin = location.place || "";
+      state.profile.originCode = location.stateCode || "";
+      state.profile.originCity = location.city || "";
       acknowledgement = locationAcknowledgement(location);
     }
     if (question && question.key === "tenure") {
@@ -818,7 +841,9 @@
       return;
     }
     if (question && question.key === "whyRaleigh") {
-      state.profile.familyNearby = /\b(family|relatives|friends)\b/i.test(answer);
+      state.profile.familyNearby = /\b(family|relatives|friends|parents|siblings)\b/i.test(answer);
+      state.profile.nearbyPerson = /\bfriends\b/i.test(answer) && !/\b(family|relatives|parents|siblings)\b/i.test(answer) ? "friends" : "family";
+      state.profile.newJob = state.intent === "relocating" && /\b(new job|job offer|for (?:a|my) job|for work|work transfer|transferred|new position|starting (?:a|my) job)\b/i.test(answer);
       state.profile.prioritiesKnown = /\bcommute\b/i.test(answer);
     }
     if (question && question.key === "areas" && /^(buying|relocating)$/.test(state.intent)) {

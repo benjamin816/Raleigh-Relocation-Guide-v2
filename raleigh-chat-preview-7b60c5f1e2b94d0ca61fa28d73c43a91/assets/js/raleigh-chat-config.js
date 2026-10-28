@@ -260,9 +260,19 @@ window.RaleighChatConfig = {
           "text": "What has you looking at moving here?"
         },
         {
+          "key": "jobLocation",
+          "when": "newJob",
+          "text": "Where will you be working here?"
+        },
+        {
+          "key": "jobStart",
+          "when": "newJob",
+          "text": "Do you have a start date for that job?"
+        },
+        {
           "key": "familyNearby",
           "when": "family",
-          "text": "Do you already have family or friends in the Raleigh area?"
+          "text": "What part of the Raleigh area are they in?"
         },
         {
           "key": "originHousing",
@@ -549,6 +559,81 @@ window.RaleighChatConfig = {
       "answer": "That depends on your timeline, budget, and flexibility. Tell me how long you expect to stay and what monthly payment feels comfortable."
     }
   ],
+  "originStates": {
+    "AL": "Alabama", "AK": "Alaska", "AZ": "Arizona", "AR": "Arkansas", "CA": "California",
+    "CO": "Colorado", "CT": "Connecticut", "DE": "Delaware", "FL": "Florida", "GA": "Georgia",
+    "HI": "Hawaii", "ID": "Idaho", "IL": "Illinois", "IN": "Indiana", "IA": "Iowa",
+    "KS": "Kansas", "KY": "Kentucky", "LA": "Louisiana", "ME": "Maine", "MD": "Maryland",
+    "MA": "Massachusetts", "MI": "Michigan", "MN": "Minnesota", "MS": "Mississippi", "MO": "Missouri",
+    "MT": "Montana", "NE": "Nebraska", "NV": "Nevada", "NH": "New Hampshire", "NJ": "New Jersey",
+    "NM": "New Mexico", "NY": "New York", "NC": "North Carolina", "ND": "North Dakota", "OH": "Ohio",
+    "OK": "Oklahoma", "OR": "Oregon", "PA": "Pennsylvania", "RI": "Rhode Island", "SC": "South Carolina",
+    "SD": "South Dakota", "TN": "Tennessee", "TX": "Texas", "UT": "Utah", "VT": "Vermont",
+    "VA": "Virginia", "WA": "Washington", "WV": "West Virginia", "WI": "Wisconsin", "WY": "Wyoming",
+    "DC": "Washington, DC"
+  },
+  "originCities": {
+    "AL": ["Birmingham", "Huntsville", "Mobile"],
+    "AK": ["Anchorage", "Fairbanks"],
+    "AZ": ["Phoenix", "Tucson", "Mesa"],
+    "AR": ["Little Rock", "Fayetteville"],
+    "CA": ["Los Angeles", "San Francisco", "San Diego", "Sacramento", "San Jose", "Oakland", "Fresno"],
+    "CO": ["Denver", "Colorado Springs", "Boulder", "Aurora"],
+    "CT": ["Hartford", "New Haven", "Stamford"],
+    "DE": ["Wilmington", "Dover"],
+    "FL": ["Miami", "Orlando", "Tampa", "Jacksonville", "Fort Lauderdale", "St. Petersburg", "Naples"],
+    "GA": ["Atlanta", "Savannah", "Augusta"],
+    "HI": ["Honolulu", "Hilo"],
+    "ID": ["Boise", "Idaho Falls", "Coeur d'Alene"],
+    "IL": ["Chicago", "Naperville", "Peoria"],
+    "IN": ["Indianapolis", "Fort Wayne", "Bloomington"],
+    "IA": ["Des Moines", "Cedar Rapids", "Iowa City"],
+    "KS": ["Wichita", "Overland Park", "Topeka"],
+    "KY": ["Louisville", "Lexington", "Bowling Green"],
+    "LA": ["New Orleans", "Baton Rouge", "Lafayette"],
+    "ME": ["Portland", "Bangor"],
+    "MD": ["Baltimore", "Annapolis", "Frederick"],
+    "MA": ["Boston", "Cambridge", "Worcester"],
+    "MI": ["Detroit", "Grand Rapids", "Ann Arbor"],
+    "MN": ["Minneapolis", "St. Paul", "Duluth"],
+    "MS": ["Jackson", "Biloxi", "Gulfport"],
+    "MO": ["St. Louis", "Kansas City", "Springfield", "Columbia"],
+    "MT": ["Billings", "Missoula", "Bozeman"],
+    "NE": ["Omaha", "Lincoln", "Grand Island"],
+    "NV": ["Las Vegas", "Reno", "Henderson"],
+    "NH": ["Manchester", "Nashua", "Concord"],
+    "NJ": ["Newark", "Jersey City", "Trenton", "Hoboken"],
+    "NM": ["Albuquerque", "Santa Fe", "Las Cruces"],
+    "NY": ["New York City", "Buffalo", "Rochester", "Syracuse", "Yonkers"],
+    "NC": ["Charlotte", "Greensboro", "Asheville", "Winston-Salem", "Wilmington", "Fayetteville"],
+    "ND": ["Fargo", "Bismarck"],
+    "OH": ["Cleveland", "Cincinnati", "Toledo", "Akron", "Dayton", "Columbus"],
+    "OK": ["Oklahoma City", "Tulsa", "Norman"],
+    "OR": ["Portland", "Eugene", "Bend", "Beaverton"],
+    "PA": ["Philadelphia", "Pittsburgh", "Allentown", "Erie", "Scranton"],
+    "RI": ["Providence", "Warwick", "Cranston"],
+    "SC": ["Charleston", "Columbia", "Greenville", "Myrtle Beach", "Rock Hill"],
+    "SD": ["Sioux Falls", "Rapid City"],
+    "TN": ["Nashville", "Memphis", "Knoxville", "Chattanooga"],
+    "TX": ["Dallas", "Houston", "Austin", "San Antonio", "Fort Worth", "El Paso", "Plano"],
+    "UT": ["Salt Lake City", "Provo", "Ogden"],
+    "VT": ["Burlington", "Montpelier"],
+    "VA": ["Virginia Beach", "Richmond", "Norfolk", "Arlington", "Alexandria", "Chesapeake", "Roanoke"],
+    "WA": ["Seattle", "Tacoma", "Spokane", "Bellevue"],
+    "WV": ["Charleston", "Morgantown", "Huntington", "Wheeling"],
+    "WI": ["Milwaukee", "Madison", "Green Bay", "Kenosha"],
+    "WY": ["Cheyenne", "Casper", "Laramie"],
+    "DC": ["Washington, DC"]
+  },
+  "originAmbiguousCities": ["Alexandria", "Arlington", "Augusta", "Burlington", "Columbus", "Dover", "Greenville", "Jackson", "Kansas City", "Lincoln", "Madison", "Manchester", "Portland", "Richmond", "Rochester", "Springfield"],
+  "relocationResponses": {
+    "price": "Fair enough!",
+    "californiaPrice": "I hear that! We get a lot of people from California who realize they can get more home for the money here in Raleigh.",
+    "weather": "Totally get that. That's one of the top reasons people move to Raleigh: we get all four seasons, and the weather is fairly mild overall.",
+    "family": "Oh, awesome.",
+    "job": "Congrats! That's super exciting.",
+    "cityTexas": "Oh, Texas? That's awesome. We get a lot of folks from down there."
+  },
   "originAcknowledgements": {
     "ohio": "Great. We've worked with multiple families relocating from Ohio.",
     "new york": "Great. We get a lot of people relocating from New York."
