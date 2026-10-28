@@ -46,11 +46,18 @@
   var attachment = null;
   var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   var speech = null;
-  function sizeInput() {
+  function sizeInput(preserveConversation) {
+    var priorLogTop = preserveConversation ? log.scrollTop : null;
     input.style.height = "42px";
     var height = Math.min(Math.max(input.scrollHeight, 42), 142);
     input.style.height = height + "px";
     input.style.overflowY = input.scrollHeight > 142 ? "auto" : "hidden";
+    if (priorLogTop !== null) {
+      log.scrollTop = priorLogTop;
+      window.requestAnimationFrame(function () {
+        if (document.activeElement === input && !panel.hidden) log.scrollTop = priorLogTop;
+      });
+    }
   }
   function stopVoiceTyping() {
     if (!speech) return;
@@ -649,6 +656,7 @@
     var question = questions[state.question];
     var variants = [question.text].concat(Array.isArray(question.alternatives) ? question.alternatives.filter(Boolean) : []);
     var wording = variants[state.answers.length % variants.length] || question.text;
+    if (question.key === "areasReason" && state.profile.areasPlural) wording = "What was it about those areas that stood out to you?";
     message((prefix ? prefix + " " : "") + wording, false);
   }
   function answerAcknowledgement(question, answer) {
@@ -668,14 +676,22 @@
       case "experience": return /\b(first|new|never)\b/.test(text) ? "That's super exciting!" : "Great, good to know.";
       case "strategy": return "Okay, got it.";
       case "sellingExperience": return /\b(first|never)\b/.test(text) ? "Okay, wonderful." : "Great, good to know.";
-      case "timing": return /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Got it.";
-      case "areas": return "Okay, great.";
-      case "home": case "nextHome": return "That gives me a better picture.";
+      case "timing": return /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Great, that timing makes sense.";
+      case "priorities": return "Absolutely!";
+      case "areas": return state.profile.areasNeedFollowup ?
+        (state.profile.areasPlural ? "Awesome, those are great areas!" : "Awesome, that's a great area!") : "That makes sense!";
+      case "areasReason": return "Makes perfect sense!";
+      case "home": return state.profile.budgetKnown ? "That gives me a good picture!" : "Got it.";
+      case "nextHome": return "That gives me a better picture.";
+      case "budget": return state.profile.budgetKnown ? "Awesome!" : "That's totally fine. We can connect you with a lender to get a clearer picture of your buying power.";
+      case "financing": return "Great!";
       default: return "Got it.";
     }
   }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
+    var flowQuestions = config.flows[state.intent].questions;
+    var questionPosition = flowQuestions.indexOf(question);
     var acknowledgement = answerAcknowledgement(question, answer);
     if (question && question.key === "location") {
       var location = engine.detectLocation(answer);
@@ -706,10 +722,27 @@
       state.profile.familyNearby = /\b(family|relatives|friends)\b/i.test(answer);
       state.profile.prioritiesKnown = /\bcommute\b/i.test(answer);
     }
+    if (question && question.key === "areas" && /^(buying|relocating)$/.test(state.intent)) {
+      state.profile.areasPlural = /,|\band\b|\bor\b|\//i.test(answer);
+      state.profile.areasNeedFollowup = !/\b(?:because|since|near|close to|closer to|for the|for its|for their|due to|like the|love the|drawn to|appeals? to|commute|schools?|walkab|yard|family)\b/i.test(answer);
+    }
+    if (question && question.key === "home" && /^(buying|relocating)$/.test(state.intent)) {
+      state.profile.budgetKnown = /\$\s?\d{3,7}|\b\d{3,4}\s?k\b|\b\d{6,7}\b/i.test(answer) && !/\b(?:not sure|don't know|unsure)\b/i.test(answer);
+    }
+    if (question && question.key === "budget" && /^(buying|relocating)$/.test(state.intent)) {
+      state.profile.budgetKnown = !/\b(?:not sure|don't know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);
+    }
+    if (question && question.key !== "location" && question.key !== "tenure") {
+      acknowledgement = answerAcknowledgement(question, answer);
+    }
     state.answers.push(redact(answer));
     state.memories[state.intent] = state.answers.slice();
     state.memoryProfiles[state.intent] = Object.assign({}, state.profile);
-    state.question += 1;
+    var nextQuestions = activeQuestions();
+    state.question = nextQuestions.findIndex(function (candidate) {
+      return flowQuestions.indexOf(candidate) > questionPosition;
+    });
+    if (state.question < 0) state.question = nextQuestions.length;
     askQuestion(acknowledgement);
   }
   function showContact() {
@@ -1007,7 +1040,7 @@
   }
   launcher.addEventListener("click", function () { panel.hidden ? open() : close(); });
   input.addEventListener("input", function () {
-    sizeInput();
+    sizeInput(true);
     sendButton.disabled = state.submitting || pendingBotMessages > 0 || !input.value.trim();
   });
   input.addEventListener("keydown", function (event) {

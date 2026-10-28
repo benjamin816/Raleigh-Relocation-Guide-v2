@@ -67,6 +67,9 @@
         case "family": return profile.familyNearby === true;
         case "needsPriorities": return profile.prioritiesKnown !== true;
         case "outNeedsPriorities": return profile.location === "out" && profile.prioritiesKnown !== true;
+        case "areaReasonNeeded": return profile.areasNeedFollowup === true;
+        case "budgetNeeded": return profile.budgetKnown !== true;
+        case "budgetKnown": return profile.budgetKnown === true;
         case "combined": return combined === true;
         case "solo": return combined !== true;
         default: return true;

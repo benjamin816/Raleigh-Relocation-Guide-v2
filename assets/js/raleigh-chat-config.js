@@ -132,19 +132,30 @@ window.RaleighChatConfig = {
         },
         {
           "key": "areas",
-          "text": "What areas are you considering so far, and why?"
+          "text": "Do you have certain areas around Raleigh you're most interested in?"
+        },
+        {
+          "key": "areasReason",
+          "when": "areaReasonNeeded",
+          "text": "What was it about that area that stood out to you?"
         },
         {
           "key": "home",
-          "text": "What are you looking for in a home?"
-        },
-        {
-          "key": "timing",
-          "text": "When are you hoping to move?"
+          "text": "As far as the home goes, what's most important to you?"
         },
         {
           "key": "budget",
-          "text": "What's a comfortable price range for you?"
+          "when": "budgetNeeded",
+          "text": "And as far as price, where would you ideally like to be?"
+        },
+        {
+          "key": "financing",
+          "when": "budgetKnown",
+          "text": "Do you think you'll be buying with cash or using financing?"
+        },
+        {
+          "key": "timing",
+          "text": "Lastly, when are you hoping to make the move, in an ideal world?"
         }
       ],
       "finish": "A one-on-one conversation with the team would help us build a game plan around your timing and what you're looking for.",
@@ -241,7 +252,7 @@ window.RaleighChatConfig = {
         {
           "key": "whyRaleigh",
           "when": "out",
-          "text": "What has you looking at moving down here?"
+          "text": "What has you looking at moving here?"
         },
         {
           "key": "familyNearby",
@@ -280,19 +291,30 @@ window.RaleighChatConfig = {
         },
         {
           "key": "areas",
-          "text": "What areas interest you so far, and why?"
+          "text": "Do you have certain areas around Raleigh you're most interested in?"
+        },
+        {
+          "key": "areasReason",
+          "when": "areaReasonNeeded",
+          "text": "What was it about that area that stood out to you?"
         },
         {
           "key": "home",
-          "text": "What are you looking for in a home?"
-        },
-        {
-          "key": "timing",
-          "text": "When are you hoping to move?"
+          "text": "As far as the home goes, what's most important to you?"
         },
         {
           "key": "budget",
-          "text": "What's a comfortable price range for you?"
+          "when": "budgetNeeded",
+          "text": "And as far as price, where would you ideally like to be?"
+        },
+        {
+          "key": "financing",
+          "when": "budgetKnown",
+          "text": "Do you think you'll be buying with cash or using financing?"
+        },
+        {
+          "key": "timing",
+          "text": "Lastly, when are you hoping to make the move, in an ideal world?"
         }
       ],
       "finish": "A one-on-one conversation with the team would help us build a game plan around your move and the areas you're considering.",
