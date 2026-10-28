@@ -51,6 +51,35 @@
     if (/\b(local|already here|in the triangle)\b/.test(text)) return { type: "local", place: "" };
     return null;
   }
+  function resolveOrigin(location, config) {
+    if (!location || location.type !== "out" || !location.place) return location;
+    var raw = normalize(location.place).replace(/[.,]+$/, "");
+    var states = config.originStates || {};
+    var cities = config.originCities || {};
+    var codes = Object.keys(states);
+    var stateCode = codes.find(function (code) {
+      return raw === code.toLowerCase() || raw === normalize(states[code]);
+    });
+    if (stateCode) return { type: "out", place: states[stateCode].toLowerCase(), stateCode: stateCode, city: "" };
+    var explicit = raw.match(/^(.+?)[, ]+([a-z]{2})$/);
+    if (explicit && states[explicit[2].toUpperCase()]) {
+      stateCode = explicit[2].toUpperCase();
+      return { type: "out", place: states[stateCode].toLowerCase(), stateCode: stateCode, city: explicit[1] };
+    }
+    if ((config.originAmbiguousCities || []).some(function (city) { return normalize(city) === raw; })) {
+      return { type: "out", place: raw, stateCode: "", city: "" };
+    }
+    var cityMatches = codes.filter(function (code) {
+      return (cities[code] || []).some(function (city) {
+        return normalize(city).replace(/[.]/g, "") === raw.replace(/[.]/g, "");
+      });
+    });
+    if (cityMatches.length === 1) {
+      stateCode = cityMatches[0];
+      return { type: "out", place: states[stateCode].toLowerCase(), stateCode: stateCode, city: raw };
+    }
+    return { type: "out", place: raw, stateCode: "", city: "" };
+  }
   function detectTenure(value) {
     var text = normalize(value);
     if (/\b(rent|renting|renter|lease|tenant)\b/.test(text)) return "renting";
@@ -62,6 +91,7 @@
       switch (question.when || "always") {
         case "local": return profile.location === "local";
         case "out": return profile.location === "out";
+        case "newJob": return profile.newJob === true;
         case "rentalClarificationNeeded": return profile.rentalClarificationNeeded === true;
         case "renting": return profile.location === "local" && profile.tenure === "renting";
         case "owning": return profile.location === "local" && profile.tenure === "owning";
@@ -94,5 +124,5 @@
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";
     return null;
   }
-  return { detectIntent: detectIntent, detectLocation: detectLocation, detectTenure: detectTenure, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
+  return { detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
 });

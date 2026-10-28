@@ -120,8 +120,8 @@ def validate_chat_config(config):
             and 1 <= len(question["text"]) <= 500
             and isinstance(question.get("key", ""), str) and len(question.get("key", "")) <= 40
             and question.get("when", "") in ("", "local", "out", "renting", "owning", "combined", "solo",
-                                               "family", "outNeedsPriorities", "areaReasonNeeded", "budgetNeeded",
-                                               "budgetKnown")
+                                               "family", "newJob", "rentalClarificationNeeded", "outNeedsPriorities",
+                                               "areaReasonNeeded", "budgetNeeded", "budgetKnown")
             and isinstance(question.get("alternatives", []), list) and len(question.get("alternatives", [])) <= 3
             and all(isinstance(text, str) and 1 <= len(text) <= 500 for text in question.get("alternatives", []))
             for question in questions

@@ -41,6 +41,11 @@ for (const [expected, phrases] of Object.entries(intents)) {
   for (const phrase of phrases) check(engine.detectIntent(phrase, config)?.id, expected, phrase);
 }
 for (const phrase of ['I live in Ohio', 'I am moving from Ohio', 'Relocating from New York', 'We live in Florida', 'I am out of state']) check(engine.detectLocation(phrase)?.type, 'out', phrase);
+for (const [origin, expected] of [['CA', 'california'], ['TX', 'texas'], ['Dallas', 'texas'], ['San Diego', 'california'], ['Delaware', 'delaware']]) check(engine.resolveOrigin({ type: 'out', place: origin }, config).place, expected, origin);
+for (const [code, name] of Object.entries(config.originStates)) check(engine.resolveOrigin({ type: 'out', place: code }, config).place, name.toLowerCase(), code);
+check(engine.resolveOrigin({ type: 'out', place: 'Portland' }, config).stateCode, '', 'Ambiguous city does not guess a state');
+check(engine.resolveOrigin({ type: 'out', place: 'Greenville' }, config).stateCode, '', 'Known shared city name does not guess a state');
+check(engine.resolveOrigin({ type: 'out', place: 'Portland, OR' }, config).place, 'oregon', 'Explicit state disambiguates city');
 for (const phrase of ["I'm moving to Raleigh", "I'm relocating"]) check(engine.detectLocation(phrase), null, phrase);
 for (const phrase of ['I already live here', 'I am local', 'I live in Raleigh', 'I live in Cary', 'I live in Durham', 'I am in Raleigh', "I'm in Raleigh", 'I live in North Raleigh']) check(engine.detectLocation(phrase)?.type, 'local', phrase);
 for (const phrase of ['I rent', 'We are renting', 'Our lease ends soon', 'I am a tenant']) check(engine.detectTenure(phrase), 'renting', phrase);
@@ -64,6 +69,8 @@ const branches = [
   ['buying', { location: 'out', areasNeedFollowup: true, budgetKnown: true }, false, 'location,whyRaleigh,priorities,areas,areasReason,home,financing,timing'],
   ['relocating', { location: 'out', areasNeedFollowup: true, budgetKnown: true }, false, 'location,whyRaleigh,originHousing,priorities,areas,areasReason,home,financing,timing'],
   ['relocating', { location: 'out', rentalClarificationNeeded: true }, false, 'location,whyRaleigh,originHousing,priorities,areas,rentalPlan,home,budget,timing'],
+  ['relocating', { location: 'out', newJob: true }, false, 'location,whyRaleigh,jobLocation,jobStart,originHousing,priorities,areas,home,budget,timing'],
+  ['relocating', { location: 'out', familyNearby: true }, false, 'location,whyRaleigh,familyNearby,originHousing,priorities,areas,home,budget,timing'],
   ['selling', {}, false, 'currentHome,ownedYears,whySellSolo,nextDestination,sellingExperience,timing'],
   ['selling', {}, true, 'whySell,currentHome,ownedYears,nextDestination,nextAreaReason,nextHome,budget,sellingExperience,timing'],
   ['investing', { location: 'local' }, false, 'location,experience,strategy,timing,areas,goals,involvement,budget'],
