@@ -1919,6 +1919,7 @@
     var leadPopupSessionStartKey = "livrLeadPopupSessionStart";
     var leadPopupNextShowKey = "livrLeadPopupNextShowAt";
     var leadPopupChatQuietUntilKey = "livrChatQuietUntil";
+    var leadPopupPageReadyAt = Date.now() + 10 * 1000;
     var leadPopupInitialDelayMs = 10 * 1000;
     var leadPopupFormFollowupDelayMs = 2 * 60 * 1000;
     var leadPopupChatDelayMs = 30 * 60 * 1000;
@@ -2665,6 +2666,10 @@
       if ((!forceOpen && !mayShowPopup()) || !popupHost.hidden) {
         return;
       }
+      if (!forceOpen && Date.now() < leadPopupPageReadyAt) {
+        schedulePopup();
+        return;
+      }
       if (!forceOpen && (chatBlocksLeadPopup || isChatOpen())) {
         clearTimer();
         return;
@@ -2723,7 +2728,7 @@
       }
       clearTimer();
       var nextShowAt = ensureNextShowAt();
-      var delay = Math.max(0, nextShowAt - Date.now());
+      var delay = Math.max(0, nextShowAt - Date.now(), leadPopupPageReadyAt - Date.now());
       timeoutId = window.setTimeout(function () {
         timeoutId = 0;
         if (chatBlocksLeadPopup || isChatOpen()) {
@@ -4926,16 +4931,16 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=68bb135a5a10";
+    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=ddbb6fd472d7";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-config.js?v=68bb135a5a10";
+    configScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-config.js?v=ddbb6fd472d7";
     configScript.onload = function () {
       var engineScript = document.createElement("script");
-      engineScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-engine.js?v=68bb135a5a10";
+      engineScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-engine.js?v=ddbb6fd472d7";
       engineScript.onload = function () {
         var chatScript = document.createElement("script");
-        chatScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat.js?v=68bb135a5a10";
+        chatScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat.js?v=ddbb6fd472d7";
         document.head.appendChild(chatScript);
       };
       document.head.appendChild(engineScript);
