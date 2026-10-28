@@ -488,6 +488,7 @@
         /\b(?:prefer|request|book|speak|meet|call|work with)\b.{0,60}\b(?:benjamin|ben|ricardo)\b/i.test(entry.text);
     });
     var requestedPreference = bookingPreferenceFromText(request || (earlierHostRequest && earlierHostRequest.text) || "");
+    if (!requestedPreference.host && state.profile.requestedHost) requestedPreference.host = state.profile.requestedHost;
     if (!config.chatRoundRobinBookingEnabled && requestedPreference.host) {
       message("I can't guarantee a call with a specific team member from chat yet. Please call 919-737-7896 and we'll find a time with " + requestedPreference.host + ".", false);
       return;
@@ -500,12 +501,13 @@
   }
   function loadBookingSlots(booking) {
     var followUp = booking.step === "choose";
+    var searchId = booking.slotSearchId = (booking.slotSearchId || 0) + 1;
     booking.step = "loading";
     if (followUp) message("Let me check.", false);
     bookingCall("slots", config.chatRoundRobinBookingEnabled ? [booking.preference] : []).then(function (slots) {
-      if (state.booking === booking) offerBookingSlots(slots);
+      if (state.booking === booking && booking.slotSearchId === searchId) offerBookingSlots(slots);
     }).catch(function (error) {
-      if (state.booking === booking) bookingFailed(error);
+      if (state.booking === booking && booking.slotSearchId === searchId) bookingFailed(error);
     });
   }
   function handleBookingAnswer(value) {
@@ -1039,13 +1041,23 @@
     }
   }
   function isQuestionPreamble(value) {
-    return /^(?:i (?:have|had|got) (?:a |one |another |quick )?question|can i ask (?:you )?(?:a |one )?question|quick question|one question|question for you)\s*[.!?]*$/i.test(value);
+    return /^(?:i (?:have|had|got) (?:a |one |another |quick )?question|can i ask (?:you )?(?:a |one )?question|can i ask you something|ask a question|quick question|one question|question for you)\s*[.!?]*$/i.test(value);
+  }
+  function requestedPerson(value) {
+    if (/\b(?:benjamin|ben)\b/i.test(value) && !/\bricardo\b/i.test(value)) return "Benjamin";
+    if (/\bricardo\b/i.test(value) && !/\b(?:benjamin|ben)\b/i.test(value)) return "Ricardo";
+    return "";
   }
   function asksForBenjaminNumber(value) {
     return /\b(?:benjamin|ben)\b.{0,70}\b(?:number|phone|call|text|reach)\b|\b(?:number|phone|call|text|reach)\b.{0,70}\b(?:benjamin|ben)\b/i.test(value);
   }
   function asksForTeamMember(value) {
-    return /\b(?:speak|talk|connect)\s+(?:with|to)\s+(?:a |the )?(?:team(?: member)?|person|agent|someone|benjamin|ben|ricardo)\b/i.test(value);
+    return /^(?:human|a human|real person|talk to somebody|speak to somebody)\s*[.!?]*$/i.test(value) ||
+      /\b(?:speak|talk|connect|reach)\s+(?:me\s+)?(?:with|to)\s+(?:a |the )?(?:team(?: member)?|person|human|agent|someone|somebody|benjamin|ben|ricardo)\b/i.test(value) ||
+      /\b(?:get|put)\s+me\s+(?:in touch|connected)\s+with\s+(?:a |the )?(?:team|person|human|agent|someone|somebody|benjamin|ben|ricardo)\b/i.test(value);
+  }
+  function asksToMeetNamedHost(value) {
+    return !!requestedPerson(value) && /\b(?:book|schedule|appointment|meeting|meet|call|time|slot)\b/i.test(value);
   }
   function resumeAfterQuestion() {
     if (state.booking) {
@@ -1066,10 +1078,34 @@
     else message(config.fallback, false);
   }
   function answerSideQuestion(value, faq) {
-    if (asksForBenjaminNumber(value)) message("Benjamin's direct call and text line is " + config.benjaminDirectPhone + ". You can reach him there anytime.", false);
-    else if (asksForTeamMember(value)) message("Absolutely. You can call or text the Living in Raleigh team at 919-737-7896.", false);
+    var humanRequest = asksForBenjaminNumber(value) || asksForTeamMember(value);
+    var person = humanRequest ? requestedPerson(value) : "";
+    if (person) { state.profile.requestedHost = person; persist(); }
+    if (person === "Benjamin") message("Benjamin's direct call and text line is " + config.benjaminDirectPhone + ". You can call or text him anytime.", false);
+    else if (person === "Ricardo") message("You can reach Ricardo through the Living in Raleigh team line at 919-737-7896. You can call or text us there.", false);
+    else if (humanRequest) message("Absolutely. You can call or text the Living in Raleigh team at 919-737-7896.", false);
     else if (faq) message(faq.answer, false);
     else message(config.unknownQuestion || "That's a great question for the team to cover on your call.", false);
+    if (humanRequest) {
+      if (state.booking && person && state.booking.preference.host !== person) {
+        state.booking.preference.host = person;
+        message("To make sure " + person + " is prepared, I'll check the next openings with " + person + ".", false);
+        state.booking.step = "loading";
+        loadBookingSlots(state.booking);
+        return;
+      }
+      if (!state.booking && state.intent && state.question >= 0 && state.question < activeQuestions().length) {
+        var remaining = activeQuestions().length - state.question;
+        message("To help " + (person || "the team") + " prepare, I have " + (remaining === 1 ? "one more question" : remaining === 2 ? "two more questions" : "a few more questions") + " for you.", false);
+        askQuestion();
+        return;
+      }
+      if (!state.booking && (!state.intent || state.question >= activeQuestions().length)) {
+        message("To make sure " + (person || "someone on the team") + " is prepared, let's set up an introduction call.", false);
+        startBooking(person || "");
+        return;
+      }
+    }
     resumeAfterQuestion();
   }
   function handleText(text) {
@@ -1127,6 +1163,22 @@
         answerSideQuestion(value, faq);
         return;
       }
+    }
+    if (asksToMeetNamedHost(value) && !directContactQuestion) {
+      var namedHost = requestedPerson(value);
+      state.profile.requestedHost = namedHost;
+      persist();
+      if (state.booking) {
+        state.booking.preference.host = namedHost;
+        state.booking.start = null;
+        message("Absolutely. I'll check the next openings with " + namedHost + ".", false);
+        state.booking.step = "loading";
+        loadBookingSlots(state.booking);
+      } else if (state.intent && state.question >= 0 && state.question < activeQuestions().length) {
+        message("Absolutely. I'll help set up a call with " + namedHost + ". I have a few quick questions first so " + namedHost + " can prepare.", false);
+        askQuestion();
+      } else startBooking(value);
+      return;
     }
     if (directContactQuestion || (state.booking && engine.asksQuestion(value) && !selectingTime)) {
       answerSideQuestion(value, faq);
