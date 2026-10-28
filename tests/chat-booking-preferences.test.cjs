@@ -40,16 +40,17 @@ assert.match(normalize('today at 3pm'), /^\d{4}-\d{2}-\d{2} 3pm ET$/);
 assert.equal(parse('Saturday at noon', parse('evening')).daypart, '');
 assert.match(parse('next Saturday').date, /^\d{4}-\d{2}-\d{2}$/);
 const pairSource = source.slice(source.indexOf('  function showBookingPair('), source.indexOf('  function startBooking('));
-function offeredPair(preference, slots) {
-  const context = { state: { booking: { allSlots: slots, offset: 0, preference, slots: [] } },
+function offeredPair(preference, slots, closestClock = null) {
+  const context = { state: { booking: { allSlots: slots, offset: 0, preference, slots: [], closestClock } },
     config: { bookingChoicePrompt: 'Which time works?' }, message() {},
-    bookingDayKey: dayKey, bookingLabel: start => start };
+    bookingDayKey: dayKey, bookingLabel: start => start,
+    bookingSlotParts: vm.runInNewContext(code + '\nbookingSlotParts') };
   vm.runInNewContext(pairSource + '\nshowBookingPair();', context);
   return context.state.booking.slots;
 }
 const saturdaySlots = [
   { start: '2026-11-07T15:00:00.000Z', daypart: 'morning' },
-  { start: '2026-10-31T16:00:00.000Z', daypart: 'midday' },
+  { start: '2026-10-31T17:00:00.000Z', daypart: 'midday' },
   { start: '2026-10-31T14:00:00.000Z', daypart: 'morning' },
   { start: '2026-11-07T17:00:00.000Z', daypart: 'midday' }
 ];
@@ -57,6 +58,10 @@ const saturdayPair = offeredPair({ weekdays: [6], date: '' }, saturdaySlots);
 assert.deepEqual(Array.from(saturdayPair, slot => dayKey(slot.start)), ['2026-10-31', '2026-10-31']);
 assert.equal(saturdayPair[0].daypart, 'morning');
 assert.equal(saturdayPair[1].daypart, 'midday');
+const nearestNoon = offeredPair({ weekdays: [6], date: '' }, saturdaySlots,
+  { hour: 12, minute: 0, meridiem: 'pm' });
+assert.equal(nearestNoon.length, 1);
+assert.equal(nearestNoon[0].start, '2026-10-31T17:00:00.000Z');
 assert.equal(offeredPair({ weekdays: [6], date: '' }, saturdaySlots.slice(0, 2)).length, 1,
   'one opening this Saturday must not be paired with next Saturday');
 const defaultPair = offeredPair({ weekdays: [], date: '' }, [thursday, friday]);
