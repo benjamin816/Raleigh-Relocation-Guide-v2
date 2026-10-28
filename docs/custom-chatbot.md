@@ -2,9 +2,9 @@
 
 The website chat is a static, dependency-free, rule-based guide. It does not use Tawk, an LLM, a paid API, or an external chatbot platform. Its scripts, keywords, questions, FAQ answers, resource URLs, and booking wording live in `assets/js/raleigh-chat-config.js`. The runtime is `assets/js/raleigh-chat.js`, intent and moderation rules are in `assets/js/raleigh-chat-engine.js`, and styles are in `assets/css/raleigh-chat.css`. Visitors type replies naturally; there are no quick-reply buttons.
 
-Open the local flow editor at `/tools/chat-flow-editor/`. The **Chat opening** card edits the starter message, header title, unmatched-topic response, Ohio and New York acknowledgements, unknown-question response, moderation wording, and same-browser memory duration. Each topic has editable intent keywords, opening, questions, conditional branch selectors, optional alternative question wording, and resource links. A separate selling-and-buying opening and the booking and FAQ wording are editable there too. Living buyers, sellers, and relocation leads can book a call inside the chat; investors are directed to `/invest/` to book and `/invest/resources/` for articles. **Save changes** writes directly to `assets/js/raleigh-chat-config.js` through the local TEST server and shows a saved status; refresh the site tab afterward. The public website cannot write to this file.
+The standalone flow editor has been retired. Conversation wording, starter message, branches, keywords, and resource links remain in `assets/js/raleigh-chat-config.js`; update them through the TEST branch chat workflow. Living buyers, sellers, and relocation leads can book a call inside the chat; investors are directed to `/invest/` to book and `/invest/resources/` for articles. The public website cannot write to the configuration file.
 
-The suggested MIT Chatbot Flow Builder Starter Kit was evaluated. It is a separate React/React Flow/Vite editor shell, while this site and its widget are plain static HTML and JavaScript. The local editor keeps one deployable configuration file and no build or runtime dependency; it does not offer free-form drag-and-drop nodes.
+The suggested MIT Chatbot Flow Builder Starter Kit was evaluated. It is a separate React/React Flow/Vite editor shell, while this site and its widget are plain static HTML and JavaScript. The chatbot keeps one deployable configuration file and has no flow editor runtime dependency.
 
 For local review of both the site and the calculator, run `python scripts/serve-test-site.py --port 8777` from this repository. It serves this site plus the already-built `dist/` from the sibling One-Stop-Rental-App at `/calculator/`. The helper binds only to `127.0.0.1` and does not change public hosting.
 
@@ -26,7 +26,7 @@ An end-to-end synthetic POST on October 23, 2026 returned `ok:true`, appeared on
 
 ## Smoke test
 
-1. Open the local TEST site and flow editor. Confirm the editor has a separately editable starter message, four paths, editable questions and contact prompts, and Save changes writes to the local file.
+1. Open the local TEST site. Confirm the chatbot starts with the configured message and routes through the buying, selling, relocating, and investing paths.
 2. Open the chat on desktop and mobile. Confirm the gold launcher stays visible, hover/focus shadow, tall narrow panel, mobile layout, message timestamps, and Escape/close focus behavior.
 3. Type buying, selling, selling-and-buying, relocating, and investing requests; follow the free-text qualification questions and check Living in-chat booking and investor `/invest/` links.
 4. Submit a synthetic contact request through a network-intercepted browser test. Verify `source_key=website_rule_chat`, interest, question/context, and that no mail client opens.
