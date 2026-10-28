@@ -5,6 +5,8 @@
   if (!config || !engine || document.querySelector(".rchat")) return;
   var path = window.location.pathname.replace(/index\.html$/, "");
   if (config.excludedPaths.indexOf(path) !== -1) return;
+  var isTestSurface = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) ||
+    (window.__raleighPreviewMode === true && /^\/raleigh-chat-preview-[a-f0-9]{32}\/$/.test(path));
 
   var root = document.createElement("aside");
   root.className = "rchat";
@@ -33,7 +35,7 @@
   var log = root.querySelector(".rchat-log");
   var newMessageButton = root.querySelector(".rchat-new");
   var testResetButton = root.querySelector(".rchat-test-reset");
-  if (/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) testResetButton.hidden = false;
+  if (isTestSurface) testResetButton.hidden = false;
   var compose = root.querySelector(".rchat-compose");
   var input = root.querySelector(".rchat-input");
   var sendButton = root.querySelector(".rchat-send");
@@ -93,7 +95,7 @@
   }
   try {
     var priorSafety = JSON.parse(window.localStorage.getItem(safetyKey) || "null");
-    if (priorSafety && priorSafety.strikes >= 2 && !/^(localhost|127\.0\.0\.1)$/.test(window.location.hostname)) { root.hidden = true; return; }
+    if (priorSafety && priorSafety.strikes >= 2 && !isTestSurface) { root.hidden = true; return; }
   } catch (_) { /* Private browsing may disable local storage. */ }
   function redact(text) {
     return String(text).replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/gi, "[email removed]")
