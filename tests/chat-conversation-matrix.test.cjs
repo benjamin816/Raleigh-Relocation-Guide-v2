@@ -77,5 +77,14 @@ const branches = [
   ['investing', { location: 'out' }, false, 'location,experience,strategy,timing,areas,goals,involvement,budget']
 ];
 for (const [id, profile, combined, expected] of branches) check(engine.activeQuestions(config.flows[id], profile, combined).map(q => q.key).join(','), expected, `${id} ${JSON.stringify(profile)} ${combined}`);
+for (const id of ['buying', 'relocating']) {
+  const flow = config.flows[id];
+  const keys = profile => engine.activeQuestions(flow, { location: 'out', ...profile }, false).map(q => q.key);
+  check(keys({ prioritySingle: true }).includes('priorityMore'), true, `${id} single detail asks for more`);
+  check(keys({ priorityPrice: true }).includes('priorityBudget'), true, `${id} price mentioned asks budget early`);
+  check(keys({ priorityPrice: true, budgetAsked: true }).includes('priorityFinancing'), true, `${id} early budget asks financing`);
+  const completed = keys({ priorityPrice: true, budgetAsked: true, budgetKnown: true, financingKnown: true });
+  for (const key of ['priorityBudget', 'priorityFinancing', 'budget', 'financing']) check(completed.includes(key), false, `${id} no repeated ${key}`);
+}
 assert.ok(checks >= 100, `Expected at least 100 checks, got ${checks}`);
 console.log(`${checks} conversation routing, interruption, safety, and branch checks passed`);

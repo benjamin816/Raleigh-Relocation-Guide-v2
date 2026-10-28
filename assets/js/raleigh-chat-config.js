@@ -130,6 +130,21 @@ window.RaleighChatConfig = {
           "text": "What matters most to you in the place where you'll live?"
         },
         {
+          "key": "priorityMore",
+          "when": "prioritySingle",
+          "text": "Is there anything else that's super important to you, like number of beds and baths, square footage, or certain amenities?"
+        },
+        {
+          "key": "priorityBudget",
+          "when": "priorityPrice",
+          "text": "What is your comfort level on the price of your new home?"
+        },
+        {
+          "key": "priorityFinancing",
+          "when": "priorityFinancingNeeded",
+          "text": "Are you planning to buy your next home in cash, or are you going to be using financing?"
+        },
+        {
           "key": "areas",
           "text": "Do you have certain areas around Raleigh you're most interested in?"
         },
@@ -308,6 +323,21 @@ window.RaleighChatConfig = {
           "key": "priorities",
           "when": "outNeedsPriorities",
           "text": "What matters most to you in a place to live?"
+        },
+        {
+          "key": "priorityMore",
+          "when": "prioritySingle",
+          "text": "Is there anything else that's super important to you, like number of beds and baths, square footage, or certain amenities?"
+        },
+        {
+          "key": "priorityBudget",
+          "when": "priorityPrice",
+          "text": "What is your comfort level on the price of your new home?"
+        },
+        {
+          "key": "priorityFinancing",
+          "when": "priorityFinancingNeeded",
+          "text": "Are you planning to buy your next home in cash, or are you going to be using financing?"
         },
         {
           "key": "areas",
