@@ -1000,6 +1000,17 @@
         (examples.length === 2 ? examples.join(" or ") : examples.slice(0, -1).join(", ") + ", or " + examples[examples.length - 1]) + "?";
     }
     if (question.key === "home" && state.profile.homeDetailsGiven) wording = "You mentioned some things you're looking for in a home earlier. Is there anything else that's important to you about the home itself?";
+    if (question.key === "homeMore") {
+      var homeAnswer = String(state.profile.homeLastAnswer || "").toLowerCase();
+      var examples = [
+        { pattern: /\b(?:bed|bedroom)/, label: "bathrooms" },
+        { pattern: /\b(?:bath|bathroom)/, label: "bedrooms" },
+        { pattern: /\b(?:sq\.?\s?ft|square feet|square footage)/, label: "square footage" },
+        { pattern: /\b(?:yard|backyard|lot)/, label: "yard size" },
+        { pattern: /\b(?:ranch|one.story|single.story|two.story|layout)/, label: "a one- or two-story layout" }
+      ].filter(function (item) { return !item.pattern.test(homeAnswer); }).map(function (item) { return item.label; });
+      if (examples.length) wording = "Besides what you mentioned, is there anything else you'd want in the home, like " + examples.slice(0, 3).join(", ") + "?";
+    }
     if ((question.key === "budget" || question.key === "priorityBudget") && state.profile.preApproved) wording = "I know you said you're pre-approved. What price would feel comfortable to you, regardless of the pre-approval amount?";
     if ((question.key === "priorityFinancing" || question.key === "financing") && state.profile.originSale) wording = "Do you think you'll buy with cash from the sale of your current home, or use financing?";
     else if (question.key === "priorityFinancing" || question.key === "financing") wording = "Do you plan on using financing, or will you be buying in cash?";
@@ -1237,6 +1248,7 @@
       state.profile.areasMentionFamilyArea = !!state.profile.familyArea && answer.toLowerCase().indexOf(state.profile.familyArea.toLowerCase()) !== -1;
     }
     if (question && question.key === "home" && /^(buying|relocating)$/.test(state.intent)) {
+      state.profile.homeLastAnswer = answer.slice(0, 200);
       state.profile.budgetKnown = /\$\s?\d{3,7}|\b\d{3,4}\s?k\b|\b\d{6,7}\b/i.test(answer) && !/\b(?:not sure|don't know|unsure)\b/i.test(answer);
       state.profile.homeSingle = !state.profile.homeDetailsGiven && homeDetailCount(answer) < 2 && !/,|;|\band\b|\bplus\b|&/i.test(answer);
     }
