@@ -336,11 +336,9 @@
   }
   function scheduleClarification(text) {
     cancelClarification();
-    var started = Date.now();
     function check() {
       if (panel.hidden) { clarificationTimer = null; return; }
-      if (Date.now() - started < 60000 &&
-          (input.value.trim() || Date.now() - lastInputAt < 2000)) {
+      if (Date.now() - lastInputAt < 3000) {
         clarificationTimer = window.setTimeout(check, 1000);
         return;
       }
@@ -355,14 +353,21 @@
     pendingBotMessages = 0;
     log.querySelectorAll(".rchat-row--typing").forEach(function (row) { row.remove(); });
   }
-  function waitForVisitorPause(generation, minimumMs) {
-    var started = Date.now();
+  function waitForVisitorPause(generation, minimumMs, row) {
+    var visibleSince = Date.now();
     return new Promise(function (resolve) {
       function check() {
-        if (generation !== messageGeneration || Date.now() - started >= 60000 ||
-            (Date.now() - started >= minimumMs && !input.value.trim() && Date.now() - lastInputAt >= minimumMs)) {
-          resolve();
-        } else window.setTimeout(check, 250);
+        if (generation !== messageGeneration) { resolve(); return; }
+        if (Date.now() - lastInputAt < 3000) {
+          row.remove();
+          visibleSince = 0;
+        } else if (!row.isConnected) {
+          log.appendChild(row);
+          visibleSince = Date.now();
+          if (!panel.hidden) scrollToLatest();
+        }
+        if (visibleSince && Date.now() - visibleSince >= minimumMs) resolve();
+        else window.setTimeout(check, 100);
       }
       check();
     });
@@ -380,7 +385,9 @@
     return new Promise(function (resolve) {
       function check() {
         if (generation !== messageGeneration ||
-            (Date.now() - lastUserSentAt >= replyDelay && Date.now() - lastBotDeliveredAt >= betweenMessagesDelay)) resolve();
+            (Date.now() - lastUserSentAt >= replyDelay &&
+             Date.now() - lastBotDeliveredAt >= betweenMessagesDelay &&
+             Date.now() - lastInputAt >= 3000)) resolve();
         else window.setTimeout(check, 100);
       }
       check();
@@ -417,7 +424,7 @@
         if (generation !== messageGeneration) return;
         log.appendChild(row);
       }
-      await waitForVisitorPause(generation, typingDuration);
+      await waitForVisitorPause(generation, typingDuration, row);
       row.remove();
       if (generation === messageGeneration) renderMessage(text, false, options);
     }).finally(function () {
@@ -1226,7 +1233,7 @@
       message("I couldn't submit that request. Reply yes to retry or no to cancel.", false);
     }).finally(function () {
       state.submitting = false;
-      input.disabled = pendingBotMessages > 0;
+      input.disabled = state.ended;
       sendButton.disabled = input.disabled || !input.value.trim();
       if (!input.disabled) input.focus();
     });
