@@ -734,11 +734,28 @@
       default: return "Got it.";
     }
   }
+  function explainRentalOnly() {
+    state.intent = null;
+    state.question = -1;
+    state.profile.pendingRentalPlan = false;
+    message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
+    link("Explore Raleigh guides", "/learning-center/");
+  }
+  function asksToRent(value) {
+    return /\b(?:looking|want|need|plan|planning|going|hoping|thinking|interested)\s+to\s+rent\b|\brent(?:ing)?\s+(?:first|for now|instead|now)\b|\b(?:looking|searching)\s+for\s+(?:a\s+)?rental\b/i.test(value);
+  }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
     var flowQuestions = config.flows[state.intent].questions;
     var questionPosition = flowQuestions.indexOf(question);
     var acknowledgement = answerAcknowledgement(question, answer);
+    if (question && /^(buying|relocating)$/.test(state.intent) &&
+        !/^(location|tenure|originHousing|areas|rentalPlan)$/.test(question.key) && asksToRent(answer)) {
+      state.profile.pendingRentalPlan = true;
+      state.profile.budgetKnown = false;
+      message("Are you planning to rent temporarily while you look for a home to buy, or are you only looking to rent?", false);
+      return;
+    }
     if (question && question.key === "location") {
       var location = engine.detectLocation(answer);
       if (!location && /^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/i.test(answer.trim())) location = { type: "local", place: "" };
@@ -1007,6 +1024,18 @@
     if (/^(what do you remember|what did i tell you|my details)$/i.test(value)) {
       var remembered = Object.keys(state.memories).filter(function (id) { return state.memories[id].length; });
       message(remembered.length ? remembered.map(memorySummary).join(" ") : "I don't have any earlier answers saved on this browser yet.", false);
+      return;
+    }
+    if (state.profile.pendingRentalPlan) {
+      if (/\b(?:only|just|solely)\s+(?:looking\s+to\s+|interested\s+in\s+)?rent(?:ing)?\b|\bnot\s+(?:looking|planning|ready)\s+to\s+buy\b|\bdon't\s+(?:want|plan)\s+to\s+buy\b/i.test(value)) {
+        explainRentalOnly();
+      } else if (/\b(?:buy|buying|purchase|purchasing|permanent home|eventually|later|temporary|short.term|few months|while|then)\b/i.test(value)) {
+        state.profile.pendingRentalPlan = false;
+        state.profile.budgetKnown = false;
+        askQuestion("That makes sense.");
+      } else {
+        message("Would you be renting briefly before buying, or are you only looking to rent?", false);
+      }
       return;
     }
     if (/^(book|book a call|schedule|schedule a call|appointment|talk to the team)$/i.test(value)) {
