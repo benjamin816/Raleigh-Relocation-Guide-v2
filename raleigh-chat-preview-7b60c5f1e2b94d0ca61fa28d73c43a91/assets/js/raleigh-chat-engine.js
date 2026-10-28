@@ -47,7 +47,7 @@
     if (/\b(already (?:live|living|here|local)|(?:i (?:live|am living|am)|i'm) (?:here|in (?:(?:north|south|east|west) )?(?:raleigh|cary|durham|the triangle))|i'm local|i am local|from (?:raleigh|cary|durham))\b/.test(text)) return { type: "local", place: "" };
     var from = text.match(/\b(?:from|live in|living in|moving from|relocating from|i am in|i'm in|we are in)\s+([a-z][a-z .-]{1,35}?)(?=\s*(?:,|\.|!|\?|$|\s+(?:and|because|but|to|for)\b))/);
     if (from && !/^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/.test(from[1].trim())) return { type: "out", place: from[1].trim().replace(/\s+/g, " ") };
-    if (/\b(out of state|relocat|moving to raleigh|moving down to raleigh)\b/.test(text)) return { type: "out", place: "" };
+    if (/\bout of state\b/.test(text)) return { type: "out", place: "" };
     if (/\b(local|already here|in the triangle)\b/.test(text)) return { type: "local", place: "" };
     return null;
   }

@@ -666,6 +666,12 @@
       state.memories[id] = state.answers.slice();
       state.memoryProfiles[id] = Object.assign({}, state.profile);
     }
+    if (id === "relocating" && !knownLocation) {
+      var opening = (flow.intro || "Awesome").replace(/[.,!?\s]+$/, "");
+      var originQuestion = activeQuestions()[0].text;
+      message(opening + ", " + originQuestion.charAt(0).toLowerCase() + originQuestion.slice(1), false);
+      return;
+    }
     if (!knownLocation) message(state.combined && flow.combinedIntro ? flow.combinedIntro : flow.intro, false);
     askQuestion(knownLocation ? locationAcknowledgement(knownLocation) : "");
   }
@@ -673,7 +679,7 @@
     if (state.intent === "investing") return location.type === "local" ? "Great!" : "Awesome.";
     if (location.type === "local") return "Great.";
     var place = (location.place || "").toLowerCase();
-    return (config.originAcknowledgements || {})[place] || "Awesome. Thanks for sharing where you're moving from.";
+    return (config.originAcknowledgements || {})[place] || (place ? "Awesome. Thanks for sharing where you're moving from." : "Awesome.");
   }
   function askQuestion(prefix) {
     var flow = config.flows[state.intent];
@@ -739,6 +745,21 @@
       if (!tenure) { scheduleClarification("Are you currently renting or do you own your home?"); return; }
       state.profile.tenure = tenure;
       acknowledgement = tenure === "renting" ? "Okay, great." : "Got it.";
+    }
+    if (question && question.key === "moveGoal") {
+      var wantsBuy = /\b(buy|buying|purchase|purchasing|both)\b/i.test(answer);
+      var wantsSell = /\b(sell|selling|list|listing|both)\b/i.test(answer);
+      if (/\b(rent|renting|lease)\b/i.test(answer) && !wantsBuy && !wantsSell) {
+        state.intent = null;
+        state.question = -1;
+        message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
+        link("Explore Raleigh guides", "/learning-center/");
+        return;
+      }
+      if (wantsSell) { startFlow("selling", true, wantsBuy); return; }
+      if (!wantsBuy) { scheduleClarification("Are you planning to buy a home here, sell a home here, or both?"); return; }
+      state.profile.moveGoal = "buying";
+      acknowledgement = "Got it.";
     }
     if (question && question.key === "willSell" && /^(?:yes|yeah|yep|probably|likely|we (?:will|need to|plan to)|i (?:will|need to|plan to))/i.test(answer.trim())) {
       state.intent = "selling";
