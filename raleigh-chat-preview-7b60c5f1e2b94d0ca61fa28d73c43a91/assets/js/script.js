@@ -1534,7 +1534,9 @@
             candidates.push("/assets/data/featured-videos/" + encodeURIComponent(feedKey) + ".json");
           }
 
-          candidates.push("/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/data/featured-videos.json");
+          if (featuredVideosSection.getAttribute("data-video-feed-strict") !== "true") {
+            candidates.push("/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/data/featured-videos.json");
+          }
           return candidates.filter(function (url, index, all) {
             return all.indexOf(url) === index;
           });
@@ -4924,16 +4926,16 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=b207d836161a";
+    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=d0b9256f6abe";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-config.js?v=b207d836161a";
+    configScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-config.js?v=d0b9256f6abe";
     configScript.onload = function () {
       var engineScript = document.createElement("script");
-      engineScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-engine.js?v=b207d836161a";
+      engineScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-engine.js?v=d0b9256f6abe";
       engineScript.onload = function () {
         var chatScript = document.createElement("script");
-        chatScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat.js?v=b207d836161a";
+        chatScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat.js?v=d0b9256f6abe";
         document.head.appendChild(chatScript);
       };
       document.head.appendChild(engineScript);
