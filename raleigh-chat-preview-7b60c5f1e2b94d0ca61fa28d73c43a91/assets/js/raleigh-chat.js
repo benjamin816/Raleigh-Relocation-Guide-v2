@@ -673,6 +673,18 @@
         available = available.filter(function (slot) { return bookingDayKey(slot.start) === soonestDay; });
       }
     }
+    if (oneRequestedDay && state.booking.closestClock) {
+      var desired = state.booking.closestClock;
+      var desiredMinutes = (desired.hour % 12 + (desired.meridiem === "pm" ? 12 : 0)) * 60 + desired.minute;
+      available.sort(function (a, b) {
+        function distance(slot) {
+          var parts = bookingSlotParts(slot.start);
+          var minutes = (Number(parts.hour) % 12 + (parts.dayPeriod.toLowerCase() === "pm" ? 12 : 0)) * 60 + Number(parts.minute);
+          return Math.abs(minutes - desiredMinutes);
+        }
+        return distance(a) - distance(b) || new Date(a.start) - new Date(b.start);
+      });
+    }
     var first = available[0];
     var firstDay = first && bookingDayKey(first.start);
     function isDifferentDay(slot) {
@@ -681,7 +693,8 @@
     var differentDay = first && (available.slice(1).find(function (slot) { return isDifferentDay(slot) && slot.daypart !== first.daypart; }) ||
       available.slice(1).find(isDifferentDay));
     var sameDayVariety = first && available.slice(1).find(function (slot) { return slot.daypart !== first.daypart; });
-    var second = oneRequestedDay ? (sameDayVariety || available[1]) : (differentDay || sameDayVariety || available[1]);
+    var second = state.booking.closestClock ? null : oneRequestedDay ? (sameDayVariety || available[1]) : (differentDay || sameDayVariety || available[1]);
+    state.booking.closestClock = null;
     state.booking.slots = first ? [first].concat(second ? [second] : []) : [];
     state.booking.step = "choose";
     if (!state.booking.slots.length) {
@@ -813,6 +826,7 @@
         if (!result || !result.available) {
           booking.step = "choose";
           if (hasBookingPreference(value)) {
+            booking.closestClock = requestedClock(value);
             message("I don't see that exact time open. Let me check the nearest options on that day.", false);
             loadBookingSlots(booking);
           } else message("That time isn't available. Would one of the times I offered work, or is there another day you'd like me to check?", false);
