@@ -87,6 +87,9 @@ assert.equal(engine.extractFirstName('My name is Benjamin'), 'Benjamin');
 assert.equal(engine.extractFirstName('Ben Carver'), 'Ben');
 assert.equal(engine.isSensitiveFamilyReason('My folks live in Raleigh and my mom is unwell'), true);
 assert.equal(engine.isSensitiveFamilyReason('I want better weather'), false);
+for (const phrase of ['unwell', 'sick', 'ill', 'illness', 'health problems', 'health issues', 'cancer', 'sickness', 'terminal', 'dying', 'death']) {
+  assert.equal(engine.isSensitiveFamilyReason(`My mother has ${phrase}`), true, phrase);
+}
 assert.equal(engine.classifySafety('nigger'), 'hate');
 assert.equal(config.flows.buying.resourceLink.href, '/buy/');
 assert.equal(config.flows.selling.resourceLink.href, '/sell/');

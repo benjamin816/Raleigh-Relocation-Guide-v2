@@ -133,7 +133,7 @@
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   }
   function isSensitiveFamilyReason(value) {
-    return /\b(?:dying|terminal(?:ly)?(?:\s+ill)?|unwell|very sick|seriously ill|hospice|cancer|hospitalized|hospitalised|health (?:issue|problem)|caregiving|care for (?:my|our) (?:mom|mother|dad|father|parent))\b/i.test(value);
+    return /\b(?:unwell|sick(?:ness)?|ill(?:ness)?|health (?:issue|problem)s?|cancer|terminal(?:ly)?(?:\s+ill)?|dying|death|died|passed away|hospice|hospitalized|hospitalised|caregiving|care for (?:my|our) (?:mom|mother|dad|father|parent))\b/i.test(value);
   }
   function classifyMoveTiming(value, now) {
     var text = normalize(value);
