@@ -114,7 +114,7 @@
     bookButton.disabled = true; notice('Confirming the calendar and booking…');
     call('book', [details]).then(function (result) {
       if (!result || !result.booked || result.assignedHost !== host.value) throw new Error('Booking needs manual assignment review.');
-      notice('Booked with ' + (result.assignedHost === 'Both' ? 'Benjamin and Ricardo' : result.assignedHost) + '. The calendar invitation was sent.' + (result.preCallEmailSent === false ? ' The pre-call email needs follow-up.' : ''));
+      notice('Booked with ' + (result.assignedHost === 'Both' ? 'Benjamin and Ricardo' : result.assignedHost) + '. The calendar invitation was sent. The standard pre-call email is queued.');
       event.target.reset(); currentHost = ''; allSlots = []; pageIndex = 0; render(); loadAvailability(true);
     }).catch(function (error) { notice(error.message, true); loadAvailability(true); });
   });

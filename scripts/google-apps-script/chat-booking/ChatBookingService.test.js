@@ -8,11 +8,13 @@ const assignmentHeaders = ['Event ID','Booked At (ET)','Call Start (ET)','Call E
   'Event Link','Notification Sent'];
 const schedules = new Map();
 let calendarReads = 0;
+let lastPhoneEvent;
 const calendars = {
   getCalendarById(id) {
     if (!schedules.has(id)) schedules.set(id, []);
     return { getEvents() { calendarReads += 1; return schedules.get(id); }, getEventById() { return { setTag() {} }; },
-      createEvent() { createdEvents += 1; return { getId() { return 'test-event-' + createdEvents; }, setTag() {} }; } };
+      createEvent(title, _start, _end, options) { createdEvents += 1; lastPhoneEvent = { title, options };
+        return { getId() { return 'test-event-' + createdEvents; }, setTag() {} }; } };
   },
   EventTransparency: { TRANSPARENT: 'transparent' },
   GuestStatus: { NO: 'no' }
@@ -101,10 +103,11 @@ assert.equal(context.chatBookingPreference_({host:'ricardo',daypart:'evening',we
 assert.equal(context.bookChatAppointment(details).booked, true);
 assert.equal(context.bookChatAppointment(details).booked, true, 'Retry returns the same receipt');
 assert.equal(createdEvents, 1, 'Retry cannot create a second event');
-assert.equal(sentEmails.length, 1, 'Retry cannot send a second pre-call email');
-assert.equal(sentEmails[0][0].subject, 'What To Know Before Our Call (Living in Raleigh Team)');
-assert.match(sentEmails[0][0].body, /meeting with Benjamin/);
-assert.equal(context.bookChatAppointment(details).preCallEmailSent, true);
+assert.match(lastPhoneEvent.title, /Exploration Call: Living in Raleigh Team \(Test Person\)/);
+assert.match(lastPhoneEvent.options.description, /Pre-call email: standard pipeline/);
+assert.match(lastPhoneEvent.options.description, /Assigned host: Benjamin/);
+assert.equal(sentEmails.length, 0, 'Booking service leaves pre-call delivery to the standard emailer');
+assert.equal(context.bookChatAppointment(details).preCallEmailQueued, true);
 assert.equal(leadRows.length, 2, 'One booking row and one header');
 assert.equal(leadRows[1][6], "'=IMPORTXML(\"bad\")", 'Spreadsheet formula is escaped');
 assert.equal(assignmentRows[0][4], 'Benjamin', 'First tie goes to Benjamin');
@@ -123,8 +126,9 @@ assert.equal(videoPayload.conferenceData.createRequest.conferenceSolutionKey.typ
 assert.equal(videoPayload.attendees[1].email, 'ricardo@triangleexperts.com', 'Second call balances toward Ricardo');
 assert.equal(leadRows[2][7], 'Website chat · video');
 assert.equal(assignmentRows[1][4], 'Ricardo');
-assert.match(sentEmails[1][0].body, /meeting with Ricardo/);
-assert.match(sentEmails[1][0].body, /video call/);
+assert.match(videoPayload.summary, /Exploration Call: Living in Raleigh Team \(Test Person\)/);
+assert.match(videoPayload.description, /Pre-call email: standard pipeline/);
+assert.match(videoPayload.description, /Assigned host: Ricardo/);
 schedules.set('ricardo.collier90@gmail.com', [busy]);
 assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-request-444444444', preferredHost: 'Ricardo', email: 'unavailable@example.com' }), /no longer available/i);
 schedules.set('ricardo.collier90@gmail.com', []);
@@ -135,7 +139,7 @@ assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-r
 const both = context.bookChatAppointment({ ...details, requestId: 'test-request-666666666', preferredHost: 'Both', email: 'both@example.com' });
 assert.equal(both.assignedHost, 'Both');
 assert.equal(assignmentRows[3][4], 'Both');
-assert.match(sentEmails[3][0].body, /meeting with Benjamin and Ricardo/);
+assert.equal(sentEmails.length, 0, 'Both-host booking also uses the standard pre-call sender');
 schedules.set('ricardo.collier90@gmail.com', [busy]);
 assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-request-777777777', preferredHost: 'Both', email: 'busyboth@example.com' }), /Both is no longer available/);
 console.log('Chat booking availability, direct booking and duplicate checks passed');

@@ -271,13 +271,24 @@ function chatSheetText_(value) {
   return /^[=+@-]/.test(text) ? "'" + text : text;
 }
 
+function chatBookingDescription_(name, email, phone, notes, host, callType) {
+  const preference = callType === 'phone' ? '1. Phone call' : 'Google video call';
+  return 'Booked through the Living in Raleigh website chat.\n' +
+    'Pre-call email: standard pipeline\n' +
+    'Assigned host: ' + host + '\n' +
+    'Booked by:\n' + name + '\n' + email + '\n' + phone + '\n' +
+    'If you would prefer a phone call or an in-person meeting at our North Raleigh office, please indicate so here!\n' +
+    preference + '\n' +
+    'Please include any information you would like me to know before our meeting!\n' +
+    (notes || 'Optional') + '\n';
+}
+
 function chatVideoEvent_(requestId, start, end, name, email, phone, notes, host) {
   const payload = {
-    summary: 'Exploration Call: Living in Raleigh Team',
+    summary: 'Exploration Call: Living in Raleigh Team (' + name + ')',
     start: { dateTime: start.toISOString(), timeZone: CHAT_ZONE },
     end: { dateTime: end.toISOString(), timeZone: CHAT_ZONE },
-    description: 'Booked through the Living in Raleigh website chat.\nCall type: Google video call\nName: ' + name +
-      '\nEmail: ' + email + '\nPhone: ' + phone + '\nNotes: ' + notes,
+    description: chatBookingDescription_(name, email, phone, notes, host.name, 'video'),
     attendees: [{ email: email }].concat(host.inviteEmail.split(',').map(function (address) { return { email: address }; })),
     conferenceData: { createRequest: { requestId: requestId, conferenceSolutionKey: { type: 'hangoutsMeet' } } }
   };
@@ -311,52 +322,6 @@ function chatVideoEvent_(requestId, start, end, name, email, phone, notes, host)
       'A video call was booked, but Google Meet has not supplied a link yet. Check calendar event ' + (event.iCalUID || event.id));
   }
   return { id: event.iCalUID || event.id, videoUrl: videoUrl, eventUrl: event.htmlLink || '' };
-}
-
-function chatEmailHtml_(value) {
-  return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
-    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
-  });
-}
-
-function chatSendPreCallEmail_(name, email, start, host, callType, videoUrl) {
-  const firstName = String(name).trim().split(/\s+/)[0];
-  const when = Utilities.formatDate(start, CHAT_ZONE, 'EEE, MMM d at h:mm a') + ' Eastern';
-  const meeting = callType === 'video' ?
-    'a video call' + (videoUrl ? ' using the Google Meet link in your calendar invitation' : ' (the video link will be added to your invitation)') :
-    'a phone call at the number you provided';
-  const formUrl = 'https://forms.gle/ECyoshD3JKjMtEk77';
-  const guideUrl = 'https://drive.google.com/file/d/1_aR0pl8KVtvXPShEWD8waG1axwoXiBu9/view?usp=sharing';
-  const plain = 'Hey ' + firstName + ' — looking forward to chatting on ' + when + '.\n\n' +
-    'You will be meeting with ' + host + ' for ' + meeting + '.\n\n' +
-    'While it is totally optional, we ask that you please fill out this quick form before we meet. ' +
-    'It helps us tailor the call to your specific situation and goals: ' + formUrl + '\n\n' +
-    'Please reply and let us know you got this email.\n\n' +
-    'Quick notes:\n- Be near a computer if possible.\n- Bring your must-haves: beds, baths, commute, budget, and timeline.\n' +
-    '- If a spouse, partner, or another decision-maker is involved, please invite them.\n' +
-    '- If anything changes, reply to this email.\n\n' +
-    'We will cover your goals, timing, best-fit areas, home options, and next steps.\n\n' +
-    '2026 Raleigh Relocation Guide: ' + guideUrl + '\n\nTalk soon,\nLiving in Raleigh Team';
-  const safeFirst = chatEmailHtml_(firstName);
-  const safeWhen = chatEmailHtml_(when);
-  const safeHost = chatEmailHtml_(host);
-  const safeMeeting = chatEmailHtml_(meeting);
-  const html = '<div style="background:#f6f7f9;padding:24px;font-family:Arial,Helvetica,sans-serif;color:#111">' +
-    '<div style="max-width:600px;margin:auto;background:#fff;border:1px solid #e6e8ee;border-radius:14px;overflow:hidden">' +
-    '<div style="padding:22px;border-bottom:1px solid #eef0f5"><div style="font-size:12px;color:#6b7280;text-transform:uppercase">Living in Raleigh Team</div>' +
-    '<h1 style="font-size:22px;margin:10px 0">What to know before our call</h1>' +
-    '<p>Hey <strong>' + safeFirst + '</strong> — looking forward to chatting on ' + safeWhen + '.</p>' +
-    '<p>You will be meeting with <strong>' + safeHost + '</strong> for ' + safeMeeting + '.</p></div>' +
-    '<div style="padding:22px;font-size:14px;line-height:1.7"><p>While it is totally optional, please fill out this quick form before we meet. It helps us tailor the call to your goals.</p>' +
-    '<p><a href="' + formUrl + '" style="display:inline-block;background:#16a34a;color:#fff;text-decoration:none;padding:12px 16px;border-radius:10px">Fill out the quick form</a></p>' +
-    '<p>Please reply and let us know you got this email.</p>' +
-    '<h2 style="font-size:16px">Quick notes</h2><ul><li>Be near a computer if possible.</li><li>Bring your must-haves: beds, baths, commute, budget, and timeline.</li>' +
-    '<li>Invite a spouse, partner, or another decision-maker if they are involved.</li><li>If anything changes, reply to this email.</li></ul>' +
-    '<h2 style="font-size:16px">What we’ll cover</h2><p>Your goals, timing, best-fit areas, home options, and next steps.</p>' +
-    '<div style="background:#ecfdf5;border:1px solid #bbf7d0;border-radius:12px;padding:14px"><strong>Bonus: 2026 Raleigh Relocation Guide</strong><p>Give it a quick skim before our call.</p>' +
-    '<a href="' + guideUrl + '" style="color:#166534">View the guide</a></div><p>Talk soon,<br><strong>Living in Raleigh Team</strong></p></div></div></div>';
-  MailApp.sendEmail({ to: email, subject: 'What To Know Before Our Call (Living in Raleigh Team)', body: plain, htmlBody: html,
-    name: 'Living in Raleigh Team', replyTo: 'livinginraleighteam@gmail.com' });
 }
 
 function bookChatAppointment(details) {
@@ -406,9 +371,8 @@ function bookChatAppointment(details) {
     if (total >= 20 || emailTotal >= 2) throw new Error('Chat booking is temporarily unavailable. Please call the team at 919-737-7896.');
     const calendar = chatCalendar_(CHAT_CALENDAR_ID);
     const video = callType === 'video' ? chatVideoEvent_(requestId, start, end, name, email, phone, notes, choice.host) : null;
-    const event = video ? null : calendar.createEvent('Exploration Call: Living in Raleigh Team', start, end, {
-      description: 'Booked through the Living in Raleigh website chat.\nName: ' + name +
-        '\nEmail: ' + email + '\nPhone: ' + phone + '\nPreferred Contact: 1 (phone call)\nNotes: ' + notes,
+    const event = video ? null : calendar.createEvent('Exploration Call: Living in Raleigh Team (' + name + ')', start, end, {
+      description: chatBookingDescription_(name, email, phone, notes, choice.host.name, 'phone'),
       location: 'Phone call', guests: email + ',' + choice.host.inviteEmail, sendInvites: true
     });
     const eventId = video ? video.id : event.getId();
@@ -430,7 +394,8 @@ function bookChatAppointment(details) {
       } catch (mailError) { console.error('Assignment repair email failed: ' + mailError); }
     }
     const result = { booked: true, start: start.toISOString(), eventId: eventId, hostPending: hostPending,
-      assignedHost: choice.host.name, callType: callType, videoUrl: video ? video.videoUrl : '' };
+      assignedHost: choice.host.name, callType: callType, videoUrl: video ? video.videoUrl : '',
+      preCallEmailQueued: true };
     cache.put(receiptKey, JSON.stringify(result), 21600);
     properties.setProperty(countKey, String(total + 1));
     properties.setProperty(emailKey, String(emailTotal + 1));
@@ -448,18 +413,6 @@ function bookChatAppointment(details) {
           'A chat booking was created on the team calendar, but it could not be written to Chat Appointments. Event ID: ' +
           eventId + '\nError: ' + String(sheetError));
       } catch (_) { /* The event and guest invitation still exist. */ }
-    }
-    try {
-      chatSendPreCallEmail_(name, email, start, choice.host.name === 'Both' ? 'Benjamin and Ricardo' : choice.host.name, callType, video ? video.videoUrl : '');
-      result.preCallEmailSent = true;
-    } catch (emailError) {
-      result.preCallEmailSent = false;
-      console.error('Pre-call email failed for calendar event ' + eventId + ': ' + emailError);
-      try {
-        MailApp.sendEmail('livinginraleighteam@gmail.com', 'Chat booking needs pre-call email follow-up',
-          'A chat booking was created, but its pre-call email was not sent. Event ID: ' + eventId +
-          '\nVisitor email: ' + email + '\nError: ' + String(emailError));
-      } catch (_) { /* The booking and calendar invitation still exist. */ }
     }
     cache.put(receiptKey, JSON.stringify(result), 21600);
     return result;
