@@ -62,7 +62,8 @@ for (const phrase of ['I own', 'We own our home', 'I am a homeowner', 'My house 
 for (const phrase of ['Where can I learn more?', 'Can I read a guide?', 'Do you have resources?', 'Are there articles?', 'Where is the website?']) check(engine.wantsResources(phrase), true, phrase);
 check(engine.wantsResources('What do I need to know about selling?'), false, 'Information question does not automatically push a resource page');
 for (const phrase of ['Can we book a call?', 'I want to schedule', 'Can I talk to the team?', 'I need an appointment', 'Can we meet with Benjamin?', 'Could you call me?']) check(engine.wantsBooking(phrase), true, phrase);
-for (const phrase of ['Visit https://spam.example', 'asdfasdfasdf', 'zzzzzzzzzzzzzz', 'www.spam.example', 'https://a.example https://b.example']) check(engine.classifySafety(phrase), 'spam', phrase);
+for (const phrase of ['Visit https://spam.example', 'www.spam.example', 'https://a.example https://b.example']) check(engine.classifySafety(phrase), 'spam', phrase);
+for (const phrase of ['asdfasdfasdf', 'zzzzzzzzzzzzzz', 'hshsj']) check(engine.classifySafety(phrase), 'gibberish', phrase);
 check(engine.classifySafety('https://zillow.com/homedetails/example'), null, 'property listing link');
 check(engine.classifySafety('https://zillow.com.spam.example'), 'spam', 'fake listing domain');
 for (const phrase of ['I will hurt your team', 'I will kill you', 'I will attack your agents']) check(engine.classifySafety(phrase), 'threat', phrase);
