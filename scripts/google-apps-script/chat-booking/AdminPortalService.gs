@@ -198,9 +198,10 @@ function adminFindEvent_(id) {
 function adminHostConflict_(event, target) {
   const start = event.getStartTime();
   const end = event.getEndTime();
+  const assigned = chatAssignedBusy_(start, end, event.getId());
   return CHAT_HOSTS.filter(function (host) { return target === 'Both' || target === host.name; })
     .some(function (host) {
-      return host.calendars.some(function (calendarId) {
+      return !chatRangeFree_(assigned[host.name], start, end) || host.calendars.some(function (calendarId) {
         return chatBusyEvents_(calendarId, start, end, true).some(function (busy) {
           return busy.getId() !== event.getId();
         });
@@ -226,10 +227,11 @@ function adminChangeAssignment_(data, viewer) {
       const present = currentGuests.includes(host.inviteEmail.toLowerCase());
       if (wanted && !present) event.addGuest(host.inviteEmail);
       if (!wanted) [host.inviteEmail].concat(host.calendars).forEach(function (email) {
-        if (currentGuests.includes(email.toLowerCase())) event.removeGuest(email);
+        if (email.toLowerCase() !== CHAT_CALENDAR_ID.toLowerCase() && currentGuests.includes(email.toLowerCase())) event.removeGuest(email);
       });
     });
     event.setTag('RR_ASSIGNED_HOST', target);
+    chatSetTeamFree_(event);
     const sheet = index.sheet;
     const rows = sheet.getRange(2, 1, sheet.getLastRow() - 1, 11).getValues();
     const position = rows.findIndex(function (entry) { return String(entry[0]) === event.getId(); });

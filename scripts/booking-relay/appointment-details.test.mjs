@@ -47,10 +47,12 @@ scope.CHAT_HOSTS = [
   {name:'Ricardo',inviteEmail:'ricardo@triangleexperts.com',calendars:['ricardo.collier90@gmail.com']}
 ];
 scope.CHAT_ZONE = 'America/New_York';
+scope.CHAT_CALENDAR_ID = 'livinginraleighteam@gmail.com';
+scope.chatSetTeamFree_ = () => {};
 scope.LockService = {getScriptLock:()=>({waitLock(){},releaseLock(){}})};
 scope.CacheService = {getScriptCache:()=>({remove(){}})};
 scope.Utilities = {formatDate:()=> '2026-10-29 16:00'};
-const attendeeSet = new Set(['benjamin.carver@exprealty.com','benjamin.raleighrealtor@gmail.com','client@example.com']);
+const attendeeSet = new Set(['benjamin.carver@exprealty.com','benjamin.raleighrealtor@gmail.com','client@example.com','livinginraleighteam@gmail.com']);
 const row = ['test-event', '', '', '', 'Benjamin', '', '', 'Assigned', '', '', 'Sent'];
 const edited = {getId:()=> 'test-event',getGuestList:()=> [...attendeeSet].map(email=>({getEmail:()=>email})),
   addGuest:email=>attendeeSet.add(email),removeGuest:email=>attendeeSet.delete(email),setTag(){}};
@@ -59,7 +61,7 @@ scope.adminHostConflict_=()=> false;
 scope.adminAssignmentIndex_=()=>({byId:{'test-event':row},sheet:{getLastRow:()=>2,getRange:(r,c)=>({getValues:()=>[row],
   setValues:values=>values[0].forEach((value,i)=>{row[c-1+i]=value;})})}});
 scope.adminChangeAssignment_({host:'Ricardo',expectedHost:'Benjamin',id:'test-event',confirm:true},{email:'admin@example.com'});
-assert.deepEqual([...attendeeSet].sort(),['client@example.com','ricardo@triangleexperts.com']);
+assert.deepEqual([...attendeeSet].sort(),['client@example.com','livinginraleighteam@gmail.com','ricardo@triangleexperts.com']);
 assert.equal(row[4],'Ricardo');
 assert.equal(row[10],'Sent');
 scope.adminChangeAssignment_({host:'Both',expectedHost:'Ricardo',id:'test-event',confirm:true},{email:'admin@example.com'});

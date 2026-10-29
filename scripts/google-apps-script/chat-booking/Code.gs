@@ -5,6 +5,8 @@
  * schedule's exact seven-day availability before enabling this service.
  */
 const CHAT_CALENDAR_ID = 'livinginraleighteam@gmail.com';
+const CHAT_TEAM_FREE_FROM = '2026-10-29T22:10:37Z';
+const CHAT_TEAM_FREE_EXCLUDED = '0k0km3phn87a8g0m8f2pguhf3k'; // Existing Friday appointment: leave untouched.
 // Keep these sources aligned with the live round-robin calendar script's RR.hosts.
 const CHAT_HOSTS = [
   { name: 'Benjamin', inviteEmail: 'benjamin.carver@exprealty.com', calendars: [
@@ -108,8 +110,8 @@ function chatSlotAllowed_(start, windows) {
   });
 }
 
-function chatBusyEvents_(calendarId, start, end, ignoreMirrors) {
-  return chatCalendar_(calendarId).getEvents(start, end).filter(function (event) {
+function chatBusyEvents_(calendarId, start, end, ignoreMirrors, events) {
+  return (events || chatCalendar_(calendarId).getEvents(start, end)).filter(function (event) {
     // Mirror artifacts are ignored only on a host's source calendar. On the
     // shared calendar they are real booking blocks and must match /consult/.
     if (ignoreMirrors && (event.getTag('MIRROR_BLOCK') === '1' || event.getTag('MIRROR_SOURCE'))) return false;
@@ -133,9 +135,37 @@ function chatRangeFree_(ranges, start, end) {
   return ranges.every(function (range) { return range[0] >= last || range[1] <= first; });
 }
 
+function chatAssignedBusy_(start, end, excludedId, events) {
+  const result = { Benjamin: [], Ricardo: [] };
+  (events || chatCalendar_(CHAT_CALENDAR_ID).getEvents(start, end)).forEach(function (event) {
+    if (event.getId() === excludedId || !/^Exploration Call: Living in Raleigh Team/i.test(event.getTitle())) return;
+    const guests = event.getGuestList().map(function (guest) { return guest.getEmail().toLowerCase(); });
+    const tagged = event.getTag('RR_ASSIGNED_HOST');
+    const matched = CHAT_HOSTS.filter(function (host) {
+      return [host.inviteEmail].concat(host.calendars).some(function (email) { return guests.includes(email.toLowerCase()); });
+    });
+    // An invitation can be pending or marked Free on a host's copy. The actual
+    // assignment still reserves that host; unknown assignments fail closed.
+    CHAT_HOSTS.forEach(function (host) {
+      const reserved = matched.length ? matched.some(function (item) { return item.name === host.name; }) :
+        !tagged || tagged === 'Both' || tagged === host.name;
+      if (reserved) result[host.name].push([event.getStartTime().getTime(), event.getEndTime().getTime()]);
+    });
+  });
+  return result;
+}
+
+function chatSetTeamFree_(event) {
+  if (!event || event.getId().replace(/@google\.com$/, '') === CHAT_TEAM_FREE_EXCLUDED ||
+      event.getDateCreated() < new Date(CHAT_TEAM_FREE_FROM)) return;
+  if (event.getTransparency() !== CalendarApp.EventTransparency.TRANSPARENT)
+    event.setTransparency(CalendarApp.EventTransparency.TRANSPARENT);
+}
+
 function chatAvailableHosts_(start, end) {
+  const assigned = chatAssignedBusy_(start, end);
   return CHAT_HOSTS.filter(function (host) {
-    return host.calendars.every(function (id) {
+    return chatRangeFree_(assigned[host.name], start, end) && host.calendars.every(function (id) {
       return chatBusyEvents_(id, start, end, true).length === 0;
     });
   });
@@ -231,11 +261,15 @@ function getChatBookingSlots(filters) {
   const startDay = new Date();
   startDay.setHours(0, 0, 0, 0);
   const searchEnd = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + horizon);
-  const teamBusy = chatBusyRanges_(CHAT_CALENDAR_ID, startDay, searchEnd, false);
+  const teamEvents = chatCalendar_(CHAT_CALENDAR_ID).getEvents(startDay, searchEnd);
+  const teamBusy = chatBusyEvents_(CHAT_CALENDAR_ID, startDay, searchEnd, false, teamEvents).map(function (event) {
+    return [event.getStartTime().getTime(), event.getEndTime().getTime()];
+  });
+  const assignedBusy = chatAssignedBusy_(startDay, searchEnd, null, teamEvents);
   const hostBusy = CHAT_HOSTS.map(function (host) {
     return { host: host, calendars: host.calendars.map(function (id) {
       return chatBusyRanges_(id, startDay, searchEnd, true);
-    }) };
+    }).concat([assignedBusy[host.name]]) };
   });
   for (let dayIndex = 0; dayIndex < horizon && (includeAll || slots.length < 12); dayIndex++) {
     const day = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + dayIndex);
@@ -431,6 +465,7 @@ function bookAppointment_(details, authorizedAdmin) {
     try {
       const tagged = event || calendar.getEventById(eventId);
       if (tagged) tagged.setTag('RR_ASSIGNED_HOST', choice.host.name);
+      if (tagged) chatSetTeamFree_(tagged);
     } catch (tagError) { console.warn('Assignment tag could not be saved: ' + tagError); }
     const format = function (value) { return Utilities.formatDate(value, CHAT_ZONE, 'yyyy-MM-dd HH:mm'); };
     let hostPending = false;

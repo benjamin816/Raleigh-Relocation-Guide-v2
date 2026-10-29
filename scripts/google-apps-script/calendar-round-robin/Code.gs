@@ -4,6 +4,8 @@
  */
 const RR = {
   targetId: 'livinginraleighteam@gmail.com',
+  teamFreeFrom: '2026-10-29T22:10:37Z',
+  teamFreeExcluded: '0k0km3phn87a8g0m8f2pguhf3k', // Preserve the existing Friday appointment.
   leadsSpreadsheetId: '1V-4tnKUm22SXO9qTkBpC027gUU1eY_YwS6M2BplU8Uo',
   ledgerName: 'Appointment Assignments',
   notificationEmail: 'livinginraleighteam@gmail.com',
@@ -114,6 +116,7 @@ function rrLedger_() {
 
 function rrReadBusy_(start,end) {
   const result = {};
+  const appointments = rrBookings_(rrCalendar_(RR.targetId), start, end);
   RR.hosts.forEach(host => {
     const windows = [];
     host.calendars.forEach(id => {
@@ -128,6 +131,12 @@ function rrReadBusy_(start,end) {
         const b = Math.min(end.getTime(),event.getEndTime().getTime());
         if (a<b) windows.push({start:new Date(a),end:new Date(b)});
       });
+    });
+    appointments.forEach(event => {
+      const actual = rrGuestAssignment_(event);
+      const assigned = actual ? actual.name : event.getTag('RR_ASSIGNED_HOST');
+      if (assigned === 'Both' || assigned === host.name)
+        windows.push({start:event.getStartTime(),end:event.getEndTime()});
     });
     result[host.name] = rrMerge_(windows);
   });
@@ -312,6 +321,7 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
         }
       }
       const host=RR.hosts.find(h=>h.name===record.values[4]);
+      rrSetTeamFree_(event);
       if (host && record.values[10]!=='Sent') {
         rrNotify_(event,host,rrEventLink_(event),record.values[6]);
         sheet.getRange(record.row,11).setValue('Sent');
@@ -347,6 +357,7 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
     }
     rrEnsureGuest_(event,choice.host);
     event.setTag('RR_ASSIGNED_HOST',choice.host.name);
+    rrSetTeamFree_(event);
     if(choice.host.name==='Both'){counts.Benjamin++;counts.Ricardo++;}
     else counts[choice.host.name]++;
     stats.assigned++;
@@ -354,6 +365,13 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
     sheet.getRange(rowNum,11).setValue('Sent');
   }
   return stats;
+}
+
+function rrSetTeamFree_(event) {
+  if (event.getId().replace(/@google\.com$/, '') === RR.teamFreeExcluded ||
+      event.getDateCreated() < new Date(RR.teamFreeFrom)) return;
+  if (event.getTransparency() !== CalendarApp.EventTransparency.TRANSPARENT)
+    event.setTransparency(CalendarApp.EventTransparency.TRANSPARENT);
 }
 
 function rrGuestAssignment_(event) {
