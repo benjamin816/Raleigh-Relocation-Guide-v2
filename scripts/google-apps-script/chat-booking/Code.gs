@@ -185,7 +185,9 @@ function chatPickHost_(available, rows, requestedName) {
     const name = counts.Benjamin < counts.Ricardo ? 'Benjamin' : 'Ricardo';
     return { host: available.find(function (host) { return host.name === name; }), reason: 'Balancing all assigned calls' };
   }
-  const recent = rows.slice().reverse().find(function (row) { return row[7] === 'Assigned'; });
+  const recent = rows.slice().reverse().find(function (row) {
+    return row[7] === 'Assigned' && (row[4] === 'Benjamin' || row[4] === 'Ricardo');
+  });
   const next = recent && recent[4] === 'Benjamin' ? 'Ricardo' : 'Benjamin';
   return { host: available.find(function (host) { return host.name === next; }), reason: 'Balanced tie' };
 }

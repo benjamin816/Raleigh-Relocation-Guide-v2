@@ -104,6 +104,10 @@ assert.equal(context.chatPickHost_(context.CHAT_HOSTS || [{name:'Benjamin'},{nam
 assert.equal(context.chatPickHost_(context.CHAT_HOSTS || [{name:'Benjamin'},{name:'Ricardo'}],
   [['both', '', '', '', 'Both', '', '', 'Assigned'], ['ben', '', '', '', 'Benjamin', '', '', 'Assigned']], '').host.name,
   'Ricardo', 'A shared appointment counts once for each host');
+assert.equal(context.chatPickHost_(context.CHAT_HOSTS || [{name:'Benjamin'},{name:'Ricardo'}],
+  [['ric', '', '', '', 'Ricardo', '', '', 'Assigned'], ['ben', '', '', '', 'Benjamin', '', '', 'Assigned'],
+    ['both', '', '', '', 'Both', '', '', 'Assigned']], '').host.name,
+  'Ricardo', 'A shared call does not replace the last solo host for a tied count');
 assert.equal(context.chatBookingPreference_({host:'ricardo',daypart:'evening',weekdays:[0,6,9]}).host, 'Ricardo');
 assert.equal(context.bookChatAppointment(details).booked, true);
 assert.equal(context.bookChatAppointment(details).booked, true, 'Retry returns the same receipt');
