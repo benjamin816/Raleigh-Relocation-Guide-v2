@@ -659,7 +659,11 @@
   }
   function bookingFailed(error) {
     state.booking = null;
-    message("I can't confirm a calendar time right now. I can pass your details to the team instead, or you can call us at 919-737-7896.", false);
+    if (error && /Chat booking is paused for testing/.test(error.message || '')) {
+      message("I'm showing the team's real openings while we test, but I can't create an appointment here right now. No appointment was booked. Please call us at 919-737-7896 if you'd like to schedule one.", false);
+    } else {
+      message("I can't confirm a calendar time right now. I can pass your details to the team instead, or you can call us at 919-737-7896.", false);
+    }
     if (window.console && error) console.warn("Chat booking unavailable:", error.message || error);
   }
   function offerBookingSlots(slots) {
