@@ -4931,16 +4931,16 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=8b4f919c5de4";
+    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=b973146cce1c";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    configScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-config.js?v=8b4f919c5de4";
+    configScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-config.js?v=b973146cce1c";
     configScript.onload = function () {
       var engineScript = document.createElement("script");
-      engineScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-engine.js?v=8b4f919c5de4";
+      engineScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-engine.js?v=b973146cce1c";
       engineScript.onload = function () {
         var chatScript = document.createElement("script");
-        chatScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat.js?v=8b4f919c5de4";
+        chatScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat.js?v=b973146cce1c";
         document.head.appendChild(chatScript);
       };
       document.head.appendChild(engineScript);
