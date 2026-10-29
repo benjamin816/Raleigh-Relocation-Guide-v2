@@ -180,7 +180,7 @@
         return !/(^|\.)(?:zillow\.com|redfin\.com|realtor\.com|raleighncguide\.com)$/.test(host);
       } catch (_) { return true; }
     })) return "spam";
-    if (/([^\s])\1{12,}/.test(text) || /\b[bcdfghjklmnpqrstvwxyz]{9,}\b/.test(text) || /\b(?:asdf|qwer|zxcv){2,}\b/.test(text) || (previous && text === normalize(previous) && text.length > 60)) return "spam";
+    if (/([^\s])\1{12,}/.test(text) || /^[bcdfghjklmnpqrstvwxz]{5,12}$/.test(text) || /\b[bcdfghjklmnpqrstvwxyz]{9,}\b/.test(text) || /\b(?:asdf|qwer|zxcv){2,}\b/.test(text) || (previous && text === normalize(previous) && text.length > 60)) return "spam";
     if (/\b(fuck|screw)\s+(you|your team|your agents)\b/.test(text)) return "abuse";
     if (/\b(no (?:black|immigrant)|avoid (?:black|asian|hispanic|muslim|jewish|gay) (?:people|neighbors)|racial makeup|(?:only |all )?(?:want )?(?:a )?(?:white|black|asian|hispanic|muslim|jewish) (?:neighborhood|area|community))\b/.test(text)) return "discrimination";
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";

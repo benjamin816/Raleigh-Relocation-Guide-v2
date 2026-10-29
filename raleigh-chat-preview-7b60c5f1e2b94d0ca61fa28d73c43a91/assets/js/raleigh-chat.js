@@ -1139,8 +1139,6 @@
     }
     if (question && question.key === "location") {
       var location = engine.detectLocation(answer, config);
-      var bareAnswer = answer.trim().replace(/[.!?]+$/, "").trim();
-      if (!location && /^[A-Za-z][A-Za-z ,.'-]{1,45}$/.test(bareAnswer) && !/^(?:not sure|i don't know|maybe|yes|no)$/i.test(bareAnswer)) location = { type: "out", place: bareAnswer.toLowerCase() };
       if (!location) { scheduleClarification("Are you already local to Raleigh, or would you be moving from out of state?"); return; }
       location = engine.resolveOrigin(location, config);
       state.profile.location = location.type;
@@ -1507,6 +1505,18 @@
     if (!replaying) {
       message(value, true, { remember: !state.contact && !contactCommand });
       sound();
+    }
+    if (/^(?:good\s?bye|goodye|goodby|bye|see (?:you|ya)|gotta go|have to go|talk later)\s*[.!?]*$/i.test(value)) {
+      state.booking = null;
+      state.contact = null;
+      state.intent = null;
+      state.question = -1;
+      state.profile.awaitingFirstName = false;
+      delete state.profile.pendingIntroReply;
+      state.profile.browsingEnded = true;
+      finishConversation();
+      message("Take care! If you have questions later, I'll be here.", false);
+      return;
     }
     if (state.profile.awaitingFirstName && !replaying) {
       state.profile.awaitingFirstName = false;
