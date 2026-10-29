@@ -87,25 +87,53 @@ function adminPrecallIndex_() {
   return byId;
 }
 
+function adminDescriptionSections_(description) {
+  const text = String(description || '').replace(/<br\s*\/?\s*>|<\/(?:p|div|li)>/gi, '\n')
+    .replace(/<[^>]*>/g, '').replace(/&nbsp;/gi, ' ').replace(/&amp;/gi, '&')
+    .replace(/&#39;|&apos;/gi, "'").replace(/&quot;/gi, '"').replace(/\*\*/g, '')
+    .replace(/\\([.])/g, '$1').replace(/\r/g, '');
+  const headings = /Booked\s+by\s*:?[ \t]*|If\s+you\s+would\s+prefer[\s\S]*?Please\s+indicate\s+so\s+here!?|Please\s+include\s+any\s+information[\s\S]*?before\s+our\s+meeting!?|Please\s+indicate\s+whether[\s\S]*?invest\s+in\s+Raleigh|I['’]m\s+looking\s+forward\s+to\s+meeting\s+you/gi;
+  const matches = []; let match;
+  while ((match = headings.exec(text))) matches.push({ label: match[0], start: match.index, end: headings.lastIndex });
+  const result = {};
+  matches.forEach(function (heading, index) {
+    heading.label = heading.label.replace(/\s+/g, ' ');
+    const key = /^Booked/i.test(heading.label) ? 'contact' : /^If you/i.test(heading.label) ? 'preference' :
+      /^Please include/i.test(heading.label) ? 'notes' : /^Please indicate/i.test(heading.label) ? 'purpose' : '';
+    if (key) result[key] = text.slice(heading.end, matches[index + 1] ? matches[index + 1].start : text.length).trim();
+  });
+  return result;
+}
+
 function adminMeetingType_(description) {
-  const text = String(description || '');
-  const question = /If you would prefer[^\n]*(?:phone call|in.person meeting)[^\n]*\n([^\n]*)/i.exec(text);
-  const answer = String(question ? question[1] : '').trim();
+  const answer = String(adminDescriptionSections_(description).preference || '').trim();
   if (/^(?:1\b|phone\b|call\b)/i.test(answer)) return 'Phone call';
   if (/^(?:2\b|in.person\b|office\b)/i.test(answer)) return 'North Raleigh office';
   return 'Google video call';
 }
 
 function adminBookingDetails_(event) {
-  const description = String(event.getDescription() || '');
-  const name = /Booked by:\s*\n([^\n]+)/i.exec(description);
-  const note = /Please include any information you would like me to know before our meeting!\s*\n([^\n]*)/i.exec(description);
-  const purpose = /Please indicate whether you are looking to buy, sell, or invest in Raleigh\s*\n([^\n]*)/i.exec(description);
-  const bookedLines = /Booked by:\s*\n([^\n]*)\n([^\n]*)\n([^\n]*)/i.exec(description);
-  return { client: name ? name[1].trim() : event.getTitle().replace(/^.*?\((.*)\).*$/, '$1'),
-    email: bookedLines ? bookedLines[2].trim() : '',
-    type: adminMeetingType_(description), notes: note && note[1] !== 'Optional' ? note[1] : '',
-    purpose: purpose ? purpose[1] : '', phone: bookedLines ? bookedLines[3].trim() : '' };
+  const description = String(event.getDescription() || ''), sections = adminDescriptionSections_(description);
+  const contact = sections.contact || '';
+  const email = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.exec(contact);
+  const phone = /\+?\d[\d\s().-]{8,}\d/.exec(email ? contact.slice(email.index + email[0].length) : contact);
+  const name = email ? contact.slice(0, email.index).replace(/\[|\]|mailto:|\(/g, '').trim() : '';
+  return { client: name || event.getTitle().replace(/^.*?\((.*)\).*$/, '$1'), email: email ? email[0] : '',
+    type: adminMeetingType_(description), notes: /^(?:Optional|Not provided)$/i.test(sections.notes || '') ? '' : sections.notes || '',
+    purpose: sections.purpose || '', phone: phone ? phone[0].trim() : '' };
+}
+
+function adminEventLinks_(event, type) {
+  try {
+    const items = Calendar.Events.list(CHAT_CALENDAR_ID, { iCalUID: event.getId(), maxResults: 2 }).items || [];
+    const item = items[0] || {};
+    const entries = item.conferenceData && item.conferenceData.entryPoints || [];
+    const video = item.hangoutLink || (entries.find(function (entry) { return entry.entryPointType === 'video'; }) || {}).uri || '';
+    return { calendarUrl: item.htmlLink || '', videoUrl: type === 'Google video call' && /^https:\/\//i.test(video) ? video : '' };
+  } catch (error) {
+    console.warn('Calendar meeting link lookup failed: ' + error.message);
+    return { calendarUrl: '', videoUrl: '' };
+  }
 }
 
 function adminUpcoming_() {
@@ -121,11 +149,24 @@ function adminUpcoming_() {
       const row = assignments[id] || [];
       const details = adminBookingDetails_(event);
       const tracked = emailStatus[id] || {};
+      const links = adminEventLinks_(event, details.type);
       const guests = event.getGuestList().map(function (guest) { return guest.getEmail(); });
+      const actualHosts = CHAT_HOSTS.filter(function (host) {
+        return [host.inviteEmail].concat(host.calendars).some(function (email) { return guests.some(function (guest) { return guest.toLowerCase() === email.toLowerCase(); }); });
+      });
+      const actualName = actualHosts.length === 2 ? 'Both' : actualHosts.length === 1 ? actualHosts[0].name : '';
+      if (actualName && row.length && (row[4] !== actualName)) {
+        const ledger = chatAssignmentRows_();
+        const position = ledger.rows.findIndex(function (entry) { return String(entry[0]) === id; });
+        if (position >= 0) ledger.sheet.getRange(position + 2, 5, 1, 5).setValues([[actualName,
+          actualHosts.map(function (host) { return host.inviteEmail; }).join(','), 'Manual attendee change', 'Assigned', new Date()]]);
+        row[4] = actualName;
+      }
       return { id: id, start: event.getStartTime().toISOString(), end: event.getEndTime().toISOString(),
         title: event.getTitle(), client: details.client, type: details.type, notes: details.notes,
-        purpose: details.purpose, host: row[4] || 'Unassigned', hostEmail: row[5] || '',
-        email: tracked.email || details.email, phone: tracked.phone || details.phone,
+        purpose: details.purpose, host: actualName || row[4] || 'Unassigned', hostEmail: row[5] || '',
+        email: details.email || tracked.email, phone: details.phone || tracked.phone,
+        videoUrl: links.videoUrl, calendarUrl: links.calendarUrl,
         emailStatus: tracked.status || 'Not yet logged', guests: guests };
     });
   const counts = { Benjamin: 0, Ricardo: 0 };
@@ -180,7 +221,9 @@ function adminChangeAssignment_(data, viewer) {
       const wanted = target === 'Both' || target === host.name;
       const present = currentGuests.includes(host.inviteEmail.toLowerCase());
       if (wanted && !present) event.addGuest(host.inviteEmail);
-      if (!wanted && present) event.removeGuest(host.inviteEmail);
+      if (!wanted) [host.inviteEmail].concat(host.calendars).forEach(function (email) {
+        if (currentGuests.includes(email.toLowerCase())) event.removeGuest(email);
+      });
     });
     event.setTag('RR_ASSIGNED_HOST', target);
     const sheet = index.sheet;

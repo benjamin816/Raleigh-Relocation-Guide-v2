@@ -145,9 +145,23 @@
         var time = document.createElement('p'); time.className = 'meta'; time.textContent = formatTime(appt.start);
         var details = document.createElement('div'); details.className = 'detail';
         details.append(detail('Assigned to', appt.host), detail('Meeting', appt.type),
-          detail('Pre-call email', appt.emailStatus), detail('Looking to', appt.purpose),
+          detail('Pre-call email', appt.emailStatus), detail('Client goal', appt.purpose),
           detail('Email', appt.email), detail('Phone', appt.phone),
           detail('Notes', appt.notes), detail('Attendees', appt.guests.join(', ')));
+        if (appt.type === 'Google video call') {
+          var meeting = document.createElement('div');
+          if (appt.videoUrl && /^https:\/\//i.test(appt.videoUrl)) {
+            var meetingLink = document.createElement('a'); meetingLink.href = appt.videoUrl;
+            meetingLink.textContent = 'Join video call'; meetingLink.target = '_blank'; meetingLink.rel = 'noopener';
+            meeting.appendChild(meetingLink);
+          } else meeting.textContent = 'Video link: Not available yet';
+          details.appendChild(meeting);
+        }
+        if (appt.calendarUrl && /^https:\/\//i.test(appt.calendarUrl)) {
+          var calendarLink = document.createElement('a'); calendarLink.href = appt.calendarUrl;
+          calendarLink.textContent = 'Open calendar event'; calendarLink.target = '_blank'; calendarLink.rel = 'noopener';
+          details.appendChild(calendarLink);
+        }
         var actions = document.createElement('div'); actions.className = 'actions';
         ['Benjamin', 'Ricardo', 'Both'].filter(function (host) { return host !== appt.host; }).forEach(function (host) {
           actions.appendChild(actionButton(host === 'Both' ? 'Add both hosts' : 'Transfer to ' + host,
