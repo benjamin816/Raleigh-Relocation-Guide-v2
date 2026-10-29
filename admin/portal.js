@@ -46,11 +46,14 @@
   function unlock(result) {
     $('signin').hidden = true; $('workspace').hidden = false;
     $('account').textContent = result.viewer.email;
+    var scheduleFrame = document.querySelector('#schedule iframe');
+    if (scheduleFrame) scheduleFrame.src = '/admin/consult/?portal=1';
     if (location.hash === '#appointments') selectTab('appointments');
     else if (location.hash === '#analytics') selectTab('analytics');
   }
   function signOut() { credential = ''; sessionStorage.removeItem('lirAdminCredential'); $('signin').hidden = false; $('workspace').hidden = true; }
   function signIn(response) {
+    $('signin-status').textContent = 'Checking your sign-in…';
     credential = response.credential;
     admin('session').then(function (result) {
       sessionStorage.setItem('lirAdminCredential', credential); $('signin-status').textContent = ''; unlock(result);
