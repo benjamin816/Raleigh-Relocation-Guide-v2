@@ -16,11 +16,11 @@
     </section>
     <section id="booking-card" class="card" hidden>
       <form id="booking-form">
-        <fieldset><legend>Who will take the call?</legend><div class="host-options"><label><input type="radio" name="host" value="Benjamin" required> Benjamin</label><label><input type="radio" name="host" value="Ricardo" required> Ricardo</label></div></fieldset>
-        <div class="schedule" aria-label="Choose a consultation time">
-          <section class="calendar-panel"><div class="schedule-heading"><h2>Choose a date</h2><button id="refresh-slots" type="button">Refresh</button></div><p>Available booking dates in the next three weeks</p><div id="calendar-dates" class="calendar-dates"></div></section>
-          <section class="time-panel"><h2 id="chosen-date">Choose a host first</h2><p>Available times for <strong id="host-label">your selection</strong> · Eastern Time</p><div id="slots" class="slots">Choose a host to see their times.</div></section>
-        </div>
+        <fieldset><legend>Who will take the call?</legend><div class="host-options"><label><input type="radio" name="host" value="Benjamin" required> Benjamin</label><label><input type="radio" name="host" value="Ricardo" required> Ricardo</label><label><input type="radio" name="host" value="Both" required> Both</label></div><p id="next-up" class="next-up">Checking whose turn is next…</p></fieldset>
+        <section class="availability" aria-label="Choose a consultation time">
+          <div class="availability-header"><div><h2>Available times</h2><p>Choose a time · Eastern Time</p></div><div class="availability-actions"><button id="previous-days" type="button" disabled aria-label="Previous five days">‹</button><span id="date-range"></span><button id="next-days" type="button" disabled aria-label="Next five days">›</button><button id="refresh-slots" type="button">Refresh</button></div></div>
+          <div id="days" class="day-columns">Choose who will take the call to see openings.</div>
+        </section>
         <div class="grid"><label>First and last name<input name="name" autocomplete="name" required minlength="2"></label><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Phone<input name="phone" type="tel" autocomplete="tel" required></label><label>Meeting type<select name="callType"><option value="video">Google video call</option><option value="phone">Phone call</option></select></label></div>
         <label>Notes for the team<textarea name="notes" rows="4" maxlength="1000"></textarea></label>
         <button id="book-button" type="submit" disabled>Book selected time</button>

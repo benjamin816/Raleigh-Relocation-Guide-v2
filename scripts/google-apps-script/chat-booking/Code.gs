@@ -185,6 +185,8 @@ function chatPickHost_(available, rows, requestedName) {
 }
 
 function getChatBookingSlots(filters) {
+  const includeAll = !!(filters && filters.all === true);
+  const horizon = includeAll ? 30 : 21;
   const preference = chatBookingPreference_(filters);
   const assignmentRows = chatAssignmentRows_().rows;
   const dueHost = chatPickHost_(CHAT_HOSTS, assignmentRows, '').host.name;
@@ -192,19 +194,19 @@ function getChatBookingSlots(filters) {
   const slots = [];
   const startDay = new Date();
   startDay.setHours(0, 0, 0, 0);
-  const searchEnd = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + 21);
+  const searchEnd = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + horizon);
   const teamBusy = chatBusyRanges_(CHAT_CALENDAR_ID, startDay, searchEnd, false);
   const hostBusy = CHAT_HOSTS.map(function (host) {
     return { host: host, calendars: host.calendars.map(function (id) {
       return chatBusyRanges_(id, startDay, searchEnd, true);
     }) };
   });
-  for (let dayIndex = 0; dayIndex < 21 && slots.length < 12; dayIndex++) {
+  for (let dayIndex = 0; dayIndex < horizon && (includeAll || slots.length < 12); dayIndex++) {
     const day = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + dayIndex);
     windows[day.getDay()].forEach(function (period) {
       const firstHour = Number(period[0].slice(0, 2));
       const lastHour = Number(period[1].slice(0, 2));
-      for (let hour = firstHour; hour + 1 <= lastHour && slots.length < 12; hour++) {
+      for (let hour = firstHour; hour + 1 <= lastHour && (includeAll || slots.length < 12); hour++) {
         const start = new Date(day.getFullYear(), day.getMonth(), day.getDate(), hour);
         const end = new Date(start.getTime() + CHAT_MINUTES * 60000);
         if (!chatSlotAllowed_(start, windows) || !chatRangeFree_(teamBusy, start, end)) continue;
@@ -227,6 +229,11 @@ function getChatBookingSlots(filters) {
     return Number(b.dueHostAvailable) - Number(a.dueHostAvailable) ||
       new Date(a.start).getTime() - new Date(b.start).getTime();
   });
+  if (includeAll) {
+    return { nextUp: dueHost, slots: slots.sort(function (a, b) {
+      return new Date(a.start).getTime() - new Date(b.start).getTime();
+    }) };
+  }
   if (!preference.daypart && !preference.weekdays.length && !preference.date) {
     const afternoon = slots.find(function (slot) { return slot.daypart === 'afternoon'; });
     const evening = slots.find(function (slot) { return slot.daypart === 'evening'; });
@@ -271,7 +278,7 @@ function chatVideoEvent_(requestId, start, end, name, email, phone, notes, host)
     end: { dateTime: end.toISOString(), timeZone: CHAT_ZONE },
     description: 'Booked through the Living in Raleigh website chat.\nCall type: Google video call\nName: ' + name +
       '\nEmail: ' + email + '\nPhone: ' + phone + '\nNotes: ' + notes,
-    attendees: [{ email: email }, { email: host.inviteEmail }],
+    attendees: [{ email: email }].concat(host.inviteEmail.split(',').map(function (address) { return { email: address }; })),
     conferenceData: { createRequest: { requestId: requestId, conferenceSolutionKey: { type: 'hangoutsMeet' } } }
   };
   const url = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CHAT_CALENDAR_ID) +
@@ -361,7 +368,8 @@ function bookChatAppointment(details) {
   const phone = String(details.phone || '').trim().slice(0, 30);
   const notes = String(details.notes || '').trim().slice(0, 1000);
   const callType = String(details.callType || 'phone').toLowerCase();
-  const preferredHost = chatBookingPreference_({ host: details.preferredHost }).host;
+  const bothRequested = String(details.preferredHost || '') === 'Both';
+  const preferredHost = bothRequested ? 'Both' : chatBookingPreference_({ host: details.preferredHost }).host;
   if (!/^[a-z0-9-]{16,80}$/i.test(requestId) || name.length < 2 ||
       !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || phone.replace(/\D/g, '').length < 10 ||
       !/^(phone|video)$/.test(callType)) {
@@ -378,7 +386,10 @@ function bookChatAppointment(details) {
     const end = new Date(start.getTime() + CHAT_MINUTES * 60000);
     const assignment = chatAssignmentRows_();
     const availableHosts = chatAvailableHosts_(start, end);
-    const choice = chatPickHost_(availableHosts, assignment.rows, preferredHost);
+    const choice = bothRequested ? (availableHosts.length === CHAT_HOSTS.length ? {
+      host: { name: 'Both', inviteEmail: CHAT_HOSTS.map(function (host) { return host.inviteEmail; }).join(',') },
+      reason: 'Both hosts requested'
+    } : null) : chatPickHost_(availableHosts, assignment.rows, preferredHost);
     if (!choice) throw new Error(preferredHost ?
       preferredHost + ' is no longer available at that time. Please choose another.' :
       'That time was taken. Please choose another.');
@@ -439,7 +450,7 @@ function bookChatAppointment(details) {
       } catch (_) { /* The event and guest invitation still exist. */ }
     }
     try {
-      chatSendPreCallEmail_(name, email, start, choice.host.name, callType, video ? video.videoUrl : '');
+      chatSendPreCallEmail_(name, email, start, choice.host.name === 'Both' ? 'Benjamin and Ricardo' : choice.host.name, callType, video ? video.videoUrl : '');
       result.preCallEmailSent = true;
     } catch (emailError) {
       result.preCallEmailSent = false;

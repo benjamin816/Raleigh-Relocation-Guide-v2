@@ -83,6 +83,12 @@ context.chatBookingWindows_ = () => [];
 context.chatAssignmentRows_ = () => ({ sheet: ledger, rows: assignmentRows });
 context.chatBookingWindows_ = () => Array.from({ length: 7 }, () => [['12:00','14:00'],['18:00','20:00']]);
 calendarReads = 0;
+const fullAvailability = context.getChatBookingSlots({ all: true });
+assert.equal(fullAvailability.nextUp, 'Benjamin');
+assert.equal(fullAvailability.slots.length > 6, true, 'One calendar read returns more than one page of slots');
+assert.equal(fullAvailability.slots.every(slot => slot.availableHosts.includes('Benjamin') && slot.availableHosts.includes('Ricardo')), true);
+assert.equal(calendarReads, 6, 'Full availability reads each conflict calendar only once');
+calendarReads = 0;
 assert.deepEqual(Array.from(context.getChatBookingSlots().slice(0, 2), slot => slot.daypart),
   ['afternoon', 'evening'], 'Default options include afternoon and evening');
 assert.equal(calendarReads, 6, 'Availability reads the shared calendar and five host calendars once each');
@@ -126,4 +132,10 @@ const requested = context.bookChatAppointment({ ...details, requestId: 'test-req
 assert.equal(requested.assignedHost, 'Ricardo', 'Explicit host request overrides balanced tie');
 assert.equal(assignmentRows[2][6], 'Requested host');
 assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-request-222222222', phone: '' }), /booking details/i);
+const both = context.bookChatAppointment({ ...details, requestId: 'test-request-666666666', preferredHost: 'Both', email: 'both@example.com' });
+assert.equal(both.assignedHost, 'Both');
+assert.equal(assignmentRows[3][4], 'Both');
+assert.match(sentEmails[3][0].body, /meeting with Benjamin and Ricardo/);
+schedules.set('ricardo.collier90@gmail.com', [busy]);
+assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-request-777777777', preferredHost: 'Both', email: 'busyboth@example.com' }), /Both is no longer available/);
 console.log('Chat booking availability, direct booking and duplicate checks passed');

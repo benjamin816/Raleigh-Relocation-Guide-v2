@@ -1,12 +1,11 @@
 (function () {
   'use strict';
   var endpoint = 'https://script.google.com/macros/s/AKfycbysLAettKRWslMW8YgG3BxftA2eBL_gsZFdK70bN7B3xu-aG_stqdNqg3jYBB5aqoMa2g/exec';
-  var bridge, currentHost = '', selectedDate = '', available = [], highlightedDates = [], requestSequence = 0;
+  var bridge, currentHost = '', allSlots = [], nextUp = '', pageIndex = 0, loading = false;
   var status = document.getElementById('status');
   var bookingCard = document.getElementById('booking-card');
   var unlockCard = document.getElementById('unlock-card');
-  var slots = document.getElementById('slots');
-  var dates = document.getElementById('calendar-dates');
+  var days = document.getElementById('days');
   var bookButton = document.getElementById('book-button');
   function randomId() { return Array.from(crypto.getRandomValues(new Uint8Array(24)), function (n) { return n.toString(16).padStart(2, '0'); }).join(''); }
   function notice(value, error) { status.textContent = value; status.className = error ? 'error' : ''; }
@@ -46,79 +45,67 @@
   }
   function calendarDays() {
     var today = dateKey(new Date()).split('-').map(Number);
-    return Array.from({ length: 21 }, function (_, index) { return new Date(Date.UTC(today[0], today[1] - 1, today[2] + index, 16)); });
+    return Array.from({ length: 30 }, function (_, index) { return new Date(Date.UTC(today[0], today[1] - 1, today[2] + index, 16)); });
   }
-  function renderCalendar() {
-    dates.replaceChildren();
-    calendarDays().forEach(function (day) {
-      var key = dateKey(day), button = document.createElement('button'), weekday = document.createElement('small');
-      button.type = 'button'; button.dataset.date = key; button.setAttribute('aria-pressed', key === selectedDate ? 'true' : 'false');
-      button.setAttribute('aria-label', new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' }).format(day));
-      if (highlightedDates.indexOf(key) !== -1) button.classList.add('has-opening');
-      weekday.textContent = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'short' }).format(day);
-      button.append(weekday, document.createTextNode(new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', day: 'numeric' }).format(day)));
-      button.addEventListener('click', function () { selectDate(key); });
-      dates.appendChild(button);
+  function hostMatches(slot) {
+    return slot.availableHosts && (currentHost === 'Both' ?
+      slot.availableHosts.indexOf('Benjamin') !== -1 && slot.availableHosts.indexOf('Ricardo') !== -1 :
+      slot.availableHosts.indexOf(currentHost) !== -1);
+  }
+  function render() {
+    var calendar = calendarDays(), first = pageIndex * 5, visible = calendar.slice(first, first + 5);
+    var shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
+    document.getElementById('date-range').textContent = shortDate.format(visible[0]) + ' – ' + shortDate.format(visible[4]);
+    document.getElementById('previous-days').disabled = pageIndex === 0;
+    document.getElementById('next-days').disabled = pageIndex >= 5;
+    days.replaceChildren(); bookButton.disabled = true;
+    if (!currentHost || loading) { days.textContent = loading ? 'Loading available times…' : 'Choose who will take the call to see openings.'; return; }
+    visible.forEach(function (day) {
+      var key = dateKey(day), column = document.createElement('div'), heading = document.createElement('h3');
+      var weekday = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long' }).format(day);
+      var date = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' }).format(day);
+      column.className = 'day-column'; heading.textContent = weekday;
+      var small = document.createElement('small'); small.textContent = date; heading.appendChild(small); column.appendChild(heading);
+      var openings = allSlots.filter(function (slot) { return dateKey(new Date(slot.start)) === key && hostMatches(slot); });
+      if (!openings.length) { var empty = document.createElement('p'); empty.className = 'empty'; empty.textContent = 'No openings'; column.appendChild(empty); }
+      openings.forEach(function (slot) {
+        var label = document.createElement('label'), radio = document.createElement('input'), text = document.createElement('span');
+        label.className = 'slot-choice'; radio.type = 'radio'; radio.name = 'slot'; radio.value = slot.start; radio.required = true;
+        radio.addEventListener('change', function () { bookButton.disabled = false; });
+        text.textContent = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit' }).format(new Date(slot.start));
+        label.append(radio, text); column.appendChild(label);
+      });
+      days.appendChild(column);
     });
   }
-  function renderSlots() {
-    slots.replaceChildren(); bookButton.disabled = true;
-    if (!available.length) { slots.textContent = 'No openings on this date. Choose another day.'; return; }
-    available.forEach(function (slot) {
-      var label = document.createElement('label'), radio = document.createElement('input'), text = document.createElement('span');
-      radio.type = 'radio'; radio.name = 'slot'; radio.value = slot.start; radio.required = true;
-      radio.addEventListener('change', function () { bookButton.disabled = false; });
-      text.textContent = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: 'numeric', minute: '2-digit', timeZoneName: 'short' }).format(new Date(slot.start));
-      label.append(radio, text); slots.appendChild(label);
-    });
+  function loadAvailability(preserveNotice) {
+    if (loading) return;
+    loading = true; days.textContent = 'Checking both calendars once…'; bookButton.disabled = true; if (preserveNotice !== true) notice('');
+    call('slots', [{ all: true }]).then(function (result) {
+      if (!result || !Array.isArray(result.slots) || !/^(Benjamin|Ricardo)$/.test(result.nextUp || '')) {
+        throw new Error('The booking service needs its availability update before this page can show times.');
+      }
+      allSlots = result.slots; nextUp = result.nextUp;
+      document.getElementById('next-up').textContent = 'Based on round robin, ' + nextUp + ' is next up. Choose who will take this call.';
+      loading = false; render();
+    }).catch(function (error) { loading = false; days.textContent = ''; notice(error.message, true); });
   }
-  function selectDate(key) {
-    if (!currentHost) return;
-    selectedDate = key; available = []; bookButton.disabled = true;
-    document.getElementById('chosen-date').textContent = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', weekday: 'long', month: 'long', day: 'numeric' }).format(new Date(key + 'T16:00:00Z'));
-    renderCalendar(); slots.textContent = 'Checking openings…'; notice('');
-    var sequence = ++requestSequence, host = currentHost;
-    call('slots', [{ host: host, date: key }]).then(function (result) {
-      if (sequence !== requestSequence || host !== currentHost || key !== selectedDate) return;
-      available = Array.isArray(result) ? result.filter(function (slot) { return dateKey(new Date(slot.start)) === key && slot.availableHosts && slot.availableHosts.indexOf(host) !== -1; }).sort(function (a, b) {
-        return new Date(a.start).getTime() - new Date(b.start).getTime();
-      }) : [];
-      if (available.length && highlightedDates.indexOf(key) === -1) { highlightedDates.push(key); renderCalendar(); }
-      renderSlots();
-    }).catch(function (error) { if (sequence === requestSequence) { slots.textContent = ''; notice(error.message, true); } });
-  }
-  function refresh() {
-    var host = document.querySelector('input[name="host"]:checked');
-    if (!host) return;
-    currentHost = host.value; selectedDate = ''; highlightedDates = []; requestSequence++;
-    document.getElementById('host-label').textContent = currentHost;
-    document.getElementById('chosen-date').textContent = 'Finding the next opening';
-    renderCalendar(); available = []; slots.textContent = 'Checking ' + currentHost + '\'s calendar…'; bookButton.disabled = true;
-    notice('');
-    var sequence = requestSequence, selectedHost = currentHost;
-    call('slots', [{ host: currentHost }]).then(function (result) {
-      if (sequence !== requestSequence || selectedHost !== currentHost) return;
-      var next = Array.isArray(result) ? result.filter(function (slot) { return slot.availableHosts && slot.availableHosts.indexOf(currentHost) !== -1; }).sort(function (a, b) {
-        return new Date(a.start).getTime() - new Date(b.start).getTime();
-      }) : [];
-      highlightedDates = next.map(function (slot) { return dateKey(new Date(slot.start)); });
-      if (next.length) selectDate(dateKey(new Date(next[0].start)));
-      else { renderCalendar(); slots.textContent = 'No openings found in the next three weeks.'; document.getElementById('chosen-date').textContent = 'No openings found'; }
-    }).catch(function (error) { if (sequence === requestSequence) { available = []; slots.textContent = ''; notice(error.message, true); } });
-  }
+  function changeHost() { currentHost = document.querySelector('input[name="host"]:checked').value; pageIndex = 0; render(); }
   document.getElementById('unlock-form').addEventListener('submit', function (event) {
     event.preventDefault(); notice('Checking access…');
     var field = document.getElementById('passcode');
     if (field.value !== '123456') { field.value = ''; notice('Incorrect passcode.', true); return; }
     field.value = ''; unlockCard.hidden = true; bookingCard.hidden = false;
-    notice('Choose Benjamin or Ricardo to see their available times.');
+    notice('Choose who will take the call.'); loadAvailability();
   });
-  document.querySelectorAll('input[name="host"]').forEach(function (input) { input.addEventListener('change', refresh); });
-  document.getElementById('refresh-slots').addEventListener('click', refresh);
+  document.querySelectorAll('input[name="host"]').forEach(function (input) { input.addEventListener('change', changeHost); });
+  document.getElementById('refresh-slots').addEventListener('click', loadAvailability);
+  document.getElementById('previous-days').addEventListener('click', function () { pageIndex--; render(); });
+  document.getElementById('next-days').addEventListener('click', function () { pageIndex++; render(); });
   document.getElementById('booking-form').addEventListener('submit', function (event) {
     event.preventDefault();
     var start = selectedStart(), host = document.querySelector('input[name="host"]:checked');
-    if (!start || !host || host.value !== currentHost || !available.some(function (slot) { return slot.start === start && slot.availableHosts.indexOf(host.value) !== -1; })) {
+    if (!start || !host || host.value !== currentHost || !allSlots.some(function (slot) { return slot.start === start && hostMatches(slot); })) {
       notice('Choose an available time for the selected person.', true); return;
     }
     var form = new FormData(event.currentTarget);
@@ -127,9 +114,8 @@
     bookButton.disabled = true; notice('Confirming the calendar and booking…');
     call('book', [details]).then(function (result) {
       if (!result || !result.booked || result.assignedHost !== host.value) throw new Error('Booking needs manual assignment review.');
-      notice('Booked with ' + result.assignedHost + '. The calendar invitation was sent.' + (result.preCallEmailSent === false ? ' The pre-call email needs follow-up.' : ''));
-      event.target.reset(); available = []; selectedDate = ''; highlightedDates = []; slots.textContent = 'Choose a host to see their times.'; currentHost = '';
-      document.getElementById('host-label').textContent = 'your selection'; document.getElementById('chosen-date').textContent = 'Choose a host first'; dates.replaceChildren();
-    }).catch(function (error) { notice(error.message, true); refresh(); });
+      notice('Booked with ' + (result.assignedHost === 'Both' ? 'Benjamin and Ricardo' : result.assignedHost) + '. The calendar invitation was sent.' + (result.preCallEmailSent === false ? ' The pre-call email needs follow-up.' : ''));
+      event.target.reset(); currentHost = ''; allSlots = []; pageIndex = 0; render(); loadAvailability(true);
+    }).catch(function (error) { notice(error.message, true); loadAvailability(true); });
   });
 }());
