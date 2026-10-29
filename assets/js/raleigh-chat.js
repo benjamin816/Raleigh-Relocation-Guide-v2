@@ -415,7 +415,7 @@
       dots.innerHTML = "<i></i><i></i><i></i>";
       row.append(img, dots);
       log.appendChild(row);
-      if (!panel.hidden && !input.value.trim()) scrollToLatest();
+      if (!panel.hidden) scrollToLatest();
       if (falseStart) {
         await waitMs(700 + Math.round(Math.random() * 500));
         row.remove();
@@ -439,6 +439,7 @@
   function message(text, byUser, options) {
     options = options || {};
     if (!byUser && !options.restoring) {
+      if (options.initial) return renderMessage(text, false, options);
       queueBotMessage(text, options);
       return;
     }
@@ -476,7 +477,7 @@
     row.appendChild(content);
     log.appendChild(row);
     if (!byUser && !options.restoring) { lastBotDeliveredAt = Date.now(); incomingSound(); }
-    if (!options.restoring && !panel.hidden && !input.value.trim()) scrollToLatest();
+    if (!options.restoring && !panel.hidden) scrollToLatest();
     if (!options.restoring && options.remember !== false && !state.contact && !state.booking) {
       state.history.push({ text: redact(text), byUser: !!byUser, at: now.toISOString(), link: options.link || null });
       state.history = state.history.slice(-80);
@@ -992,6 +993,7 @@
       if (question.key === "originHousing") wording = "Do you have a home" + (state.profile.origin ? " in " + originLabel() : " there") + " that you'd need to sell, or are you currently renting?";
       if (question.key === "areas") wording = "What areas around Raleigh are you interested in buying a home in?";
       if (question.key === "familyNearby" || question.key === "priorityFamilyArea") wording = state.profile.nearbyPerson === "friends" ? "What part of the Raleigh area are your friends in?" : "What part of the Raleigh area is your family in?";
+      if ((question.key === "familyNearby" || question.key === "priorityFamilyArea") && state.profile.sensitiveFamilyReason) wording = "What part of the Raleigh area does your family live in?";
     }
     if (question.key === "priorityMore" && (state.profile.remoteWork || state.profile.retired || state.profile.noChildren)) {
       var examples = ["nearby amenities", "shopping"];
@@ -1031,6 +1033,7 @@
       case "firstTime": return /\b(yes|first|never)\b/.test(text) ? "That's super exciting!" : "Got it.";
       case "leaseEnd": return "Got it.";
       case "whyRaleigh": {
+        if (engine.isSensitiveFamilyReason(answer)) return /\b(?:mom|mother)\b/i.test(answer) ? "I'm so sorry to hear about your mom. It makes sense that you'd want to be closer to her." : /\b(?:dad|father)\b/i.test(answer) ? "I'm so sorry to hear about your dad. It makes sense that you'd want to be closer to him." : "I'm sorry to hear that. Being closer to family makes sense.";
         if (/^(buying|relocating)$/.test(state.intent)) {
           var responses = config.relocationResponses || {};
           if (state.profile.newJob) return responses.job || "Congrats! That's super exciting.";
@@ -1044,7 +1047,7 @@
       }
       case "jobLocation": return "Okay, awesome.";
       case "jobStart": return "Great.";
-      case "familyNearby": case "priorityFamilyArea": return state.profile.familyArea ? "That's a great area!" : "Got it.";
+      case "familyNearby": case "priorityFamilyArea": return state.profile.sensitiveFamilyReason ? "Thanks for sharing that." : state.profile.familyArea ? "That's a great area!" : "Got it.";
       case "currentHome": return /north raleigh/.test(text) ? "North Raleigh is a great area!" : "Okay, great.";
       case "ownedYears": { var years = parseInt(text, 10); return years >= 5 || /\b(five|six|seven|eight|nine|ten|eleven|twelve)\b/.test(text) ? "Wow, you've been there a while!" : "Okay, got it."; }
       case "whySell": case "whySellSolo": return /\b(family|relatives)\b/.test(text) ? "I totally understand." : "That makes sense.";
@@ -1211,8 +1214,9 @@
         state.profile.originCode = mentionedOrigin.stateCode || "";
         state.profile.originCity = mentionedOrigin.city || "";
       }
-      state.profile.familyNearby = /\b(family|relatives|friends|parents|siblings)\b/i.test(answer);
-      state.profile.nearbyPerson = /\bfriends\b/i.test(answer) && !/\b(family|relatives|parents|siblings)\b/i.test(answer) ? "friends" : "family";
+      state.profile.familyNearby = /\b(family|relatives|friends|parents|siblings|folks|mom|mother|dad|father)\b/i.test(answer);
+      state.profile.sensitiveFamilyReason = engine.isSensitiveFamilyReason(answer);
+      state.profile.nearbyPerson = /\bfriends\b/i.test(answer) && !/\b(family|relatives|parents|siblings|folks|mom|mother|dad|father)\b/i.test(answer) ? "friends" : "family";
       state.profile.newJob = state.intent === "relocating" && /\b(new job|job offer|for (?:a|my) job|for work|work transfer|transferred|new position|starting (?:a|my) job)\b/i.test(answer);
       state.profile.commuteMentioned = /\bcommut(?:e|ing)\b/i.test(answer) && !state.profile.remoteWork && !state.profile.retired;
       state.profile.prioritiesKnown = false;
@@ -1463,11 +1467,15 @@
     }
     resumeAfterQuestion();
   }
-  function endBrowsingConversation() {
+  function offerBrowsingHelp() {
     state.profile.awaitingVisitReason = false;
-    state.profile.browsingEnded = true;
-    finishConversation();
-    message("Got it. A lot of people check out the site when they're still unsure about moving to Raleigh. Please don't hesitate to reach out if you have any questions that aren't answered by all our free resources here and on the Living in Raleigh YouTube channel.", false);
+    message("Even if you're just exploring, this is the #1 spot for resources on life in Raleigh. I'm happy to answer any questions you have.", false);
+    if (state.profile.firstName) { message("What would you like to know about Raleigh?", false); return; }
+    state.profile.introAsked = true;
+    state.profile.awaitingFirstName = true;
+    state.profile.browsingIntro = true;
+    persist();
+    message("😊 I'm Sam. May I have your first name so I can personalize things for you?", false);
   }
   function handleText(text, replaying) {
     var value = text.trim();
@@ -1542,8 +1550,27 @@
       } else message("No worries!", false);
       var pendingIntroReply = state.profile.pendingIntroReply;
       delete state.profile.pendingIntroReply;
+      if (state.profile.browsingIntro) {
+        state.profile.browsingIntro = false;
+        persist();
+        message("What would you like to know about Raleigh?", false);
+        return;
+      }
       persist();
       if (pendingIntroReply) handleText(pendingIntroReply, true);
+      return;
+    }
+    if (state.profile.awaitingVisitReason && !replaying) {
+      state.profile.awaitingVisitReason = false;
+      persist();
+      if (!detectIntent(value) && !engine.wantsBooking(value) && !engine.asksQuestion(value)) {
+        offerBrowsingHelp();
+        return;
+      }
+    }
+    if (!replaying && !state.intent && !state.profile.introAsked && !detectIntent(value) &&
+        /\b(?:bored|just browsing|looking around|just exploring|killing time)\b/i.test(value)) {
+      offerBrowsingHelp();
       return;
     }
     if (!replaying && !state.profile.introAsked && !state.intent && !state.booking && !state.contact &&
@@ -1557,7 +1584,7 @@
       state.profile.awaitingFirstName = true;
       state.profile.pendingIntroReply = value;
       persist();
-      message("That sounds exciting!", false);
+      if (engine.isSensitiveFamilyReason(value)) message("I'm sorry to hear that.", false);
       message("😊 I'm Sam, and I can help answer your questions about buying or selling in Raleigh. May I have your first name so I can personalize things for you?", false);
       return;
     }
@@ -1576,25 +1603,13 @@
     }
     if (!state.intent && !state.booking && !state.contact && /^(?:no|nope|nah|not really)(?:[,\s]+(?:just browsing|just looking|only browsing))?\s*[.!?]*$/i.test(value)) {
       if (state.profile.awaitingVisitReason) {
-        endBrowsingConversation();
+        offerBrowsingHelp();
       } else {
         state.profile.awaitingVisitReason = true;
         persist();
         message("What has you looking at our website today?", false);
       }
       return;
-    }
-    if (state.profile.awaitingVisitReason) {
-      state.profile.awaitingVisitReason = false;
-      persist();
-      if (!detectIntent(value) && !engine.asksQuestion(value) && !engine.wantsResources(value) && !engine.wantsBooking(value)) {
-        if (/\b(?:mov(?:e|ing)|relocat\w*|buy\w*|sell\w*|invest\w*|homes?|houses?|properties?|neighborhoods?)\b/i.test(value)) {
-          state.profile.awaitingVisitReason = true;
-          persist();
-          message("Are you thinking about a future move to Raleigh, or just exploring for now?", false);
-        } else endBrowsingConversation();
-        return;
-      }
     }
     if (!state.booking && !state.contact && /^(?:hi|hello|hey|good morning|good afternoon|good evening|one sec(?:ond)?|just a sec(?:ond)?|let me think|hmm|um+)\s*[.!?]*$/i.test(value)) {
       var pendingQuestion = state.intent && state.question >= 0 && state.question < activeQuestions().length
@@ -1811,7 +1826,7 @@
     window.dispatchEvent(new CustomEvent("raleigh-chat-state", { detail: { blocked: true, reason: "custom_chat_open" } }));
     if (!state.started) {
       state.started = true;
-      message(config.welcome, false);
+      message(config.welcome, false, { initial: true });
     } else if (resumeQuestionOnOpen) {
       resumeQuestionOnOpen = false;
       if (state.profile.awaitingVisitReason) message("What has you looking at our website today?", false);

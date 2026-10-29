@@ -132,6 +132,9 @@
     if (/^(?:what|why|who|where|when|how|huh|wait|sorry|thanks|okay|sure|yeah|nope|hello|there)$/i.test(first)) return null;
     return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
   }
+  function isSensitiveFamilyReason(value) {
+    return /\b(?:dying|terminal(?:ly)?(?:\s+ill)?|unwell|very sick|seriously ill|hospice|cancer|hospitalized|hospitalised|health (?:issue|problem)|caregiving|care for (?:my|our) (?:mom|mother|dad|father|parent))\b/i.test(value);
+  }
   function classifyMoveTiming(value, now) {
     var text = normalize(value);
     if (/\b(?:not now|not soon|not sure|don't know)\b/.test(text)) return "";
@@ -204,5 +207,5 @@
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";
     return null;
   }
-  return { detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
+  return { detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
 });
