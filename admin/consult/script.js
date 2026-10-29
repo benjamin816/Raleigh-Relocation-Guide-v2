@@ -124,7 +124,7 @@
       email: String(form.get('email') || ''), phone: String(form.get('phone') || ''), callType: String(form.get('callType') || ''),
       purpose: String(form.get('purpose') || ''), notes: String(form.get('notes') || '') };
     bookButton.disabled = true; notice('Confirming the calendar and booking…');
-    call('book', [details]).then(function (result) {
+    call('admin', [sessionStorage.getItem('lirAdminCredential') || '', 'book', details]).then(function (result) {
       if (!result || !result.booked || result.assignedHost !== host.value) throw new Error('Booking needs manual assignment review.');
       notice('Booked with ' + (result.assignedHost === 'Both' ? 'Benjamin and Ricardo' : result.assignedHost) + '. The calendar invitation was sent. The standard pre-call email is queued.');
       event.target.reset(); currentHost = ''; allSlots = []; pageIndex = 0; render(); loadAvailability(true);

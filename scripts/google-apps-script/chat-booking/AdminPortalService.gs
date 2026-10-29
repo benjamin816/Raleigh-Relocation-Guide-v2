@@ -59,6 +59,7 @@ function adminPortalRequest(credential, action, payload) {
     case 'session': return { viewer: viewer };
     case 'appointments': return adminUpcoming_();
     case 'analytics': return adminAnalytics_(String(data.range || 'today'));
+    case 'book': return bookAppointment_(data, true);
     case 'assignment': return adminChangeAssignment_(data, viewer);
     case 'cancel': return adminCancelAppointment_(data, viewer);
     default: throw new Error('Unknown admin action.');

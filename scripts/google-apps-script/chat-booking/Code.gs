@@ -365,7 +365,11 @@ function chatVideoEvent_(requestId, start, end, name, email, phone, notes, host,
 }
 
 function bookChatAppointment(details) {
-  if (PropertiesService.getScriptProperties().getProperty('CHAT_BOOKING_TEST_READ_ONLY') === 'true')
+  return bookAppointment_(details, false);
+}
+
+function bookAppointment_(details, authorizedAdmin) {
+  if (!authorizedAdmin && PropertiesService.getScriptProperties().getProperty('CHAT_BOOKING_TEST_READ_ONLY') === 'true')
     throw new Error('Chat booking is paused for testing. No appointment was created. Please call the team at 919-737-7896 if you need to book now.');
   if (!details || typeof details !== 'object') throw new Error('Missing booking details.');
   const requestId = String(details.requestId || '');
