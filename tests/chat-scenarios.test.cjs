@@ -12,6 +12,13 @@ const cases = [
   ['direct buyer', 'I want to buy a home in Raleigh', 'buying'],
   ['relocating buyer', 'I am relocating from Ohio', 'relocating'],
   ['moving typo', 'movng to raleigh', 'relocating'],
+  ['missing first vowel', 'mving from out of state', 'relocating'],
+  ['buying typo', 'I am bying a home', 'buying'],
+  ['selling typo', 'I am seling my home', 'selling'],
+  ['relocating typo', 'I am relocatin to Raleigh', 'relocating'],
+  ['investing typo', 'I am investng in Raleigh', 'investing'],
+  ['ordinary loving', 'I am loving Raleigh', null],
+  ['ordinary living', 'I am living in Raleigh', null],
   ['local seller', 'I need to sell my house', 'selling'],
   ['seller and buyer', 'I am selling my home and buying another', 'selling', true],
   ['investor', 'I want a rental investment', 'investing'],
@@ -57,7 +64,10 @@ assert.ok(engine.activeQuestions(config.flows.buying, { location: 'out', budgetK
 assert.ok(!engine.activeQuestions(config.flows.buying, { location: 'out', budgetKnown: true, financingKnown: true, usingFinancing: true, preApproved: true }, false).some(q => q.key === 'preapproval'));
 assert.equal(engine.detectLocation('I live in Ohio').place, 'ohio');
 assert.equal(engine.detectLocation('I am relocating from New York').place, 'new york');
+assert.equal(engine.detectLocation('mving from out of state', config).place, '');
+assert.equal(engine.wantsBooking('Can I book an apppointment?'), true);
 assert.equal(engine.detectTenure('We rent right now'), 'renting');
+assert.equal(engine.detectTenure('We are rentng right now'), 'renting');
 assert.equal(engine.detectTenure('I own my current home'), 'owning');
 assert.equal(engine.classifySafety('https://spam.example'), 'spam');
 assert.equal(engine.classifySafety('asdfasdfasdf'), 'spam');

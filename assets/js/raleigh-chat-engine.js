@@ -9,8 +9,29 @@
     var escaped = normalize(phrase).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     return new RegExp("(^|[^a-z0-9])" + escaped + "(?=$|[^a-z0-9])", "i").test(text);
   }
+  // Correct one missing, extra, or mistyped letter in a small set of routing words.
+  // Keep names, places, and free-form answers untouched.
+  var routingWords = ["moving", "buying", "selling", "relocating", "investing", "renting", "rental", "purchase", "purchasing", "booking", "appointment", "schedule"];
+  function oneEditAway(word, target) {
+    if (word.charAt(0) !== target.charAt(0) || Math.abs(word.length - target.length) > 1) return false;
+    var i = 0, j = 0, edits = 0;
+    while (i < word.length && j < target.length) {
+      if (word.charAt(i) === target.charAt(j)) { i++; j++; continue; }
+      if (++edits > 1) return false;
+      if (word.length >= target.length) i++;
+      if (target.length >= word.length) j++;
+    }
+    return edits + (i < word.length || j < target.length ? 1 : 0) <= 1;
+  }
+  function normalizeRouting(value) {
+    return normalize(value).replace(/\b[a-z]{5,}\b/g, function (word) {
+      if (routingWords.indexOf(word) !== -1) return word;
+      var matches = routingWords.filter(function (target) { return oneEditAway(word, target); });
+      return matches.length === 1 ? matches[0] : word;
+    });
+  }
   function detectIntent(value, config) {
-    var text = normalize(value).replace(/\bmovng\b/g, "moving");
+    var text = normalizeRouting(value);
     var sell = /\b(sell|selling|seller|list my|listing my|home value|house value)\b/.test(text);
     var buy = /\b(buy|buying|buyer|purchase|purchasing|looking for a home)\b/.test(text);
     if (sell && buy) return { id: "selling", combined: true };
@@ -40,7 +61,7 @@
     return best;
   }
   function wantsResources(value) { return /\b(resources?|guides?|articles?|blogs?|learn more|website|web page|where can i (?:read|learn))\b/i.test(value); }
-  function wantsBooking(value) { return /\b(book|booking|schedule|appointment|call|talk to (you|the team)|meet with)\b/i.test(value); }
+  function wantsBooking(value) { return /\b(book|booking|schedule|appointment|call|talk to (you|the team)|meet with)\b/i.test(normalizeRouting(value)); }
   function asksQuestion(value) { return /\?|^\s*(how|what|where|when|why|can|could|do|does|is|are|should|tell me|explain)\b/i.test(value); }
   function detectLocation(value, config) {
     var text = normalize(value);
@@ -54,7 +75,7 @@
     })) return { type: "out", place: barePlace };
     if (/\b(already (?:live|living|here|local)|(?:i (?:live|am living|am)|i'm) (?:here|in (?:(?:north|south|east|west) )?(?:raleigh|cary|durham|the triangle))|i'm local|i am local|from (?:raleigh|cary|durham))\b/.test(text)) return { type: "local", place: "" };
     var from = text.match(/\b(?:from|live in|living in|moving from|relocating from|i am in|i'm in|we are in)\s+([a-z][a-z .-]{1,35}?)(?=\s*(?:,|\.|!|\?|$|\s+(?:and|because|but|to|for)\b))/);
-    if (from && !/^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/.test(from[1].trim())) return { type: "out", place: from[1].trim().replace(/\s+/g, " ") };
+    if (from && !/^(?:raleigh|cary|durham|the triangle|north carolina|nc|out of state)$/.test(from[1].trim())) return { type: "out", place: from[1].trim().replace(/\s+/g, " ") };
     if (/\bout of state\b/.test(text)) return { type: "out", place: "" };
     if (/\b(local|already here|in the triangle)\b/.test(text)) return { type: "local", place: "" };
     return null;
@@ -89,7 +110,7 @@
     return { type: "out", place: raw, stateCode: "", city: "" };
   }
   function detectTenure(value) {
-    var text = normalize(value);
+    var text = normalizeRouting(value);
     if (/\b(rent|renting|renter|lease|tenant)\b/.test(text)) return "renting";
     if (/\b(own|owner|homeowner|mortgage|my house|my home)\b/.test(text)) return "owning";
     return null;
