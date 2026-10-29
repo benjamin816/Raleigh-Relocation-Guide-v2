@@ -880,7 +880,7 @@
         try { window.localStorage.setItem("livrBookingReportedAt", new Date().toISOString()); } catch (_) {}
         finishConversation();
         window.dispatchEvent(new CustomEvent("raleigh-booking-confirmed", { detail: { source: "website_chat" } }));
-        message("Great, " + booking.details.name.split(/\s+/)[0] + ", I've got you confirmed for " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". You'll get a calendar invitation." + (booking.details.callType === "video" ? (result.videoUrl ? " The Google Meet link is in the invitation." : " The team will add the video link before your call.") : "") + (result.preCallEmailSent ? " Look out for an email titled What To Know Before Our Call, with a quick form and resources to help you prepare." : "") + " If you need anything in the meantime, message me here or call or text the team at 919-737-7896.", false);
+        message("Great, " + booking.details.name.split(/\s+/)[0] + ", I've got you confirmed for " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". You'll get a calendar invitation." + (booking.details.callType === "video" ? (result.videoUrl ? " The Google Meet link is in the invitation." : " The team will add the video link before your call.") : "") + " Look out for an email titled What To Know Before Our Call, with a quick form and resources to help you prepare." + " If you need anything in the meantime, message me here or call or text the team at 919-737-7896.", false);
         if (bookingFile) submitBookingAttachment(bookingFile, booking, result);
       }).catch(function (error) {
         if (state.booking !== booking) return;
