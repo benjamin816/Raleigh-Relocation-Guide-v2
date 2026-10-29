@@ -1033,7 +1033,7 @@
       case "firstTime": return /\b(yes|first|never)\b/.test(text) ? "That's super exciting!" : "Got it.";
       case "leaseEnd": return "Got it.";
       case "whyRaleigh": {
-        if (engine.isSensitiveFamilyReason(answer)) return /\b(?:mom|mother)\b/i.test(answer) ? "I'm so sorry to hear about your mom. It makes sense that you'd want to be closer to her." : /\b(?:dad|father)\b/i.test(answer) ? "I'm so sorry to hear about your dad. It makes sense that you'd want to be closer to him." : "I'm sorry to hear that. Being closer to family makes sense.";
+        if (engine.isSensitiveFamilyReason(answer)) return "I'm so sorry to hear that." + (state.profile.familyNearby ? " It makes sense that you'd want to be closer to your family." : "");
         if (/^(buying|relocating)$/.test(state.intent)) {
           var responses = config.relocationResponses || {};
           if (state.profile.newJob) return responses.job || "Congrats! That's super exciting.";
@@ -1584,7 +1584,7 @@
       state.profile.awaitingFirstName = true;
       state.profile.pendingIntroReply = value;
       persist();
-      if (engine.isSensitiveFamilyReason(value)) message("I'm sorry to hear that.", false);
+      if (engine.isSensitiveFamilyReason(value)) message("I'm so sorry to hear that.", false);
       message("😊 I'm Sam, and I can help answer your questions about buying or selling in Raleigh. May I have your first name so I can personalize things for you?", false);
       return;
     }
