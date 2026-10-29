@@ -17,8 +17,10 @@
     <section id="booking-card" class="card" hidden>
       <form id="booking-form">
         <fieldset><legend>Who will take the call?</legend><div class="host-options"><label><input type="radio" name="host" value="Benjamin" required> Benjamin</label><label><input type="radio" name="host" value="Ricardo" required> Ricardo</label></div></fieldset>
-        <button id="refresh-slots" type="button">Refresh available times</button>
-        <fieldset><legend>Available times for <span id="host-label">your selection</span></legend><div id="slots" class="slots">Choose a host to see their times.</div></fieldset>
+        <div class="schedule" aria-label="Choose a consultation time">
+          <section class="calendar-panel"><div class="schedule-heading"><h2>Choose a date</h2><button id="refresh-slots" type="button">Refresh</button></div><p>Available booking dates in the next three weeks</p><div id="calendar-dates" class="calendar-dates"></div></section>
+          <section class="time-panel"><h2 id="chosen-date">Choose a host first</h2><p>Available times for <strong id="host-label">your selection</strong> · Eastern Time</p><div id="slots" class="slots">Choose a host to see their times.</div></section>
+        </div>
         <div class="grid"><label>First and last name<input name="name" autocomplete="name" required minlength="2"></label><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Phone<input name="phone" type="tel" autocomplete="tel" required></label><label>Meeting type<select name="callType"><option value="video">Google video call</option><option value="phone">Phone call</option></select></label></div>
         <label>Notes for the team<textarea name="notes" rows="4" maxlength="1000"></textarea></label>
         <button id="book-button" type="submit" disabled>Book selected time</button>
