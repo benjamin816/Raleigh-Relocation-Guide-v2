@@ -1,5 +1,11 @@
 # Booking relay
 
+Portal sign-ins are verified with Google by the Worker. The Worker and Apps Script
+share an `ADMIN_ASSERTION_KEY` secret stored only in their service settings.
+Assertions expire after 60 seconds, bind the exact action and payload, and can be
+used once. No Google ID token is forwarded to Apps Script on this path. Keep the
+allowed account lists aligned in both files. Never commit the signing key.
+
 The static site cannot call the team-owned Apps Script web app directly from a Chrome profile signed into multiple Google accounts. Google rewrites the URL to an account-specific path before the booking script runs. This Worker makes the request server-to-server so the visitor's Google cookies do not affect booking.
 
 The Worker holds no Google credentials. It accepts only the site and local-test origins, POSTs an allowlisted method to the existing Apps Script endpoint, and returns JSON. The Apps Script service still enforces booking availability and verifies Google ID tokens for admin operations.

@@ -1,6 +1,7 @@
 /** Private admin operations. Never add these methods to the public booking bridge
  * without the Google ID token check in adminPortalRequest(). */
 const ADMIN_ALLOWED_EMAILS = [
+  'benjamin.carver@exprealty.com',
   'benjamin.raleighrealtor@gmail.com',
   'ricardo@triangleexperts.com'
 ];
@@ -11,7 +12,31 @@ function adminPortalConfig() {
   return { clientId: PropertiesService.getScriptProperties().getProperty('ADMIN_GOOGLE_CLIENT_ID') || '' };
 }
 
-function adminVerifyToken_(credential) {
+function adminVerifyRelay_(credential, action, data) {
+  const parts = credential.split('.');
+  const key = PropertiesService.getScriptProperties().getProperty('ADMIN_ASSERTION_KEY');
+  if (!key || parts.length !== 3 || parts[0] !== 'v1' || credential.length > 20000) throw new Error('Please sign in again.');
+  const expected = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(parts[1], key)).replace(/=+$/, '');
+  let difference = expected.length ^ parts[2].length;
+  for (let i = 0; i < expected.length; i++) difference |= expected.charCodeAt(i) ^ (parts[2].charCodeAt(i) || 0);
+  if (difference) throw new Error('Invalid portal authorization.');
+  const claim = JSON.parse(Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[1])).getDataAsString());
+  const now = Math.floor(Date.now() / 1000);
+  if (!ADMIN_ALLOWED_EMAILS.includes(claim.email) || claim.expires <= now || claim.expires > now + 90 ||
+      claim.action !== action || JSON.stringify(claim.data) !== JSON.stringify(data) || !/^[a-f0-9-]{36}$/.test(claim.nonce))
+    throw new Error('Portal authorization expired or does not match this request.');
+  const cache = CacheService.getScriptCache(), nonceKey = 'admin-relay-' + claim.nonce;
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    if (cache.get(nonceKey)) throw new Error('Portal request was already used. Please retry.');
+    cache.put(nonceKey, 'used', 120);
+  } finally { lock.releaseLock(); }
+  return { email: claim.email, name: claim.name };
+}
+
+function adminVerifyToken_(credential, action, data) {
+  if (String(credential || '').indexOf('v1.') === 0) return adminVerifyRelay_(credential, action, data);
   const clientId = adminPortalConfig().clientId;
   if (!clientId) throw new Error('Google sign-in is not configured.');
   const token = String(credential || '');
@@ -28,8 +53,8 @@ function adminVerifyToken_(credential) {
 }
 
 function adminPortalRequest(credential, action, payload) {
-  const viewer = adminVerifyToken_(credential);
   const data = payload && typeof payload === 'object' ? payload : {};
+  const viewer = adminVerifyToken_(credential, action, data);
   switch (String(action || '')) {
     case 'session': return { viewer: viewer };
     case 'appointments': return adminUpcoming_();
