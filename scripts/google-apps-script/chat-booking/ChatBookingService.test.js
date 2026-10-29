@@ -13,8 +13,10 @@ const calendars = {
   getCalendarById(id) {
     if (!schedules.has(id)) schedules.set(id, []);
     return { getEvents() { calendarReads += 1; return schedules.get(id); }, getEventById() { return { setTag() {} }; },
-      createEvent(title, _start, _end, options) { createdEvents += 1; lastPhoneEvent = { title, options };
-        return { getId() { return 'test-event-' + createdEvents; }, setTag() {} }; } };
+      createEvent(title, _start, _end, options) { createdEvents += 1; lastPhoneEvent = { title, options, reminders: [] };
+        return { getId() { return 'test-event-' + createdEvents; }, setTag() {},
+          addEmailReminder(minutes) { lastPhoneEvent.reminders.push(['email', minutes]); },
+          addPopupReminder(minutes) { lastPhoneEvent.reminders.push(['popup', minutes]); } }; } };
   },
   EventTransparency: { TRANSPARENT: 'transparent' },
   GuestStatus: { NO: 'no' }
@@ -96,7 +98,7 @@ assert.deepEqual(Array.from(context.getChatBookingSlots().slice(0, 2), slot => s
 assert.equal(calendarReads, 6, 'Availability reads the shared calendar and five host calendars once each');
 assert.equal(context.getChatBookingSlots({ daypart: 'evening' }).every(slot => slot.daypart === 'evening'), true);
 context.chatBookingWindows_ = () => [];
-const details = { requestId: 'test-request-123456789', start: start.toISOString(), name: 'Test Person', email: 'test@example.com', phone: '9195550100', notes: '=IMPORTXML("bad")' };
+const details = { requestId: 'test-request-123456789', start: start.toISOString(), name: 'Test Person', email: 'test@example.com', phone: '9195550100', notes: '=IMPORTXML("bad")', purpose: 'Buy' };
 assert.equal(context.chatPickHost_(context.CHAT_HOSTS || [{name:'Benjamin'},{name:'Ricardo'}],
   [['old', '', '', '', 'Benjamin', '', '', 'Assigned']], '').host.name, 'Ricardo');
 assert.equal(context.chatBookingPreference_({host:'ricardo',daypart:'evening',weekdays:[0,6,9]}).host, 'Ricardo');
@@ -106,6 +108,8 @@ assert.equal(createdEvents, 1, 'Retry cannot create a second event');
 assert.match(lastPhoneEvent.title, /Exploration Call: Living in Raleigh Team \(Test Person\)/);
 assert.match(lastPhoneEvent.options.description, /Pre-call email: standard pipeline/);
 assert.match(lastPhoneEvent.options.description, /Assigned host: Benjamin/);
+assert.match(lastPhoneEvent.options.description, /whether you are looking to buy, sell, or invest in Raleigh\nBuy/);
+assert.deepEqual(lastPhoneEvent.reminders, [['email', 1440], ['popup', 30]]);
 assert.equal(sentEmails.length, 0, 'Booking service leaves pre-call delivery to the standard emailer');
 assert.equal(context.bookChatAppointment(details).preCallEmailQueued, true);
 assert.equal(leadRows.length, 2, 'One booking row and one header');
@@ -129,6 +133,7 @@ assert.equal(assignmentRows[1][4], 'Ricardo');
 assert.match(videoPayload.summary, /Exploration Call: Living in Raleigh Team \(Test Person\)/);
 assert.match(videoPayload.description, /Pre-call email: standard pipeline/);
 assert.match(videoPayload.description, /Assigned host: Ricardo/);
+assert.deepEqual(JSON.parse(JSON.stringify(videoPayload.reminders)), { useDefault: false, overrides: [{ method: 'email', minutes: 1440 }, { method: 'popup', minutes: 30 }] });
 schedules.set('ricardo.collier90@gmail.com', [busy]);
 assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-request-444444444', preferredHost: 'Ricardo', email: 'unavailable@example.com' }), /no longer available/i);
 schedules.set('ricardo.collier90@gmail.com', []);
