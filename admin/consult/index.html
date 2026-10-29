@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow,noarchive">
+  <title>Admin consultation booking | Living in Raleigh</title>
+  <link rel="stylesheet" href="/admin/consult/style.css">
+</head>
+<body>
+  <main class="shell">
+    <header><span class="eyebrow">Living in Raleigh Team</span><h1>Book a consultation</h1><p>Choose a host and an available time. The booking is added to the team calendar and assigned to that person.</p></header>
+    <section id="unlock-card" class="card">
+      <h2>Admin access</h2>
+      <form id="unlock-form"><label for="passcode">Passcode</label><input id="passcode" type="password" inputmode="numeric" autocomplete="off" required maxlength="12"><button type="submit">Unlock booking</button></form>
+    </section>
+    <section id="booking-card" class="card" hidden>
+      <form id="booking-form">
+        <fieldset><legend>Who will take the call?</legend><div class="host-options"><label><input type="radio" name="host" value="Benjamin" required> Benjamin</label><label><input type="radio" name="host" value="Ricardo" required> Ricardo</label></div></fieldset>
+        <button id="refresh-slots" type="button">Refresh available times</button>
+        <fieldset><legend>Available times for <span id="host-label">your selection</span></legend><div id="slots" class="slots">Choose a host to see their times.</div></fieldset>
+        <div class="grid"><label>First and last name<input name="name" autocomplete="name" required minlength="2"></label><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Phone<input name="phone" type="tel" autocomplete="tel" required></label><label>Meeting type<select name="callType"><option value="video">Google video call</option><option value="phone">Phone call</option></select></label></div>
+        <label>Notes for the team<textarea name="notes" rows="4" maxlength="1000"></textarea></label>
+        <button id="book-button" type="submit" disabled>Book selected time</button>
+      </form>
+    </section>
+    <p id="status" role="status" aria-live="polite"></p>
+  </main>
+  <script src="/admin/consult/script.js" defer></script>
+</body>
+</html>
