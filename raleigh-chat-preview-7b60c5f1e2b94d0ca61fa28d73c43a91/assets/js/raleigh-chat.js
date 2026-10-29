@@ -869,7 +869,7 @@
       booking.step = "confirming";
       booking.requestId = booking.requestId || bookingToken();
       message("I'll book that time now and send the invitation to your email.", false);
-      bookingCall("book", [{ requestId: booking.requestId, start: booking.start, name: booking.details.name, email: booking.details.email, phone: booking.details.phone, notes: booking.details.notes, callType: booking.details.callType, preferredHost: config.chatRoundRobinBookingEnabled ? booking.preference.host : "" }]).then(function (result) {
+      bookingCall("book", [{ requestId: booking.requestId, start: booking.start, name: booking.details.name, email: booking.details.email, phone: booking.details.phone, notes: booking.details.notes, callType: booking.details.callType, purpose: state.intent === "selling" ? "Sell" : state.intent === "investing" ? "Invest" : "Buy", preferredHost: config.chatRoundRobinBookingEnabled ? booking.preference.host : "" }]).then(function (result) {
         if (state.booking !== booking) return;
         if (!result || !result.booked) throw new Error("Booking was not confirmed.");
         var bookingFile = attachment;
