@@ -4931,7 +4931,7 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=05a35631bfd4";
+    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=b9246defb85c";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
     var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261029-test49";
