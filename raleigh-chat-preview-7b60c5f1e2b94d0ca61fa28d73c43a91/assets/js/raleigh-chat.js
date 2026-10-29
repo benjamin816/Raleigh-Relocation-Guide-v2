@@ -1936,7 +1936,7 @@
     try { window.localStorage.removeItem(safetyKey); } catch (_) {}
     try { window.localStorage.removeItem("livrBookingReportedAt"); } catch (_) {}
     root.hidden = false;
-    message(config.welcome, false);
+    message(config.welcome, false, { initial: true });
     input.focus();
   });
   log.addEventListener("scroll", function () {
