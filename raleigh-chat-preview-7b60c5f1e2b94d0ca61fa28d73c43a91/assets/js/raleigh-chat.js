@@ -959,7 +959,7 @@
     }
     if (!knownLocation && !introAsked) message(state.combined && flow.combinedIntro ? flow.combinedIntro : flow.intro, false);
     offerPreapprovalUpload();
-    askQuestion(knownLocation ? locationAcknowledgement(knownLocation) : "");
+    askQuestion(knownLocation && !introAsked ? locationAcknowledgement(knownLocation) : "");
   }
   function locationAcknowledgement(location) {
     if (state.intent === "investing") return location.type === "local" ? "Great!" : "Awesome.";
