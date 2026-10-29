@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   var endpoint = 'https://script.google.com/macros/s/AKfycbysLAettKRWslMW8YgG3BxftA2eBL_gsZFdK70bN7B3xu-aG_stqdNqg3jYBB5aqoMa2g/exec';
+  var relayEndpoint = window.RALEIGH_BOOKING_RELAY_URL || '';
   var protocol = 'raleigh-chat-booking-v1';
   var credential = sessionStorage.getItem('lirAdminCredential') || '';
   var bridge, pendingAction;
@@ -28,6 +29,11 @@
     return ready;
   }
   function call(method, args) {
+    if (relayEndpoint) return fetch(relayEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: method, args: args || [] }), cache: 'no-store' }).then(function (response) {
+      if (!response.ok) throw new Error('The portal service is unavailable.');
+      return response.json();
+    }).then(function (message) { if (!message.ok) throw new Error(message.error || 'The portal request failed.'); return message.result; });
     return connect().then(function () { return new Promise(function (resolve, reject) {
       var id = randomId();
       var timer = setTimeout(function () { delete bridge.pending[id]; reject(new Error('The portal request timed out.')); }, 45000);

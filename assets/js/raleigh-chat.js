@@ -540,6 +540,11 @@
     return ready;
   }
   function bookingCall(method, args) {
+    if (config.bookingRelayUrl) return fetch(config.bookingRelayUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: method, args: args || [] }), cache: 'no-store' }).then(function (response) {
+      if (!response.ok) throw new Error('Booking service is unavailable.');
+      return response.json();
+    }).then(function (message) { if (!message.ok) throw new Error(message.error || 'Booking is unavailable.'); return message.result; });
     return bookingBridgeReady().then(function () {
       return new Promise(function (resolve, reject) {
         var id = bookingToken();
@@ -714,7 +719,7 @@
       link("Book an investing exploration call", config.bookingLinks.investing);
       return;
     }
-    if (!config.bookingBridgeUrl) {
+    if (!config.bookingBridgeUrl && !config.bookingRelayUrl) {
       message("I can't check the calendar from chat right now. I can pass your details to the team, or you can call 919-737-7896.", false);
       return;
     }

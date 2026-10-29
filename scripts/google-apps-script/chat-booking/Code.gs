@@ -36,6 +36,34 @@ function doGet(e) {
     .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
+/** JSON transport for the same booking operations used by the HTML bridge.
+ * A relay can call this endpoint without the visitor's Google browser cookies.
+ * Private admin actions still require an artifact-bound Google ID token. */
+function doPost(e) {
+  try {
+    const raw = String(e && e.postData && e.postData.contents || '');
+    if (raw.length > 30000) throw new Error('Request is too large.');
+    const request = JSON.parse(raw);
+    const args = request && request.args;
+    if (!request || !Array.isArray(args) || args.length > 4) throw new Error('Invalid request.');
+    const methods = {
+      slots: getChatBookingSlots,
+      check: checkChatBookingSlot,
+      suggest: checkChatBookingSuggestion,
+      book: bookChatAppointment,
+      adminConfig: adminPortalConfig,
+      admin: adminPortalRequest
+    };
+    const fn = methods[request.method];
+    if (!fn) throw new Error('Unknown request.');
+    return ContentService.createTextOutput(JSON.stringify({ ok: true, result: fn.apply(null, args) }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ ok: false, error: error && error.message || 'Service unavailable.' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
 function chatBookingWindows_() {
   if (Session.getScriptTimeZone() !== CHAT_ZONE) throw new Error('Booking timezone is not configured.');
   const raw = PropertiesService.getScriptProperties().getProperty('CHAT_BOOKING_WINDOWS');
