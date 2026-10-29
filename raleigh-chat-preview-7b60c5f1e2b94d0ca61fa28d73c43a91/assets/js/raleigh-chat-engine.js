@@ -117,6 +117,7 @@
   }
   function isUnclearAnswer(value, questionKey) {
     var text = normalize(value).replace(/[.!?]+$/, "").trim();
+    if (questionKey === "intro" && /^(?:not sure|i don't know|idk)$/.test(text)) return true;
     if (/^(?:bruh|bro|lol|lmao|huh|what|whatever|okay|ok|sure|yep|yeah|nah|um+|hmm+)$/.test(text)) return true;
     if (!/^(?:whyRaleigh|priorities|priorityMore|home|homeMore)$/.test(questionKey || "")) return false;
     if (!/^[a-z]{3,20}$/.test(text)) return false;
