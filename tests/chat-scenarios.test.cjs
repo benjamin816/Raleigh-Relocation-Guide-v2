@@ -75,6 +75,8 @@ assert.equal(engine.classifySafety('hshsj'), 'gibberish');
 assert.equal(engine.classifySafety('goodye'), null);
 assert.equal(engine.detectLocation('goodye', config), null);
 assert.equal(engine.isUnclearAnswer('bruh', 'priorities'), true);
+assert.equal(engine.isUnclearAnswer('bruh', 'intro'), true);
+assert.equal(engine.isUnclearAnswer('not sure', 'intro'), true);
 assert.equal(engine.isUnclearAnswer('banana', 'whyRaleigh'), true);
 assert.equal(engine.isUnclearAnswer('weather', 'whyRaleigh'), false);
 assert.equal(engine.isUnclearAnswer('family', 'priorities'), false);

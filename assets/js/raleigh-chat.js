@@ -1547,6 +1547,11 @@
       return;
     }
     if (!replaying && !state.profile.introAsked && !state.intent && !state.booking && !state.contact &&
+        engine.isUnclearAnswer(value, "intro")) {
+      scheduleClarification("Sorry, I don't quite understand. " + config.welcome);
+      return;
+    }
+    if (!replaying && !state.profile.introAsked && !state.intent && !state.booking && !state.contact &&
         !/^(?:hi|hello|hey|good (?:morning|afternoon|evening)|no|nope|nah|not really|one sec(?:ond)?)\s*[.!?]*$/i.test(value)) {
       state.profile.introAsked = true;
       state.profile.awaitingFirstName = true;
