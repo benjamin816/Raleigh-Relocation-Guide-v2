@@ -91,13 +91,18 @@
     }).catch(function (error) { loading = false; days.textContent = ''; notice(error.message, true); });
   }
   function changeHost() { currentHost = document.querySelector('input[name="host"]:checked').value; pageIndex = 0; render(); }
-  document.getElementById('unlock-form').addEventListener('submit', function (event) {
-    event.preventDefault(); notice('Checking access…');
-    var field = document.getElementById('passcode');
-    if (field.value !== '123456') { field.value = ''; notice('Incorrect passcode.', true); return; }
-    field.value = ''; unlockCard.hidden = true; bookingCard.hidden = false;
+  function unlockBooking() {
+    unlockCard.hidden = true; bookingCard.hidden = false;
     notice('Choose who will take the call.'); loadAvailability();
-  });
+  }
+  if (new URLSearchParams(location.search).get('portal') === '1' && window.parent !== window) {
+    var portalCredential = sessionStorage.getItem('lirAdminCredential');
+    if (portalCredential) {
+      notice('Checking team sign-in…');
+      call('admin', [portalCredential, 'session', {}]).then(function () { unlockBooking(); })
+        .catch(function () { notice('Please sign in to the team portal again.', true); });
+    }
+  }
   document.querySelectorAll('input[name="host"]').forEach(function (input) { input.addEventListener('change', changeHost); });
   document.getElementById('refresh-slots').addEventListener('click', loadAvailability);
   document.getElementById('previous-days').addEventListener('click', function () { pageIndex--; render(); });
