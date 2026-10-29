@@ -123,6 +123,15 @@
     if (!/^[a-z]{3,20}$/.test(text)) return false;
     return !/^(?:weather|climate|warmth|family|friends|job|work|career|retirement|prices?|affordability|cost|commute|schools?|shopping|amenities|walkability|safety|space|yard|backyard|bedrooms?|bathrooms?|garage|pool|office|location|quiet|community|lifestyle|opportunity|opportunities|raleigh|cary|apex|durham)$/.test(text);
   }
+  function extractFirstName(value) {
+    var text = String(value || "").trim();
+    if (!text || /\?/.test(text)) return null;
+    text = text.replace(/^(?:my name is|i am|i'm|call me)\s+/i, "").replace(/[.!]+$/, "").trim();
+    if (!/^[a-z][a-z'-]{1,34}(?:\s+[a-z][a-z'-]{1,34})?$/i.test(text)) return null;
+    var first = text.split(/\s+/)[0];
+    if (/^(?:what|why|who|where|when|how|huh|wait|sorry|thanks|okay|sure|yeah|nope|hello|there)$/i.test(first)) return null;
+    return first.charAt(0).toUpperCase() + first.slice(1).toLowerCase();
+  }
   function classifyMoveTiming(value, now) {
     var text = normalize(value);
     if (/\b(?:not now|not soon|not sure|don't know)\b/.test(text)) return "";
@@ -195,5 +204,5 @@
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";
     return null;
   }
-  return { detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
+  return { detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
 });
