@@ -1530,14 +1530,14 @@
     if (state.profile.awaitingFirstName && !replaying) {
       state.profile.awaitingFirstName = false;
       if (!/^(?:no|no thanks|nope|rather not|prefer not to|skip)\s*[.!?]*$/i.test(value)) {
-        var firstName = value.replace(/[^a-zA-Z'\- ]/g, "").trim().split(/\s+/)[0];
-        if (!firstName || firstName.length < 2 || firstName.length > 35) {
+        var firstName = engine.extractFirstName(value);
+        if (!firstName) {
           state.profile.awaitingFirstName = true;
-          message("What first name should I use? You can also say no thanks.", false);
+          message("I was asking what first name you'd like me to use. You can also say no thanks.", false);
           persist();
           return;
         }
-        state.profile.firstName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+        state.profile.firstName = firstName;
         message("Nice to meet you, " + state.profile.firstName + "!", false);
       } else message("No worries!", false);
       var pendingIntroReply = state.profile.pendingIntroReply;
