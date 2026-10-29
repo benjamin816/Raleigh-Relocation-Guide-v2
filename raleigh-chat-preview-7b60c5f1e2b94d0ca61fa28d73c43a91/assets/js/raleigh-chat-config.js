@@ -122,13 +122,18 @@ window.RaleighChatConfig = {
         },
         {
           "key": "familyNearby",
-          "when": "family",
+          "when": "familyBeforePriorities",
           "text": "Do you already have family or friends in the Raleigh area?"
         },
         {
           "key": "priorities",
           "when": "outNeedsPriorities",
           "text": "When it comes to the place that you end up calling home, what is most important to you?"
+        },
+        {
+          "key": "priorityFamilyArea",
+          "when": "familyAreaNeeded",
+          "text": "What part of the Raleigh area is your family in?"
         },
         {
           "key": "priorityMore",
@@ -317,7 +322,7 @@ window.RaleighChatConfig = {
         },
         {
           "key": "familyNearby",
-          "when": "family",
+          "when": "familyBeforePriorities",
           "text": "What part of the Raleigh area are they in?"
         },
         {
@@ -354,6 +359,11 @@ window.RaleighChatConfig = {
           "key": "priorities",
           "when": "outNeedsPriorities",
           "text": "When it comes to the place that you end up calling home, what is most important to you?"
+        },
+        {
+          "key": "priorityFamilyArea",
+          "when": "familyAreaNeeded",
+          "text": "What part of the Raleigh area is your family in?"
         },
         {
           "key": "priorityMore",

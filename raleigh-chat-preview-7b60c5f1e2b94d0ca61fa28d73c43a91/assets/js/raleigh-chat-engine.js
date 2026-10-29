@@ -128,6 +128,8 @@
         case "renting": return profile.location === "local" && profile.tenure === "renting";
         case "owning": return profile.location === "local" && profile.tenure === "owning";
         case "family": return profile.familyNearby === true;
+        case "familyBeforePriorities": return profile.familyNearby === true && (profile.priorityAnswered !== true || profile.familyAreaAsked === true);
+        case "familyAreaNeeded": return profile.familyNearby === true && profile.priorityAnswered === true && !profile.familyArea && profile.familyAreaAsked !== true;
         case "needsPriorities": return profile.prioritiesKnown !== true;
         case "outNeedsPriorities": return profile.location === "out" && profile.prioritiesKnown !== true;
         case "areaReasonNeeded": return profile.areasNeedFollowup === true;
