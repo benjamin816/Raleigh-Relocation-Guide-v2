@@ -1498,6 +1498,11 @@
         message(config.safetyEnd || "I'm going to end this conversation for now.", false, { remember: false });
       } else if (safety === "discrimination") {
         message("I can compare areas by budget, commute, homes, and amenities. " + (state.intent && state.question < activeQuestions().length ? activeQuestions()[state.question].text : config.safetyWarning), false, { remember: false });
+      } else if (safety === "gibberish") {
+        message("Sorry, I don't quite understand.", false, { remember: false });
+        if (state.profile.awaitingFirstName) message("May I have your first name? You can also say no thanks.", false, { remember: false });
+        else if (state.intent && state.question >= 0 && state.question < activeQuestions().length) askQuestion();
+        else message(config.welcome, false, { remember: false });
       } else message(config.safetyWarning || "Let's keep this focused on your real estate question.", false, { remember: false });
       return;
     }
