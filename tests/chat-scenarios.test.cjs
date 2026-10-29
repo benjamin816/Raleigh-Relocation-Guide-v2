@@ -87,6 +87,12 @@ assert.equal(engine.extractFirstName('My name is Benjamin'), 'Benjamin');
 assert.equal(engine.extractFirstName('Ben Carver'), 'Ben');
 assert.equal(engine.isSensitiveFamilyReason('My folks live in Raleigh and my mom is unwell'), true);
 assert.equal(engine.isSensitiveFamilyReason('I want better weather'), false);
+const chatSource = fs.readFileSync(require.resolve('../assets/js/raleigh-chat.js'), 'utf8');
+const acknowledgementCode = chatSource.slice(chatSource.indexOf('  function answerAcknowledgement('), chatSource.indexOf('  function explainRentalOnly('));
+const acknowledge = vm.runInNewContext(acknowledgementCode + '\nanswerAcknowledgement', {
+  engine, config, state: { intent: 'relocating', profile: { familyNearby: true } }
+});
+assert.match(acknowledge({ key: 'whyRaleigh' }, 'My mother in law lives in Cary and is terminally ill so we are moving down to be with her'), /^I'm so sorry to hear that\./);
 for (const phrase of ['unwell', 'sick', 'ill', 'illness', 'health problems', 'health issues', 'cancer', 'sickness', 'terminal', 'dying', 'death']) {
   assert.equal(engine.isSensitiveFamilyReason(`My mother has ${phrase}`), true, phrase);
 }
