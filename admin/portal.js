@@ -6,6 +6,43 @@
   var credential = sessionStorage.getItem('lirAdminCredential') || '';
   var bridge, pendingAction;
   var $ = function (id) { return document.getElementById(id); };
+  var viewerEmail = '', pendingLoads = {};
+  function snapshotKey(kind) { return 'lirPortalSnapshot:v3:' + viewerEmail + ':' + kind; }
+  function savedSnapshot(kind) {
+    try { var value = JSON.parse(localStorage.getItem(snapshotKey(kind)) || 'null');
+      return value && Date.now() - value.savedAt < 7 * 86400000 ? value.result : null;
+    } catch (_) { return null; }
+  }
+  function loadSnapshot(kind, request, render, indicator) {
+    var owner = viewerEmail, cacheKey = snapshotKey(kind), saved = savedSnapshot(kind), label = $(indicator);
+    if (saved) render(saved);
+    if (pendingLoads[kind]) return pendingLoads[kind];
+    label.textContent = 'Updating…'; label.className = 'updating';
+    pendingLoads[kind] = request().then(function (result) {
+      if (viewerEmail !== owner) return;
+      try { localStorage.setItem(cacheKey, JSON.stringify({ savedAt: Date.now(), result: result })); } catch (_) {}
+      render(result);
+      if (kind.indexOf('analytics-') === 0 && kind !== 'analytics-' + $('analytics-range').value) return;
+      label.textContent = 'Updated ' + new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(new Date(result.generatedAt || Date.now()));
+      label.className = 'update-status';
+    }).catch(function (error) {
+      if (viewerEmail !== owner) return;
+      if (kind.indexOf('analytics-') === 0 && kind !== 'analytics-' + $('analytics-range').value) return;
+      label.className = 'warning';
+      label.textContent = (saved ? 'Showing the last saved view. Update unavailable: ' : 'Data unavailable: ') + error.message;
+    }).finally(function () { delete pendingLoads[kind]; });
+    return pendingLoads[kind];
+  }
+  function pageName(path) {
+    var names = { '/': 'Home page', '/consult/': 'Consult page', '/buy/': 'Buy page', '/sell/': 'Sell page',
+      '/quiz/': 'Suburb quiz landing page', '/2026/': 'Relocation guide landing page', '/learning-center/': 'Learning Center' };
+    if (names[path]) return names[path];
+    return path.split('/').filter(Boolean).pop().replace(/-/g, ' ').replace(/\b\w/g, function (letter) { return letter.toUpperCase(); });
+  }
+  function duration(seconds) {
+    if (seconds == null) return 'Not available';
+    var rounded = Math.round(seconds); return Math.floor(rounded / 60) + 'm ' + rounded % 60 + 's';
+  }
   function randomId() { return Array.from(crypto.getRandomValues(new Uint8Array(24)), function (n) { return n.toString(16).padStart(2, '0'); }).join(''); }
   function status(message) { $('portal-status').textContent = message || ''; }
   function connect() {
@@ -44,6 +81,7 @@
   }
   function admin(action, data) { return call('admin', [credential, action, data || {}]); }
   function unlock(result) {
+    viewerEmail = result.viewer.email.toLowerCase();
     $('signin').hidden = true; $('workspace').hidden = false;
     $('account').textContent = result.viewer.email;
     var scheduleFrame = document.querySelector('#schedule iframe');
@@ -133,13 +171,15 @@
       .catch(function (error) { status(error.message); });
   }
   function loadAppointments() {
-    var list = $('appointment-list'); list.textContent = 'Loading appointments…';
-    admin('appointments').then(function (result) {
+    return loadSnapshot('appointments', function () { return admin('appointments'); }, renderAppointments, 'appointments-updating');
+  }
+  function renderAppointments(result) {
+      var list = $('appointment-list');
       $('rotation').replaceChildren(metric('Benjamin this month', result.counts.Benjamin, result.month),
         metric('Ricardo this month', result.counts.Ricardo, result.month), metric('Next in rotation', result.nextUp, 'When both are available'));
       list.replaceChildren();
       if (!result.appointments.length) { list.textContent = 'No upcoming exploration calls found.'; return; }
-      result.appointments.forEach(function (appt) {
+      result.appointments.filter(function (appt) { return Date.parse(appt.start) > Date.now(); }).forEach(function (appt) {
         var card = document.createElement('article'); card.className = 'appointment';
         var name = document.createElement('h3'); name.textContent = appt.client || appt.title;
         var time = document.createElement('p'); time.className = 'meta'; time.textContent = formatTime(appt.start);
@@ -170,17 +210,26 @@
         actions.appendChild(actionButton('Cancel appointment', function () { cancelAppointment(appt); }, true));
         card.append(name, time, details, actions); list.appendChild(card);
       });
-    }).catch(function (error) { list.textContent = error.message; });
   }
   function loadAnalytics() {
-    $('tracking-status').textContent = 'Reading raw website events…';
-    admin('analytics', { range: $('analytics-range').value }).then(function (result) {
+    var range = $('analytics-range').value;
+    return loadSnapshot('analytics-' + range, function () { return admin('analytics', { range: range }); }, function (result) {
+      if ($('analytics-range').value === range) renderAnalytics(result);
+    }, 'analytics-updating');
+  }
+  function renderAnalytics(result) {
       $('tracking-status').className = result.stale ? 'warning' : '';
       $('tracking-status').textContent = result.stale ? 'Tracking may be stale. Last real page view: ' + (result.latestReal || 'none found') :
-        'Raw event log · ' + result.start + ' to ' + result.end + ' · last real page view ' + result.latestReal;
+        'Website events · ' + result.start + ' to ' + result.end;
       $('analytics-metrics').replaceChildren(metric('Tracked visits', result.visits, 'Unique sessions'),
-        metric('Tracked enquiries', result.enquiries, 'Successful form sessions'),
-        metric('Booking-page visitors', result.bookingVisitors, 'Unique /consult/ sessions'));
+        metric('Total leads', result.leads == null ? 'Not available' : result.leads, 'Unique contacts · forms, guide downloads & bookings'),
+        metric('Average time on site', duration(result.averageTimeSeconds), 'Tracked visible-tab time'),
+        metric('Average pages per visit', result.averagePages == null ? 'Not available' : result.averagePages.toFixed(1), 'Page views per session'),
+        metric('Chat conversations', result.chatConversations == null ? 'Not available' : result.chatConversations, 'Conversations with a visitor reply'),
+        metric('Chat → booked call', result.chatConversion == null ? 'No conversations yet' : result.chatConversion.toFixed(1) + '%', (result.chatBooked || 0) + ' confirmed bookings'),
+        metric('Tracked form enquiries', result.enquiries, 'Sessions with a submission event'),
+        metric('Booking-page visitors', result.bookingVisitors, 'Unique visits to the consult page'));
+      $('metric-notes').textContent = [result.leadNote, result.timingNote, result.chatNote].filter(Boolean).join(' ');
       var chart = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       chart.setAttribute('class', 'line-chart'); chart.setAttribute('viewBox', '0 0 800 180');
       chart.setAttribute('role', 'img'); chart.setAttribute('aria-label', 'Tracked visits by day');
@@ -194,6 +243,11 @@
         line.setAttribute('points', points); line.setAttribute('fill', 'none');
         line.setAttribute('stroke', '#2b715b'); line.setAttribute('stroke-width', '4');
         line.setAttribute('stroke-linejoin', 'round'); chart.appendChild(line);
+        if (result.series.length === 1) {
+          var dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+          var coordinate = points.split(','); dot.setAttribute('cx', coordinate[0]); dot.setAttribute('cy', coordinate[1]);
+          dot.setAttribute('r', '5'); dot.setAttribute('fill', '#2b715b'); chart.appendChild(dot);
+        }
       }
       $('visits-chart').replaceChildren(chart);
       var caption = document.createElement('p'); caption.className = 'chart-caption';
@@ -203,15 +257,20 @@
       var top = Math.max(1, ...result.topPages.map(function (page) { return page.views; }));
       result.topPages.forEach(function (page) {
         var row = document.createElement('div'); row.className = 'page-row';
-        var path = document.createElement('span'); path.textContent = page.path;
+        var path = document.createElement('span'); path.textContent = pageName(page.path); path.title = page.path;
         var track = document.createElement('div'); track.className = 'page-track';
         var fill = document.createElement('div'); fill.className = 'page-fill'; fill.style.width = page.views / top * 100 + '%'; track.appendChild(fill);
         var count = document.createElement('strong'); count.textContent = page.views; row.append(path, track, count); $('top-pages').appendChild(row);
       });
-    }).catch(function (error) { $('tracking-status').className = 'warning'; $('tracking-status').textContent = 'Tracking unavailable: ' + error.message; });
   }
   document.querySelectorAll('.tabs button').forEach(function (button) { button.addEventListener('click', function () { selectTab(button.dataset.tab); }); });
-  $('refresh-appointments').addEventListener('click', loadAppointments);
   $('analytics-range').addEventListener('change', loadAnalytics);
+  function refreshActiveView() {
+    if (document.visibilityState !== 'visible' || $('workspace').hidden) return;
+    if (location.hash === '#appointments') loadAppointments();
+    if (location.hash === '#analytics') loadAnalytics();
+  }
+  setInterval(refreshActiveView, 60000);
+  document.addEventListener('visibilitychange', refreshActiveView);
   loadLogin();
 }());

@@ -59,6 +59,7 @@
       slot.availableHosts.indexOf(currentHost) !== -1);
   }
   function render() {
+    document.getElementById('availability').hidden = !currentHost;
     var calendar = calendarDays(), first = pageIndex * 5, visible = calendar.slice(first, first + 5);
     var shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
     document.getElementById('date-range').textContent = shortDate.format(visible[0]) + ' – ' + shortDate.format(visible[4]);

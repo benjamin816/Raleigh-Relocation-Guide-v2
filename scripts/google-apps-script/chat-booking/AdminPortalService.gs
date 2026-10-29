@@ -137,6 +137,8 @@ function adminEventLinks_(event, type) {
 }
 
 function adminUpcoming_() {
+  const cached = portalCacheGet_('portal-appointments-v2');
+  if (cached) return cached;
   const now = new Date();
   const end = new Date(now.getTime() + 90 * 86400000);
   const assignments = adminAssignmentIndex_().byId;
@@ -179,7 +181,9 @@ function adminUpcoming_() {
     if (row[4] === 'Ricardo' || row[4] === 'Both') counts.Ricardo++;
   });
   const next = chatPickHost_(CHAT_HOSTS, Object.keys(assignments).map(function (id) { return assignments[id]; }), '').host.name;
-  return { appointments: appointments, counts: counts, nextUp: next, month: month };
+  const result = { appointments: appointments, counts: counts, nextUp: next, month: month, generatedAt: new Date().toISOString() };
+  portalCachePut_('portal-appointments-v2', result, 20);
+  return result;
 }
 
 function adminFindEvent_(id) {
@@ -234,6 +238,7 @@ function adminChangeAssignment_(data, viewer) {
       .map(function (host) { return host.inviteEmail; }).join(',');
     sheet.getRange(position + 2, 5, 1, 5).setValues([[target, emails,
       'Admin transfer by ' + viewer.email, 'Assigned', Utilities.formatDate(new Date(), CHAT_ZONE, 'yyyy-MM-dd HH:mm')]]);
+    CacheService.getScriptCache().remove('portal-appointments-v2');
     return { ok: true, host: target };
   } finally { lock.releaseLock(); }
 }
@@ -253,6 +258,7 @@ function adminCancelAppointment_(data, viewer) {
       index.sheet.getRange(position + 2, 8).setValue('Cancelled');
       index.sheet.getRange(position + 2, 9).setValue(Utilities.formatDate(new Date(), CHAT_ZONE, 'yyyy-MM-dd HH:mm'));
     }
+    CacheService.getScriptCache().remove('portal-appointments-v2');
     return { ok: true };
   } finally { lock.releaseLock(); }
 }
@@ -262,64 +268,6 @@ function adminRangeStart_(range, today) {
   if (!spans[range]) throw new Error('Unknown analytics period.');
   const date = new Date(today.getTime() - (spans[range] - 1) * 86400000);
   return Utilities.formatDate(date, CHAT_ZONE, 'yyyy-MM-dd');
-}
-
-function adminAnalytics_(range) {
-  const book = SpreadsheetApp.openById(ADMIN_ANALYTICS_SHEET_ID);
-  const sheet = book.getSheetByName('Event Log');
-  if (!sheet) throw new Error('Raw website event log is unavailable.');
-  const today = new Date();
-  const start = adminRangeStart_(range, today);
-  const end = Utilities.formatDate(today, CHAT_ZONE, 'yyyy-MM-dd');
-  const freshnessStart = adminRangeStart_('week', today);
-  const scanStart = start < freshnessStart ? start : freshnessStart;
-  const sessions = {}, enquiries = {}, bookingVisitors = {}, pages = {}, daily = {};
-  let latestReal = '', scanned = 0;
-  const last = sheet.getLastRow();
-  for (let row = 2; row <= last; row += 3000) {
-    const count = Math.min(3000, last - row + 1);
-    const values = sheet.getRange(row, 2, count, 7).getDisplayValues();
-    for (let i = 0; i < values.length; i++) {
-      const item = values[i];
-      const date = String(item[1]).slice(0, 10);
-      if (!/^\d{4}-\d\d-\d\d$/.test(date)) continue;
-      if (date < scanStart) return adminAnalyticsResult_(range, start, end, sessions, enquiries, bookingVisitors, pages, daily, latestReal, scanned);
-      const event = String(item[2]);
-      const session = String(item[3]);
-      const path = String(item[5]);
-      const url = String(item[6]);
-      if (!path.startsWith('/') || path.startsWith('/invest/') || path.startsWith('/calculator/') ||
-          path.startsWith('/learning-center/review/') || /(?:localhost|127\.0\.0\.1)/i.test(url)) continue;
-      if (event === 'page_view' && !latestReal) latestReal = String(item[0]);
-      if (date < start || date > end || !session) continue;
-      scanned++;
-      if (event === 'page_view') {
-        sessions[session] = true;
-        if (path.startsWith('/consult/')) bookingVisitors[session] = true;
-        pages[path] = (pages[path] || 0) + 1;
-        daily[date] = daily[date] || {};
-        daily[date][session] = true;
-      }
-      if (/^(?:popup_submit_success|home_eval_submit_success|requested_contact_submit_success|new_construction_form_submit_success|suburb_quiz_submit_success)$/.test(event))
-        enquiries[session] = true;
-    }
-  }
-  return adminAnalyticsResult_(range, start, end, sessions, enquiries, bookingVisitors, pages, daily, latestReal, scanned);
-}
-
-function adminAnalyticsResult_(range, start, end, sessions, enquiries, bookingVisitors, pages, daily, latestReal, scanned) {
-  const series = [];
-  for (let day = new Date(start + 'T12:00:00Z'); day <= new Date(end + 'T12:00:00Z'); day.setUTCDate(day.getUTCDate() + 1)) {
-    const date = day.toISOString().slice(0, 10);
-    series.push({ date: date, visits: daily[date] ? Object.keys(daily[date]).length : 0 });
-  }
-  const topPages = Object.keys(pages).sort(function (a, b) { return pages[b] - pages[a]; }).slice(0, 5)
-    .map(function (path) { return { path: path, views: pages[path] }; });
-  const stale = !latestReal || !Number.isFinite(Date.parse(latestReal)) ||
-    Date.now() - Date.parse(latestReal) > 48 * 3600000;
-  return { range: range, start: start, end: end, visits: Object.keys(sessions).length,
-    enquiries: Object.keys(enquiries).length, bookingVisitors: Object.keys(bookingVisitors).length,
-    topPages: topPages, series: series, latestReal: latestReal, stale: stale, scanned: scanned };
 }
 
 /** Check the live calendar and analytics sources without logging lead details. */

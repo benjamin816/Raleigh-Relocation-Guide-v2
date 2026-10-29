@@ -915,6 +915,7 @@
         page_url: window.location.href,
         page_title: document.title || "",
         page_type: pageType,
+        interaction_source: 'metrics_v2',
         referrer: document.referrer || "",
         page_time_ms: Math.max(0, Date.now() - pageOpenAtMs),
         engaged_time_ms: Math.max(0, getEngagedTimeMs()),
@@ -1058,6 +1059,7 @@
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "hidden") {
         updateEngagedTime();
+        visibleSinceMs = 0;
         flush(false);
         return;
       }
@@ -1065,6 +1067,7 @@
     });
 
     window.setInterval(function () {
+      if (document.visibilityState !== 'visible') return;
       track("engagement_heartbeat", {
         heartbeat_interval_ms: 30000
       });
@@ -1122,7 +1125,8 @@
 
   // Carry a submitted living-site lead across pages, including quiz pages where
   // the timed popup is intentionally not mounted. This is not a booking signal.
-  window.addEventListener("raleigh-lead-form-submitted", function () {
+  window.addEventListener("raleigh-lead-form-submitted", function (event) {
+    analyticsTracker.track('lead_submit_success', { form_name: String(event.detail && event.detail.source || 'website_form') });
     if (/^\/(invest|calculator)(\/|$)/i.test(window.location.pathname)) return;
     try {
       window.localStorage.setItem("livrLeadPopupSubmitted", "true");
@@ -4933,7 +4937,7 @@
     chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test13";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261029-test52";
+    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261029-test53";
     configScript.src = "/assets/js/raleigh-chat-config.js?v=" + chatVersion;
     configScript.onload = function () {
       var engineScript = document.createElement("script");

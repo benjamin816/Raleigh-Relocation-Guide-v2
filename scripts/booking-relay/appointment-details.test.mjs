@@ -48,6 +48,7 @@ scope.CHAT_HOSTS = [
 ];
 scope.CHAT_ZONE = 'America/New_York';
 scope.LockService = {getScriptLock:()=>({waitLock(){},releaseLock(){}})};
+scope.CacheService = {getScriptCache:()=>({remove(){}})};
 scope.Utilities = {formatDate:()=> '2026-10-29 16:00'};
 const attendeeSet = new Set(['benjamin.carver@exprealty.com','benjamin.raleighrealtor@gmail.com','client@example.com']);
 const row = ['test-event', '', '', '', 'Benjamin', '', '', 'Assigned', '', '', 'Sent'];

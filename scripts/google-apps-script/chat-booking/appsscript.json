@@ -2,7 +2,7 @@
   "timeZone": "America/New_York",
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8",
-  "dependencies": { "enabledAdvancedServices": [{ "userSymbol": "Calendar", "version": "v3", "serviceId": "calendar" }] },
+  "dependencies": { "enabledAdvancedServices": [{ "userSymbol": "Calendar", "version": "v3", "serviceId": "calendar" }, { "userSymbol": "Sheets", "version": "v4", "serviceId": "sheets" }] },
   "oauthScopes": [
     "https://www.googleapis.com/auth/calendar",
     "https://www.googleapis.com/auth/script.external_request",
