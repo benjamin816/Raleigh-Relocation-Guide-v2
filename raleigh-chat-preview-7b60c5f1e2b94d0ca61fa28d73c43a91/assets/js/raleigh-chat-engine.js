@@ -10,7 +10,7 @@
     return new RegExp("(^|[^a-z0-9])" + escaped + "(?=$|[^a-z0-9])", "i").test(text);
   }
   function detectIntent(value, config) {
-    var text = normalize(value);
+    var text = normalize(value).replace(/\bmovng\b/g, "moving");
     var sell = /\b(sell|selling|seller|list my|listing my|home value|house value)\b/.test(text);
     var buy = /\b(buy|buying|buyer|purchase|purchasing|looking for a home)\b/.test(text);
     if (sell && buy) return { id: "selling", combined: true };

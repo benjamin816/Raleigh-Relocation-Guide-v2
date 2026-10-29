@@ -954,7 +954,7 @@
     if (id === "relocating" && !knownLocation) {
       var opening = (flow.intro || "Awesome").replace(/[.,!?\s]+$/, "");
       var originQuestion = activeQuestions()[0].text;
-      message(opening + ", " + originQuestion.charAt(0).toLowerCase() + originQuestion.slice(1), false);
+      message(introAsked ? originQuestion : opening + ", " + originQuestion.charAt(0).toLowerCase() + originQuestion.slice(1), false);
       return;
     }
     if (!knownLocation && !introAsked) message(state.combined && flow.combinedIntro ? flow.combinedIntro : flow.intro, false);
