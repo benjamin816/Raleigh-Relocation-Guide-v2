@@ -253,10 +253,8 @@ function adminAnalyticsResult_(range, start, end, sessions, enquiries, bookingVi
     topPages: topPages, series: series, latestReal: latestReal, stale: stale, scanned: scanned };
 }
 
-/** Run once in the Apps Script editor to authorize new read/fetch scopes and
- * verify the live calendar and analytics sources without logging lead details. */
+/** Check the live calendar and analytics sources without logging lead details. */
 function adminPortalSmoke() {
-  UrlFetchApp.fetch('https://oauth2.googleapis.com/tokeninfo?id_token=invalid', { muteHttpExceptions: true });
   const analytics = adminAnalytics_('today');
   const upcoming = adminUpcoming_();
   console.log(JSON.stringify({ visits: analytics.visits, stale: analytics.stale,
