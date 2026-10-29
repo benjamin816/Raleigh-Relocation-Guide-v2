@@ -59,7 +59,6 @@ context.PropertiesService = { getScriptProperties() { return {
 }; } };
 context.LockService = { getScriptLock() { return { waitLock() {}, releaseLock() {} }; } };
 context.Utilities = {
-  getUuid() { return '01234567-89ab-cdef-0123-456789abcdef'; },
   formatDate(date, _zone, pattern) {
     if (pattern === 'H') return String(date.getHours());
     if (pattern === 'u') return String(date.getDay() || 7);
@@ -83,13 +82,6 @@ context.chatSlotFree_ = () => true;
 context.chatBookingWindows_ = () => [];
 context.chatAssignmentRows_ = () => ({ sheet: ledger, rows: assignmentRows });
 context.chatBookingWindows_ = () => Array.from({ length: 7 }, () => [['12:00','14:00'],['18:00','20:00']]);
-properties.set('ADMIN_CONSULT_PASSCODE', '123456');
-assert.throws(() => context.unlockAdminConsult('000000'), /Incorrect passcode/);
-assert.throws(() => context.getAdminConsultSlots('bad', 'Benjamin'), /session expired/);
-const adminToken = context.unlockAdminConsult('123456').token;
-assert.match(adminToken, /^[a-f0-9]{64}$/);
-assert.equal(context.getAdminConsultSlots(adminToken, 'Benjamin').every(slot => slot.availableHosts.includes('Benjamin')), true);
-assert.throws(() => context.getAdminConsultSlots(adminToken, 'Someone Else'), /Choose Benjamin or Ricardo/);
 calendarReads = 0;
 assert.deepEqual(Array.from(context.getChatBookingSlots().slice(0, 2), slot => slot.daypart),
   ['afternoon', 'evening'], 'Default options include afternoon and evening');
@@ -133,8 +125,5 @@ schedules.set('ricardo.collier90@gmail.com', []);
 const requested = context.bookChatAppointment({ ...details, requestId: 'test-request-333333333', preferredHost: 'Ricardo', email: 'other@example.com' });
 assert.equal(requested.assignedHost, 'Ricardo', 'Explicit host request overrides balanced tie');
 assert.equal(assignmentRows[2][6], 'Requested host');
-const adminBooked = context.bookAdminConsult(adminToken, { ...details, requestId: 'test-request-555555555', preferredHost: 'Benjamin', email: 'admin@example.com' });
-assert.equal(adminBooked.assignedHost, 'Benjamin', 'Admin booking is assigned to its selected host');
-assert.throws(() => context.bookAdminConsult('bad', { ...details, preferredHost: 'Ricardo' }), /session expired/);
 assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-request-222222222', phone: '' }), /booking details/i);
 console.log('Chat booking availability, direct booking and duplicate checks passed');

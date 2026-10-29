@@ -17,10 +17,7 @@
       slots: 'getChatBookingSlots',
       check: 'checkChatBookingSlot',
       suggest: 'checkChatBookingSuggestion',
-      book: 'bookChatAppointment',
-      adminUnlock: 'unlockAdminConsult',
-      adminSlots: 'getAdminConsultSlots',
-      adminBook: 'bookAdminConsult'
+      book: 'bookChatAppointment'
     };
     if (!methods[method]) return;
     const runner = google.script.run.withSuccessHandler(function (result) {

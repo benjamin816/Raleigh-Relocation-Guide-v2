@@ -133,54 +133,6 @@ function chatBookingPreference_(value) {
   return { host: host, daypart: daypart, weekdays: weekdays, date: date };
 }
 
-function adminConsultPasscode_() {
-  const code = PropertiesService.getScriptProperties().getProperty('ADMIN_CONSULT_PASSCODE');
-  if (!code || !/^\d{6,12}$/.test(code)) throw new Error('Admin booking is not configured.');
-  return code;
-}
-
-function adminConsultSession_(token) {
-  if (!/^[a-f0-9]{64}$/.test(String(token || '')) ||
-      CacheService.getScriptCache().get('admin-consult-' + token) !== 'ok') {
-    throw new Error('Your admin session expired. Enter the passcode again.');
-  }
-}
-
-function unlockAdminConsult(passcode) {
-  const cache = CacheService.getScriptCache();
-  const lock = LockService.getScriptLock();
-  lock.waitLock(10000);
-  try {
-    const failures = Number(cache.get('admin-consult-failures') || '0');
-    if (failures >= 10) throw new Error('Too many attempts. Try again later.');
-    if (String(passcode || '') !== adminConsultPasscode_()) {
-      cache.put('admin-consult-failures', String(failures + 1), 3600);
-      throw new Error('Incorrect passcode.');
-    }
-    const token = Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
-    cache.put('admin-consult-' + token, 'ok', 21600);
-    return { token: token, expiresInSeconds: 21600 };
-  } finally { lock.releaseLock(); }
-}
-
-function getAdminConsultSlots(token, host) {
-  adminConsultSession_(token);
-  const name = chatBookingPreference_({ host: host }).host;
-  if (!name) throw new Error('Choose Benjamin or Ricardo.');
-  return getChatBookingSlots({ host: name }).sort(function (a, b) {
-    return new Date(a.start).getTime() - new Date(b.start).getTime();
-  });
-}
-
-function bookAdminConsult(token, details) {
-  adminConsultSession_(token);
-  const name = chatBookingPreference_({ host: details && details.preferredHost }).host;
-  if (!name) throw new Error('Choose Benjamin or Ricardo.');
-  // bookChatAppointment locks, rechecks every source calendar, and invites only
-  // the requested host. It also writes the shared assignment ledger and lead.
-  return bookChatAppointment(details);
-}
-
 function chatDaypart_(start) {
   const hour = Number(Utilities.formatDate(start, CHAT_ZONE, 'H'));
   return hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';

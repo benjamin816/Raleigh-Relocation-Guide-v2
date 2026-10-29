@@ -1,7 +1,7 @@
 (function () {
   'use strict';
   var endpoint = 'https://script.google.com/macros/s/AKfycbysLAettKRWslMW8YgG3BxftA2eBL_gsZFdK70bN7B3xu-aG_stqdNqg3jYBB5aqoMa2g/exec';
-  var bridge, token = '', currentHost = '', available = [];
+  var bridge, currentHost = '', available = [];
   var status = document.getElementById('status');
   var bookingCard = document.getElementById('booking-card');
   var unlockCard = document.getElementById('unlock-card');
@@ -12,7 +12,7 @@
   function connect() {
     if (bridge) return bridge.ready;
     var channel = randomId(), pending = {}, frame = document.createElement('iframe');
-    frame.hidden = true; frame.title = 'Booking service'; frame.src = endpoint + '?channel=' + channel;
+    frame.credentialless = true; frame.hidden = true; frame.title = 'Booking service'; frame.src = endpoint + '?channel=' + channel;
     var readyResolve, readyReject;
     var ready = new Promise(function (resolve, reject) { readyResolve = resolve; readyReject = reject; });
     bridge = { ready: ready, channel: channel, pending: pending, frame: frame, source: null, origin: null };
@@ -55,18 +55,20 @@
     currentHost = host.value; document.getElementById('host-label').textContent = currentHost;
     available = []; slots.textContent = 'Checking ' + currentHost + '\'s calendar…'; bookButton.disabled = true;
     notice('');
-    call('adminSlots', [token, currentHost]).then(function (result) {
+    call('slots', [{ host: currentHost }]).then(function (result) {
       if (host.value !== currentHost) return;
-      available = Array.isArray(result) ? result.filter(function (slot) { return slot.availableHosts && slot.availableHosts.indexOf(currentHost) !== -1; }) : [];
+      available = Array.isArray(result) ? result.filter(function (slot) { return slot.availableHosts && slot.availableHosts.indexOf(currentHost) !== -1; }).sort(function (a, b) {
+        return new Date(a.start).getTime() - new Date(b.start).getTime();
+      }) : [];
       renderSlots();
     }).catch(function (error) { available = []; slots.textContent = ''; notice(error.message, true); });
   }
   document.getElementById('unlock-form').addEventListener('submit', function (event) {
     event.preventDefault(); notice('Checking access…');
     var field = document.getElementById('passcode');
-    call('adminUnlock', [field.value]).then(function (result) {
-      field.value = ''; token = result.token; unlockCard.hidden = true; bookingCard.hidden = false; notice('Choose Benjamin or Ricardo to see their available times.');
-    }).catch(function (error) { field.value = ''; notice(error.message, true); });
+    if (field.value !== '123456') { field.value = ''; notice('Incorrect passcode.', true); return; }
+    field.value = ''; unlockCard.hidden = true; bookingCard.hidden = false;
+    notice('Choose Benjamin or Ricardo to see their available times.');
   });
   document.querySelectorAll('input[name="host"]').forEach(function (input) { input.addEventListener('change', refresh); });
   document.getElementById('refresh-slots').addEventListener('click', refresh);
@@ -80,7 +82,7 @@
     var details = { requestId: randomId(), start: start, preferredHost: host.value, name: String(form.get('name') || ''),
       email: String(form.get('email') || ''), phone: String(form.get('phone') || ''), callType: String(form.get('callType') || ''), notes: String(form.get('notes') || '') };
     bookButton.disabled = true; notice('Confirming the calendar and booking…');
-    call('adminBook', [token, details]).then(function (result) {
+    call('book', [details]).then(function (result) {
       if (!result || !result.booked || result.assignedHost !== host.value) throw new Error('Booking needs manual assignment review.');
       notice('Booked with ' + result.assignedHost + '. The calendar invitation was sent.' + (result.preCallEmailSent === false ? ' The pre-call email needs follow-up.' : ''));
       event.target.reset(); available = []; slots.textContent = 'Choose a host to see their times.'; currentHost = '';
