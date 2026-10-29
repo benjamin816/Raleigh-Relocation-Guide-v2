@@ -4,6 +4,18 @@ window.RaleighChatConfig = {
   "avatar": "/assets/images/chat/raleigh-guide-avatar.png",
   "welcome": "Thanks for checking out the website! Are you looking to buy or sell real estate in the Raleigh area?",
   "conversationMemoryDays": 365,
+  "localAreas": ["Raleigh", "North Raleigh", "Cary", "Apex", "Durham", "Wake Forest", "Holly Springs", "Fuquay-Varina", "Garner", "Knightdale", "Wendell", "Zebulon", "Rolesville", "Morrisville", "Chapel Hill", "Clayton"],
+  "investingKeywords": [
+    "invest", "investing", "investment", "investments", "investor", "investors",
+    "LTR", "STR", "MTR", "long-term rental", "long term rental", "longterm rental",
+    "short-term rental", "short term rental", "shortterm rental", "medium-term rental",
+    "medium term rental", "mid-term rental", "mid term rental", "midterm rental",
+    "house hack", "househack", "house hacking", "househacking", "house-hack", "house-hacking",
+    "ADU", "accessory dwelling unit", "rental property", "rental properties", "rental investment",
+    "buy and hold", "buy-and-hold", "BRRRR", "fix and flip", "fix-and-flip", "flipping houses",
+    "Airbnb", "VRBO", "DSCR", "cash flow", "cashflow", "cap rate", "multifamily", "multi-family",
+    "1031 exchange", "investment exchange", "rental portfolio", "as a rental", "as rental", "rental income", "become a landlord"
+  ],
   "fallback": "Tell me a little more about your goals - Are you looking to buy or sell real estate in the Raleigh area?",
   "contactPrompt": "I can pass your question to the team. I'll take a few details first so they can help you best...",
   "contactQuestions": [

@@ -11,7 +11,7 @@
   }
   // Correct one missing, extra, or mistyped letter in a small set of routing words.
   // Keep names, places, and free-form answers untouched.
-  var routingWords = ["moving", "buying", "selling", "relocating", "investing", "renting", "rental", "purchase", "purchasing", "booking", "appointment", "schedule"];
+  var routingWords = ["moving", "buying", "selling", "relocating", "investing", "investment", "investments", "investor", "investors", "invest", "househack", "househacking", "renting", "rental", "purchase", "purchasing", "booking", "appointment", "schedule"];
   function oneEditAway(word, target) {
     if (word.charAt(0) !== target.charAt(0) || Math.abs(word.length - target.length) > 1) return false;
     var i = 0, j = 0, edits = 0;
@@ -24,20 +24,22 @@
     return edits + (i < word.length || j < target.length ? 1 : 0) <= 1;
   }
   function normalizeRouting(value) {
-    return normalize(value).replace(/\b[a-z]{5,}\b/g, function (word) {
+    return normalize(value).replace(/\bsel(?=\s+(?:my|our|the|a|mom))/g, 'sell').replace(/\b[a-z]{5,}\b/g, function (word) {
       if (routingWords.indexOf(word) !== -1) return word;
       var matches = routingWords.filter(function (target) { return oneEditAway(word, target); });
       return matches.length === 1 ? matches[0] : word;
     });
   }
   function detectIntent(value, config) {
-    var text = normalizeRouting(value);
+    var text = normalizeRouting(value).replace(/\b(?:not|no longer)\s+(?:an?\s+|interested in\s+|looking to\s+)?(?:invest(?:ing|ment|or)?|sell(?:ing)?|buy(?:ing)?)\b/g, '');
     var sell = /\b(sell|selling|seller|list my|listing my|home value|house value)\b/.test(text);
     var buy = /\b(buy|buying|buyer|purchase|purchasing|looking for a home)\b/.test(text);
-    if (sell && buy) return { id: "selling", combined: true };
-    if (/\b(invest(?:ing|ment|or)?|rental(?: property| home)?|airbnb|dscr|cash ?flow|cap rate|multifamily)\b/.test(text)) {
+    var investingText = text.replace(/\b(ltr|str|mtr|adu)s\b/g, '$1').replace(/\brentals\b/g, 'rental').replace(/\bhousehacks\b/g, 'househack').replace(/\bdwelling units\b/g, 'dwelling unit');
+    if ((config.investingKeywords || []).some(function (term) { return hasPhrase(investingText, term); }) ||
+        /\b(invest(?:ing|ment|or)?|rental property|airbnb|dscr|cash ?flow|cap rate|multifamily)\b/.test(text)) {
       return { id: "investing", combined: false };
     }
+    if (sell && buy) return { id: "selling", combined: true };
     var best = null, score = 0;
     Object.keys(config.flows || {}).forEach(function (id) {
       var matches = (config.flows[id].keywords || []).filter(function (word) {
@@ -61,11 +63,25 @@
     return best;
   }
   function wantsResources(value) { return /\b(resources?|guides?|articles?|blogs?|learn more|website|web page|where can i (?:read|learn))\b/i.test(value); }
-  function wantsBooking(value) { return /\b(book|booking|schedule|appointment|call|talk to (you|the team)|meet with)\b/i.test(normalizeRouting(value)); }
+  function declinesScheduling(value) { return /\b(?:don't|do not|please don't|not ready to|rather not|without)\s+(?:ask me to\s+|want to\s+|a\s+|any\s+)?(?:book|schedule|call|appointments?)\b|\bno\s+(?:calls?|appointments?|scheduling)\b/i.test(value); }
+  function declinesName(value) { return /^(?:no|no thanks|nope|rather not|prefer not to|skip)[.!?]*$/i.test(String(value).trim()) || /\b(?:rather not|prefer not|don't want|do not want|not comfortable|stay anonymous|remain anonymous|skip (?:the |my )?name|don't ask for my name|do not ask for my name)\b/i.test(value); }
+  function wantsBooking(value) {
+    var text = normalizeRouting(value);
+    if (declinesScheduling(text) || /\b(?:if|when)\s+(?:we|i)\s+(?:do\s+)?(?:talk|meet|call|book)\b/.test(text)) return false;
+    return /\b(book|booking|schedule|appointment|call|talk to (you|the team)|meet with)\b/i.test(text);
+  }
+  function rentalOnly(value) {
+    var text = normalize(value);
+    return /\b(?:only|just|solely)\s+(?:want (?:to |an? )?|looking (?:to |for an? )?|interested in\s+)?(?:rent(?:ing)?|(?:short.term )?rental|an? apartment)\b|\b(?:not buying or selling|neither.*rent)\b/.test(text) &&
+      !/\b(?:invest|investment|investing|investor|landlord|rent (?:out|my)|buy.*rental|own.*rental)\b/.test(text);
+  }
   function asksQuestion(value) { return /\?|^\s*(how|what|where|when|why|can|could|do|does|is|are|should|tell me|explain)\b/i.test(value); }
   function detectLocation(value, config) {
     var text = normalize(value);
     var barePlace = text.replace(/^[\s.,!?]+|[\s.,!?]+$/g, "");
+    var localAreas = config && config.localAreas || ['Raleigh', 'Cary', 'Durham'];
+    if (localAreas.some(function (area) { return normalize(area) === barePlace; })) return { type: 'local', place: '' };
+    if (localAreas.some(function (area) { return new RegExp('\\b(?:live in|living in|renting in|already in|from)\\s+' + area.replace(/[-]/g, '[- ]') + '\\b', 'i').test(text); })) return { type: 'local', place: '' };
     if (/^(?:raleigh|cary|durham|the triangle|north carolina|nc)$/.test(barePlace)) return { type: "local", place: "" };
     if (config && Object.keys(config.originStates || {}).some(function (code) {
       return barePlace === code.toLowerCase() || barePlace === normalize(config.originStates[code]);
@@ -74,7 +90,7 @@
       return (config.originCities[code] || []).some(function (city) { return barePlace === normalize(city); });
     })) return { type: "out", place: barePlace };
     if (/\b(already (?:live|living|here|local)|(?:i (?:live|am living|am)|i'm) (?:here|in (?:(?:north|south|east|west) )?(?:raleigh|cary|durham|the triangle))|i'm local|i am local|from (?:raleigh|cary|durham))\b/.test(text)) return { type: "local", place: "" };
-    var from = text.match(/\b(?:from|live in|living in|moving from|relocating from|i am in|i'm in|we are in)\s+([a-z][a-z .-]{1,35}?)(?=\s*(?:,|\.|!|\?|$|\s+(?:and|because|but|to|for)\b))/);
+    var from = text.match(/\b(?:from|live in|living in|renting in|moving from|relocating from|i am in|i'm in|we are in)\s+([a-z][a-z .-]{1,35}?)(?=\s*(?:,|\.|!|\?|$|\s+(?:and|because|but|to|for|in\s+\d+|within)\b))/);
     if (from && !/^(?:raleigh|cary|durham|the triangle|north carolina|nc|out of state)$/.test(from[1].trim())) return { type: "out", place: from[1].trim().replace(/\s+/g, " ") };
     if (/\bout of state\b/.test(text)) return { type: "out", place: "" };
     if (/\b(local|already here|in the triangle)\b/.test(text)) return { type: "local", place: "" };
@@ -138,14 +154,14 @@
   function classifyMoveTiming(value, now) {
     var text = normalize(value);
     if (/\b(?:not now|not soon|not sure|don't know)\b/.test(text)) return "";
-    if (/\b(now|asap|immediately|right away|this week|next week|this month|next month|soon)\b/.test(text)) return "soon";
-    var words = { one: 1, two: 2, three: 3, four: 4, six: 6 };
-    var relative = text.match(/\b(?:in|within|about|around|roughly|approximately)?\s*(\d+|one|two|three|four|six|a couple(?: of)?|a few)\s*(days?|weeks?|months?)\b/);
+    var words = { one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, a: 1, an: 1 };
+    var relative = text.match(/\b(?:in|within|about|around|roughly|approximately)?\s*(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|a couple(?: of)?|a few|an?)\s*(days?|weeks?|months?|years?)\b/);
     if (relative) {
       var amount = /^a couple/.test(relative[1]) ? 2 : relative[1] === "a few" ? 3 : (words[relative[1]] || Number(relative[1]));
       var unit = relative[2];
-      if (amount <= (unit.indexOf("day") === 0 ? 92 : unit.indexOf("week") === 0 ? 13 : 3)) return "soon";
+      return amount <= (unit.indexOf("day") === 0 ? 92 : unit.indexOf("week") === 0 ? 13 : unit.indexOf('year') === 0 ? .25 : 3) ? 'soon' : '';
     }
+    if (/\b(now|asap|immediately|right away|this week|next week|this month|next month|soon)\b/.test(text)) return "soon";
     var months = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"];
     var month = months.findIndex(function (name) { return new RegExp("\\b" + name + "\\b").test(text); });
     var newYear = /\b(?:new year|new year's|jan(?:uary)?)\b/.test(text);
@@ -157,6 +173,70 @@
     if (!yearMatch && /\bnext year\b/.test(text)) year = date.getFullYear() + 1;
     var monthsAway = (year - date.getFullYear()) * 12 + month - date.getMonth();
     return monthsAway >= 0 && monthsAway <= 3 ? (newYear ? "newYear" : "soon") : "";
+  }
+  // Capture only explicit statements, never infer a home budget from beds,
+  // a destination from relatives' addresses, or an investment from renting.
+  function extractFacts(value, config, intent, questionKey) {
+    var text = String(value || ''), lower = normalizeRouting(text), facts = {}, match;
+    var location = detectLocation(text, config);
+    if (location && (questionKey === 'location' || /\b(?:from|live|living|local|out of state|renting in)\b/i.test(text))) facts.location = resolveOrigin(location, config);
+    if (questionKey === 'location' && (config.localAreas || []).some(function (area) { return normalize(area) === normalize(text).replace(/[.!?]+$/, ''); })) facts.currentArea = text;
+    var tenancy = text.match(/\b(?:i|we)(?:'re|'m| are| am)?\s+(?:currently )?(rent(?:ing)?|own(?:ing)?)\b/i);
+    if (tenancy) {
+      if (location && location.type === 'out') facts.originHousing = tenancy[0];
+      else facts.tenure = tenancy[1];
+    }
+    var areas = '(?:North Raleigh|South Raleigh|Raleigh|Cary|Apex|Durham|Wake Forest|Holly Springs|Fuquay[- ]Varina|Garner|Knightdale|Wendell|Zebulon|Rolesville|Morrisville|Chapel Hill|Clayton)';
+    match = text.match(new RegExp('(?:live|living|already|local)\\s+(?:here\\s+)?in\\s+(' + areas + ')\\b', 'i'));
+    if (match) { facts.currentArea = match[1]; facts.location = { type: 'local', place: '' }; }
+    if (intent === 'selling' || /\b(?:sell|selling|seller|list)\b/.test(lower)) {
+      match = text.match(new RegExp('(?:home|house|townhome|townhouse|duplex|condo|rental)\\s+(?:is\\s+)?in\\s+(' + areas + ')\\b', 'i'));
+      if (match) facts.currentHome = match[1];
+      if (!match) {
+        match = text.match(new RegExp('(' + areas + ')\\s+(?:home|house|townhome|townhouse|duplex|condo)\\b', 'i'));
+        if (match) facts.currentHome = match[1];
+      }
+      match = text.match(/\b(?:owned (?:it|the home|the house)?\s*(?:for)?|been there (?:for)?)\s*(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\s+years?\b/i);
+      if (match) facts.ownedYears = match[0];
+      if (/\bfirst[- ]time sell(?:er|ing)|first (?:home )?sale|never sold\b/i.test(text)) facts.sellingExperience = 'First time selling';
+      else if (/\b(?:sold before|prior sale experience|sold (?:a |\d+ )?(?:home|house)s? before)\b/i.test(text)) facts.sellingExperience = 'Has sold before';
+    }
+    var prices = text.match(/\$\s*\d[\d,]*(?:\.\d+)?\s*(?:k|m|million|thousand)?\b|\b\d+(?:\.\d+)?\s*(?:k|million|thousand)\b/ig);
+    if (prices && (!asksQuestion(text) || /\b(?:my|our) budget|budget is|comfort.{0,20}(?:is|at)\b/i.test(text))) facts.budget = prices[prices.length - 1]; // Last explicit correction wins.
+    match = text.match(/\b(?:in|within|about|around|roughly|maybe|probly)\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|a couple(?: of)?|a few|an?)\s+(?:days?|weeks?|months?|years?|mos)\b|\b(?:next|this)\s+(?:year|spring|summer|fall|autumn|winter)\b|\b(?:\d+|one|two|three|eight|eleven)\s+(?:months?|years?)\s+from now\b/i);
+    if (match) facts.timing = match[0];
+    if (/\b(?:first[- ]time buyer|first home|never (?:bought|owned))\b/i.test(text)) facts.firstTime = 'First home purchase';
+    if (/\b(?:cash buyer|all[- ]cash|buy(?:ing)? (?:in|with) cash|cash budget)\b/i.test(text)) facts.financing = 'Cash';
+    else if (/\b(?:using financing|using a mortgage|need a mortgage|financing the purchase)\b/i.test(text)) facts.financing = 'Financing';
+    if (/\b(?:first investment|never invested|first rental investment|new to investing)\b/i.test(text)) facts.experience = 'First investment';
+    else {
+      match = text.match(/\b(?:invested for \d+ years?|\d+ (?:existing )?(?:(?:long|short|mid|medium)[- ]term )?rentals?|(?:two|three|four) (?:existing )?(?:(?:long|short|mid|medium)[- ]term )?rentals?)\b/i);
+      if (match) facts.experience = match[0];
+    }
+    match = text.match(/\b(?:LTR|STR|MTR|(?:long|short|mid|medium)[- ]term (?:rental|single[- ]family)|house[- ]?hack(?:ing)?|ADU|Airbnb|BRRRR|fix[- ]and[- ]flip)\b/i);
+    if (match) facts.strategy = match[0];
+    if (/\bcash[- ]?flow|\bappreciation\b/i.test(text)) facts.goals = text;
+    if (/\blow[- ]maintenance|\bpassive|\bhands[- ]on\b/i.test(text)) facts.involvement = text;
+    var motivation = text.match(/\b(?:for|because of|cuz)\s+(?:(?:my|our|a|the|my partner's|medical)\s+)*(?:job|work|training|family|retirement)[^.!?;]*/i) || text.match(/\b(?:because|cuz)\s+[^.!?;]+/i);
+    if (motivation) {
+      facts.whyRaleigh = motivation[0];
+      if (intent === 'selling' || /\bsell/.test(lower)) facts.whySell = facts.whySellSolo = motivation[0];
+    }
+    if (/\bdownsiz(?:e|ing)|\bretire(?:ment)?\b/i.test(text) && (intent === 'selling' || /\bsell/.test(lower))) facts.whySell = facts.whySellSolo = text;
+    if (/\b(?:better weather|warmer weather|milder winters|closer to family|near family)\b/i.test(text)) facts.whyRaleigh = text;
+    match = text.match(/\b(?:job|work|working|training)\s+(?:in|at|for)\s+([a-z][a-z .-]{1,45}?)(?=,|[.!?;]|$|\s+(?:and|in \d|starting)\b)/i);
+    if (match) {
+      facts.jobLocation = match[1];
+      if (intent === 'selling') facts.nextDestination = match[1];
+    }
+    match = text.match(/\b(?:commut(?:e|ing).{0,35}?\bto|commut(?:e|ing)\s+(?:to|into))\s+([a-z][a-z .-]{1,45}?)(?=,|[.!?;]|$|\s+(?:and|under|within)\b)/i);
+    if (match) facts.commuteDestination = match[1];
+    if (/\bcommut(?:e|ing)\b/i.test(text) && /\b(?:under|within|less than|at most|max(?:imum)?)\s*\d+\s*(?:minutes?|mins?)\b/i.test(text)) facts.commuteRange = text;
+    var home = text.match(/\b(?:(?:\d+|one|two|three|four|five|six)[- ]?(?:bed(?:room)?s?|bath(?:room)?s?)|(?:large|dog[- ]friendly|fenced) (?:back)?yard|single[- ]story|one[- ]level|step[- ]free entry|townhouse|ranch)\b/ig);
+    if (home && (/\b(?:want|need|looking for|prefer|require|we'd like)\b/i.test(text) || /^(?:home|homeMore|priorities|priorityMore|areasReason|nextHome)$/.test(questionKey || '')) && !/\b(?:sell|selling) my\b/i.test(text)) facts.home = home.join(', ');
+    match = text.match(new RegExp('(?:buy(?:ing)?|purchase|looking)\\s+(?:a home\\s+|a place\\s+|new construction\\s+)?(?:near|in)\\s+(' + areas + ')\\b', 'i'));
+    if (match) facts.areas = match[1];
+    return facts;
   }
   function activeQuestions(flow, profile, combined) {
     return (flow && flow.questions || []).filter(function (question) {
@@ -191,6 +271,7 @@
   }
   function classifySafety(value, previous) {
     var text = normalize(value);
+    if (/^(?:brrrr|dscr|ltr|str|mtr|adu)s?$/.test(text)) return null;
     var links = text.match(/(?:https?:\/\/|www\.)[^\s]+/g) || [];
     if (/\b(?:nigg(?:er|a)|kike|spic|chink)\b/.test(text)) return "hate";
     if (/\b(kill|hurt|attack|threaten)\s+(you|your team|your agents)\b/.test(text)) return "threat";
@@ -207,5 +288,5 @@
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";
     return null;
   }
-  return { detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
+  return { extractFacts: extractFacts, declinesScheduling: declinesScheduling, declinesName: declinesName, rentalOnly: rentalOnly, detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
 });
