@@ -110,7 +110,8 @@
     }
     var form = new FormData(event.currentTarget);
     var details = { requestId: randomId(), start: start, preferredHost: host.value, name: String(form.get('name') || ''),
-      email: String(form.get('email') || ''), phone: String(form.get('phone') || ''), callType: String(form.get('callType') || ''), notes: String(form.get('notes') || '') };
+      email: String(form.get('email') || ''), phone: String(form.get('phone') || ''), callType: String(form.get('callType') || ''),
+      purpose: String(form.get('purpose') || ''), notes: String(form.get('notes') || '') };
     bookButton.disabled = true; notice('Confirming the calendar and booking…');
     call('book', [details]).then(function (result) {
       if (!result || !result.booked || result.assignedHost !== host.value) throw new Error('Booking needs manual assignment review.');
