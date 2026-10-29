@@ -42,6 +42,7 @@ window.RaleighChatConfig = {
   "investorConsoleUrl": "/invest/",
   "investorQuestionUrl": "/calculator/",
   "bookingBridgeUrl": "https://script.google.com/macros/s/AKfycbysLAettKRWslMW8YgG3BxftA2eBL_gsZFdK70bN7B3xu-aG_stqdNqg3jYBB5aqoMa2g/exec",
+  "bookingRelayUrl": "https://lir-booking-bridge.benjamin-raleighrealtor.workers.dev/booking",
   "chatVideoBookingEnabled": true,
   "chatRoundRobinBookingEnabled": true,
   "chatAttachmentsEnabled": true,
