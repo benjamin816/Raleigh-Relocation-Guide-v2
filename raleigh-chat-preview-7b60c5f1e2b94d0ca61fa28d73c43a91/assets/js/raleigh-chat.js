@@ -96,6 +96,13 @@
   var resumeQuestionOnOpen = false;
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
   var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, hasUserMessage: false, completed: false, unreadCount: 0, badgeReadyAt: 0, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
+  function trackConversation(eventName) {
+    var tracker = window.__livrAnalyticsTracker;
+    if (!tracker || typeof tracker.track !== 'function') return;
+    var id = state.profile.analyticsConversationId;
+    if (!id) { id = 'chat_' + (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2)); state.profile.analyticsConversationId = id; }
+    tracker.track(eventName, { interaction_source: (isTestSurface ? 'test-chat:' : 'chat:') + id, chat_conversation_id: id });
+  }
   var safetyKey = "raleigh-guide-chat-safety-v1";
   var pulseTimer = 0;
   var pulseEndTimer = 0;
@@ -881,6 +888,7 @@
       bookingCall("book", [{ requestId: booking.requestId, start: booking.start, name: booking.details.name, email: booking.details.email, phone: booking.details.phone, notes: booking.details.notes, callType: booking.details.callType, purpose: state.intent === "selling" ? "Sell" : state.intent === "investing" ? "Invest" : "Buy", preferredHost: config.chatRoundRobinBookingEnabled ? booking.preference.host : "" }]).then(function (result) {
         if (state.booking !== booking) return;
         if (!result || !result.booked) throw new Error("Booking was not confirmed.");
+        trackConversation('chat_appointment_booked');
         var bookingFile = attachment;
         attachment = null;
         attachmentInput.value = "";
@@ -1489,6 +1497,10 @@
   function handleText(text, replaying) {
     var value = text.trim();
     if (!value || state.submitting || state.ended) return;
+    if (!replaying && !state.profile.analyticsConversationStarted) {
+      trackConversation('chat_conversation_started');
+      state.profile.analyticsConversationStarted = true;
+    }
     state.hasUserMessage = true;
     persist();
     if (!replaying) {

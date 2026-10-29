@@ -916,6 +916,7 @@
         page_url: window.location.href,
         page_title: document.title || "",
         page_type: pageType,
+        interaction_source: 'metrics_v2',
         referrer: document.referrer || "",
         page_time_ms: Math.max(0, Date.now() - pageOpenAtMs),
         engaged_time_ms: Math.max(0, getEngagedTimeMs()),
@@ -1059,6 +1060,7 @@
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "hidden") {
         updateEngagedTime();
+        visibleSinceMs = 0;
         flush(false);
         return;
       }
@@ -1066,6 +1068,7 @@
     });
 
     window.setInterval(function () {
+      if (document.visibilityState !== 'visible') return;
       track("engagement_heartbeat", {
         heartbeat_interval_ms: 30000
       });
@@ -1123,7 +1126,8 @@
 
   // Carry a submitted living-site lead across pages, including quiz pages where
   // the timed popup is intentionally not mounted. This is not a booking signal.
-  window.addEventListener("raleigh-lead-form-submitted", function () {
+  window.addEventListener("raleigh-lead-form-submitted", function (event) {
+    analyticsTracker.track('lead_submit_success', { form_name: String(event.detail && event.detail.source || 'website_form') });
     if (/^\/(invest|calculator)(\/|$)/i.test(window.location.pathname)) return;
     try {
       window.localStorage.setItem("livrLeadPopupSubmitted", "true");
@@ -4931,10 +4935,10 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=21ac7f5a8e69";
+    chatStyles.href = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/css/raleigh-chat.css?v=eb4b7ba015c5";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261029-test52";
+    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261029-test53";
     configScript.src = "/raleigh-chat-preview-7b60c5f1e2b94d0ca61fa28d73c43a91/assets/js/raleigh-chat-config.js?v=" + chatVersion;
     configScript.onload = function () {
       var engineScript = document.createElement("script");
