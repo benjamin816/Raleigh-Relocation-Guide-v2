@@ -40,8 +40,10 @@ for (const [name, text, intent, combined, faq, resource, booking, safety] of cas
   if (safety) assert.equal(engine.classifySafety(text), safety, `${name}: safety`);
 }
 
-assert.equal(config.flows.buying.questions.length, 23);
-assert.equal(config.flows.relocating.questions.length, 28);
+assert.equal(config.flows.buying.questions.length, 24);
+assert.equal(config.flows.relocating.questions.length, 29);
+assert.equal(engine.resolveOrigin(engine.detectLocation('Better weather coming from Minnesota', config), config).stateCode, 'MN');
+assert.ok(engine.activeQuestions(config.flows.buying, { location: 'out', familyNearby: true, priorityAnswered: true }, false).some(q => q.key === 'priorityFamilyArea'));
 assert.equal(config.flows.selling.questions.length, 11);
 assert.equal(engine.activeQuestions(config.flows.buying, { location: 'local', tenure: 'renting' }, false).map(q => q.key).join(','), 'location,currentArea,tenure,firstTime,leaseEnd,areas,home,budget,timing');
 assert.equal(engine.activeQuestions(config.flows.buying, { location: 'out' }, false).map(q => q.key).join(','), 'location,whyRaleigh,priorities,areas,home,budget,timing');
