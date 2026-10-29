@@ -173,7 +173,13 @@ function chatPickHost_(available, rows, requestedName) {
   if (!available.length) return null;
   const counts = { Benjamin: 0, Ricardo: 0 };
   rows.forEach(function (row) {
-    if (row[7] === 'Assigned' && counts[row[4]] !== undefined) counts[row[4]]++;
+    if (row[7] !== 'Assigned') return;
+    if (row[4] === 'Both') {
+      counts.Benjamin++;
+      counts.Ricardo++;
+    } else if (counts[row[4]] !== undefined) {
+      counts[row[4]]++;
+    }
   });
   if (counts.Benjamin !== counts.Ricardo) {
     const name = counts.Benjamin < counts.Ricardo ? 'Benjamin' : 'Ricardo';

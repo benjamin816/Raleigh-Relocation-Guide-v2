@@ -101,6 +101,9 @@ context.chatBookingWindows_ = () => [];
 const details = { requestId: 'test-request-123456789', start: start.toISOString(), name: 'Test Person', email: 'test@example.com', phone: '9195550100', notes: '=IMPORTXML("bad")', purpose: 'Buy' };
 assert.equal(context.chatPickHost_(context.CHAT_HOSTS || [{name:'Benjamin'},{name:'Ricardo'}],
   [['old', '', '', '', 'Benjamin', '', '', 'Assigned']], '').host.name, 'Ricardo');
+assert.equal(context.chatPickHost_(context.CHAT_HOSTS || [{name:'Benjamin'},{name:'Ricardo'}],
+  [['both', '', '', '', 'Both', '', '', 'Assigned'], ['ben', '', '', '', 'Benjamin', '', '', 'Assigned']], '').host.name,
+  'Ricardo', 'A shared appointment counts once for each host');
 assert.equal(context.chatBookingPreference_({host:'ricardo',daypart:'evening',weekdays:[0,6,9]}).host, 'Ricardo');
 assert.equal(context.bookChatAppointment(details).booked, true);
 assert.equal(context.bookChatAppointment(details).booked, true, 'Retry returns the same receipt');
