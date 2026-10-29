@@ -1117,6 +1117,10 @@
   }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
+    if (question && engine.isUnclearAnswer(answer, question.key)) {
+      scheduleClarification("Sorry, I don't quite understand. " + question.text);
+      return;
+    }
     var flowQuestions = config.flows[state.intent].questions;
     var questionPosition = flowQuestions.indexOf(question);
     markPreapproval(answer);
