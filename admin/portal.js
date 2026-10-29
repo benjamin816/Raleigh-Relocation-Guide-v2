@@ -4,7 +4,7 @@
   var relayEndpoint = window.RALEIGH_BOOKING_RELAY_URL || '';
   var protocol = 'raleigh-chat-booking-v1';
   var credential = sessionStorage.getItem('lirAdminCredential') || '';
-  var bridge, pendingAction;
+  var bridge, pendingAction, armedTransfer;
   var $ = function (id) { return document.getElementById(id); };
   var viewerEmail = '', pendingLoads = {};
   function snapshotKey(kind) { return 'lirPortalSnapshot:v3:' + viewerEmail + ':' + kind; }
@@ -114,6 +114,7 @@
     }).catch(function (error) { $('signin-status').textContent = error.message; });
   }
   function selectTab(name) {
+    resetTransfer();
     document.querySelectorAll('.tabs button').forEach(function (button) { button.setAttribute('aria-selected', button.dataset.tab === name); });
     document.querySelectorAll('.panel').forEach(function (panel) { panel.classList.toggle('active', panel.id === name); });
     history.replaceState(null, '', '#' + name);
@@ -150,19 +151,32 @@
     if (pendingAction) { pendingAction.resolve($('confirm-dialog').returnValue === 'confirm'); pendingAction = null; }
   });
   $('confirm-text').addEventListener('input', function () { $('confirm-action').disabled = $('confirm-text').value !== 'CANCEL'; });
-  function changeHost(appt, host) {
-    var title = host === 'Both' ? 'Add both hosts?' : 'Transfer to ' + host + '?';
-    var copy = 'This changes the calendar invitation and round-robin record for ' + appt.client + ' on ' + formatTime(appt.start) +
-      '. The client pre-call email will not be sent again.';
-    confirm(title, copy, false).then(function (ok) {
-      if (!ok) return;
-      return confirm('Final confirmation', 'Confirm ' + (host === 'Both' ? 'both hosts' : host) + ' for this appointment.', false)
-        .then(function (sure) { if (!sure) return; status('Updating appointment…');
-          return admin('assignment', { id: appt.id, expectedHost: appt.host, host: host, confirm: true })
-            .then(function () { status('Assignment updated.'); loadAppointments(); }); });
-    }).catch(function (error) { status(error.message); });
+  function resetTransfer() {
+    if (!armedTransfer) return;
+    clearTimeout(armedTransfer.timer);
+    armedTransfer.button.textContent = armedTransfer.label;
+    armedTransfer.button.classList.remove('confirm-transfer');
+    armedTransfer.button.setAttribute('aria-pressed', 'false');
+    armedTransfer = null;
+  }
+  function changeHost(appt, host, button) {
+    if (button.disabled) return;
+    if (!armedTransfer || armedTransfer.button !== button) {
+      resetTransfer();
+      armedTransfer = { button: button, label: button.textContent, timer: setTimeout(resetTransfer, 15000) };
+      button.textContent = 'Click one more time to confirm: ' + host;
+      button.classList.add('confirm-transfer');
+      button.setAttribute('aria-pressed', 'true');
+      return;
+    }
+    resetTransfer();
+    button.disabled = true; button.textContent = 'Updating…'; status('Updating appointment…');
+    admin('assignment', { id: appt.id, expectedHost: appt.host, host: host, confirm: true })
+      .then(function () { status('Assignment updated.'); loadAppointments(); })
+      .catch(function (error) { status(error.message); button.disabled = false; button.textContent = host === 'Both' ? 'Add both hosts' : 'Transfer to ' + host; });
   }
   function cancelAppointment(appt) {
+    resetTransfer();
     confirm('Cancel appointment?', 'This will cancel ' + appt.client + '’s appointment on ' + formatTime(appt.start) + '.', false)
       .then(function (ok) { if (!ok) return; return confirm('Final cancellation', 'Type CANCEL to confirm. This removes the calendar event.', true)
         .then(function (sure) { if (!sure) return; status('Cancelling appointment…');
@@ -174,6 +188,7 @@
     return loadSnapshot('appointments', function () { return admin('appointments'); }, renderAppointments, 'appointments-updating');
   }
   function renderAppointments(result) {
+      resetTransfer();
       var list = $('appointment-list');
       $('rotation').replaceChildren(metric('Benjamin this month', result.counts.Benjamin, result.month),
         metric('Ricardo this month', result.counts.Ricardo, result.month), metric('Next in rotation', result.nextUp, 'When both are available'));
@@ -205,7 +220,7 @@
         var actions = document.createElement('div'); actions.className = 'actions';
         ['Benjamin', 'Ricardo', 'Both'].filter(function (host) { return host !== appt.host; }).forEach(function (host) {
           actions.appendChild(actionButton(host === 'Both' ? 'Add both hosts' : 'Transfer to ' + host,
-            function () { changeHost(appt, host); }));
+            function (event) { changeHost(appt, host, event.currentTarget); }));
         });
         actions.appendChild(actionButton('Cancel appointment', function () { cancelAppointment(appt); }, true));
         card.append(name, time, details, actions); list.appendChild(card);

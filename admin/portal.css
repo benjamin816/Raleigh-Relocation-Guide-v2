@@ -2,3 +2,4 @@
 :root .line-chart{display:block;width:100%;height:180px;border-bottom:1px solid #a1b4a6}
 
 .updating,.update-status{font-size:.85rem;color:#526e5e}.updating{animation:portal-update 1.8s ease-in-out infinite}.metric-notes{font-size:.8rem;color:#617569;line-height:1.5}@keyframes portal-update{50%{opacity:.4}}@media(prefers-reduced-motion:reduce){.updating{animation:none}}
+.appointment .actions button.confirm-transfer{background:#d9ac38;border-color:#b78b1b;color:#173a32;box-shadow:0 0 0 3px #d9ac3840;font-weight:700}.appointment .actions button:disabled{opacity:.65;cursor:wait}[hidden]{display:none!important}
