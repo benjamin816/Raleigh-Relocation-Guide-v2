@@ -11,6 +11,7 @@ const config = scope.window.RaleighChatConfig;
 const cases = [
   ['direct buyer', 'I want to buy a home in Raleigh', 'buying'],
   ['relocating buyer', 'I am relocating from Ohio', 'relocating'],
+  ['moving typo', 'movng to raleigh', 'relocating'],
   ['local seller', 'I need to sell my house', 'selling'],
   ['seller and buyer', 'I am selling my home and buying another', 'selling', true],
   ['investor', 'I want a rental investment', 'investing'],
