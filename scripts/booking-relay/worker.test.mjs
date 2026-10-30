@@ -52,3 +52,15 @@ try {
   assert.equal(upstreamCalls, 1);
 } finally { globalThis.fetch = originalFetch; }
 console.log('signed portal authorization checks passed');
+
+// Device tokens are opaque here: backend verification must decide access.
+globalThis.fetch = async (url, init) => {
+  assert.equal(url, env.BOOKING_SCRIPT_URL, 'Device sessions must not be sent to Google tokeninfo');
+  assert.equal(JSON.parse(init.body).args[0], 'ps1.'+'a'.repeat(64));
+  return new Response(JSON.stringify({ok:false,error:'Your device sign-in has expired. Please sign in again.'}));
+};
+try {
+  result=await relay.fetch(request('http://127.0.0.1:8777','POST',{method:'admin',args:['ps1.'+'a'.repeat(64),'appointments',{}]}),env);
+  assert.equal((await result.json()).ok,false,'Worker must preserve backend rejection');
+} finally {globalThis.fetch=originalFetch;}
+console.log('Opaque device sessions remain subject to backend verification.');

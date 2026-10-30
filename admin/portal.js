@@ -4,6 +4,13 @@
   var relayEndpoint = window.RALEIGH_BOOKING_RELAY_URL || '';
   var protocol = 'raleigh-chat-booking-v1';
   var credential = sessionStorage.getItem('lirAdminCredential') || '';
+  try {
+    var remembered = JSON.parse(localStorage.getItem('lirAdminSession') || 'null');
+    if (remembered && remembered.expiresAt > Date.now() && /^ps1\.[a-f0-9]{64}$/.test(remembered.token)) {
+      credential = remembered.token; sessionStorage.setItem('lirAdminCredential', credential);
+    } else localStorage.removeItem('lirAdminSession');
+  } catch (_) {}
+  var recoveringSignIn = false;
   var bridge, pendingAction, armedTransfer;
   var $ = function (id) { return document.getElementById(id); };
   var viewerEmail = '', pendingLoads = {};
@@ -79,9 +86,25 @@
         method: method, args: args || [] }, bridge.origin);
     }); });
   }
-  function admin(action, data) { return call('admin', [credential, action, data || {}]); }
+  function admin(action, data) {
+    var sentCredential = credential;
+    return call('admin', [sentCredential, action, data || {}]).catch(function (error) {
+      if (credential === sentCredential && /sign.in|not authorized|authorization expired/i.test(error.message) && !recoveringSignIn) {
+        recoveringSignIn = true; signOut();
+        $('signin-status').textContent = 'Please confirm your Google account to continue.';
+        if (window.google && google.accounts && google.accounts.id) google.accounts.id.prompt();
+      }
+      throw error;
+    });
+  }
   function unlock(result) {
     viewerEmail = result.viewer.email.toLowerCase();
+    if (result.session && result.session.token) {
+      credential = result.session.token;
+      try { localStorage.setItem('lirAdminSession', JSON.stringify(result.session)); } catch (_) {}
+    }
+    sessionStorage.setItem('lirAdminCredential', credential);
+    recoveringSignIn = false; $('signout').hidden = false;
     $('signin').hidden = true; $('workspace').hidden = false;
     $('account').textContent = result.viewer.email;
     var scheduleFrame = document.querySelector('#schedule iframe');
@@ -89,7 +112,17 @@
     if (location.hash === '#appointments') selectTab('appointments');
     else if (location.hash === '#analytics') selectTab('analytics');
   }
-  function signOut() { credential = ''; sessionStorage.removeItem('lirAdminCredential'); $('signin').hidden = false; $('workspace').hidden = true; }
+  function signOut() {
+    resetTransfer(); credential = ''; sessionStorage.removeItem('lirAdminCredential');
+    try { localStorage.removeItem('lirAdminSession'); } catch (_) {}
+    $('signin').hidden = false; $('workspace').hidden = true; $('signout').hidden = true;
+  }
+  $('signout').addEventListener('click', function () {
+    admin('logout').then(function () {
+      if (window.google && google.accounts && google.accounts.id) google.accounts.id.disableAutoSelect();
+      signOut(); $('signin-status').textContent = 'You are signed out of this browser.';
+    }).catch(function (error) { status('Could not sign out yet. Please try again. ' + error.message); });
+  });
   function signIn(response) {
     $('signin-status').textContent = 'Checking your sign-in…';
     credential = response.credential;

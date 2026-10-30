@@ -8,12 +8,12 @@
   <link rel="stylesheet" href="/admin/portal.css?v=20261029-3">
   <script src="https://accounts.google.com/gsi/client" async defer></script>
   <script src="/assets/js/booking-relay-config.js?v=20261029-2" defer></script>
-  <script src="/admin/portal.js?v=20261029-5" defer></script>
+  <script src="/admin/portal.js?v=20261029-6" defer></script>
 </head>
 <body>
   <main class="portal">
-    <header class="top"><div><span class="eyebrow">Living in Raleigh Team</span><h1>Team portal</h1></div><div id="account"></div></header>
-    <section id="signin" class="card signin"><h2>Sign in with your team Google account</h2><p>Appointment and website data is available only to authorized team accounts.</p><div id="google-button"></div><p id="signin-status" role="status"></p></section>
+    <header class="top"><div><span class="eyebrow">Living in Raleigh Team</span><h1>Team portal</h1></div><div id="account"></div><button type="button" id="signout" hidden>Sign out</button></header>
+    <section id="signin" class="card signin"><h2>Sign in with your team Google account</h2><p>Appointment and website data is available only to authorized team accounts. This browser remembers your sign-in for up to 30 days.</p><div id="google-button"></div><p id="signin-status" role="status"></p></section>
     <div id="workspace" hidden>
       <nav class="tabs" aria-label="Portal sections">
         <button type="button" data-tab="schedule" aria-selected="true">Schedule consults</button>

@@ -12,6 +12,43 @@ function adminPortalConfig() {
   return { clientId: PropertiesService.getScriptProperties().getProperty('ADMIN_GOOGLE_CLIENT_ID') || '' };
 }
 
+const ADMIN_SESSION_DAYS = 30;
+function adminSessionKey_(token) {
+  return 'ADMIN_DEVICE_' + Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, token)
+    .map(function (byte) { return ('0' + (byte & 255).toString(16)).slice(-2); }).join('');
+}
+function adminDeviceSession_(token) {
+  if (!/^ps1\.[a-f0-9]{64}$/.test(token)) throw new Error('Please sign in again.');
+  const properties = PropertiesService.getScriptProperties(), key = adminSessionKey_(token);
+  const raw = properties.getProperty(key);
+  const session = raw ? JSON.parse(raw) : null;
+  if (!session || session.expiresAt <= Date.now() || !ADMIN_ALLOWED_EMAILS.includes(session.email)) {
+    if (raw) properties.deleteProperty(key);
+    throw new Error('Your device sign-in has expired. Please sign in again.');
+  }
+  return { email: session.email, name: session.name, deviceSession: true, expiresAt: session.expiresAt };
+}
+function adminCreateDeviceSession_(viewer) {
+  const lock = LockService.getScriptLock(); lock.waitLock(10000);
+  try {
+    const properties = PropertiesService.getScriptProperties(), now = Date.now(), own = [];
+    const all = properties.getProperties();
+    Object.keys(all).filter(function (key) { return key.indexOf('ADMIN_DEVICE_') === 0; }).forEach(function (key) {
+      let record;
+      try { record = JSON.parse(all[key]); } catch (_) {}
+      if (!record || record.expiresAt <= now) properties.deleteProperty(key);
+      else if (record.email === viewer.email) own.push({ key: key, createdAt: record.createdAt });
+    });
+    // Bound persistent storage; newest ten devices per allowed account.
+    own.sort(function (a, b) { return b.createdAt - a.createdAt; }).slice(9)
+      .forEach(function (record) { properties.deleteProperty(record.key); });
+    const token = 'ps1.' + (Utilities.getUuid() + Utilities.getUuid()).replace(/-/g, '').toLowerCase();
+    const record = { email: viewer.email, name: viewer.name, createdAt: now, expiresAt: now + ADMIN_SESSION_DAYS * 86400000 };
+    properties.setProperty(adminSessionKey_(token), JSON.stringify(record));
+    return { token: token, expiresAt: record.expiresAt };
+  } finally { lock.releaseLock(); }
+}
+
 function adminVerifyRelay_(credential, action, data) {
   const parts = credential.split('.');
   const key = PropertiesService.getScriptProperties().getProperty('ADMIN_ASSERTION_KEY');
@@ -36,6 +73,7 @@ function adminVerifyRelay_(credential, action, data) {
 }
 
 function adminVerifyToken_(credential, action, data) {
+  if (String(credential || '').indexOf('ps1.') === 0) return adminDeviceSession_(credential);
   if (String(credential || '').indexOf('v1.') === 0) return adminVerifyRelay_(credential, action, data);
   const clientId = adminPortalConfig().clientId;
   if (!clientId) throw new Error('Google sign-in is not configured.');
@@ -56,7 +94,11 @@ function adminPortalRequest(credential, action, payload) {
   const data = payload && typeof payload === 'object' ? payload : {};
   const viewer = adminVerifyToken_(credential, action, data);
   switch (String(action || '')) {
-    case 'session': return { viewer: viewer };
+    case 'session': return { viewer: viewer, session: viewer.deviceSession ?
+      { token: credential, expiresAt: viewer.expiresAt } : adminCreateDeviceSession_(viewer) };
+    case 'logout':
+      if (viewer.deviceSession) PropertiesService.getScriptProperties().deleteProperty(adminSessionKey_(credential));
+      return { ok: true };
     case 'appointments': return adminUpcoming_();
     case 'analytics': return adminAnalytics_(String(data.range || 'today'));
     case 'book': return bookAppointment_(data, true);

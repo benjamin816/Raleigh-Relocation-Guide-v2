@@ -14,6 +14,9 @@ function base64url(bytes) {
 async function authorizeAdmin(body, env) {
   if (!env.ADMIN_ASSERTION_KEY) throw new Error('Portal authorization is not configured.');
   const [token, action, data = {}] = body.args;
+  // Opaque device sessions are validated/revoked by Apps Script on EVERY
+  // request. Never convert an unverified device token into a signed assertion.
+  if (typeof token === 'string' && /^ps1\.[a-f0-9]{64}$/.test(token)) return;
   if (typeof token !== 'string' || !/^[A-Za-z0-9._-]{100,4096}$/.test(token)) throw new Error('Please sign in again.');
   const check = await fetch('https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(token));
   if (!check.ok) throw new Error('Your sign-in has expired. Please sign in again.');
