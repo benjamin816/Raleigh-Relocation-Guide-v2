@@ -926,6 +926,8 @@
     };
 
     var track = function (eventName, properties) {
+      // End-to-end diagnostics must never count as real visitor traffic.
+      if (/[?&]analytics_diagnostic=/.test(window.location.href) && !/^diagnostic_/.test(eventName)) eventName = "diagnostic_" + eventName;
       if (!eventName) {
         return;
       }
