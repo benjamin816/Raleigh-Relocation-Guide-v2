@@ -288,7 +288,7 @@ function getChatBookingSlots(filters) {
         })) && (!preference.date || Utilities.formatDate(start, CHAT_ZONE, 'yyyy-MM-dd') === preference.date) &&
             (!preference.weekdays.length || preference.weekdays.indexOf(day.getDay()) !== -1) &&
             (!preference.daypart || chatDaypart_(start) === preference.daypart)) {
-          slots.push({ start: start.toISOString(), minutes: CHAT_MINUTES, daypart: chatDaypart_(start),
+          slots.push({ start: start.toISOString(), minutes: CHAT_MINUTES, referralMinutes: 15, daypart: chatDaypart_(start),
             availableHosts: availableHosts.map(function (host) { return host.name; }),
             dueHostAvailable: availableHosts.some(function (host) { return host.name === dueHost; }) });
         }
@@ -398,6 +398,21 @@ function chatVideoEvent_(requestId, start, end, name, email, phone, notes, host,
   return { id: event.iCalUID || event.id, videoUrl: videoUrl, eventUrl: event.htmlLink || '' };
 }
 
+// Referral calls use the same real opening windows and host assignment as exploration calls.
+// Availability searches remain conservative (a full 60-minute opening); only the event is shorter.
+function chatAppointmentMinutes_(details) {
+  const kind = String(details.appointmentType || 'exploration');
+  if (kind === 'seller_referral') {
+    if (String(details.callType || 'phone').toLowerCase() !== 'phone' ||
+        String(details.purpose || '') !== 'Sell' || Number(details.durationMinutes) !== 15)
+      throw new Error('A seller referral must be a 15-minute phone call about selling.');
+    return 15;
+  }
+  if (kind !== 'exploration' || details.durationMinutes !== undefined && Number(details.durationMinutes) !== CHAT_MINUTES)
+    throw new Error('Unsupported appointment type or length.');
+  return CHAT_MINUTES;
+}
+
 function bookChatAppointment(details) {
   return bookAppointment_(details, false);
 }
@@ -414,6 +429,7 @@ function bookAppointment_(details, authorizedAdmin) {
   const notes = String(details.notes || '').trim().slice(0, 1000);
   const callType = String(details.callType || 'phone').toLowerCase();
   const purpose = String(details.purpose || '').trim().slice(0, 60);
+  const appointmentMinutes = chatAppointmentMinutes_(details);
   const bothRequested = String(details.preferredHost || '') === 'Both';
   const preferredHost = bothRequested ? 'Both' : chatBookingPreference_({ host: details.preferredHost }).host;
   if (!/^[a-z0-9-]{16,80}$/i.test(requestId) || name.length < 2 ||
@@ -429,7 +445,7 @@ function bookAppointment_(details, authorizedAdmin) {
     const previous = cache.get(receiptKey);
     if (previous) return JSON.parse(previous);
     if (!chatSlotFree_(start, chatBookingWindows_())) throw new Error('That time was taken. Please choose another.');
-    const end = new Date(start.getTime() + CHAT_MINUTES * 60000);
+    const end = new Date(start.getTime() + appointmentMinutes * 60000);
     const assignment = chatAssignmentRows_();
     const availableHosts = chatAvailableHosts_(start, end);
     const choice = bothRequested ? (availableHosts.length === CHAT_HOSTS.length ? {
@@ -481,7 +497,7 @@ function bookAppointment_(details, authorizedAdmin) {
       } catch (mailError) { console.error('Assignment repair email failed: ' + mailError); }
     }
     const result = { booked: true, start: start.toISOString(), eventId: eventId, hostPending: hostPending,
-      assignedHost: choice.host.name, callType: callType, videoUrl: video ? video.videoUrl : '',
+      durationMinutes: appointmentMinutes, assignedHost: choice.host.name, callType: callType, videoUrl: video ? video.videoUrl : '',
       preCallEmailQueued: true };
     cache.put(receiptKey, JSON.stringify(result), 21600);
     properties.setProperty(countKey, String(total + 1));

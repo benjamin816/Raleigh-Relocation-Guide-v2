@@ -1,5 +1,12 @@
 // Raleigh chat conversation configuration. Update through the TEST branch chat workflow.
 window.RaleighChatConfig = {
+  "sellerReferral": {
+    "intro": "Got it! If you're selling your home out of state and planning to rent here, our free Raleigh resources and Living in Raleigh YouTube channel can help you get to know the area. We don't offer a rental search service, but we have extensive relationships with top listing agents in other markets and would be happy to help connect you with the right person.",
+    "invitation": "Let's set up a quick 10\u201315-minute phone call with the team to learn more about your current home and help connect you with the right listing agent.",
+    "resourceLabel": "Explore Raleigh guides",
+    "resourceUrl": "/learning-center/",
+    "notesLabel": "Out-of-state listing-agent referral; client plans to rent in Raleigh."
+},
   "conversationResponses": {
     "uncertainTimeline": "No worries! Many people who reach out to us are still in that exploration phase. In an ideal world, would that move be sometime this year or next?",
     "researchTimeline": "Got it! What we offer clients in your shoes, being further out or still figuring out the timing, is an exploration call with the team to answer your burning questions and get you all the resources you need while you're still in that research phase.",

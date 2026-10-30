@@ -24,7 +24,7 @@ for (let i = 0; i < bounds.length; i++) {
 
 const conversationFunctions = [
   'informationalGuidance', 'informationalReply', 'requestContactPermission', 'resumeAfterQuestion', 'answerSideQuestion', 'memorySummary', 'offerBrowsingHelp', 'showContact', 'handleContactAnswer', 'applyKnownFacts', 'knownAnswer', 'activeQuestions', 'detectIntent', 'startFlow',
-  'locationAcknowledgement', 'originLabel', 'askQuestion', 'answerAcknowledgement',
+  'routeSellerReferral', 'locationAcknowledgement', 'originLabel', 'askQuestion', 'answerAcknowledgement',
   'explainRentalOnly', 'asksToRent', 'mentionsPrice', 'priceAmount', 'homeDetailCount',
   'captureVisitorContext', 'markPreapproval', 'acceptAnswer', 'handleText',
   'isQuestionPreamble', 'asksForBenjaminNumber', 'asksForTeamMember',
@@ -39,10 +39,10 @@ const bookingFunctions = [
 for (const name of [...conversationFunctions, ...bookingFunctions]) assert(funcs[name], `missing application function ${name}`);
 
 const deterministicSlots = [
-  { start: '2026-11-05T18:00:00.000Z', daypart: 'afternoon', availableHosts: ['Benjamin', 'Ricardo'] },
-  { start: '2026-11-06T22:00:00.000Z', daypart: 'evening', availableHosts: ['Benjamin', 'Ricardo'] },
-  { start: '2026-11-07T15:00:00.000Z', daypart: 'morning', availableHosts: ['Benjamin'] },
-  { start: '2026-11-07T18:00:00.000Z', daypart: 'afternoon', availableHosts: ['Ricardo'] }
+  { start: '2026-11-05T18:00:00.000Z', referralMinutes: 15, daypart: 'afternoon', availableHosts: ['Benjamin', 'Ricardo'] },
+  { start: '2026-11-06T22:00:00.000Z', referralMinutes: 15, daypart: 'evening', availableHosts: ['Benjamin', 'Ricardo'] },
+  { start: '2026-11-07T15:00:00.000Z', referralMinutes: 15, daypart: 'morning', availableHosts: ['Benjamin'] },
+  { start: '2026-11-07T18:00:00.000Z', referralMinutes: 15, daypart: 'afternoon', availableHosts: ['Ricardo'] }
 ];
 
 const tick = () => new Promise(resolve => setImmediate(resolve));
@@ -82,7 +82,7 @@ function createSession(id, metadata) {
   function bookingCall(method, args) {
     const captured = clone(args || []);
     serviceCalls.push({ boundary: 'bookingCall', method, args: captured, atTurn: transcript.length });
-    if (method === 'slots') return Promise.resolve(clone(deterministicSlots));
+    if (method === 'slots') { const slots=clone(deterministicSlots); if(metadata && metadata.legacyBookingService) slots.forEach(slot=>delete slot.referralMinutes); return Promise.resolve(slots); }
     if (method === 'suggest') return Promise.resolve({ available: false });
     if (method === 'book') {
       const payload = captured[0] || {};

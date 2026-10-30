@@ -35,7 +35,8 @@
     var text = raw.replace(/\b(?:we|i) (?:were|was|had been)\s+(?:going to|planning to|thinking about)\s+(?:buy\w*|sell\w*)[^,.]*[,\.]?/g, ' ');
     var externalSale = /\b(?:partner|spouse)\b.{0,65}\b(?:condo|house|home|sell)\b/.test(text) && /\b(?:independent|isn't mine|not mine|belongs to|regardless|for myself|for me|my (?:purchase|plans?))\b/.test(text);
     var noPurchase = /\b(?:not|don't|do not|won't|will not|no|neither)\s+(?:(?:be|need|want|planning|looking|going|to|a|another|next|new|local|home|purchase|here|again|soon|of us|us will)\s+)*(?:buy\w*|purchas\w*)\b|\b(?:sale|sell\w*) only\b|\bonly (?:need to |want to )?sell\b/.test(text);
-    var keep = /\b(?:keep|keeping)\b.{0,50}\b(?:home|house|townhouse|townhome|it|property)\b|\b(?:not|don't|do not|won't|will not)\s+(?:need to |want to |plan to |be |looking to )?sell\b|\bno sale\b/.test(text);
+    var noHomeToSell = /\b(?:no|nothing|don['’]?t have (?:a|any)|do not have (?:a|any))\s+(?:(?:home|house|property)\s+)?to sell\b/.test(text);
+    var keep = noHomeToSell || /\b(?:keep|keeping)\b.{0,50}\b(?:home|house|townhouse|townhome|it|property)\b|\b(?:not|don't|do not|won't|will not)\s+(?:need to |want to |plan to |be |looking to )?sell\b|\bno sale\b/.test(text);
     var primary = text.match(/\b(?:main|primary) (?:goal|focus|priority) (?:is|will be)\s+(buy\w*|purchas\w*|sell\w*)/);
     var positive = text.replace(/\b(?:not|don't|do not|won't|will not|no longer)\s+(?:(?:need|want|planning|looking|going|to|a|another|new|home|local)\s+)*(?:buy\w*|purchas\w*|sell\w*)\b/g, ' ');
     var buy = !noPurchase && /\b(?:buy|buying|buyer|purchase|purchasing|first (?:home|place)|next home|downsiz\w* into|bigger place|larger primary)\b/.test(positive);
@@ -131,6 +132,8 @@
   function asksQuestion(value) { return /\?|^\s*(how|what|where|when|why|can|could|do|does|is|are|should|tell me|explain)\b|\b(?:my question|i have a question|could you|can you|please (?:explain|give|show))\b/i.test(value); }
   function detectLocation(value, config) {
     var text = normalize(value).replace(/\b(?:work|working) from home\b/g, '').replace(/\bfrom (?:now|here|there)\b/g, '');
+    // A planned rental destination does not make an out-of-state visitor local.
+    text = text.replace(/\b(?:will|plan to|planning to|going to|want to)\s+(?:be )?(?:rent(?:ing)?|live|living)\s+in\s+[a-z ]+?(?=[,.!?]|$)/g, ' ');
     var barePlace = text.replace(/^[\s.,!?]+|[\s.,!?]+$/g, "");
     var localAreas = config && config.localAreas || ['Raleigh', 'Cary', 'Durham'];
     if (localAreas.some(function (area) { return normalize(area) === barePlace; })) return { type: 'local', place: '' };
@@ -237,7 +240,8 @@
     var location = detectLocation(text, config);
     var correctedOrigin = text.match(/\b(?:i|we) meant\s+([a-z][a-z ,.-]{1,55}?)(?=[—–.!?;]|$|\s+(?:to buy|to sell|and|for)\b)/i);
     if (correctedOrigin) location = resolveOrigin({type:'out',place:correctedOrigin[1].trim()},config);
-    if (location && (questionKey === 'location' || correctedOrigin || /\b(?:from|live|living|local|out of state|rent(?:ing)? in|retired in|i am in|i'm in)\b/i.test(text))) facts.location = resolveOrigin(location, config);
+    var futureRental = /\b(?:will|plan to|planning to|going to|want to)\s+(?:only )?(?:be )?(?:rent(?:ing)?|live|living)\s+in\b/i.test(text);
+    if (location && !(futureRental && location.type === 'local') && (questionKey === 'location' || correctedOrigin || /\b(?:from|live|living|local|out of state|rent(?:ing)? in|retired in|i am in|i'm in)\b/i.test(text))) facts.location = resolveOrigin(location, config);
     var leaseCity = text.match(/\b(?:our|my)\s+([a-z]+(?:\s+[a-z]+)?)\s+lease\b/i);
     if (!facts.location && leaseCity) {
       var leaseOrigin = resolveOrigin({type:'out',place:leaseCity[1]},config);
@@ -253,7 +257,7 @@
     }
     var areas = '(?:North Raleigh|South Raleigh|Raleigh|Cary|Apex|Durham|Wake Forest|Holly Springs|Fuquay[- ]Varina|Garner|Knightdale|Wendell|Zebulon|Rolesville|Morrisville|Chapel Hill|Clayton)';
     match = text.match(new RegExp('(?:live|living|rent|renting|already|local)\\s+(?:here\\s+)?in\\s+(' + areas + ')\\b', 'i'));
-    if (match) { facts.currentArea = match[1]; facts.location = { type: 'local', place: '' }; }
+    if (match && !futureRental && !(location && location.type === 'out')) { facts.currentArea = match[1]; facts.location = { type: 'local', place: '' }; }
     if (intent === 'selling' || /\b(?:sell|selling|seller|list)\b/.test(lower)) {
       match = text.match(new RegExp('(?:home|house|townhome|townhouse|duplex|condo|rental)\\s+(?:is\\s+)?in\\s+(' + areas + ')\\b', 'i'));
       if (match) facts.currentHome = match[1];
@@ -270,6 +274,7 @@
     var budget = extractBudget(text);
     if (budget && (!asksQuestion(text) || /\b(?:my|our) budget|budget is|comfort|ceiling|cap|limit\b/i.test(text))) facts.budget = budget;
     if (sellThenRent(text)) facts.sellThenRent = true;
+    if (/\b(?:no|nothing|don't have (?:a|any)|do not have (?:a|any))\s+(?:(?:home|house|property)\s+)?to sell\b/i.test(text)) { facts.originHousing='Nothing to sell'; facts.sellThenRent=false; }
     match = text.match(/\b(?:in|within|about|around|roughly|maybe|probly)\s+(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|a couple(?: of)?|a few|an?)[- ]+(?:days?|weeks?|months?|years?|mos)\b|\b(?:next|this)\s+(?:year|spring|summer|fall|autumn|winter)\b|\b(?:\d+|one|two|three|eight|eleven)\s+(?:months?|years?)\s+from now\b/i);
     if (match) facts.timing = match[0];
     if (/\b(?:first[- ]time buyer|first (?:home|townhouse|condo|house)|never (?:bought|owned))\b/i.test(text)) facts.firstTime = 'First home purchase';

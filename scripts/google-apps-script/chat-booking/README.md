@@ -33,3 +33,12 @@ Analytics scans bounded raw-log chunks without assuming event-date order. Page v
 ## Future team-calendar availability policy
 
 Booking service version 16 and the existing round-robin trigger apply Free transparency only to new consults created on/after October 29, 2026, 6:10:37 p.m. Eastern. The team account remains the organizer; host transfers explicitly protect it. The existing October 30, 11 a.m. appointment (`0k0km3phn87a8g0m8f2pguhf3k`) is additionally excluded by ID. Older appointments are unchanged. Only the team copy is marked Free; transparency is private to each calendar copy. Availability and admin transfer checks also reserve each assigned host directly from team-calendar appointments, regardless of RSVP or host-copy transparency. Unknown pending bookings fail closed in the booking service. The round-robin script includes assigned consults in host conflict windows and preserves its existing trigger and notification receipt logic. Native Google appointment-schedule slots remain single-booking slots; this does not change that Google limitation. Public chatbot booking authority remains paused.
+
+
+### Test: out-of-state seller referral phone calls
+
+The Test widget routes confirmed out-of-state sellers who plan to rent in Raleigh to rental resources and a quick listing-agent referral phone call. Local property sales, bridge rentals before buying, investors, rental-only visitors without a home to sell, and refusals keep their existing routes.
+
+`Code.gs` now advertises `referralMinutes: 15` on slot results. A `book` request with `appointmentType: "seller_referral"`, `durationMinutes: 15`, `callType: "phone"`, and `purpose: "Sell"` creates a 15-minute event through the same host selection, assignment ledger, lead sheet, idempotency protection and standard pre-call email pipeline. Other calls remain 60 minutes. Availability remains conservatively limited to existing full-length bookable openings; the new route does not open extra hours.
+
+This source update needs deployment to the existing booking web app before live referral writes are supported. The widget checks the slot capability marker and will not submit a short-call booking to an older service that would silently create 60 minutes. Keep `CHAT_BOOKING_TEST_READ_ONLY=true` until the owner explicitly restores booking authority. Do not create a second deployment or email sender merely for this track.

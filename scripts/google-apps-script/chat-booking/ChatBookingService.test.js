@@ -13,7 +13,7 @@ const calendars = {
   getCalendarById(id) {
     if (!schedules.has(id)) schedules.set(id, []);
     return { getEvents() { calendarReads += 1; return schedules.get(id); }, getEventById() { return { setTag() {} }; },
-      createEvent(title, _start, _end, options) { createdEvents += 1; lastPhoneEvent = { title, options, reminders: [] };
+      createEvent(title, _start, _end, options) { createdEvents += 1; lastPhoneEvent = { title, options, start: _start, end: _end, reminders: [] };
         return { getId() { return 'test-event-' + createdEvents; }, setTag() {},
           addEmailReminder(minutes) { lastPhoneEvent.reminders.push(['email', minutes]); },
           addPopupReminder(minutes) { lastPhoneEvent.reminders.push(['popup', minutes]); } }; } };
@@ -154,4 +154,19 @@ assert.equal(assignmentRows[3][4], 'Both');
 assert.equal(sentEmails.length, 0, 'Both-host booking also uses the standard pre-call sender');
 schedules.set('ricardo.collier90@gmail.com', [busy]);
 assert.throws(() => context.bookChatAppointment({ ...details, requestId: 'test-request-777777777', preferredHost: 'Both', email: 'busyboth@example.com' }), /Both is no longer available/);
+schedules.set('ricardo.collier90@gmail.com', []);
+assert.equal(fullAvailability.slots.every(slot=>slot.referralMinutes===15),true,'Slots advertise short-call support');
+const referralDetails={...details,requestId:'test-referral-88888888',email:'referral@example.com',callType:'phone',purpose:'Sell',appointmentType:'seller_referral',durationMinutes:15};
+const referral=context.bookChatAppointment(referralDetails);
+assert.equal(referral.durationMinutes,15);
+assert.equal(lastPhoneEvent.end-lastPhoneEvent.start,15*60000,'Referral event is actually 15 minutes');
+assert.equal(assignmentRows.at(-1)[4],referral.assignedHost,'Referral uses normal assignment ledger');
+assert.match(lastPhoneEvent.options.description,/\nSell\n/);
+assert.equal(context.bookChatAppointment(referralDetails).eventId,referral.eventId,'Referral retries are idempotent');
+for(const bad of [{durationMinutes:60},{callType:'video'},{purpose:'Buy'}])assert.throws(()=>context.chatAppointmentMinutes_({...referralDetails,...bad}),/15-minute phone call/);
+assert.equal(context.chatAppointmentMinutes_({}),60,'Existing clients remain 60 minutes');
+properties.set('CHAT_BOOKING_TEST_READ_ONLY','true');
+const beforePaused=createdEvents;
+assert.throws(()=>context.bookChatAppointment({...referralDetails,requestId:'test-referral-paused123'}),/paused for testing/);
+assert.equal(createdEvents,beforePaused,'Referral cannot bypass the live booking pause');
 console.log('Chat booking availability, direct booking and duplicate checks passed');

@@ -676,6 +676,7 @@
   }
   function offerBookingSlots(slots) {
     if (!state.booking) return;
+    state.booking.referralSupported = Array.isArray(slots) && slots.length > 0 && slots.every(function(slot){return slot.referralMinutes === 15;});
     state.booking.allSlots = Array.isArray(slots) ? slots.slice(0, 6) : [];
     state.booking.offset = 0;
     showBookingPair();
@@ -786,6 +787,7 @@
     }
     state.booking = { step: "loading", slots: [], allSlots: [], offset: 0, details: {},
       preference: requestedPreference };
+    if (state.profile.outOfStateReferral) { state.booking.referral = true; state.booking.details.callType = "phone"; }
     if (/\b(phone|telephone)\b/i.test(request || "")) state.booking.details.callType = "phone";
     else if (config.chatVideoBookingEnabled && /\b(video|zoom|google meet|virtual)\b/i.test(request || "")) state.booking.details.callType = "video";
     loadBookingSlots(state.booking);
@@ -812,6 +814,9 @@
   }
   function handleBookingAnswer(value) {
     var booking = state.booking;
+    if (booking.referral && /\b(video|zoom|meet|virtual)\b/i.test(value)) {
+      message("This referral appointment is a quick phone call to learn about your current home. Would you like to continue with that, or contact the team at 919-737-7896 about another format?", false); return;
+    }
     if (/\b(video|zoom|meet|virtual)\b/i.test(value)) booking.details.callType = "video";
     else if (/\b(phone|telephone|call me)\b/i.test(value)) booking.details.callType = "phone";
     if (engine.cancelsScheduling(value) || engine.declinesScheduling(value)) {
@@ -943,9 +948,14 @@
       if (!state.profile.transactionGoal && !state.intent) { booking.step="purpose"; message("Before I book, is the call about buying, selling, or both?",false); return; }
       booking.details.notes = /^skip$/i.test(value) ? "" : value.slice(0, 1000);
       booking.step = "confirming";
+      if (booking.referral && !booking.referralSupported) {
+        message("I can read the team's openings, but the short referral-call booking option is still being connected. No appointment has been booked. You can call or text 919-737-7896 to arrange that quick phone call.", false);
+        return;
+      }
+      if (booking.referral) booking.details.notes = config.sellerReferral.notesLabel + " Current home: " + (state.profile.origin || "out of state") + ". " + booking.details.notes;
       booking.requestId = booking.requestId || bookingToken();
       message("I'll book that time now and send the invitation to your email.", false);
-      bookingCall("book", [{ requestId: booking.requestId, start: booking.start, name: booking.details.name, email: booking.details.email, phone: booking.details.phone, notes: booking.details.notes, callType: booking.details.callType, purpose: state.combined ? "Buy and Sell" : (state.profile.transactionGoal || state.intent) === "selling" ? "Sell" : state.intent === "investing" ? "Invest" : "Buy", preferredHost: config.chatRoundRobinBookingEnabled ? booking.preference.host : "" }]).then(function (result) {
+      bookingCall("book", [{ requestId: booking.requestId, appointmentType: booking.referral ? "seller_referral" : "exploration", durationMinutes: booking.referral ? 15 : 60, start: booking.start, name: booking.details.name, email: booking.details.email, phone: booking.details.phone, notes: booking.details.notes, callType: booking.details.callType, purpose: state.combined ? "Buy and Sell" : (state.profile.transactionGoal || state.intent) === "selling" ? "Sell" : state.intent === "investing" ? "Invest" : "Buy", preferredHost: config.chatRoundRobinBookingEnabled ? booking.preference.host : "" }]).then(function (result) {
         if (state.booking !== booking) return;
         if (!result || !result.booked) throw new Error("Booking was not confirmed.");
         trackConversation('chat_appointment_booked');
@@ -957,7 +967,8 @@
         try { window.localStorage.setItem("livrBookingReportedAt", new Date().toISOString()); } catch (_) {}
         finishConversation();
         window.dispatchEvent(new CustomEvent("raleigh-booking-confirmed", { detail: { source: "website_chat" } }));
-        message("Great, " + booking.details.name.split(/\s+/)[0] + ", I've got you confirmed for " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". You'll get a calendar invitation." + (booking.details.callType === "video" ? (result.videoUrl ? " The Google Meet link is in the invitation." : " The team will add the video link before your call.") : "") + " Look out for an email titled What To Know Before Our Call, with a quick form and resources to help you prepare. If you need anything in the meantime, message me here or call or text the team at 919-737-7896.", false);
+        if (booking.referral) message("Great, " + booking.details.name.split(/\s+/)[0] + ", you're confirmed for a 15-minute phone call on " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". You'll get a calendar invitation. We'll learn more about your current home and help connect you with the right listing agent. You can call or text us at 919-737-7896 if you need anything before then.", false);
+        else message("Great, " + booking.details.name.split(/\s+/)[0] + ", I've got you confirmed for " + bookingLabel(result.start) + " with " + (result.assignedHost || "the team") + ". You'll get a calendar invitation." + (booking.details.callType === "video" ? (result.videoUrl ? " The Google Meet link is in the invitation." : " The team will add the video link before your call.") : "") + " Look out for an email titled What To Know Before Our Call, with a quick form and resources to help you prepare. If you need anything in the meantime, message me here or call or text the team at 919-737-7896.", false);
         if (bookingFile) submitBookingAttachment(bookingFile, booking, result);
       }).catch(function (error) {
         if (state.booking !== booking) return;
@@ -1184,6 +1195,34 @@
       case "preapproval": return state.profile.preApproved ? "" : "Got it, noted.";
       default: return "Got it.";
     }
+  }
+  function routeSellerReferral(value) {
+    if (state.booking || state.intent === "investing") return false;
+    var p = state.profile, facts = p.facts || {}, plan = engine.transactionPlan(value);
+    if (plan.combined || plan.id === "buying") { p.outOfStateReferral = false; return false; }
+    var outside = facts.location ? facts.location.type === "out" : p.location === "out";
+    if (facts.currentHome && (config.localAreas || []).some(function(area){return area.toLowerCase() === facts.currentHome.toLowerCase();})) return false;
+    if (/\b(?:nothing|no (?:house|home|property)) to sell\b/i.test(facts.originHousing || value)) return false;
+    var sale = p.originSale || p.sellThenRent || facts.sellThenRent || /\bsell|selling|listing\b/i.test(facts.originHousing || "") || state.intent === "selling";
+    var renting = p.sellThenRent || facts.sellThenRent || plan.sellThenRent || engine.rentalOnly(value) || asksToRent(value) || /\b(?:will|going to) (?:be )?renting\b/i.test(value);
+    if (!outside || !sale || !renting || p.noScheduling || p.noContact || p.researchOnly) return false;
+    applyKnownFacts();
+    p.outOfStateReferral = true;
+    p.rentalOnly = false;
+    p.informationOnly = false;
+    p.awaitingFirstName = false;
+    p.pendingRentalPlan = false;
+    delete p.pendingIntroReply;
+    state.intent = "selling";
+    p.transactionGoal = "selling";
+    state.combined = false;
+    state.question = -1;
+    message(config.sellerReferral.intro, false);
+    link(config.sellerReferral.resourceLabel, config.sellerReferral.resourceUrl);
+    message(config.sellerReferral.invitation, false);
+    persist();
+    startBooking("phone call");
+    return true;
   }
   function explainRentalOnly() {
     state.intent = null;
@@ -1797,6 +1836,7 @@
       state.profile.awaitingFirstName = false;
       delete state.profile.pendingIntroReply;
     }
+    if (routeSellerReferral(value)) return;
     if (isQuestionPreamble(value)) {
       state.questionDetour = true;
       message("Absolutely, what's the question that you have?", false);
