@@ -477,6 +477,11 @@ window.RaleighChatConfig = {
           "text": "Do you currently live here, or are you out of state?"
         },
         {
+          "key": "salePriority",
+          "when": "investmentSale",
+          "text": "Should we focus on selling your current rental, the next investment, or planning both together?"
+        },
+        {
           "key": "experience",
           "text": "Would this be your first investment, or do you have experience investing?"
         },
@@ -735,6 +740,7 @@ window.RaleighChatConfig = {
     "DC": ["Washington, DC"]
   },
   "originAmbiguousCities": ["Alexandria", "Arlington", "Augusta", "Burlington", "Columbus", "Dover", "Greenville", "Jackson", "Kansas City", "Lincoln", "Madison", "Manchester", "Portland", "Richmond", "Rochester", "Springfield"],
+  "originCityOptions": { "portland": ["Oregon", "Maine"] },
   "relocationResponses": {
     "price": "Fair enough!",
     "californiaPrice": "I hear that! We get a lot of people from California who realize they can get more home for the money here in Raleigh.",

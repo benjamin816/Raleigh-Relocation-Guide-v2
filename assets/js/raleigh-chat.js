@@ -723,11 +723,34 @@
       return (index === 0 ? "" : " or ") + bookingLabel(slot.start);
     }).join("") + ". " + (nearestRequested ? "Would that work for you?" : (config.bookingChoicePrompt || "Which time works for you? Let me know if you'd prefer a video or phone call.")), false);
   }
+  function requestContactPermission(action) {
+    state.profile.pendingContactPermission = action;
+    persist();
+    message(action === 'booking' ? "Booking a call requires your name, email, and phone number. Would you like to continue, or keep chatting without sharing those details?" :
+      "To send a message to the team, I'd need your contact details. May I ask for those, or would you prefer to keep chatting anonymously?", false);
+  }
+  function informationalReply(value) {
+    state.profile.informationOnly = true;
+    state.question = -1;
+    var first = !state.profile.informationalIntroShown;
+    var faq = value && engine.findFaq(value, config);
+    var flow = config.flows[state.intent];
+    if (faq && !/exploration call|book a call|schedule a call/i.test(faq.answer)) message(faq.answer, false);
+    else if (value && /\b(?:home|house|property)\b.{0,30}\b(?:worth|value)\b/i.test(value))
+      message("A useful home valuation needs property details and recent comparable sales. I can't give you a reliable price in this chat.", false);
+    else message(first ? "That's completely fine—we can keep this informational. You don't need to schedule a call or share contact details. What would you like to know?" :
+      "I'm happy to help with general Raleigh questions. What would you like to understand next?", false);
+    if (flow && flow.resourceLink && (state.profile.researchOnly && first || value && engine.wantsResources(value))) link(flow.resourceLink.label, flow.resourceLink.href);
+    state.profile.informationalIntroShown = true;
+    finishConversation();
+    persist();
+  }
   function startBooking(request) {
-    if (state.profile.noScheduling) {
+    if (state.profile.noScheduling || state.profile.researchOnly) {
       message("Of course—we can keep this to your questions without scheduling a call. What else would you like to know?", false);
       return;
     }
+    if (state.profile.noContact) { requestContactPermission('booking'); return; }
     var currentFlow = state.intent && config.flows[state.intent];
     if (currentFlow && currentFlow.booking === "investing") {
       message("Investing calls are booked through our investor page, where you can choose the time that works for you.", false);
@@ -967,6 +990,7 @@
     var introAsked = state.profile.introAsked;
     state.profile = Object.assign({}, state.profile, { firstName: visitorName || "", introAsked: !!introAsked });
     if (sourceText) { captureVisitorContext(sourceText); markPreapproval(sourceText); }
+    applyKnownFacts();
     updateAttachmentAvailability();
     var knownLocation = /^(buying|relocating|investing)$/.test(id) && sourceText && engine.detectLocation(sourceText, config);
     if (knownLocation) knownLocation = engine.resolveOrigin(knownLocation, config);
@@ -1008,11 +1032,20 @@
     var before = activeQuestions()[state.question];
     var cursor = before ? flow.questions.indexOf(before) : flow.questions.length;
     applyKnownFacts();
+    var ambiguousOrigin = !state.profile.originCode && !state.profile.originDisambiguationDeclined &&
+      (config.originAmbiguousCities || []).find(function (city) { return city.toLowerCase() === (state.profile.origin || '').toLowerCase(); });
+    if (ambiguousOrigin) {
+      state.profile.awaitingOriginState = ambiguousOrigin;
+      var options = (config.originCityOptions || {})[ambiguousOrigin.toLowerCase()];
+      message(options ? "Just to make sure: " + ambiguousOrigin + ", " + options.join(' or ') + "—or a different state?" : "Which state is " + ambiguousOrigin + " in?", false);
+      return;
+    }
     var questions = activeQuestions();
     state.question = questions.findIndex(function (item) { return flow.questions.indexOf(item) >= cursor; });
     if (state.question < 0) state.question = questions.length;
     while (state.question < questions.length && knownAnswer(questions[state.question].key)) state.question++;
     if (state.question >= questions.length) {
+      if (state.profile.noScheduling || state.profile.researchOnly) { informationalReply(); return; }
       var sellerSummer = state.intent === "selling" && /\bnext summer\b/i.test(state.profile.targetTiming || "");
       var buyerSummer = /^(buying|relocating)$/.test(state.intent) && /\bsummer\b/i.test(state.profile.targetTiming || "");
       message(state.profile.shortTiming ? "Well, great. Based on that timing, we should absolutely set up an exploration call with the team to help build you a game plan around your move." : sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish, false);
@@ -1023,6 +1056,7 @@
     var question = questions[state.question];
     var variants = [question.text].concat(Array.isArray(question.alternatives) ? question.alternatives.filter(Boolean) : []);
     var wording = variants[state.answers.length % variants.length] || question.text;
+    if (question.key === 'salePriority' && state.profile.facts.currentHome) wording = "You mentioned selling your rental in " + state.profile.facts.currentHome + ". Should we focus on that sale, your next investment, or both?";
     if (/^(buying|relocating)$/.test(state.intent) && state.profile.location === "out") {
       if (question.key === "whyRaleigh") wording = !state.profile.origin ? "Where are you moving from, and what's drawing you to Raleigh?" : state.profile.originCity ? "What has you making the move?" : "What has you looking at moving to Raleigh from " + originLabel() + "?";
       if (question.key === "originHousing") wording = "Do you have a home" + (state.profile.origin ? " in " + originLabel() : " there") + " that you'd need to sell, or are you currently renting?";
@@ -1147,6 +1181,8 @@
     var facts = engine.extractFacts(text, config, state.intent || detected && detected.id, current && current.key);
     state.profile.facts = Object.assign({}, state.profile.facts || {}, facts);
     if (engine.declinesScheduling(text)) state.profile.noScheduling = true;
+    if (engine.declinesContact(text)) { state.profile.noContact = true; state.profile.skipName = true; }
+    if (engine.researchOnly(text)) { state.profile.researchOnly = true; state.profile.noScheduling = true; state.profile.skipName = true; }
     if (/\b(?:don't|do not) ask (?:me )?for my name|\b(?:stay|remain) anonymous\b/i.test(text)) state.profile.skipName = true;
     var familyPlace = text.match(new RegExp('\\b(?:family|relatives|parents|friends|mother|father)\\b.{0,60}?\\b(?:in|near)\\s+(' + (config.localAreas || ['Raleigh', 'Cary', 'Durham']).join('|') + ')\\b', 'i'));
     if ((familyPlace || /\b(?:near|closer to|close to|be with)\s+(?:(?:my|our)\s+)?(?:family|relatives|parents|friends|mother|father)\b/i.test(text)) && !/\bno (?:family|friends)\b/i.test(text)) {
@@ -1166,6 +1202,7 @@
   }
   function applyKnownFacts() {
     var p = state.profile, facts = p.facts || {};
+    if (facts.investmentSale) p.investmentSale = true;
     ['remoteWork', 'retired', 'noChildren'].forEach(function (key) { if (facts[key] !== undefined) p[key] = facts[key]; });
     if (facts.hasFamilyNearby) p.familyNearby = true;
     if (facts.familyArea) { p.familyArea = facts.familyArea; p.familyAreaAsked = true; }
@@ -1199,6 +1236,9 @@
   }
   function acceptAnswer(answer) {
     var question = activeQuestions()[state.question];
+    if (question && question.key === 'salePriority' && !/\b(?:sale|sell|selling|both|exchange|invest|investment|buy|purchase|next)\b/i.test(answer)) {
+      scheduleClarification(question.text); return;
+    }
     if (question && /^(firstTime|sellingExperience|experience)$/.test(question.key) &&
         !/\b(?:yes|no|first|never|before|experience|experienced|new to|own|owned|invested|rentals?|years?|\d+)\b/i.test(answer)) {
       scheduleClarification("Just to clarify: " + question.text); return;
@@ -1382,6 +1422,7 @@
     askQuestion(acknowledgement);
   }
   function showContact() {
+    if (state.profile.noContact) { requestContactPermission('contact'); return; }
     // The existing website receiver writes to the Living in Raleigh sheet.
     // Investor enquiries must never be sent there while a separate,
     // acknowledged investor receiver is not configured for this widget.
@@ -1626,6 +1667,19 @@
       message("Take care! If you have questions later, I'll be here.", false);
       return;
     }
+    if (state.profile.pendingContactPermission && !replaying) {
+      var permissionAction = state.profile.pendingContactPermission;
+      delete state.profile.pendingContactPermission;
+      if (/^(?:yes|yes please|i confirm|i agree|go ahead|you may|that's fine)[.!?]*$/i.test(value)) {
+        state.profile.noContact = false;
+        persist();
+        if (permissionAction === 'booking') startBooking(); else showContact();
+        return;
+      }
+      if (/^(?:no|no thanks|not yet|not now|cancel)[.!?]*$/i.test(value)) {
+        message("No problem. We can keep chatting without collecting your details.", false); return;
+      }
+    }
     if (state.profile.awaitingFirstName && !replaying) {
       state.profile.awaitingFirstName = false;
       if (!engine.declinesName(value)) {
@@ -1683,6 +1737,18 @@
       state.profile.introAsked = true;
       message("Of course. I'm Sam, and I'm happy to help with your questions without asking for your name.", false);
     }
+    if (state.profile.awaitingOriginState) {
+      var originCity = state.profile.awaitingOriginState;
+      if (/\b(?:rather not|prefer not|skip|don't want to share)\b/i.test(value)) {
+        delete state.profile.awaitingOriginState; state.profile.originDisambiguationDeclined = true; askQuestion("No problem."); return;
+      }
+      var originState = engine.resolveOrigin({type:'out',place:value.trim().replace(/[.!?]+$/, '')},config);
+      if (originState.stateCode) {
+        state.profile.facts.location = Object.assign({},originState,{city:originCity.toLowerCase()});
+        delete state.profile.awaitingOriginState; applyKnownFacts(); askQuestion("Got it—" + originCity + ", " + config.originStates[originState.stateCode] + "."); return;
+      }
+      if (!engine.asksQuestion(value)) { askQuestion(); return; }
+    }
     if (engine.declinesScheduling(value) && state.booking) {
       state.booking = null;
       message("Of course—we don't need to schedule anything.", false);
@@ -1691,6 +1757,11 @@
       return;
     }
     var correctedIntent = detectIntent(value);
+    if (state.intent === 'investing' && !state.profile.investmentSale && state.profile.facts.investmentSale && !state.booking) {
+      state.profile.investmentSale = true;
+      state.question = activeQuestions().findIndex(function (question) { return question.key === 'salePriority'; });
+      askQuestion(); return;
+    }
     if (engine.rentalOnly(value)) { explainRentalOnly(); return; }
     if (state.profile.rentalOnly && (!correctedIntent || correctedIntent.id === 'investing') && !/\b(?:invest|buy|purchase|own a rental|landlord)\b/i.test(value)) {
       message("I'm happy to answer general Raleigh questions. Our guides can help with getting to know the area, but we don't offer a rental search service.", false);
@@ -1704,7 +1775,19 @@
       startFlow(correctedIntent.id, true, correctedIntent.combined, value);
       return;
     }
-    if (engine.wantsBooking(value) && /^(?:let's|can we|could we|i want|i'd like|i would like|please|book|schedule|set up)\b|\bready to (?:book|schedule)\b/i.test(value)) state.profile.noScheduling = false;
+    if (engine.explicitBooking(value)) {
+      state.profile.noScheduling = false; state.profile.researchOnly = false; state.profile.informationOnly = false;
+    }
+    if (state.profile.informationOnly && (asksForBenjaminNumber(value) || asksForTeamMember(value)) && !engine.explicitBooking(value)) {
+      message("You can call or text the team at " + (config.benjaminDirectPhone || '919-737-7896') + ".", false); return;
+    }
+    if (/^(?:please\s+|yes[, ]+)?(?:contact me|have (?:someone|the team) (?:contact|call|text) me|send (?:a |the )?message)\b/i.test(value) && !engine.declinesContact(value)) {
+      state.profile.informationOnly = false; showContact(); return;
+    }
+    if (engine.researchOnly(value) || state.profile.noContact && /\b(?:question|guidance|information)\b/i.test(value) && !engine.explicitBooking(value) || state.profile.informationOnly && !engine.explicitBooking(value)) {
+      state.intent = correctedIntent ? correctedIntent.id : state.intent;
+      informationalReply(value); return;
+    }
     offerPreapprovalUpload();
     if (state.profile.browsingEnded) {
       state.profile.browsingEnded = false;

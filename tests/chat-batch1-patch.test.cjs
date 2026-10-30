@@ -5,8 +5,8 @@ const configScope={window:{}};vm.runInNewContext(fs.readFileSync(base+'assets/js
 const engine=require(base+'assets/js/raleigh-chat-engine.js');
 const boundaries=[...source.matchAll(/^  function ([\w]+)\(/gm)];
 const functions={};for(let i=0;i<boundaries.length;i++)functions[boundaries[i][1]]=source.slice(boundaries[i].index,i+1<boundaries.length?boundaries[i+1].index:source.length);
-const selected=['applyKnownFacts','knownAnswer','bookingPreferenceFromText','activeQuestions','detectIntent','startFlow','locationAcknowledgement','originLabel','askQuestion','answerAcknowledgement','explainRentalOnly','asksToRent','mentionsPrice','priceAmount','homeDetailCount','captureVisitorContext','markPreapproval','acceptAnswer','handleText','isQuestionPreamble','asksForBenjaminNumber','asksForTeamMember','asksToMeetNamedHost','requestedPerson'];
-function run(label,turns,setup){const messages=[],state={intent:null,combined:false,question:-1,answers:[],profile:{},memories:{},memoryProfiles:{},previousInput:'',ended:false};
+const selected=['informationalReply','requestContactPermission','applyKnownFacts','knownAnswer','bookingPreferenceFromText','activeQuestions','detectIntent','startFlow','locationAcknowledgement','originLabel','askQuestion','answerAcknowledgement','explainRentalOnly','asksToRent','mentionsPrice','priceAmount','homeDetailCount','captureVisitorContext','markPreapproval','acceptAnswer','handleText','isQuestionPreamble','asksForBenjaminNumber','asksForTeamMember','asksToMeetNamedHost','requestedPerson'];
+function run(label,turns,setup){const messages=[],state={intent:null,combined:false,question:-1,answers:[],profile:{},memories:{},memoryProfiles:{},previousInput:'',history:[],ended:false};
  const scope={engine,config:configScope.window.RaleighChatConfig,state,console,Date, input:{},sendButton:{},lastUserSentAt:0,window:{sessionStorage:{setItem(){}}}};
  for(const name of Object.keys(functions))scope[name]=()=>{};
  Object.assign(scope,{message:(text,user)=>{if(!user)messages.push(String(text));},link:(label)=>messages.push('[LINK] '+label),startBooking:value=>{state.booking={step:'choose'};messages.push('[SCHEDULING START] '+(value||''));},redact:text=>text,scheduleClarification:text=>messages.push('[CLARIFY] '+text),finishConversation:()=>{state.completed=true;}});
@@ -63,3 +63,5 @@ assert.equal(engine.detectLocation('I live in Chapel Hill.',configScope.window.R
 assert.equal(engine.extractFacts('What can $700k buy?',configScope.window.RaleighChatConfig,'buying').budget,undefined);
 if(process.argv.includes('--transcripts'))console.log(JSON.stringify({results,timing,classifications},null,2));
 else console.log('Batch 1 patch regressions pass: fact retention, explicit corrections, privacy/scheduling boundaries, rental exits, answer validation, area uncertainty, timing, and investing keyword variants. No booking or lead requests are executed.');
+
+module.exports={run,engine,config:configScope.window.RaleighChatConfig,functions};
