@@ -1,5 +1,47 @@
 // Raleigh chat conversation configuration. Update through the TEST branch chat workflow.
 window.RaleighChatConfig = {
+  "informationalAnswers": [
+    {
+      "pattern": "\\b(?:accessib\\w*|wheelchair|step[- ]free|mobility)\\b",
+      "answer": "For accessibility, compare the actual entry route, steps, doorway widths, bathroom layout, bedroom access, and any elevator or single-level needs. Listing labels alone may not tell you whether a home works for you. Write down the measurements and features you need so those can be checked on each property."
+    },
+    {
+      "pattern": "\\b(?:fixer|renovat\\w*|inspection|inspectors?|builder|new construction)\\b.{0,90}\\b(?:check|questions?|ask|compare|process|inspection|before|should|important)|\\b(?:what|how|which)\\b.{0,70}\\b(?:fixer|inspection|builder|new construction)\\b",
+      "answer": "For a fixer, start with the condition of major systems, repair scope, contractor estimates, and your contingency budget. For new construction, compare what is included, upgrade costs, contract terms, timing, warranties, and inspection opportunities. Ask an independent inspector about the appropriate checks for the specific property; I cannot assess a home's condition from chat."
+    },
+    {
+      "pattern": "\\b(?:valuation|value|worth|pricing|price)\\b.{0,65}\\b(?:process|determine|estimate|decide|calculate|compare)|\\b(?:how|what)\\b.{0,65}\\b(?:valuation|worth|price (?:a|my|our)|home value)\\b",
+      "answer": "A valuation compares recent closed sales of similar homes, then looks at differences in location, size, layout, condition, and features. Current competing listings and your timing also matter. An online estimate is a starting point; this chat cannot provide a reliable property-specific value."
+    },
+    {
+      "pattern": "\\b(?:records?|documents?|paperwork|maintenance information|preliminary steps)\\b",
+      "answer": "You can start with ownership and loan documents, any survey, repair and maintenance records, permits, warranties, and HOA documents if applicable. For a rental, also gather leases, rent and deposit records, and income and expense records. You can organize these without committing to a sale. Your CPA or closing attorney can tell you what is needed for your particular situation."
+    },
+    {
+      "pattern": "\\b(?:neutral|objective|framework|checklist|compar(?:e|ing|ison)|tradeoffs?)\\b.{0,90}\\b(?:areas?|places?|commute|price|cost|housing|parks?|grocer|neighborhood)|\\b(?:areas?|places?)\\b.{0,60}\\b(?:compar|criteria)\\w*",
+      "answer": "A useful neutral comparison starts with your total housing budget, the home types available, routes to work, and access to parks, groceries, and other amenities you use. Compare the same criteria for each area; try your commute at the times you would actually travel, and check the specific property's taxes, insurance, HOA fees, and maintenance needs. I can help you build that checklist without scheduling a call."
+    },
+    {
+      "pattern": "\\b(?:inherit(?:ed|ance)?|siblings?|estate|probate)\\b.{0,100}\\b(?:steps?|process|decid|sell|agree)|\\b(?:steps?|process)\\b.{0,60}\\b(?:inherit|estate|probate)",
+      "answer": "While you decide, gather the ownership documents and maintenance records, keep the property maintained, and write down each owner's goals and questions. An estate or closing attorney can clarify who has authority to sell and what approvals may be needed. You can gather information and compare options without agreeing to list the home."
+    },
+    {
+      "pattern": "\\b(?:sell|selling|sale|seller|list|listing)\\b.{0,70}\\b(?:process|steps?|prepare|preparation|costs?|fees)|\\b(?:process|steps?|prepare|preparation|costs?|fees)\\b.{0,70}\\b(?:sell|selling|sale|seller|list)",
+      "answer": "A sale usually starts with reviewing the property and your timing, comparing recent sales, and deciding what preparation makes sense. Then come pricing, listing, showings, reviewing offers, and the contract-to-closing steps. For costs, compare an itemized estimate that includes any agreed service fees, repairs or concessions, loan payoff, and closing expenses; the amounts depend on the property and agreement."
+    },
+    {
+      "pattern": "\\b(?:buy|buying|purchase|buyer)\\b.{0,65}\\b(?:process|steps?|prepare|costs?|fees)|\\b(?:process|steps?|costs?|fees)\\b.{0,65}\\b(?:buy|buying|purchase|buyer)",
+      "answer": "For a purchase, start with a comfortable total budget and financing or proof of funds, then narrow the location and home features. Next come the search, an offer, inspections and other contract deadlines, and closing. Ask for an itemized estimate of purchase and ongoing costs so you can compare homes on more than the asking price."
+    },
+    {
+      "pattern": "\\b(?:resources?|guides?|learn more|where can i read|website)\\b",
+      "answer": "Yes—our site has buying and relocation resources at /buy/, selling resources at /sell/, and investing resources at /invest/resources/. Which topic would be most useful to you?"
+    },
+    {
+      "pattern": "\\b(?:before|during|on|what happens|what.*expect)\\b.{0,65}\\b(?:call|meeting|consult)|\\b(?:call|meeting|consult)\\b.{0,60}\\b(?:prepare|involve|work|expect)",
+      "answer": "An exploration call is a chance to explain your goals, ask questions, and talk through timing and possible next steps with the team. You can keep it focused on the real estate logistics and do not need to discuss private personal circumstances."
+    }
+  ],
   "title": "Welcome to Living in Raleigh",
   "avatar": "/assets/images/chat/raleigh-guide-avatar.png",
   "welcome": "Thanks for checking out the website! Are you looking to buy or sell real estate in the Raleigh area?",

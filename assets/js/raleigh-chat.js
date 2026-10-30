@@ -584,6 +584,7 @@
   }
   function offeredBookingChoice(value, slots) {
     var text = String(value).toLowerCase();
+    if (/\b(?:different|other|alternative|neither|don't work|do not work|doesn't work|does not work|not (?:the )?(?:first|second))\b/.test(text)) return null;
     var clock = requestedClock(text);
     if (/\b(?:earlier|early)\b/.test(text)) return slots[0] || null;
     if (/\b(?:later|late)\b/.test(text)) return slots[1] || null;
@@ -735,7 +736,10 @@
     var first = !state.profile.informationalIntroShown;
     var faq = value && engine.findFaq(value, config);
     var flow = config.flows[state.intent];
-    if (faq && !/exploration call|book a call|schedule a call/i.test(faq.answer)) message(faq.answer, false);
+    var guidance = informationalGuidance(value);
+    if (value && (asksForBenjaminNumber(value) || asksForTeamMember(value))) message("You can call or text the team at " + (config.benjaminDirectPhone || '919-737-7896') + ".", false);
+    else if (guidance) message(guidance, false);
+    else if (faq && !/exploration call|book a call|schedule a call/i.test(faq.answer)) message(faq.answer, false);
     else if (value && /\b(?:home|house|property)\b.{0,30}\b(?:worth|value)\b/i.test(value))
       message("A useful home valuation needs property details and recent comparable sales. I can't give you a reliable price in this chat.", false);
     else message(first ? "That's completely fine—we can keep this informational. You don't need to schedule a call or share contact details. What would you like to know?" :
@@ -744,6 +748,13 @@
     state.profile.informationalIntroShown = true;
     finishConversation();
     persist();
+  }
+  function informationalGuidance(value) {
+    var text = String(value || '').toLowerCase();
+    var answer = (config.informationalAnswers || []).find(function (item) {
+      return new RegExp(item.pattern, 'i').test(text);
+    });
+    return answer ? answer.answer : '';
   }
   function startBooking(request) {
     if (state.profile.noScheduling || state.profile.researchOnly) {
@@ -802,8 +813,9 @@
     var booking = state.booking;
     if (/\b(video|zoom|meet|virtual)\b/i.test(value)) booking.details.callType = "video";
     else if (/\b(phone|telephone|call me)\b/i.test(value)) booking.details.callType = "phone";
-    if (/^(cancel|stop|never mind)$/i.test(value)) {
+    if (engine.cancelsScheduling(value) || engine.declinesScheduling(value)) {
       state.booking = null;
+      state.profile.noScheduling = true;
       message("No call was booked. What else can I help with?", false);
       return;
     }
@@ -830,7 +842,7 @@
         message("I can't guarantee a specific team member from chat yet. Please call 919-737-7896 if you'd like to meet with Benjamin or Ricardo.", false);
         return;
       }
-      if (/^(more|more times|other times|another time|different time)$/i.test(value)) {
+      if (/\b(?:more|other|another|different|alternative)\s+(?:times?|options?|slots?|openings?)\b/i.test(value) || /^more[.!?]*$/i.test(value) || /\b(?:neither|those (?:two )?(?:don't|do not) work)\b/i.test(value)) {
         booking.offset = booking.offset + 2 < booking.allSlots.length ? booking.offset + 2 : 0;
         showBookingPair();
         return;
@@ -1048,7 +1060,8 @@
       if (state.profile.noScheduling || state.profile.researchOnly) { informationalReply(); return; }
       var sellerSummer = state.intent === "selling" && /\bnext summer\b/i.test(state.profile.targetTiming || "");
       var buyerSummer = /^(buying|relocating)$/.test(state.intent) && /\bsummer\b/i.test(state.profile.targetTiming || "");
-      message(state.profile.shortTiming ? "Well, great. Based on that timing, we should absolutely set up an exploration call with the team to help build you a game plan around your move." : sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish, false);
+      var finish = state.profile.sellThenRent ? "An exploration call can help plan your sale and the transition to renting. We can keep the discussion focused on sale logistics." : state.profile.sensitiveMove ? "We can keep personal details private. An exploration call can focus on the sale logistics and timing you want help with." : state.profile.shortTiming ? "Well, great. Based on that timing, we should absolutely set up an exploration call with the team to help build you a game plan around your move." : sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish;
+      message(finish, false);
       if (flow.booking === "general") startBooking();
       else link("Book an investing exploration call", config.bookingLinks.investing);
       return;
@@ -1097,6 +1110,7 @@
     message((prefix ? prefix + " " : "") + personal + wording, false);
   }
   function answerAcknowledgement(question, answer) {
+    if (state.profile.sensitiveMove) return /^(?:timing|nextDestination|whySell|whySellSolo|ownedYears|timingReason)$/.test(question && question.key) ? "Understood." : "Got it.";
     if (!question) return "Got it.";
     var text = String(answer || "").toLowerCase();
     switch (question.key) {
@@ -1180,6 +1194,9 @@
     var detected = engine.detectIntent(text, config);
     var facts = engine.extractFacts(text, config, state.intent || detected && detected.id, current && current.key);
     state.profile.facts = Object.assign({}, state.profile.facts || {}, facts);
+    if (facts.budget) state.profile.priorityBudgetAmount = priceAmount(facts.budget);
+    if (facts.sellThenRent) state.profile.sellThenRent = true;
+    if (/\b(?:divorce|separat(?:ion|ing|ed)|bereavement|death|died|illness|terminal)\b/i.test(text)) state.profile.sensitiveMove = true;
     if (engine.declinesScheduling(text)) state.profile.noScheduling = true;
     if (engine.declinesContact(text)) { state.profile.noContact = true; state.profile.skipName = true; }
     if (engine.researchOnly(text)) { state.profile.researchOnly = true; state.profile.noScheduling = true; state.profile.skipName = true; }
@@ -1396,7 +1413,7 @@
       state.profile.homeSingle = !state.profile.homeDetailsGiven && homeDetailCount(answer) < 2 && !/,|;|\band\b|\bplus\b|&/i.test(answer);
     }
     if (question && question.key === "homeMore") state.profile.homeSingle = false;
-    if (question && question.key === "budget" && /^(buying|relocating)$/.test(state.intent)) {
+    if (question && question.key === "budget") {
       state.profile.budgetAsked = true;
       state.profile.budgetKnown = !/\b(?:not sure|don't know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);
     }
@@ -1571,6 +1588,7 @@
     if (person === "Benjamin") message("Benjamin's direct call and text line is " + config.benjaminDirectPhone + ". You can call or text him anytime.", false);
     else if (person === "Ricardo") message("You can reach Ricardo through the Living in Raleigh team line at 919-737-7896. You can call or text us there.", false);
     else if (humanRequest) message("Absolutely. You can call or text the Living in Raleigh team at 919-737-7896.", false);
+    else if (informationalGuidance(value)) message(informationalGuidance(value), false);
     else if (faq) message(faq.answer, false);
     else message(config.unknownQuestion || "That's a great question for the team to cover on your call.", false);
     if (humanRequest) {
@@ -1641,7 +1659,7 @@
         sendButton.disabled = true;
         message(config.safetyEnd || "I'm going to end this conversation for now.", false, { remember: false });
       } else if (safety === "discrimination") {
-        message("I can compare areas by budget, commute, homes, and amenities. " + (state.intent && state.question < activeQuestions().length ? activeQuestions()[state.question].text : config.safetyWarning), false, { remember: false });
+        message("I can't help choose neighborhoods by race, religion, or who lives there. I can help compare housing cost, home types, commute routes, parks, and shopping. Which of those would you like to compare?", false, { remember: false });
       } else if (safety === "gibberish") {
         message("Sorry, I don't quite understand.", false, { remember: false });
         if (state.profile.awaitingFirstName) message("May I have your first name? You can also say no thanks.", false, { remember: false });
@@ -1655,7 +1673,7 @@
       message(value, true, { remember: !state.contact && !contactCommand });
       sound();
     }
-    if (/^(?:good\s?bye|goodye|goodby|bye|see (?:you|ya)|gotta go|have to go|talk later)\s*[.!?]*$/i.test(value)) {
+    if (/^(?:good\s?bye|goodye|goodby|bye|see (?:you|ya)|gotta go|have to go|talk later|thanks[,. ]+(?:that's|that is) all(?: for now)?)\s*[.!?]*$/i.test(value)) {
       state.booking = null;
       state.contact = null;
       state.intent = null;
@@ -1665,6 +1683,49 @@
       state.profile.browsingEnded = true;
       finishConversation();
       message("Take care! If you have questions later, I'll be here.", false);
+      return;
+    }
+    // Boundaries and changed consent apply before name collection or time parsing.
+    // Clearing a draft never cancels an existing Calendar appointment.
+    if (engine.cancelsScheduling(value) || engine.declinesScheduling(value) || engine.declinesContact(value)) {
+      state.booking = null;
+      state.contact = null;
+      state.profile.awaitingFirstName = false;
+      delete state.profile.pendingIntroReply;
+      delete state.profile.pendingContactPermission;
+      state.intent = state.intent || (detectIntent(value) || {}).id || null;
+      informationalReply(value);
+      return;
+    }
+    if (engine.explicitBooking(value)) {
+      state.profile.noScheduling = false;
+      state.profile.researchOnly = false;
+      state.profile.informationOnly = false;
+      state.profile.awaitingFirstName = false;
+      delete state.profile.pendingIntroReply;
+    }
+    if (engine.researchOnly(value) || state.profile.informationOnly && !engine.explicitBooking(value)) {
+      state.intent = state.intent || (detectIntent(value) || {}).id || null;
+      informationalReply(value);
+      return;
+    }
+    if (engine.explicitBooking(value) && !state.booking && !state.contact) {
+      var bookingIntent = detectIntent(value);
+      if (bookingIntent) state.intent = bookingIntent.id;
+      state.profile.introAsked = true;
+      startBooking(value);
+      return;
+    }
+    if (state.intent === 'selling' && state.profile.sellThenRent && state.combined) {
+      state.combined = false;
+      state.question = 0;
+      askQuestion("Got it—we'll focus on your sale and the transition to renting, without planning a purchase.");
+      return;
+    }
+    var earlyGuidance = (engine.asksQuestion(value) || /\b(?:give me|show me|could you|can you|please explain)\b/i.test(value)) && informationalGuidance(value);
+    if (earlyGuidance && !state.booking && !engine.explicitBooking(value)) {
+      message(earlyGuidance, false);
+      if (state.intent && !state.profile.awaitingFirstName) askQuestion();
       return;
     }
     if (state.profile.pendingContactPermission && !replaying) {

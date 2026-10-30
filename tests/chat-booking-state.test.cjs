@@ -32,7 +32,7 @@ function harness(options={}){
    return Promise.reject(new Error('Unexpected mocked booking method: '+method));
  };
  const blocked=()=>{throw new Error('ISOLATION FAILURE: unmocked external side effect attempted');};
- const context={config,state,Date,Intl,console,attachment:null,attachmentInput:{value:''},input:{},sendButton:{},
+ const context={engine:require(repo+'/assets/js/raleigh-chat-engine.js'),config,state,Date,Intl,console,attachment:null,attachmentInput:{value:''},input:{},sendButton:{},
    persist(){},message:t=>messages.push(String(t)),link:(label,href)=>messages.push(`[LINK] ${label} -> ${href}`),bookingCall:fakeBookingCall,
    trackConversation:name=>analytics.push(name),submitBookingAttachment:blocked,showAttachment(){},
    finishConversation(){state.ended=true;},fetch:blocked,XMLHttpRequest:blocked,WebSocket:blocked,EventSource:blocked,

@@ -92,7 +92,7 @@ function runBookingAnswer(value, slots = [thursday, friday]) {
   const calls = [];
   const messages = [];
   const booking = { step: 'choose', slots, allSlots: slots, preference: { host: '', daypart: '', weekdays: [], date: '' }, details: {} };
-  const context = { state: { booking }, config: { chatRoundRobinBookingEnabled: true, chatVideoBookingEnabled: true,
+  const context = { engine: require('../assets/js/raleigh-chat-engine.js'), state: { booking, profile: {} }, config: { chatRoundRobinBookingEnabled: true, chatVideoBookingEnabled: true,
     bookingEmailPrompt: 'What is your email?' }, bookingPreferenceFromText: parse,
     hasBookingPreference: has, offeredBookingChoice: choose, requestedClock: vm.runInNewContext(code + '\nrequestedClock'),
     normalizeSuggestedTime: normalize, bookingDayKey: dayKey, bookingLabel: start => start,

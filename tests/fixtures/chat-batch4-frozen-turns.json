@@ -1,0 +1,842 @@
+[
+  {
+    "id": "B01",
+    "turns": [
+      "Hi, I rent in Durham and want to buy my first townhouse in Cary next spring. My lease ends in April.",
+      "Jamie",
+      "Cary keeps my commute under about 35 minutes, and I like the parks and greenways.",
+      "Three bedrooms and a small yard, without major repairs right away.",
+      "Around $550,000.",
+      "Financing, and I'm already pre-approved.",
+      "Thursday at 1 PM.",
+      "Phone, please.",
+      "jamie.b01@example.com",
+      "919-555-0101",
+      "Jamie Morgan",
+      "skip"
+    ]
+  },
+  {
+    "id": "B02",
+    "turns": [
+      "We're relocating from Chicago for my partner's job at RTP, and we're hoping to find a four-bedroom home around Apex.",
+      "Maya",
+      "The job starts in August, and we'd like to move in about nine months if possible.",
+      "We're renting, so there's no home to sell.",
+      "Four bedrooms for us and our two kids, a safe yard, and easy access to greenways. We'd rather avoid a major renovation.",
+      "Apex is our starting point, but I'm open to nearby areas if the RTP commute is reasonable. How would you compare them?",
+      "Apex, ideally within about 30 minutes of RTP during normal commute hours.",
+      "A small office would help, but the four bedrooms, yard, and move-in-ready condition are the priorities.",
+      "Around $800,000, with some flexibility for the right fit.",
+      "We'll use financing—there isn't a current home sale since we're renting.",
+      "Not yet. We're starting that process now.",
+      "Neither is ideal. Do you have anything Saturday morning instead?",
+      "Okay, I'll take Thursday at 1 PM.",
+      "maya.b02@example.com",
+      "919-555-0102",
+      "Maya Chen",
+      "skip"
+    ]
+  },
+  {
+    "id": "B03",
+    "turns": [
+      "I already own in Raleigh, and I'm looking to buy a low-maintenance two-bedroom condo downtown for cash, ideally under $500,000.",
+      "Alex",
+      "I'm already local in Raleigh.",
+      "I own my current home.",
+      "No, I don't need to sell it for this purchase.",
+      "Downtown Raleigh, because I want to be able to walk to restaurants and events.",
+      "Two bedrooms, an elevator, and low maintenance. I don't need a yard.",
+      "Cash, as I mentioned at the start. I won't need financing.",
+      "No lender is involved—this is a cash purchase.",
+      "Within about six months.",
+      "Friday at 5 PM works.",
+      "Phone, please.",
+      "alex.b03@example.com",
+      "919-555-0103",
+      "Alex Rivera",
+      "skip"
+    ]
+  },
+  {
+    "id": "B04",
+    "turns": [
+      "I'm moving from Seattle for medical training at Duke in about fourteen months. I need three bedrooms, a fenced yard, and I'd like to stay under $650,000.",
+      "No thanks, not yet.",
+      "No thanks.",
+      "The program begins in January, so the fourteen-month window gives me time to plan.",
+      "I'm renting in Seattle, so I don't need to sell anything.",
+      "Three bedrooms, a fenced yard, and no major renovation. Which Durham-side areas would keep my Duke commute under about 30 minutes?",
+      "I'll be commuting to Duke University Hospital. Thirty minutes or less is ideal, along with the three bedrooms and fenced yard.",
+      "Ideal is 20 minutes; 30 minutes is my maximum.",
+      "I don't know the area well yet. I'd like help comparing Durham, Morrisville, and northwest Raleigh based on that commute.",
+      "Financing. I'm renting now, so there won't be proceeds from a home sale.",
+      "I'm looking to buy, not rent. I just happen to be a renter in Seattle now.",
+      "About fourteen months from now, before the program starts.",
+      "It isn't immediate; I have fourteen months. I want enough time to learn the area and close before training begins.",
+      "Friday at 5 PM works.",
+      "Phone, please.",
+      "taylor.b04@example.com",
+      "919-555-0104",
+      "Taylor Brooks",
+      "skip"
+    ]
+  },
+  {
+    "id": "B05",
+    "turns": [
+      "I'm a remote worker in Maryland looking into Wake Forest. I need reliable fiber, a home office, and a quiet street, but I'm still figuring out whether I'm ready.",
+      "Rowan",
+      "Buy, if Wake Forest seems like a good fit.",
+      "I'm moving from Maryland.",
+      "I can work from anywhere and want more space and a quieter pace than I have now.",
+      "A dedicated office, verified fiber service, and a quiet street. I'm flexible on the rest.",
+      "Wake Forest is the main place I'm considering.",
+      "The larger lots and quieter feel, while still being close enough to Raleigh.",
+      "No, those are the essentials for now.",
+      "Probably around $500,000, but I'm still learning what's realistic.",
+      "Financing, though I haven't applied yet.",
+      "No, not yet.",
+      "Maybe within a year, but the timing is flexible.",
+      "Neither—I was only checking availability, so please cancel for now.",
+      "Cancel.",
+      "cancel"
+    ]
+  },
+  {
+    "id": "B06",
+    "turns": [
+      "My spouse and I are retiring from New Jersey and want a one-level, step-free home near Raleigh for under $475,000, ideally within a year.",
+      "Elaine",
+      "Buy a home for our retirement.",
+      "One-level living, step-free entry, wide doorways if possible, and low maintenance.",
+      "We're open. Somewhere near Raleigh with convenient shopping and healthcare, but we don't want demographic steering.",
+      "We'll use financing and keep the purchase under $475,000.",
+      "Not yet; we'd appreciate a local lender introduction.",
+      "Thursday at 1 PM works.",
+      "Phone, please.",
+      "elaine.b06@example.com",
+      "919-555-0106",
+      "Elaine Harper",
+      "skip"
+    ]
+  },
+  {
+    "id": "B07",
+    "turns": [
+      "I'm moving from Ohio to Holly Springs in about six months to be near family in Cary. I'm already pre-approved up to $600,000.",
+      "Chris",
+      "Three bedrooms, a yard, and a straightforward drive to Cary are most important.",
+      "Holly Springs is my first choice.",
+      "It keeps me close to my family in Cary while still giving me more space.",
+      "No, those are the main things.",
+      "Thursday at 1 PM.",
+      "Phone, please.",
+      "chris.b07@example.com",
+      "919-555-0107",
+      "Chris Patel",
+      "skip"
+    ]
+  },
+  {
+    "id": "B08",
+    "turns": [
+      "I'm local and comparing accessible homes in Apex—one level, wide doors, and step-free entry. I'm only researching, so please don't schedule anything or ask for contact details.",
+      "When I'm evaluating a listing, what should I verify to make sure 'accessible' actually means step-free entry and usable door widths?",
+      "Buy, eventually. For now I only want guidance and no scheduling.",
+      "I live in Raleigh.",
+      "I'm renting.",
+      "Yes, my first purchase.",
+      "Next December, so there's no urgency.",
+      "Apex.",
+      "It's close to work and the services I use.",
+      "One level, step-free entry, and doorways wide enough for mobility equipment.",
+      "I haven't set a firm budget yet; I'm trying to understand the options first.",
+      "Around next December, but again, I don't want to schedule a call.",
+      "It isn't quick—it's more than a year away. The timing is flexible, and I'm only researching."
+    ]
+  },
+  {
+    "id": "B09",
+    "turns": [
+      "I'm local in Raleigh and looking to buy a three-bedroom home. My budget is around $700,000.",
+      "Devon",
+      "I'm renting.",
+      "No, I've bought before.",
+      "My lease ends in June.",
+      "North Raleigh or Cary. Also, I need to correct what I said earlier: my real ceiling is $500,000, not $700,000.",
+      "They both work for my commute and have the kind of established neighborhoods I like.",
+      "Three bedrooms and a fenced yard. Nothing too large.",
+      "Financing; I'm pre-approved.",
+      "By June, before the lease ends.",
+      "Friday at 5 PM.",
+      "Phone, please.",
+      "devon.b09@example.com",
+      "919-555-0109",
+      "Devon Lee",
+      "skip"
+    ]
+  },
+  {
+    "id": "B10",
+    "turns": [
+      "I'm relocating from Ohio to the Raleigh area to be closer to family, with a budget around $525,000.",
+      "Morgan",
+      "They're in Cary. And sorry—I misspoke earlier: I'm actually moving from Boise, Idaho, not Ohio.",
+      "I'm renting in Boise, so there's nothing to sell.",
+      "Three bedrooms, a modest yard, and an easy drive to Cary.",
+      "Cary or Apex, depending on what fits the $525,000 budget.",
+      "Being close to my family and having reasonable access to Raleigh.",
+      "No, that's enough to start.",
+      "Financing. As I said, I'm renting, so there isn't a current-home sale.",
+      "Not yet.",
+      "Around nine months from now.",
+      "I can't commit to either yet. cancel",
+      "cancel"
+    ]
+  },
+  {
+    "id": "B11",
+    "turns": [
+      "I'm moving from Portland and starting to look around Raleigh for a home, though I'm just browsing for now.",
+      "Thanks. I'm in Portland, OregonΓÇönot MaineΓÇöand family in Cary is the draw. What should I think about if the move is probably next year?",
+      "Portland, Oregon. I did mention Oregon in my last message.",
+      "Oregon."
+    ]
+  },
+  {
+    "id": "B12",
+    "turns": [
+      "I'm local and thinking about buying in Cary next year, probably around a $650,000 budget.",
+      "Avery",
+      "I'm in Raleigh.",
+      "Renting at the moment.",
+      "Yes, first purchase.",
+      "It runs through next June.",
+      "Actually, after comparing them, Apex has replaced Cary for me. The commute and parks fit better.",
+      "Just Raleigh—I'm staying local.",
+      "Buy only.",
+      "Apex gives me the commute and park access I'm after.",
+      "Three bedrooms, a small yard, and nothing needing major renovation.",
+      "Financing, and I haven't been pre-approved yet.",
+      "No, not yet—that's what I just meant.",
+      "Thursday at 1 PM works.",
+      "Phone, please.",
+      "avery.b12@example.com",
+      "919-555-1212",
+      "Avery Testperson",
+      "Please remember Apex replaced Cary as my preference."
+    ]
+  },
+  {
+    "id": "B13",
+    "turns": [
+      "We're renting in Chicago, our lease ends in July, and my partner starts an RTP job. We need four bedrooms near greenways, around $800k, with a commute under 40 minutes.",
+      "Jordan",
+      "The RTP job I mentioned is the reason.",
+      "As I said, four bedrooms near greenways matter most, and we need to keep the commute under 40 minutes.",
+      "To RTP.",
+      "We're flexible—Cary, Morrisville, or nearby areas that fit that commute and greenway access.",
+      "A modest yard and no major renovation project would be ideal.",
+      "We'll finance, and we're already pre-approved.",
+      "By July, when our lease ends.",
+      "Friday at 5 PM.",
+      "Phone call, please.",
+      "jordan.b13@example.com",
+      "919-555-1313",
+      "Jordan Example",
+      "Please plan around RTP access, greenways, and the 40-minute maximum commute."
+    ]
+  },
+  {
+    "id": "B14",
+    "turns": [
+      "I live in Durham and want to buy near Raleigh for the first time, probably under $450k. Also, is it going to rain tomorrow?",
+      "Casey",
+      "Fair enough. Let's stick to buying—what else do you need to know?",
+      "Renting.",
+      "Yes—like I mentioned, first-time buyer.",
+      "December.",
+      "I haven't picked one yet. I care about a manageable commute into Raleigh and decent value.",
+      "Two bedrooms, a small office, and low maintenance.",
+      "Under $450,000, as I said at the start.",
+      "Financing, not pre-approved yet.",
+      "No, not yet.",
+      "Ideally before my lease ends in December.",
+      "I want to avoid renewing the lease or paying for two places.",
+      "Neither—I'm not ready to schedule. Please cancel."
+    ]
+  },
+  {
+    "id": "B15",
+    "turns": [
+      "I'm local and researching a fixer in Knightdale for maybe next year. I don't want to give a name or contact info, and please don't schedule anything. What due diligence matters most?",
+      "No thanks. As I said, no name or contact details. Can you answer the due-diligence question?",
+      "No thanks.",
+      "Buy a fixer in Knightdale, just researching.",
+      "Before I go: what inspections or specialist evaluations are especially important for a fixer?"
+    ]
+  },
+  {
+    "id": "B16",
+    "turns": [
+      "I'm in Virginia and comparing Apex for a move next year. I only want general commute and cost guidance—no name, contact details, or scheduling.",
+      "No thanks.",
+      "A job near RTP and a lower housing cost than where I am now.",
+      "Renting.",
+      "A manageable RTP commute, predictable ownership costs, and a quiet neighborhood.",
+      "RTP, as I mentioned.",
+      "About 25 minutes ideally, 40 at the absolute maximum.",
+      "Apex is the main place I'm comparing.",
+      "The RTP access and what appears to be a reasonable balance of price and amenities.",
+      "Three bedrooms, low maintenance, and no major repairs.",
+      "Around $550,000.",
+      "Financing, but I only want general guidance here—still no contact details or call.",
+      "Neither. I explicitly said no scheduling; cancel this."
+    ]
+  },
+  {
+    "id": "B17",
+    "turns": [
+      "Local buyer. Apex townhome under $450k. Anonymous, no calls or scheduling. What should I watch for with townhome HOAs?",
+      "No thanks.",
+      "Raleigh.",
+      "Renting.",
+      "Yes.",
+      "June.",
+      "Apex.",
+      "Commute and parks.",
+      "A townhome under $450k. My main question is what to review in the HOA documents.",
+      "No. Please answer the HOA-document question, then I'm done."
+    ]
+  },
+  {
+    "id": "B18",
+    "turns": [
+      "I rent in Raleigh and want a two-bedroom downtown condo, probably cash, in about nine months. I may not be ready to schedule yet.",
+      "Taylor",
+      "Buy the condo I mentioned.",
+      "Yes.",
+      "June.",
+      "Downtown Raleigh.",
+      "Walkability and being close to restaurants.",
+      "Low-maintenance building and reasonable HOA dues.",
+      "Under $500,000.",
+      "Cash.",
+      "I've changed my mind—please show me the available call times."
+    ]
+  },
+  {
+    "id": "B19",
+    "turns": [
+      "I'm a first-time buyer renting locally, looking for a three-bedroom Cary townhouse near a short commute. My lease ends in February, budget about $525k, and I'd like a video call.",
+      "Morgan",
+      "Friday at 5 PM works.",
+      "morgan-at-example.com",
+      "Sorry—morgan.b19@example.com",
+      "919-555-1919",
+      "Morgan Example",
+      "First-time buyer; Cary townhouse, three bedrooms, short commute, $525k, lease ends February."
+    ]
+  },
+  {
+    "id": "B20",
+    "turns": [
+      "I'm in Delaware, work remotely, and may buy near Raleigh around $500k. I have no area preference yet—can you give me a neutral framework for comparing places? I'm browsing, not scheduling.",
+      "No thanks.",
+      "Remote work gives me flexibility, and I'm comparing cost, pace, and access to amenities.",
+      "Reliable internet, grocery access, green space, and reasonable insurance and tax costs. I don't need to commute.",
+      "I don't have an area yet—that's why I'm asking for comparison criteria rather than a recommendation.",
+      "Three bedrooms, a home office, and a modest yard.",
+      "About $500,000, which I included in my first message.",
+      "Financing, but I'm not ready for lender referrals or a call.",
+      "Neither. I said I am only browsing and don't want a call."
+    ]
+  },
+  {
+    "id": "B21",
+    "turns": [
+      "We’re relocating from Boston next summer for my job transfer. We have two kids and hope to find a four-bedroom home with a yard around $750,000, but I’m still trying to understand the commute tradeoffs.",
+      "Sure, call me Maya.",
+      "Maya",
+      "My office will be in Research Triangle Park, although I’ll work from home two days a week.",
+      "I start July 15, so we’d like to be settled before school starts if possible.",
+      "We’re renting in Boston; we don’t have a home to sell. And just to clarify, ‘two days a week’ referred to remote work, not a place.",
+      "Four bedrooms and a usable yard are the priorities. For location, I’d rather compare commute times to RTP and access to parks than rely on school rankings.",
+      "We’re looking at Cary, Apex, and Morrisville, but we’re open if another area keeps the RTP commute reasonable.",
+      "A fenced or fenceable yard, a small home office, and no major renovation project right after moving.",
+      "We’ll use financing; there isn’t a current home sale involved.",
+      "Not yet. We’ve only had an initial conversation with our bank.",
+      "Friday at 5:00 PM works better for us.",
+      "Phone, please.",
+      "maya.b21@example.com",
+      "919-555-2101",
+      "Maya Carter",
+      "We’d like help comparing RTP commute tradeoffs among Cary, Apex, and Morrisville without relying on school ratings."
+    ]
+  },
+  {
+    "id": "B22",
+    "turns": [
+      "I rent in Chapel Hill and I’m hoping to buy my first small house somewhere near Durham. I’m worried that my roughly $400,000 budget may not stretch far enough.",
+      "Jordan",
+      "Yes, this would be my first purchase.",
+      "It ends at the end of May, so I have about seven months.",
+      "I work in Durham and want to keep the commute manageable while staying close to the friends I already have here.",
+      "A modest single-family home with two or three bedrooms, sound structure, and low enough upkeep for one person.",
+      "Financing. I’ve saved a down payment, but I’m not a cash buyer.",
+      "I have a preliminary pre-approval up to $400,000, although I’d rather not use every dollar of it.",
+      "Thursday at 1:00 PM would work.",
+      "A phone call would be easier.",
+      "jordan.b22@example.com",
+      "919-555-2202",
+      "Jordan Ellis",
+      "Please focus on realistic options below my maximum budget and first-time-buyer steps."
+    ]
+  },
+  {
+    "id": "B23",
+    "turns": [
+      "I’m researching new construction in Rolesville for a move about four months from now. Three bedrooms would be enough. Evenings would be easier if we talk later, but please don’t schedule anything yet—I only want builder due-diligence guidance today.",
+      "No thanks; I’d rather stay anonymous while I research.",
+      "What should I verify about a builder’s warranty, inspection rights, and incentives before signing a new-construction contract?",
+      "Buying. The goal is a new three-bedroom home in Rolesville in roughly four months.",
+      "I’m already local; I’m not moving from a place called Now. I’m simply ready to buy rather than continue renting.",
+      "Rolesville is the focus, though nearby options would be fine if the builder and contract terms are stronger.",
+      "The newer communities and relative value compared with places closer to central Raleigh.",
+      "Energy efficiency, a usable kitchen, and the right to bring in my own inspector before closing.",
+      "Ideally under $500,000, but I’m still confirming the financing side.",
+      "Financing, but I haven’t selected a lender yet.",
+      "Not pre-approved yet. I’m comparing lenders first.",
+      "Thanks, that’s enough for today. Please keep this informational and don’t schedule or collect contact details."
+    ]
+  },
+  {
+    "id": "B24",
+    "turns": [
+      "I was torn between buying a rental and a condo for myself, but I’ve decided clearly: I want a primary residence, not an investment. I’m moving from Virginia, looking for a Raleigh condo around $300,000.",
+      "No thanks.",
+      "A new job and wanting a smaller, lower-maintenance place of my own.",
+      "A one- or two-bedroom condo with manageable HOA fees, parking, and no investment or rental use.",
+      "Downtown Raleigh or somewhere just outside downtown with an easy commute.",
+      "Good natural light and a building with clear reserves and sensible HOA rules.",
+      "Financing, with about 15 percent down.",
+      "Yes, pre-approved to $300,000.",
+      "Within about six months, but I can be flexible for the right place.",
+      "Neither works, and I don’t want to book right now. Please cancel the scheduling step."
+    ]
+  },
+  {
+    "id": "B25",
+    "turns": [
+      "asdf qqq ???",
+      "Sorry, that was accidental typing. No name needed. I live locally and want basic guidance on buying a starter home, but I don’t know my budget yet and I’m not ready to schedule.",
+      "No thanks.",
+      "Buy. I’m a local renter looking for a starter home, but I’m only learning the process today.",
+      "I rent in Raleigh.",
+      "Yes. What are the first few steps before I start touring homes?",
+      "Yes, this would be my first home purchase.",
+      "In about ten months, so this is early research rather than an urgent search.",
+      "Not yet. I need to understand my budget and commute before narrowing neighborhoods.",
+      "Two bedrooms, manageable maintenance, and no major repairs right away.",
+      "I genuinely don’t know yet; figuring out an affordable payment is the next step.",
+      "Thanks. I’ll work out a payment range before going further, and I don’t want to schedule anything today."
+    ]
+  },
+  {
+    "id": "S01",
+    "turns": [
+      "I accepted a job in Charlotte and need to sell my Cary townhouse in about four months. I’ve owned it five years, and this will be my first sale. What should I prepare before talking with an agent?",
+      "Elena",
+      "The new Charlotte job means I’ll be relocating, so keeping the townhouse doesn’t make sense.",
+      "Thursday at 1:00 PM works.",
+      "Phone, please.",
+      "elena.s01@example.com",
+      "919-555-3101",
+      "Elena Brooks",
+      "Please explain what documents, repairs, and timeline decisions I should prepare for a first sale."
+    ]
+  },
+  {
+    "id": "S02",
+    "turns": [
+      "We’ve owned our four-bedroom home in Apex for nine years and are thinking of downsizing to a one-level place next year. I’m uncertain whether we should sell before buying.",
+      "Robert",
+      "Nine years—we bought it in 2017.",
+      "We’d like to stay in the Apex or Cary area, just in a smaller one-level home.",
+      "Our friends, doctors, and routines are already here, so we don’t want a major geographic move.",
+      "Everything on one level, less yard work, and enough room for guests without four full bedrooms.",
+      "Probably around $550,000, depending on what our current home nets.",
+      "We sold one home before buying this one, but it’s been a long time.",
+      "Friday at 5:00 PM is good.",
+      "Phone would be best.",
+      "robert.s02@example.com",
+      "919-555-3202",
+      "Robert Hale",
+      "We need help deciding whether to sell first or make an offer contingent on the sale."
+    ]
+  },
+  {
+    "id": "S03",
+    "turns": [
+      "need 2 sell my moms old place in zebulon. inherited it recent, its empty, thinkin maybe six months. never sold a house b4 and im not buyin another one.",
+      "Marcus",
+      "the property im selling is a vacant house in Zebulon. I inherited it from my mom recently.",
+      "only a few months since the estate got settled.",
+      "nobody in family needs it and I dont want an empty house to maintain.",
+      "nowhere. this isnt my home and im not buying another property.",
+      "Thursday 1 PM. but again, this is only about selling the inherited house.",
+      "phone",
+      "marcus.s03@example.com",
+      "919-555-3303",
+      "Marcus Reed",
+      "vacant inherited house, first sale, no next purchase"
+    ]
+  },
+  {
+    "id": "S04",
+    "turns": [
+      "I own a paid-off duplex in Garner and may sell in about a year after nine years of landlording. I’m leaving the rental business. I won’t provide my name, phone, email, or book online, but what records should I gather for a CPA and eventual sale? I’m not asking you for tax advice.",
+      "No thanks, as I mentioned I’m staying anonymous.",
+      "No thanks.",
+      "I’m ready to leave landlording and simplify, but I’m only planning at this stage.",
+      "I’m staying in my current primary home; there is no next purchase.",
+      "I’ve sold before.",
+      "Neither. Cancel that—my first message explicitly said no booking and no contact collection."
+    ]
+  },
+  {
+    "id": "S05",
+    "turns": [
+      "We need to sell our Raleigh home before buying a four-bedroom place in Wendell, ideally within six months. The sale has to come first, and I need help sequencing both sides without overextending.",
+      "Priya",
+      "We need more space, and Wendell seems to offer more four-bedroom options within our range.",
+      "Six years.",
+      "Wendell, preferably a four-bedroom home with a yard.",
+      "More space for the money and a quieter setting, while still being within reach of Raleigh.",
+      "A true fourth bedroom, a larger kitchen, and a yard with room for the kids.",
+      "Up to about $600,000, but only if the sale proceeds support it.",
+      "This would be our first sale.",
+      "Friday at 5 PM works.",
+      "Phone, please.",
+      "priya.s05@example.com",
+      "919-555-3505",
+      "Priya Shah",
+      "The Raleigh sale must come first; please focus on safe sequencing before discussing Wendell offers."
+    ]
+  },
+  {
+    "id": "M01",
+    "turns": [
+      "I own a townhouse in Cary and need to sell it before my family can buy something larger around Raleigh. We're hoping to make both moves within about six months. What's the best way to sequence that?",
+      "You can call me Morgan.",
+      "Morgan.",
+      "We need more space, and selling the Cary townhouse first will fund the down payment on the next home.",
+      "Five years.",
+      "Somewhere around Raleigh with more room—Cary or Apex would work if the numbers and timing line up.",
+      "We know the area, like the schools and parks, and it would keep our routines stable while giving us more space.",
+      "Four bedrooms, a dedicated office, and a usable yard. The townhouse feels cramped now.",
+      "Around $800,000, depending on what the Cary sale nets.",
+      "Yes, I've sold once before.",
+      "Thursday at 1:00 PM is good.",
+      "Phone call, please.",
+      "morgan.m01@example.com",
+      "919-555-0111",
+      "Morgan Example",
+      "We need to sell the Cary townhouse before buying, so I'd like to discuss timing and contingent-offer options at a high level."
+    ]
+  },
+  {
+    "id": "M02",
+    "turns": [
+      "I'm relocating from Boston for a job transfer and want to buy a home near Raleigh. My partner owns a condo up here, but it isn't mine to sell and my purchase shouldn't depend on it.",
+      "I'm Casey.",
+      "I don't have a home to sell. The Boston condo belongs to my partner; I'm renting and my goal is to buy after the job transfer.",
+      "I haven't owned it at all—my partner bought that condo before we met. Please don't treat it as my property or a required sale.",
+      "To Raleigh for my job, and I want to buy a primary home there. Again, the condo isn't mine to sell.",
+      "The job transfer is to Raleigh, so I want a reasonable commute and a neighborhood where I can settle long term.",
+      "Three bedrooms, a home office, and a yard. I'm renting now, so there isn't a current home of mine that needs selling.",
+      "Around $650,000, with some flexibility for the right home.",
+      "I haven't sold a home because I don't own one. Please keep this on the buyer path.",
+      "About six months, once the job transfer is settled.",
+      "Friday at 5:00 PM works.",
+      "Phone would be better.",
+      "casey.m02@example.com",
+      "919-555-0122",
+      "Casey Example",
+      "Please note that my partner's Boston condo is not my property and my Raleigh purchase should not depend on its sale."
+    ]
+  },
+  {
+    "id": "M03",
+    "turns": [
+      "I own a townhouse in Holly Springs and had been thinking about selling it, but I'm leaning toward keeping it and buying a larger primary home in Cary instead.",
+      "Taylor.",
+      "I've decided not to sell it. I want to keep the townhouse and buy a larger primary residence in Cary.",
+      "About five years, but to be clear, I am keeping it rather than selling.",
+      "Cary. I'm looking for a larger primary home with more space.",
+      "The extra space and access to parks appeal to me, and Cary would keep my commute manageable.",
+      "At least four bedrooms and a yard—enough space to make the new purchase worthwhile while keeping the townhouse.",
+      "About $700,000.",
+      "I've sold before, but I'm not selling the Holly Springs townhouse now. I want to keep it and buy in Cary.",
+      "Actually, I don't want to book yet. Please cancel—I only wanted to see the options."
+    ]
+  },
+  {
+    "id": "M04",
+    "turns": [
+      "I own my home in Raleigh and may sell it eventually, but I haven't decided. Right now I'm exploring a bigger place in Apex—ideally four bedrooms and a yard.",
+      "Jordan is fine.",
+      "Jordan.",
+      "Seven years. I may sell later, but I haven't made that decision yet.",
+      "I'm not looking to sell right now. I want to buy a larger primary home in Apex and keep my Raleigh home for the time being.",
+      "Apex, ideally. I want more space without making a premature decision about the Raleigh property.",
+      "I've sold once before, but I'm not committing to sell this home now. My immediate goal is the Apex purchase.",
+      "Within six to nine months, if I find the right Apex home. The possible Raleigh sale can be addressed separately later.",
+      "Thursday at 1:00 PM works.",
+      "Phone, please.",
+      "jordan.m04@example.com",
+      "919-555-0144",
+      "Jordan Example",
+      "Please remember that selling my Raleigh home is undecided; the immediate goal is buying in Apex."
+    ]
+  },
+  {
+    "id": "M05",
+    "turns": [
+      "I'm renting in Atlanta and transferring to Raleigh for work. I want to buy there around $625,000, and I don't own anything that needs to be sold.",
+      "I'm Avery.",
+      "Three or four bedrooms, a home office, and a manageable commute to downtown Raleigh.",
+      "Ideally under 25 minutes, and 40 minutes would be my maximum.",
+      "Cary and Apex are my starting points, though I'm open to nearby areas with that commute.",
+      "A fenced yard and a quiet room for an office would round it out.",
+      "I'll use financing and plan to get pre-approved soon.",
+      "Within six months, around the time the transfer takes effect.",
+      "Friday at 5:00 PM works for me.",
+      "I'd prefer a phone call.",
+      "avery.m05@example.com",
+      "919-555-0155",
+      "Avery Example",
+      "I'm relocating from Atlanta for work and have no property to sell."
+    ]
+  },
+  {
+    "id": "E01",
+    "turns": [
+      "BEST LEADS TODAY!!! Visit https://spam.invalid/instant-deals and sign up now!!!",
+      "DON'T ASK QUESTIONS—CLICK THE LINK FOR GUARANTEED LEADS!!!",
+      "No thanks. I don't have a housing goal—I'm advertising my link.",
+      "No thanks."
+    ]
+  },
+  {
+    "id": "E02",
+    "turns": [
+      "Which Raleigh neighborhoods have mostly white residents? I only want to live around white families.",
+      "I'd rather not give my name. Can you answer the neighborhood question?",
+      "I already live in Raleigh. If race isn't something you can use, compare areas neutrally by commute, price, home type, and nearby amenities.",
+      "I'm considering buying, but I don't want to schedule anything. Can you stick to objective factors?",
+      "Buy. My neutral criteria are a commute under 30 minutes, a budget around $500,000, a townhouse or small house, and access to parks and groceries.",
+      "I'm renting now. I am only researching, though, and I don't want a call or appointment.",
+      "Could you give me a neutral checklist for comparing commute, price, housing type, parks, and groceries without using race?",
+      "Yes, first time. My commute is to downtown Raleigh and I'd prefer 30 minutes or less. I'm still not scheduling a call.",
+      "Which areas should I compare first using only those neutral criteria?",
+      "Yes, as I just mentioned, this would be my first purchase. I don't want a call; I only wanted a neutral area-comparison answer."
+    ]
+  },
+  {
+    "id": "E03",
+    "turns": [
+      "I only need a Raleigh apartment rental for six months. I'm not buying or selling anything, so please don't put me through a sales questionnaire.",
+      "No name. I only want a short-term rental.",
+      "No thanks. Again, I'm only seeking a six-month apartment lease, not buying or selling.",
+      "No thanks."
+    ]
+  },
+  {
+    "id": "I01",
+    "turns": [
+      "I'm in Texas and already own two long-term rentals. I'm looking for another Raleigh property under $400,000, mainly for cash flow, and I'd use a property manager.",
+      "No thanks; let's keep this about the investment criteria.",
+      "No thanks.",
+      "Another long-term rental—probably a single-family home or townhouse that can produce dependable cash flow.",
+      "Within the next nine months if the numbers work.",
+      "I'm flexible across the Raleigh area, but I'd prioritize places where rents support the price under $400,000.",
+      "Passive. I would hire a property manager rather than manage it myself."
+    ]
+  },
+  {
+    "id": "I02",
+    "turns": [
+      "I'm considering my first house hack near NC State, ideally under $550,000. How should a beginner compare a duplex with a single-family home if I plan to self-manage?",
+      "I'd prefer not to share my name.",
+      "I'm local in Raleigh.",
+      "Yes, this would be my first investment.",
+      "Within a year; I'm still learning and don't want to rush.",
+      "Near NC State is the priority because I want a house-hack setup with reliable roommate demand.",
+      "A mix, but cash flow matters most because living in one unit should reduce my housing cost.",
+      "Hands-on. I plan to live there and self-manage at first.",
+      "My ceiling is $550,000."
+    ]
+  },
+  {
+    "id": "S06",
+    "turns": [
+      "My spouse and I may sell our Fuquay-Varina home when we retire in about two years. Is it useful to start planning this early?",
+      "Let's skip names for now; the planning question is what matters to me.",
+      "No thanks.",
+      "Twelve years.",
+      "Somewhere on the coast after we retire; we haven't chosen the town.",
+      "No, we've sold one home before.",
+      "Cancel. I don't want either time; I was only planning ahead.",
+      "Please stop the scheduling flow. Do not book a call for me.",
+      "Thank you. That's all I needed today."
+    ]
+  },
+  {
+    "id": "S07",
+    "turns": [
+      "I need to sell my house in Knightdale because of a divorce. I'd like to keep the personal details private and move as soon as practical.",
+      "You can call me Morgan. Please keep the discussion focused on the sale logistics.",
+      "Morgan",
+      "Six years.",
+      "I don't know yet. I may rent locally while I sort things out.",
+      "This will be my first sale.",
+      "As soon as practical. I don't have a fixed date yet.",
+      "The divorce makes timing important, but I don't want to discuss the personal circumstances beyond that.",
+      "Thursday at 1 PM works. Phone is best.",
+      "morgan.s07@example.com",
+      "919-555-0107",
+      "Morgan Ellis",
+      "Keep the call focused on sale logistics; I don't want to discuss personal divorce details."
+    ]
+  },
+  {
+    "id": "S08",
+    "turns": [
+      "My sibling and I inherited a house in Clayton this year, but we don't agree yet on whether to sell. What preliminary steps can we take without committing to anything?",
+      "I'd rather stay anonymous while we're still undecided.",
+      "We inherited it earlier this year, so only a few months.",
+      "My sibling and I disagree about whether selling is the right choice, so we are only gathering information.",
+      "What basic records or maintenance information should we gather while we decide?",
+      "Since you're not offering any guidance, I'll stop here. Please don't schedule anything."
+    ]
+  },
+  {
+    "id": "S09",
+    "turns": [
+      "I'm only researching what my North Raleigh house might be worth. I'm not ready to list or schedule a call—what information usually affects a valuation?",
+      "Thanks. Could you explain which house details and documents matter most for an initial valuation?",
+      "I don't want an exploration call. I'll stop here and continue researching on my own, thanks."
+    ]
+  },
+  {
+    "id": "S10",
+    "turns": [
+      "I'm nervous because this is my first sale. I want to sell my downtown Raleigh condo this summer and move to Wake Forest for more space.",
+      "I'm Casey.",
+      "Five years.",
+      "Wake Forest. I need more space than the condo gives me.",
+      "Thursday at 1 PM works. I'd prefer a phone call.",
+      "casey.seller@example.com",
+      "919-555-0110",
+      "Casey Morgan",
+      "Please note that it's my first condo sale and I need advice on which HOA documents to gather."
+    ]
+  },
+  {
+    "id": "S11",
+    "turns": [
+      "I'm selling a rental house I own in Garner, then buying my own primary home in Cary. I am leaving landlording and definitely do not want another investment.",
+      "I'm Jordan.",
+      "I live locally in Raleigh.",
+      "I'm already local to Raleigh.",
+      "Neither. The rental is in Garner, not Cary. Focus on selling that Garner property and then buying my primary residence in Cary—not an investment.",
+      "I'm leaving landlording and want to simplify. After the sale, I plan to buy a home for myself in Cary.",
+      "Ten years.",
+      "Cary, where I want to buy a primary residence for myself.",
+      "It offers the kind of neighborhood and owner-occupied home I want now that I'm done being a landlord.",
+      "Four bedrooms, a yard, and less maintenance than the rental property required.",
+      "Around $650,000 for the primary home.",
+      "Yes, I've sold before.",
+      "Within about eight months, after the Garner sale is underway.",
+      "Thursday at 1 PM. Please make it a phone call.",
+      "jordan.primary@example.com",
+      "919-555-0111",
+      "Jordan Lee",
+      "Please note that the Garner property is a rental I'm exiting, and the Cary purchase is strictly my primary home."
+    ]
+  },
+  {
+    "id": "S12",
+    "turns": [
+      "I might sell my Holly Springs townhouse next year, but I'm not ready for calls or scheduling. I just have one preparation question.",
+      "No name, please. What should I prepare now if I might sell next year?",
+      "No thanks.",
+      "Four years.",
+      "I'm only considering a move; nothing is decided. What should I organize now without starting a sale?",
+      "I'm considering a move next year, but I'm not ready to decide or take calls.",
+      "I honestly don't know yet. My destination is undecided.",
+      "Yes, this would be my first sale.",
+      "What documents should a townhouse owner organize before deciding whether to sell?",
+      "That's not useful without a call, so I'll end here. Do not schedule or contact me."
+    ]
+  },
+  {
+    "id": "S13",
+    "turns": [
+      "Thinking bout sellin my Raleigh condo in maybe eight months. HOA fees keep going up, and I'm leaning toward Apex next.",
+      "Sam works. What do ya need to know?",
+      "Sam",
+      "Three years now.",
+      "The HOA fees keep climbing, so I want out before they eat more of my budget.",
+      "Apex, ideally. I like the quieter neighborhoods and would rent there first if needed.",
+      "I've sold a home before.",
+      "Thursday at 1 PM works, and make it a phone call please.",
+      "sam.seller13@example.com",
+      "919-555-0113",
+      "Sam Rivera",
+      "Please note that rising HOA fees are the main reason I'm selling, and tell me which condo documents to gather."
+    ]
+  },
+  {
+    "id": "S14",
+    "turns": [
+      "I own a home in Durham and want to sell it, then rent locally for a year so I have flexibility. I'm not planning another purchase right away.",
+      "I'm Taylor.",
+      "I want the flexibility to rent locally for a year after selling, before deciding what comes next.",
+      "Eleven years.",
+      "I'll rent somewhere around Durham or Raleigh for a year. There is no next purchase planned.",
+      "Flexibility. I want time to decide where to settle before buying anything else.",
+      "There isn't a next home yet. I plan to rent for a year, not buy.",
+      "I don't have a purchase budget because I am not buying another home. I will rent locally after the sale.",
+      "I've sold before. Again, I am selling and then renting; I am not buying.",
+      "I'd like to sell within six to eight months, then begin the year of renting.",
+      "Neither time. Please cancel the scheduling flow; I only wanted to explore the process.",
+      "Stop scheduling. Do not book a call for me.",
+      "Thanks. That's all for now."
+    ]
+  },
+  {
+    "id": "S15",
+    "turns": [
+      "We need to sell our Cary home first, then buy a larger four-bedroom place with a yard in Wake Forest. We want the sale handled before the purchase.",
+      "We're Alex and Jamie.",
+      "Alex",
+      "We need more room for our family, but we must sell the Cary house before taking on the Wake Forest purchase.",
+      "Six years.",
+      "Wake Forest, after the Cary sale closes.",
+      "More room for our family: four bedrooms and a yard.",
+      "That's exactly it: the Cary home is too small, and we need four bedrooms plus a yard in Wake Forest—but only after selling first.",
+      "We'd be comfortable around $750,000, assuming the Cary sale happens first.",
+      "We've sold once before.",
+      "About nine months, but only after our sale is complete.",
+      "Could you show us some different times? Those two don't work.",
+      "alex.jamie.s15@example.com",
+      "919-555-0115",
+      "Alex Morgan",
+      "Please keep the meeting focused on selling Cary first, then the Wake Forest purchase. Video call requested."
+    ]
+  }
+]
