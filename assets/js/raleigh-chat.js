@@ -1079,7 +1079,7 @@
       if (state.profile.noScheduling || state.profile.researchOnly) { informationalReply(); return; }
       var sellerSummer = state.intent === "selling" && /\bnext summer\b/i.test(state.profile.targetTiming || "");
       var buyerSummer = /^(buying|relocating)$/.test(state.intent) && /\bsummer\b/i.test(state.profile.targetTiming || "");
-      var finish = state.profile.saleOnly && !state.profile.sellThenRent ? "An exploration call can focus on your sale, preparation, and timing. We do not need to plan a new purchase." : state.profile.sellThenRent ? "An exploration call can help plan your sale and the transition to renting. We can keep the discussion focused on sale logistics." : state.profile.sensitiveMove ? "We can keep personal details private. An exploration call can focus on the sale logistics and timing you want help with." : state.profile.shortTiming ? "Well, great. Based on that timing, we should absolutely set up an exploration call with the team to help build you a game plan around your move." : sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish;
+      var finish = state.profile.researchTimeline ? config.conversationResponses.researchTimeline : state.profile.saleOnly && !state.profile.sellThenRent ? "An exploration call with the team can help you put together a game plan for your sale, preparation, and timing." : state.profile.sellThenRent ? "An exploration call can help plan your sale and the transition to renting. We can keep the discussion focused on sale logistics." : state.profile.sensitiveMove ? "We can keep personal details private. An exploration call can focus on the sale logistics and timing you want help with." : state.profile.shortTiming ? "Well, great. Based on that timing, we should absolutely set up an exploration call with the team to help build you a game plan around your move." : sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish;
       message(finish, false);
       if (flow.booking === "general") startBooking();
       else link("Book an investing exploration call", config.bookingLinks.investing);
@@ -1124,6 +1124,11 @@
     if (question.key === "areas" && state.profile.priorityAnswered) wording = "Are there any specific areas around Raleigh that you're interested in buying a home in?";
     if (question.key === "areasReason" && state.profile.areasPlural) wording = "What was it about those areas that stood out to you?";
     if (question.key === "areasReason" && state.profile.familyArea && state.profile.areasMentionFamilyArea) wording += " I know you mentioned having family in " + state.profile.familyArea + ".";
+    if (question.key === "timing" && state.profile.justDiscussedUncertainFunding) {
+      wording = config.conversationResponses.fundingTimelineLead;
+      prefix = "";
+      state.profile.justDiscussedUncertainFunding = false;
+    }
     var personal = state.profile.firstName && (question.key === "areas" || question.key === "timing")
       ? state.profile.firstName + ", " : "";
     if (personal) wording = wording.charAt(0).toLowerCase() + wording.slice(1);
@@ -1167,7 +1172,7 @@
       case "commuteDestination": return "Got it.";
       case "commuteRange": return "That makes sense.";
       case "priorityBudget": return state.profile.priorityBudgetAmount >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "👍";
-      case "priorityFinancing": return "Great!";
+      case "priorityFinancing": return engine.financingType(answer) ? "Great!" : "";
       case "areas": return state.profile.areasMentionFamilyArea ? "That makes sense." : state.profile.areasNeedFollowup ?
         (state.profile.areasPlural ? "Awesome, those are great areas!" : "Awesome, that's a great area!") : "That makes sense!";
       case "areasReason": return "Makes perfect sense!";
@@ -1175,7 +1180,7 @@
       case "homeMore": return "Got it.";
       case "nextHome": return "That gives me a better picture.";
       case "budget": return state.profile.budgetKnown ? (priceAmount(engine.extractBudget(answer)) >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "👍") : "That's totally fine. We can connect you with a lender to get a clearer picture of your buying power.";
-      case "financing": return "Great!";
+      case "financing": return engine.financingType(answer) ? "Great!" : "";
       case "preapproval": return state.profile.preApproved ? "" : "Got it, noted.";
       default: return "Got it.";
     }
@@ -1235,6 +1240,7 @@
   }
   function knownAnswer(key) {
     var facts = state.profile.facts || {};
+    if (key === 'timing' && state.profile.awaitingTimelineYear) return false;
     if (key === 'home' && facts.home && homeDetailCount(facts.home) < 2 && !facts.homeAnswered) return false;
     if (key==='priorityBudget') return !!facts.budget;
     if (key==='priorityFinancing') return !!facts.financing;
@@ -1250,6 +1256,7 @@
     ['remoteWork', 'retired', 'noChildren'].forEach(function (key) { if (facts[key] !== undefined) p[key] = facts[key]; });
     if (facts.hasFamilyNearby !== undefined) p.familyNearby = facts.hasFamilyNearby;
     if (facts.saleOnly !== undefined) p.saleOnly = facts.saleOnly;
+    if (facts.transactionGoal === 'buying' || facts.combined) p.saleOnly = false;
     if (facts.transactionGoal) p.transactionGoal = facts.transactionGoal;
     if (facts.bridgeRental) { p.sellThenRent=false; p.bridgeRental=true; }
     if (facts.preapproval) p.preapprovalAsked = true;
@@ -1284,6 +1291,22 @@
   }
   function acceptAnswer(answer) {
     var question = activeQuestions().find(function(q){return q.key===state.profile.currentQuestionKey;}) || activeQuestions()[state.question];
+    if (question && question.key === "timing" && state.intent !== "investing") {
+      var uncertainTiming = /\b(?:not sure|unsure|undecided|don['’]?t know|no idea|can['’]?t say|haven['’]?t decided|just (?:started|starting|began)|no (?:set )?(?:timeline|timeframe|date))\b/i.test(answer);
+      if (uncertainTiming && !state.profile.timelineYearAsked) {
+        state.profile.timelineYearAsked = true;
+        state.profile.awaitingTimelineYear = true;
+        state.profile.facts = state.profile.facts || {};
+        delete state.profile.facts.timing;
+        state.profile.targetTiming = "";
+        state.profile.shortTiming = "";
+        persist();
+        message(config.conversationResponses.uncertainTimeline, false);
+        return;
+      }
+      state.profile.awaitingTimelineYear = false;
+      state.profile.researchTimeline = uncertainTiming || /\b(?:far (?:out|off|away)|couple (?:of )?years|few years|several years|no rush|eventually|someday|some day)\b/i.test(answer) || /\b(?:[2-9]|two|three|four|five)\s*(?:\+|or more)?\s*years?\b/i.test(answer);
+    }
     if (question && question.key === 'salePriority' && !/\b(?:sale|sell|selling|both|exchange|invest|investment|buy|purchase|next)\b/i.test(answer)) {
       scheduleClarification(question.text); return;
     }
@@ -1427,6 +1450,10 @@
     if (question && (question.key === "priorityFinancing" || question.key === "financing")) {
       state.profile.financingKnown = true;
       state.profile.usingFinancing = engine.financingType(answer)==='Financing';
+      if (!engine.financingType(answer)) {
+        message(config.conversationResponses.uncertainFunding, false);
+        state.profile.justDiscussedUncertainFunding = true;
+      }
     }
     if (question && question.key === "preapproval") {
       state.profile.preapprovalAsked = true;

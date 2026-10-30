@@ -332,8 +332,7 @@
     var plan = transactionPlan(text);
     var goalAnswer = /^(?:originHousing|willSell|financing|priorityFinancing|budget|priorityBudget|preapproval|timing|timingReason|ownedYears)$/.test(questionKey||'');
     var goalCorrection = /\b(?:main|primary) (?:goal|focus)|\b(?:switch|actually|focus on|no longer|plan changed|only need to sell)\b/i.test(text);
-    if (plan.explicit && (!goalAnswer || goalCorrection)) { facts.transactionGoal = plan.id; facts.combined = plan.combined; }
-    if (plan.saleOnly) facts.saleOnly = true;
+    if (plan.explicit && (!goalAnswer || goalCorrection)) { facts.transactionGoal = plan.id; facts.combined = plan.combined; facts.saleOnly = plan.saleOnly; }
     if (plan.saleOnly && /\b(?:no (?:next|new) (?:home|purchase)|not buying|not purchasing|don't need to purchase|parents'|estate|parents.*home|moving in with us|moving in with me)\b/i.test(text)) facts.nextDestination = 'No next home purchase planned';
     if (plan.keepHome) { facts.willSell = 'No'; facts.tenure='owning'; }
     if (plan.bridgeRental) { facts.bridgeRental = true; facts.sellThenRent = false; }

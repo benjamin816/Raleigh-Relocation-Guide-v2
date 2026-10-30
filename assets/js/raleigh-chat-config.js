@@ -1,5 +1,11 @@
 // Raleigh chat conversation configuration. Update through the TEST branch chat workflow.
 window.RaleighChatConfig = {
+  "conversationResponses": {
+    "uncertainTimeline": "No worries! Many people who reach out to us are still in that exploration phase. In an ideal world, would that move be sometime this year or next?",
+    "researchTimeline": "Got it! What we offer clients in your shoes, being further out or still figuring out the timing, is an exploration call with the team to answer your burning questions and get you all the resources you need while you're still in that research phase.",
+    "uncertainFunding": "No worries! We have a lot of clients who could lean either way. Some new-construction buyers, for example, may qualify for a lower-rate financing offer and prefer to keep their cash. We'll go over the pros and cons when we meet with you.",
+    "fundingTimelineLead": "Last question real quick: when are you hoping to make the move, in an ideal world?"
+},
   "informationalAnswers": [
     {
       "pattern": "\\bHOA\\b",
