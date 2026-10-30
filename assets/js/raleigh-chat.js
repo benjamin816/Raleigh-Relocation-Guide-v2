@@ -1357,7 +1357,7 @@
     if (key==='priorityBudget') return !!facts.budget;
     if (key==='priorityFinancing') return !!facts.financing;
     if (key==='nextHome') return !!facts.home && homeDetailCount(facts.home)>=2;
-    if (key==='familyNearby' || key==='priorityFamilyArea') return !!facts.familyArea || facts.hasFamilyNearby===false;
+    if (key==='familyNearby' || key==='priorityFamilyArea') return !!facts.familyArea || facts.familyNearbyAnswered===true || facts.hasFamilyNearby===false;
     if (key==='preapproval') return !!facts.preapproval || state.profile.preApproved===true || state.profile.preapprovalAsked===true;
     if (key==='moveGoal') return !!facts.transactionGoal;
     return !!facts[key];
@@ -1372,7 +1372,9 @@
     if (facts.transactionGoal) p.transactionGoal = facts.transactionGoal;
     if (facts.bridgeRental) { p.sellThenRent=false; p.bridgeRental=true; }
     if (facts.preapproval) p.preapprovalAsked = true;
-    if (facts.familyArea !== undefined) { p.familyArea = facts.familyArea; p.familyAreaAsked = !!facts.familyArea; }
+    // Repair older saved chats whose family location lived only in the profile.
+    if (facts.familyArea === undefined && p.familyAreaAsked && p.familyArea) facts.familyArea=p.familyArea;
+    if (facts.familyArea !== undefined) { p.familyArea = facts.familyArea; p.familyAreaAsked = facts.familyAreaAsked===true || !!facts.familyArea; }
     if (facts.location && typeof facts.location === 'object') {
       p.location = facts.location.type; p.origin = facts.location.place || '';
       p.originCode = facts.location.stateCode || ''; p.originCity = facts.location.city || '';
@@ -1532,7 +1534,7 @@
     if (question && question.key === "jobLocation" && state.profile.commuteMentioned && !state.profile.remoteWork) state.profile.commuteDestinationKnown = true;
     if (question && (question.key === "familyNearby" || question.key === "priorityFamilyArea")) {
       var familyPlace = answer.trim().replace(/[.!?]+$/, "");
-      state.profile.familyArea = /^(?:yes|no|yeah|yep|here|not sure)$/i.test(familyPlace) ? "" : familyPlace.slice(0, 60);
+      state.profile.familyArea = /^(?:yes|no|yeah|yep|here|not sure|unsure|no idea|don't know|i don't know|i am not sure|somewhere in (?:the )?triangle)$/i.test(familyPlace) ? "" : familyPlace.slice(0, 60);
       state.profile.familyAreaAsked = true;
     }
     if (question && (question.key === "priorities" || question.key === "priorityMore")) {
@@ -1610,6 +1612,11 @@
         state.profile.facts.homeAnswered = true;
         if (canonicalKey==='homeMore' || homeDetailCount(state.profile.homeDetailEvidence || state.profile.facts.home) > 2) state.profile.facts.homeMoreAnswered=true;
         if (canonicalKey==='home') canonical=state.profile.facts.home || 'Flexible';
+      }
+      if (canonicalKey==='familyNearby' || canonicalKey==='priorityFamilyArea') {
+        state.profile.facts.familyArea=state.profile.familyArea;
+        state.profile.facts.familyAreaAsked=true;
+        state.profile.facts.familyNearbyAnswered=true;
       }
       if (canonicalKey==='budget') canonical = engine.extractBudget(answer) || 'Not sure';
       if (canonicalKey==='commuteDestination') canonical=state.profile.commuteDestination;

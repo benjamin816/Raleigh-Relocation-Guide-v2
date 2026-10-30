@@ -366,6 +366,13 @@
       if (questionKey==='areas' || questionKey==='areasReason') facts.areasReason = text;
       else facts.priorities = text;
     }
+    if (/^(?:familyNearby|priorityFamilyArea)$/.test(questionKey || '') && !asksQuestion(text)) {
+      var familyAnswer=text.trim().replace(/[.!?]+$/, '');
+      facts.familyArea=/^(?:yes|no|yeah|yep|here|not sure|unsure|no idea|don't know|i don't know|i am not sure|somewhere in (?:the )?triangle)$/i.test(familyAnswer) ? '' : familyAnswer.slice(0,60);
+      facts.familyAreaAsked=true;
+      facts.familyNearbyAnswered=true;
+      if (facts.familyArea) facts.familyNearby=facts.familyArea;
+    }
     if (questionKey && !asksQuestion(text)) {
       if (/^(?:leaseEnd|jobStart|ownedYears|sellingExperience|timingReason|nextAreaReason)$/.test(questionKey)) facts[questionKey] = text;
       if (questionKey==='preapproval') facts.preapproval = /^(?:no|not|haven't)/i.test(text) ? 'Not approved' : text;
