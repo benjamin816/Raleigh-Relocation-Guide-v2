@@ -37,7 +37,7 @@ Booking service version 16 and the existing round-robin trigger apply Free trans
 
 ### Test: out-of-state seller referral phone calls
 
-The Test widget routes confirmed out-of-state sellers who plan to rent in Raleigh to rental resources and a quick listing-agent referral phone call. Local property sales, bridge rentals before buying, investors, rental-only visitors without a home to sell, and refusals keep their existing routes.
+The Test widget first qualifies how long a relocating visitor plans to rent. Three months or less routes straight to a normal exploration call about the eventual purchase. Six to twelve months or longer routes confirmed out-of-state sellers to rental resources and a quick listing-agent referral phone call; a vague rental plan is clarified before offering slots. Local property sales, bridge rentals before buying, investors, rental-only visitors without a home to sell, and refusals keep their existing routes.
 
 `Code.gs` now advertises `referralMinutes: 15` on slot results. A `book` request with `appointmentType: "seller_referral"`, `durationMinutes: 15`, `callType: "phone"`, and `purpose: "Sell"` creates a 15-minute event through the same host selection, assignment ledger, lead sheet, idempotency protection and standard pre-call email pipeline. Other calls remain 60 minutes. Availability remains conservatively limited to existing full-length bookable openings; the new route does not open extra hours.
 

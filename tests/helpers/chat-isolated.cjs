@@ -24,7 +24,7 @@ for (let i = 0; i < bounds.length; i++) {
 
 const conversationFunctions = [
   'informationalGuidance', 'informationalReply', 'requestContactPermission', 'resumeAfterQuestion', 'answerSideQuestion', 'memorySummary', 'offerBrowsingHelp', 'showContact', 'handleContactAnswer', 'applyKnownFacts', 'knownAnswer', 'activeQuestions', 'detectIntent', 'startFlow',
-  'routeSellerReferral', 'locationAcknowledgement', 'originLabel', 'askQuestion', 'answerAcknowledgement',
+  'routeRentalPlan', 'routeSellerReferral', 'locationAcknowledgement', 'originLabel', 'askQuestion', 'answerAcknowledgement',
   'explainRentalOnly', 'asksToRent', 'mentionsPrice', 'priceAmount', 'homeDetailCount',
   'captureVisitorContext', 'markPreapproval', 'acceptAnswer', 'handleText',
   'isQuestionPreamble', 'asksForBenjaminNumber', 'asksForTeamMember',
@@ -114,7 +114,7 @@ function createSession(id, metadata) {
   const context = {
     engine, config, state, console, Date, Intl, input: {}, sendButton: {}, lastUserSentAt: 0,
     attachment: null, attachmentInput: { value: '' }, document: safeDocument, navigator: safeNavigator,
-    message(text, isUser) { if (!isUser) messages.push(String(text)); state.history.push({text:String(text),byUser:!!isUser,at:new Date().toISOString()}); },
+    message(text, isUser, options) { if (!isUser) messages.push(String(text)+(options && options.link ? ` [LINK] ${options.link.label} -> ${options.link.href}` : '')); state.history.push({text:String(text),byUser:!!isUser,at:new Date().toISOString()}); },
     link(label, href) { messages.push(`[LINK] ${label} -> ${href}`); },
     bookingCall,
     redact: text => text,

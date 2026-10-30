@@ -4939,7 +4939,7 @@
     chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test13";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261030-test59";
+    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261030-test60";
     configScript.src = "/assets/js/raleigh-chat-config.js?v=" + chatVersion;
     configScript.onload = function () {
       var engineScript = document.createElement("script");

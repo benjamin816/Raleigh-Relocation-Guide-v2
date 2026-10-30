@@ -1,7 +1,13 @@
 // Raleigh chat conversation configuration. Update through the TEST branch chat workflow.
 window.RaleighChatConfig = {
+  "rentalConversation": {
+    "qualifier": "Got it. A lot of relocators do the same thing so they can test out the area first. Is your plan to rent for a few months while you search for a permanent home, or do you plan to rent for the next 12-plus months?",
+    "services": "Our market doesn't have a system set up for us to work directly with renters. Most of our rentals don't go through the MLS. We do, however, offer free resources here on our website, plus our Living in Raleigh YouTube channel, to help you find the right area. We absolutely welcome you to reach back out when you're starting to look for a more permanent home.",
+    "clarify": "Would you expect to rent for three months or less while looking for a home to buy, or for six to twelve months or longer? It's okay if you haven't decided yet.",
+    "short": "That makes sense! Let's set up an exploration call with the team to build a game plan for renting briefly and finding your permanent home."
+},
   "sellerReferral": {
-    "intro": "Got it! If you're selling your home out of state and planning to rent here, our free Raleigh resources and Living in Raleigh YouTube channel can help you get to know the area. We don't offer a rental search service, but we have extensive relationships with top listing agents in other markets and would be happy to help connect you with the right person.",
+    "intro": "We can't work directly with rentals, but our free website resources and Living in Raleigh YouTube channel can help you find the right area. We also have an extensive network of trusted listing agents in {market} and would be happy to help connect you with the right person.",
     "invitation": "Let's set up a quick 10\u201315-minute phone call with the team to learn more about your current home and help connect you with the right listing agent.",
     "resourceLabel": "Explore Raleigh guides",
     "resourceUrl": "/learning-center/",
@@ -224,7 +230,7 @@ window.RaleighChatConfig = {
         {
           "key": "priorities",
           "when": "outNeedsPriorities",
-          "text": "When it comes to the place that you end up calling home, what is most important to you?"
+          "text": "When it comes to the area you choose to live in, what's most important to you?"
         },
         {
           "key": "priorityFamilyArea",
@@ -454,7 +460,7 @@ window.RaleighChatConfig = {
         {
           "key": "priorities",
           "when": "outNeedsPriorities",
-          "text": "When it comes to the place that you end up calling home, what is most important to you?"
+          "text": "When it comes to the area you choose to live in, what's most important to you?"
         },
         {
           "key": "priorityFamilyArea",

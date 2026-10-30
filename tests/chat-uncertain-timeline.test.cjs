@@ -2,7 +2,7 @@ const assert=require('node:assert/strict');
 const {createSession}=require('./helpers/chat-isolated.cjs');
 const engine=require('../assets/js/raleigh-chat-engine.js');
 const fs=require('node:fs'),vm=require('node:vm');const sandbox={window:{}};vm.runInNewContext(fs.readFileSync('assets/js/raleigh-chat-config.js','utf8'),sandbox);const config=sandbox.window.RaleighChatConfig;
-async function ready(id){const s=createSession(id);for(const t of ["I live in Raleigh and rent month-to-month. First-time buyer. I want to buy in Cary because of parks. I want 3 beds and 2 baths. Budget $600k.",'Ben','Month to month'])await s.send(t);return s;}
+async function ready(id){const s=createSession(id);for(const t of ["I live in Raleigh and rent month-to-month. First-time buyer. I want to buy in Cary because of parks. I want 3 beds and 2 baths. Budget $600k.",'Ben','Month to month','Nothing else for the home.'])await s.send(t);return s;}
 (async()=>{
  const s=await ready('uncertain-funding-and-timing');
  let reply=(await s.send('Not sure')).botMessage;

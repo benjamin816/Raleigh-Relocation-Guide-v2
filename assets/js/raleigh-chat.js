@@ -274,7 +274,8 @@
         var entry = { text: redact(item.text), byUser: item.byUser, at: item.at };
         if (item.link && safeLink(item.link.href) && typeof item.link.label === "string") entry.link = { href: item.link.href, label: item.link.label.slice(0, 80) };
         state.history.push(entry);
-        message(entry.text, entry.byUser, { at: entry.at, link: entry.link, restoring: true });
+        if (Array.isArray(item.links)) entry.links=item.links.filter(function(l){return l && safeLink(l.href) && typeof l.label==='string';}).map(function(l){return {href:l.href,label:l.label.slice(0,80)};});
+        message(entry.text, entry.byUser, { links:entry.links, at: entry.at, link: entry.link, restoring: true });
       });
       if (!state.history.length) state.started = false;
       if (!state.hasUserMessage && state.history.some(function (item) { return item.byUser; })) state.hasUserMessage = true;
@@ -331,6 +332,7 @@
     } catch (_) { /* Audio may be blocked by the browser. */ }
   }
   var botQueue = Promise.resolve();
+  var replyBurst = [];
   var pendingBotMessages = 0;
   var messageGeneration = 0;
   var clarificationTimer = null;
@@ -355,6 +357,7 @@
     clarificationTimer = window.setTimeout(check, 15000);
   }
   function interruptBotQueue() {
+    replyBurst = [];
     messageGeneration += 1;
     botQueue = Promise.resolve();
     pendingBotMessages = 0;
@@ -400,7 +403,7 @@
       check();
     });
   }
-  function queueBotMessage(text, options) {
+  function queueBotMessage(text, options, item) {
     var generation = messageGeneration;
     var replyDelay = replyDelayMs();
     var betweenMessagesDelay = 900 + Math.round(Math.random() * 1100);
@@ -433,7 +436,11 @@
       }
       await waitForVisitorPause(generation, typingDuration, row);
       row.remove();
-      if (generation === messageGeneration) renderMessage(text, false, options);
+      if (generation === messageGeneration) {
+        var historyBefore = state.history[state.history.length-1];
+        item.bubble = renderMessage(item.text, false, item.options);
+        if (state.history[state.history.length-1] !== historyBefore) item.historyEntry=state.history[state.history.length-1];
+      }
     }).finally(function () {
       if (generation !== messageGeneration) return;
       pendingBotMessages -= 1;
@@ -447,10 +454,36 @@
     options = options || {};
     if (!byUser && !options.restoring) {
       if (options.initial) return renderMessage(text, false, options);
-      queueBotMessage(text, options);
+      if (replyBurst.length >= 3) {
+        var last = replyBurst[2];
+        last.text += "\n\n" + text;
+        last.options.links = (last.options.links || []).concat(options.link ? [options.link] : [], options.links || []);
+        if (last.bubble) {
+          var timestamp=last.bubble.querySelector("time");
+          last.bubble.replaceChildren();
+          appendReplyContent(last.bubble,last.text,last.options);
+          if (timestamp) last.bubble.appendChild(timestamp);
+          if (last.historyEntry) {last.historyEntry.text=redact(last.text);last.historyEntry.links=last.options.links;persist();}
+          if (!panel.hidden) scrollToLatest();
+        }
+        return;
+      }
+      var item={text:String(text),options:Object.assign({},options)};
+      replyBurst.push(item);
+      queueBotMessage(text, options, item);
       return;
     }
     return renderMessage(text, byUser, options);
+  }
+  function appendReplyContent(bubble,text,options) {
+    bubble.appendChild(document.createTextNode(text));
+    var links=(options.link ? [options.link] : []).concat(options.links || []);
+    links.forEach(function(item){
+      if (!item || !safeLink(item.href)) return;
+      var anchor=document.createElement("a");
+      anchor.className="rchat-link";anchor.href=item.href;anchor.textContent=item.label;
+      bubble.appendChild(anchor);
+    });
   }
   function renderMessage(text, byUser, options) {
     options = options || {};
@@ -466,14 +499,7 @@
     content.className = "rchat-content";
     var bubble = document.createElement("div");
     bubble.className = "rchat-bubble";
-    bubble.textContent = text;
-    if (options.link && safeLink(options.link.href)) {
-      var anchor = document.createElement("a");
-      anchor.className = "rchat-link";
-      anchor.href = options.link.href;
-      anchor.textContent = options.link.label;
-      bubble.appendChild(anchor);
-    }
+    appendReplyContent(bubble,text,options);
     var timestamp = document.createElement("time");
     var now = options.at && !isNaN(Date.parse(options.at)) ? new Date(options.at) : new Date();
     timestamp.className = "rchat-time";
@@ -486,7 +512,7 @@
     if (!byUser && !options.restoring) { lastBotDeliveredAt = Date.now(); incomingSound(); }
     if (!options.restoring && !panel.hidden) scrollToLatest();
     if (!options.restoring && options.remember !== false && !state.contact && !state.booking) {
-      state.history.push({ text: redact(text), byUser: !!byUser, at: now.toISOString(), link: options.link || null });
+      state.history.push({ text: redact(text), byUser: !!byUser, at: now.toISOString(), link: options.link || null, links:options.links || [] });
       state.history = state.history.slice(-80);
       persist();
     }
@@ -1108,12 +1134,19 @@
       if (question.key === "familyNearby" || question.key === "priorityFamilyArea") wording = state.profile.nearbyPerson === "friends" ? "What part of the Raleigh area are your friends in?" : "What part of the Raleigh area is your family in?";
       if ((question.key === "familyNearby" || question.key === "priorityFamilyArea") && state.profile.sensitiveFamilyReason) wording = "What part of the Raleigh area does your family live in?";
     }
-    if (question.key === "priorityMore" && (state.profile.remoteWork || state.profile.retired || state.profile.noChildren)) {
-      var examples = ["nearby amenities", "shopping"];
-      if (!state.profile.retired && !state.profile.noChildren) examples.push("schools");
-      if (!state.profile.remoteWork && !state.profile.retired) examples.push("your commute");
-      wording = "Is there anything else that's super important to you about the area, like " +
-        (examples.length === 2 ? examples.join(" or ") : examples.slice(0, -1).join(", ") + ", or " + examples[examples.length - 1]) + "?";
+    if (question.key === "priorityMore") {
+      var suppliedArea = [state.profile.facts.priorities, state.profile.facts.priorityMore].filter(Boolean).join(" ");
+      var areaExamples = [
+        {label:"nearby amenities", pattern:/\b(?:amenities|parks?|trails?|greenways?)\b/i},
+        {label:"shopping", pattern:/\b(?:shopping|shops?|groceries|stores?)\b/i},
+        {label:"schools", pattern:/\bschools?\b/i, omit:state.profile.retired || state.profile.noChildren},
+        {label:"your commute", pattern:/\bcommut(?:e|ing)\b/i, omit:state.profile.remoteWork || state.profile.retired}
+      ].filter(function(item){return !item.omit && !item.pattern.test(suppliedArea);}).map(function(item){return item.label;});
+      wording = "Is there anything else that's super important to you about the area" + (areaExamples.length ? ", like " + areaExamples.join(", ") : "") + "?";
+    }
+    if (question.key === "commuteRange" && /\b(?:RTP|Research Triangle Park)\b/i.test(state.profile.commuteDestination || "")) {
+      prefix = "";
+      wording = "Should have known, haha! Research Triangle Park—RTP. Is around 30 minutes your comfort limit for a daily commute, or would you prefer something shorter or be comfortable with longer?";
     }
     if (question.key === "home" && state.profile.homeDetailsGiven) wording = state.profile.facts && state.profile.facts.home ?
       "You mentioned " + state.profile.facts.home + ". Is there anything else that's important to you about the home itself?" :
@@ -1143,6 +1176,14 @@
     var personal = state.profile.firstName && (question.key === "areas" || question.key === "timing")
       ? state.profile.firstName + ", " : "";
     if (personal) wording = wording.charAt(0).toLowerCase() + wording.slice(1);
+    if (prefix) {
+      if (prefix === state.profile.lastAcknowledgement) {
+        var alternatives = ["Understood.", "Okay.", "Thanks for sharing that."];
+        prefix = alternatives[(state.profile.ackVariation || 0) % alternatives.length];
+        state.profile.ackVariation = (state.profile.ackVariation || 0) + 1;
+      }
+      state.profile.lastAcknowledgement = prefix;
+    }
     message((prefix ? prefix + " " : "") + personal + wording, false);
   }
   function answerAcknowledgement(question, answer) {
@@ -1178,8 +1219,8 @@
       case "strategy": return "Okay, got it.";
       case "sellingExperience": return /\b(first|never)\b/.test(text) ? "Okay, wonderful." : "Great, good to know.";
       case "timing": return state.profile.shortTiming === "newYear" ? "Looking to avoid the holiday craziness—smart!" : state.profile.shortTiming ? "Gotcha! That move is coming up super quick." : /\bsummer\b/.test(text) && /^(buying|relocating)$/.test(state.intent) ? "" : /\b(spring|summer|fall|winter|next year)\b/.test(text) ? "Totally get it." : "Great, that timing makes sense.";
-      case "priorities": return state.profile.familyNearby && !state.profile.familyArea ? "Oh, that's wonderful!" : state.profile.commuteMentioned ? "Got it." : state.profile.priorityPrice ? "Awesome." : state.profile.prioritySingle ? "Got it." : "Makes perfect sense.";
-      case "priorityMore": return state.profile.commuteMentioned ? "Got it." : state.profile.priorityPrice ? "Awesome." : "Makes perfect sense.";
+      case "priorities": if (/\bschools?\b/i.test(answer)) return "Awesome! We get a lot of families moving here for those Wake County schools!"; return state.profile.familyNearby && !state.profile.familyArea ? "Oh, that's wonderful!" : state.profile.commuteMentioned ? "Got it." : state.profile.priorityPrice ? "Awesome." : state.profile.prioritySingle ? "Got it." : "Makes perfect sense.";
+      case "priorityMore": if (/\bschools?\b/i.test(answer)) return "Awesome! We get a lot of families moving here for those Wake County schools!"; return state.profile.commuteMentioned ? "Got it." : state.profile.priorityPrice ? "Awesome." : "Makes perfect sense.";
       case "commuteDestination": return "Got it.";
       case "commuteRange": return "That makes sense.";
       case "priorityBudget": return state.profile.priorityBudgetAmount >= 500000 ? "Okay, great. Sounds like we've got a lot to work with for our market." : "👍";
@@ -1196,15 +1237,47 @@
       default: return "Got it.";
     }
   }
-  function routeSellerReferral(value) {
+  function routeRentalPlan(value) {
     if (state.booking || state.intent === "investing") return false;
+    var p=state.profile, text=String(value), plan=engine.transactionPlan(text);
+    var rentalQuestion=/\b(?:work with|help|assist|do|handle|offer|find)\b.{0,35}\b(?:renters|rentals?|renting|rental search)\b/i.test(text) && engine.asksQuestion(text);
+    var futureRent=asksToRent(text) || engine.rentalOnly(text) || plan.sellThenRent || /\b(?:will|going to|plan to|planning to)\s+(?:only )?(?:be )?renting\b/i.test(text);
+    if (!p.pendingRentalPlan && !futureRent && !rentalQuestion) return false;
+    if (futureRent) p.rentalPlanConfirmed=true;
+    if (plan.id==='buying' && !futureRent && !rentalQuestion) {p.pendingRentalPlan=false;return false;}
+    var duration=text.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|a few|few)(?:[-– ]+(?:to[- ]+)?(\d+|three|six|twelve))?\s*(?:[- ]?(?:plus|or more)|\+)?[- ]*(months?|mos|years?)\b/i);
+    var numbers={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,'a few':3,few:3};
+    var months=duration ? (numbers[(duration[2]||duration[1]).toLowerCase()] || Number(duration[2]||duration[1])) * (/year/i.test(duration[3])?12:1) : 0;
+    var horizon=months && months<=3 ? 'short' : months>=6 || /\b(?:annual lease|year[- ]long|a year|at least a year)\b/i.test(text) ? 'long' : '';
+    if (!horizon) {
+      if (!p.pendingRentalPlan && rentalQuestion && !(p.facts && p.facts.transactionGoal==='buying')) message(config.rentalConversation.services,false);
+      message(p.pendingRentalPlan ? config.rentalConversation.clarify : config.rentalConversation.qualifier,false);
+      p.pendingRentalPlan=true;
+      p.awaitingFirstName=false;
+      delete p.pendingIntroReply;
+      persist(); return true;
+    }
+    p.pendingRentalPlan=false;
+    p.rentalHorizon=horizon;
+    if (horizon==='short') {
+      p.outOfStateReferral=false;p.rentalOnly=false;p.informationOnly=false;p.awaitingFirstName=false;
+      state.intent='buying';p.transactionGoal='buying';state.combined=false;
+      p.facts=p.facts||{};p.facts.transactionGoal='buying';p.facts.saleOnly=false;
+      message(config.rentalConversation.short,false);
+      persist();startBooking();return true;
+    }
+    if (routeSellerReferral(text)) return true;
+    explainRentalOnly();return true;
+  }
+  function routeSellerReferral(value) {
+    if (state.booking || state.intent === "investing" || state.profile.rentalHorizon !== "long") return false;
     var p = state.profile, facts = p.facts || {}, plan = engine.transactionPlan(value);
     if (plan.combined || plan.id === "buying") { p.outOfStateReferral = false; return false; }
     var outside = facts.location ? facts.location.type === "out" : p.location === "out";
     if (facts.currentHome && (config.localAreas || []).some(function(area){return area.toLowerCase() === facts.currentHome.toLowerCase();})) return false;
     if (/\b(?:nothing|no (?:house|home|property)) to sell\b/i.test(facts.originHousing || value)) return false;
     var sale = p.originSale || p.sellThenRent || facts.sellThenRent || /\bsell|selling|listing\b/i.test(facts.originHousing || "") || state.intent === "selling";
-    var renting = p.sellThenRent || facts.sellThenRent || plan.sellThenRent || engine.rentalOnly(value) || asksToRent(value) || /\b(?:will|going to) (?:be )?renting\b/i.test(value);
+    var renting = p.rentalPlanConfirmed || p.sellThenRent || facts.sellThenRent || plan.sellThenRent || engine.rentalOnly(value) || asksToRent(value) || /\b(?:will|going to) (?:be )?renting\b/i.test(value);
     if (!outside || !sale || !renting || p.noScheduling || p.noContact || p.researchOnly) return false;
     applyKnownFacts();
     p.outOfStateReferral = true;
@@ -1217,8 +1290,8 @@
     p.transactionGoal = "selling";
     state.combined = false;
     state.question = -1;
-    message(config.sellerReferral.intro, false);
-    link(config.sellerReferral.resourceLabel, config.sellerReferral.resourceUrl);
+    var market = (p.originCity || "").replace(/\b[a-z]/g,function(letter){return letter.toUpperCase();}) || originLabel() || "your market";
+    message(config.sellerReferral.intro.replace("{market}", market), false, {link:{label:config.sellerReferral.resourceLabel,href:config.sellerReferral.resourceUrl}});
     message(config.sellerReferral.invitation, false);
     persist();
     startBooking("phone call");
@@ -1230,7 +1303,7 @@
     state.profile.pendingRentalPlan = false;
     state.profile.rentalOnly = true;
     finishConversation();
-    message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
+    message(config.rentalConversation.services, false);
     link("Explore Raleigh guides", "/learning-center/");
   }
   function asksToRent(value) {
@@ -1257,7 +1330,7 @@
     var current = state.intent && (activeQuestions().find(function(q){return q.key===state.profile.currentQuestionKey;}) || activeQuestions()[state.question]);
     var detected = engine.detectIntent(text, config);
     var facts = engine.extractFacts(text, config, state.intent || detected && detected.id, current && current.key);
-    if (facts.home) facts.home = engine.mergeHome((state.profile.facts || {}).home, facts.home);
+    if (facts.home) { state.profile.homeDetailEvidence = ((state.profile.homeDetailEvidence || "") + " " + text).trim().slice(-1600); facts.home = engine.mergeHome((state.profile.facts || {}).home, facts.home); }
     state.profile.facts = Object.assign({}, state.profile.facts || {}, facts);
     if (facts.budget) state.profile.priorityBudgetAmount = priceAmount(facts.budget);
     if (facts.sellThenRent !== undefined) state.profile.sellThenRent = facts.sellThenRent;
@@ -1307,7 +1380,7 @@
     if (facts.budget) { facts.budget=engine.extractBudget(facts.budget)||facts.budget; p.budgetKnown = priceAmount(facts.budget) > 0; p.budgetAsked = true; p.priorityBudgetAmount = priceAmount(facts.budget); }
     if (facts.financing) { facts.financing=engine.financingType(facts.financing)||facts.financing; p.financingKnown = true; p.usingFinancing = facts.financing==='Financing'; }
     if (facts.timing) { p.targetTiming = facts.timing; p.shortTiming = state.intent === 'investing' ? '' : engine.classifyMoveTiming(facts.timing, new Date()); }
-    if (facts.home) { p.homeDetailsGiven = true; p.homeLastAnswer = facts.home; p.homeSingle = !facts.homeMoreAnswered && homeDetailCount(facts.home) < 2 && !/,|;|\band\b|\bplus\b|&/i.test(facts.home); }
+    if (facts.home) { p.homeDetailsGiven = true; p.homeLastAnswer = p.homeDetailEvidence || facts.home; p.homeSingle = !facts.homeMoreAnswered && homeDetailCount(p.homeLastAnswer) <= 2; }
     if (facts.commuteDestination) { p.commuteMentioned = true; p.commuteDestinationKnown = true; p.commuteDestination = facts.commuteDestination; }
     if (facts.commuteRange) { p.commuteMentioned = true; p.commuteRangeKnown = true; p.commuteComfort = facts.commuteRange; }
     if (facts.jobLocation && p.commuteMentioned && !p.remoteWork && !p.retired) { p.commuteDestinationKnown = true; p.commuteDestination = facts.jobLocation; }
@@ -1401,7 +1474,7 @@
       if (/\b(rent|renting|lease)\b/i.test(answer) && !wantsBuy && !wantsSell) {
         state.intent = null;
         state.question = -1;
-        message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
+        message(config.rentalConversation.services, false);
         link("Explore Raleigh guides", "/learning-center/");
         return;
       }
@@ -1420,7 +1493,7 @@
       if (/\b(only|just|solely|not (?:looking|planning|ready) to buy|don't (?:want|plan) to buy)\b/i.test(answer) && /\b(rent|renting|lease)\b/i.test(answer)) {
         state.intent = null;
         state.question = -1;
-        message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
+        message(config.rentalConversation.services, false);
         link("Explore Raleigh guides", "/learning-center/");
         return;
       }
@@ -1463,7 +1536,7 @@
       state.profile.familyAreaAsked = true;
     }
     if (question && (question.key === "priorities" || question.key === "priorityMore")) {
-      if (/\b(family|relatives|parents|siblings|friends)\b/i.test(answer.replace(/family[- ]friendly/ig, ""))) {
+      if (/\b(family|relatives|parents|siblings|friends)\b/i.test(answer.replace(/family[- ]friendly/ig, "")) && !/\b(?:no|not|don't have|do not have)\s+(?:any )?(?:family|relatives|parents|siblings|friends)\b/i.test(answer)) {
         state.profile.familyNearby = true;
         state.profile.nearbyPerson = /\bfriends\b/i.test(answer) && !/\b(family|relatives|parents|siblings)\b/i.test(answer) ? "friends" : "family";
       }
@@ -1475,7 +1548,7 @@
     }
     if (question && question.key === "commuteDestination") {
       state.profile.commuteDestinationKnown = true;
-      state.profile.commuteDestination = answer.slice(0, 120);
+      state.profile.commuteDestination = /\b(?:rtp|research triangle park)\b/i.test(answer) ? "Research Triangle Park (RTP)" : answer.slice(0, 120);
     }
     if (question && question.key === "commuteRange") {
       state.profile.commuteRangeKnown = true;
@@ -1509,7 +1582,7 @@
     if (question && question.key === "home" && /^(buying|relocating)$/.test(state.intent)) {
       state.profile.homeLastAnswer = answer.slice(0, 200);
       state.profile.budgetKnown = state.profile.budgetKnown || /\$\s?\d{3,7}|\b\d{3,4}\s?k\b|\b\d{6,7}\b/i.test(answer) && !/\b(?:not sure|don't know|unsure)\b/i.test(answer);
-      state.profile.homeSingle = !state.profile.homeDetailsGiven && homeDetailCount(answer) < 2 && !/,|;|\band\b|\bplus\b|&/i.test(answer);
+      state.profile.homeSingle = homeDetailCount(state.profile.homeDetailEvidence || state.profile.facts.home || answer) <= 2;
     }
     if (question && question.key === "homeMore") state.profile.homeSingle = false;
     if (question && question.key === "budget") {
@@ -1535,10 +1608,11 @@
         var extraHome = extracted.home || (/\b(?:nothing else|that covers|that's all|not sure|no more)\b/i.test(answer) ? '' : redact(answer));
         state.profile.facts.home = engine.mergeHome(priorHome, extraHome);
         state.profile.facts.homeAnswered = true;
-        if (canonicalKey==='homeMore' || state.profile.homeDetailsGiven) state.profile.facts.homeMoreAnswered=true;
+        if (canonicalKey==='homeMore' || homeDetailCount(state.profile.homeDetailEvidence || state.profile.facts.home) > 2) state.profile.facts.homeMoreAnswered=true;
         if (canonicalKey==='home') canonical=state.profile.facts.home || 'Flexible';
       }
       if (canonicalKey==='budget') canonical = engine.extractBudget(answer) || 'Not sure';
+      if (canonicalKey==='commuteDestination') canonical=state.profile.commuteDestination;
       if (canonicalKey==='financing') canonical = engine.financingType(answer) || 'Not sure';
       state.profile.facts[canonicalKey] = canonical !== undefined ? canonical : redact(answer);
     }
@@ -1836,7 +1910,7 @@
       state.profile.awaitingFirstName = false;
       delete state.profile.pendingIntroReply;
     }
-    if (routeSellerReferral(value)) return;
+    if (routeRentalPlan(value)) return;
     if (isQuestionPreamble(value)) {
       state.questionDetour = true;
       message("Absolutely, what's the question that you have?", false);
@@ -2090,7 +2164,7 @@
       return;
     }
     if (!state.intent && /\b(?:looking to rent|want to rent|need to rent|rent a (?:home|house|apartment)|looking for a rental|just renting)\b/i.test(value)) {
-      message("A lot of people rent first to get to know the area. We don't have a rental search service, since most local rentals aren't listed through the MLS. Our free Raleigh guides and YouTube videos can help you get started. When you're ready to buy, come back and we'll help you make a game plan for a more permanent home.", false);
+      message(config.rentalConversation.services, false);
       link("Explore Raleigh guides", "/learning-center/");
       return;
     }
