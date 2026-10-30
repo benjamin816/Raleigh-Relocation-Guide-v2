@@ -916,6 +916,7 @@
         page_url: window.location.href,
         page_title: document.title || "",
         page_type: pageType,
+        interaction_source: 'metrics_v2',
         referrer: document.referrer || "",
         page_time_ms: Math.max(0, Date.now() - pageOpenAtMs),
         engaged_time_ms: Math.max(0, getEngagedTimeMs()),
@@ -1059,16 +1060,18 @@
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "hidden") {
         updateEngagedTime();
-        flush(false);
+        visibleSinceMs = 0;
+        // Preserve brief visits too, including closing a mobile browser tab.
+        track("engagement_heartbeat", { heartbeat_trigger: "visibility_hidden" });
+        flush(true);
         return;
       }
       visibleSinceMs = Date.now();
     });
 
     window.setInterval(function () {
-      track("engagement_heartbeat", {
-        heartbeat_interval_ms: 30000
-      });
+      if (document.visibilityState !== "visible") return;
+      track("engagement_heartbeat", { heartbeat_interval_ms: 30000 });
     }, 30000);
 
     window.addEventListener("pagehide", function () {
