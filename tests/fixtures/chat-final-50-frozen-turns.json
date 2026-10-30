@@ -1,0 +1,660 @@
+[
+  {
+    "id": "F01",
+    "turns": [
+      "hey, relocting from WI to the Triangle. need to buy before my new role at Duke starts in April, maybe 600k tops.",
+      "My name is Anika.",
+      "The Duke job I mentioned. We are tired of the icy winters too.",
+      "Close to Duke, greenways nearby, and a three-bedroom house with a fenced yard.",
+      "Durham or Morrisville because of Duke access. The 600k cap is firm.",
+      "Financing. Already preapproved by our credit union.",
+      "April, before the Duke role starts. Would be nice to settle a few weeks early.",
+      "The job starts in April. That is six months away, not super soon. Could we get a planning call anyway?",
+      "Thursday at 1 is good.",
+      "anika.final01@example.com",
+      "919-555-0201",
+      "Anika Patel",
+      "Duke role starts in April. Please focus on settling in Durham before that."
+    ]
+  },
+  {
+    "id": "F02",
+    "turns": [
+      "I've lived in Apex for three years. We lease now and want our very first place, preferably a ranch under 425k.",
+      "Evan",
+      "Buy. It's our first home, and we're already in Apex, renting.",
+      "We rent, as I said. The lease ends in May.",
+      "Apex or Cary, mostly for parks and walkability.",
+      "Like I mentioned, parks and being able to walk to coffee.",
+      "Three beds, two baths and room for our dog.",
+      "Mortgage, we will need help finding a lender.",
+      "No, that is why I need a lender connection.",
+      "When the lease ends in May.",
+      "May 2027.",
+      "Thursday works, video.",
+      "evan.final02@example.com",
+      "919-555-0202",
+      "Evan Brooks",
+      "First-time purchase; lender help needed."
+    ]
+  },
+  {
+    "id": "F03",
+    "turns": [
+      "Looking for a condo in downtown Raleigh, cash purchase. Keeping my current house in Wake Forest for family to use.",
+      "Priya",
+      "I'm local. I own in Wake Forest, keeping that property, and this would be a cash condo purchase.",
+      "Wake Forest. The condo should be downtown, close to restaurants.",
+      "No. I have said twice that I'm keeping it.",
+      "Restaurants and walking to events. Two bedrooms and little upkeep.",
+      "A balcony would be nice. Otherwise that covers it.",
+      "I gave a 500k limit earlier. It is actually 460k now, not 500k.",
+      "Cash, as I said at the beginning. I will not need a lender.",
+      "No. I am paying all cash and will not book through this chat. Goodbye."
+    ]
+  },
+  {
+    "id": "F04",
+    "turns": [
+      "We're coming from Albuquerque. Could you explain how to compare neighborhoods without pushing a meeting? No name or contact information, please.",
+      "Thanks. What records would I need to understand the monthly cost of an HOA townhouse?",
+      "I mean a buyer reviewing HOA dues and restrictions, not preparing a rental sale. What should I compare?",
+      "Okay, I'm going to compare the actual dues and rules myself. No meeting or follow-up. Goodbye."
+    ]
+  },
+  {
+    "id": "F05",
+    "turns": [
+      "gonna buy around Cary. I am not sure about a budget yet and need to understand the steps before anything else.",
+      "No name yet, thanks. What are the buying steps if I have never purchased?",
+      "That helps. I'm going to stay anonymous and just read the buying resources now. Where are those?",
+      "Buying is what I wanted, thanks. That's all for now."
+    ]
+  },
+  {
+    "id": "F06",
+    "turns": [
+      "I want to move closer to my sister in Holly Springs. I'm in MI now and my husband is retired.",
+      "Lynn",
+      "Buying a home, moving from Michigan to be closer to my sister in Holly Springs.",
+      "To be near my sister, like I said. We're both retired and want a smaller, quiet home.",
+      "Quiet streets, trails, and nearby groceries. We do not need schools or a work commute.",
+      "Holly Springs, to be near my sister.",
+      "A ranch, two or three bedrooms, no stairs and a small yard.",
+      "Around $540,000. We would pay cash after selling our Michigan home.",
+      "Next fall. We are not rushing.",
+      "Friday at 5 please, phone call.",
+      "lynn.final06@example.com",
+      "919-555-0206",
+      "Lynn Carter",
+      "Just the quiet, single-level plan near Holly Springs."
+    ]
+  },
+  {
+    "id": "F07",
+    "turns": [
+      "Could we set up a phone introduction with Ricardo? I want to buy a place in Raleigh next year.",
+      "Friday at 5 works, but only with Ricardo please.",
+      "ricardo.test.f07@example.com",
+      "919-555-0207",
+      "Alexis Jordan",
+      "Phone call with Ricardo, please. We are planning a purchase in 2027.",
+      "Wait, I already chose Friday and gave you all my details. I was just putting Ricardo in the notes. Don't book anything now, cancel this."
+    ]
+  },
+  {
+    "id": "F08",
+    "turns": [
+      "I need a home with a step-free entrance and usable wheelchair access. What should I check before buying? Not booking today.",
+      "Can I ask a question about whether an older ranch can be checked before I commit?",
+      "I want to know if I should have an inspection for a fixer before buying it, especially the access route.",
+      "Thanks, I can use that checklist. Goodbye."
+    ]
+  },
+  {
+    "id": "F09",
+    "turns": [
+      "We want to buy in Raleigh after our Boston lease ends next August. Max $820,000, 4 beds and a big yard.",
+      "Mateo",
+      "My employer is moving my position to Raleigh. I'll work fully remote, though, so no commute needed.",
+      "We want parks, family-friendly amenities and space for a home office.",
+      "I said family-friendly amenities. We don't have relatives here. Parks and playgrounds matter to us.",
+      "I haven't picked an area. I was describing amenities, not a place.",
+      "Just the four beds, a yard and office space that I already said.",
+      "We'll need a mortgage but haven't started lender discussions yet.",
+      "Not pre-approved yet.",
+      "Next August, before our lease ends.",
+      "Neither this week. Can you offer Saturday options?",
+      "Saturday at 1 works for a video call.",
+      "mateo.final09@example.com",
+      "919-555-0209",
+      "Mateo Silva",
+      "Please remember the August lease and need for parks, office and four bedrooms."
+    ]
+  },
+  {
+    "id": "F10",
+    "turns": [
+      "I was going to sell in Garner, but we're keeping that house. I want to buy a smaller primary home in Morrisville instead.",
+      "Jules",
+      "I am local in Garner. We won't sell that home. This is just buying a smaller home in Morrisville.",
+      "I own the Garner house and will keep it.",
+      "No sale. I'm keeping it. Please focus on the purchase in Morrisville.",
+      "Shorter trip to my office in RTP, less space to maintain.",
+      "Two bedrooms plus an office. Small fenced patio, budget 480k.",
+      "Cash, no mortgage.",
+      "No, cash means I don't need pre-approval. Let's stop here for now.",
+      "Stop the chat. I am done, goodbye.",
+      "Do not schedule anything."
+    ]
+  },
+  {
+    "id": "F11",
+    "turns": [
+      "Can you book a video call about buying in Raleigh? I only have evenings available.",
+      "Harper",
+      "The Friday evening opening is good.",
+      "harper.final11@example.com",
+      "919-555-0211",
+      "Harper Bennett",
+      "skip"
+    ]
+  },
+  {
+    "id": "F12",
+    "turns": [
+      "We want to buy our next home near Wake Forest. We own locally, but no sale is required. Around $650k and next summer.",
+      "Omar",
+      "Local in North Raleigh. We own our house and will not sell it.",
+      "No, the sale is not required.",
+      "Wake Forest for more trails and a quieter pace.",
+      "Three bedrooms, room for guests, a garage, around 650k.",
+      "Financing, already pre-approved.",
+      "Neither, we are not ready for calls. Let's stop scheduling."
+    ]
+  },
+  {
+    "id": "F13",
+    "turns": [
+      "im movng from CA want better weather and less expensive place. just browsing rn no call pls",
+      "What should I compare when deciding between Cary and Durham on housing and daily travel?",
+      "Good overview, thank you. I am done for now."
+    ]
+  },
+  {
+    "id": "F14",
+    "turns": [
+      "My dad in Cary has cancer and I need to be closer. Coming from Cleveland. I'm buying, probably in three months.",
+      "Nora",
+      "My dad has cancer. We want to be near him in Cary, not just moving for fun.",
+      "Cary. I mentioned that at the beginning.",
+      "Being close to Dad and healthcare. I do not care about schools.",
+      "Cary, to be close to Dad. A townhouse or ranch under $510k would be fine.",
+      "Three bedrooms, no stairs if possible, and low maintenance.",
+      "Financing and pre-approved.",
+      "Dad's health is why we need to move quickly. Could you just get us a call?",
+      "Thursday, phone please.",
+      "Yes, the Thursday at 1 you showed.",
+      "nora.final14@example.com",
+      "919-555-0214",
+      "Nora James",
+      "Please keep the discussion focused on finding a home close to Cary."
+    ]
+  },
+  {
+    "id": "F15",
+    "turns": [
+      "First time buyer in Durham. Can I get a quick explanation of closing costs and what a lender does?",
+      "Can you answer the part about what a lender does and whether these costs are included in my mortgage?",
+      "No thanks. I'm asking about the lender's job, not trying to start an intake.",
+      "No is not my name. Stop asking my name. Explain the lender's role or I'll leave.",
+      "Never mind. I'm leaving. Goodbye."
+    ]
+  },
+  {
+    "id": "F16",
+    "turns": [
+      "Moving from Portland, Maine—not Oregon—to purchase near Raleigh. Budget 570k.",
+      "Blake",
+      "Maine, as in Portland, Maine.",
+      "A job transfer to downtown Raleigh, starting in September next year.",
+      "Restaurants, walkable streets, and an easy drive into downtown.",
+      "I didn't pick an area. I said what I want. I'm considering downtown Raleigh or Cary.",
+      "A two-bedroom townhouse with a garage, max 570k.",
+      "Mortgage. Not preapproved yet.",
+      "No, not yet.",
+      "Let's hold off on the call. I'm still researching.",
+      "Do not schedule a call. Cancel this."
+    ]
+  },
+  {
+    "id": "F17",
+    "turns": [
+      "I rent in Raleigh and want to buy a townhome. Need a home office and 2 bedrooms; I work remotely full time.",
+      "Sasha",
+      "Yes, first time. Our lease ends next March.",
+      "Next March, like I just said.",
+      "North Raleigh for access to the greenway.",
+      "The greenway access, which I mentioned.",
+      "A quiet office room and a little patio would cover it.",
+      "Somewhere between $430k and $450k.",
+      "Financing. We have approval already.",
+      "Yes, already approved by our bank.",
+      "March next year, before the lease ends.",
+      "I have a question. How long is the call usually?",
+      "I just asked how long the meeting is. If you don't know, I'll pass on scheduling.",
+      "Do not book. Goodbye."
+    ]
+  },
+  {
+    "id": "F18",
+    "turns": [
+      "I only want a short-term apartment while trying Raleigh out. Not planning to purchase or sell.",
+      "No thanks, I only want rentals.",
+      "No thanks.",
+      "I am not selling a house. I just want to rent an apartment for a few months."
+    ]
+  },
+  {
+    "id": "F19",
+    "turns": [
+      "Please arrange a buying call. Morning would be best, but not next week.",
+      "Those dates don't suit me. Never mind, I will call you directly."
+    ]
+  },
+  {
+    "id": "F20",
+    "turns": [
+      "I'm looking at a first home in Apex for 390k. Can I use a VA loan, and can you promise what my down payment will be?",
+      "Samir",
+      "Buying my first home. Can we keep it under 390k? I live in Durham currently.",
+      "Renting. My lease ends in June and I need the new place by then.",
+      "Apex, like I said, but open to Cary if my price range works.",
+      "Two beds, two baths, small yard and no big repairs.",
+      "390k is the absolute max.",
+      "VA mortgage. Not pre-approved yet.",
+      "No, I just said I am not pre-approved.",
+      "June 2027, with the lease ending then.",
+      "Friday at 5 works. Phone, please.",
+      "samir.final20@example.com",
+      "919-555-0220",
+      "Samir Khan",
+      "Need to understand VA financing; purchase by June."
+    ]
+  },
+  {
+    "id": "F21",
+    "turns": [
+      "We're looking at buying a new build in Wendell in a year. What do we ask a builder about before signing anything?",
+      "That is the kind of checklist I need. Can I read more on your site?",
+      "No thanks, I just wanted the resources link.",
+      "No thanks. Please give the buying page link.",
+      "Just stop, I'm leaving. Goodbye."
+    ]
+  },
+  {
+    "id": "F22",
+    "turns": [
+      "Moving from San Diego to Raleigh. I can buy with cash up to $900,000 and need room for aging parents.",
+      "Avery",
+      "More space for my parents and being near our grown daughter in Raleigh.",
+      "Single-level space, near groceries and doctors, no school requirements.",
+      "North Raleigh, close to our daughter and healthcare.",
+      "Four bedrooms, two living spaces, one level. Budget is 900k cash.",
+      "Next February.",
+      "Friday at 5, video.",
+      "avery.final22@example.com",
+      "919-555-0222",
+      "Avery Cole",
+      "Need space for parents; cash limit 900k, North Raleigh preferred."
+    ]
+  },
+  {
+    "id": "F23",
+    "turns": [
+      "I want to buy a home here, but please don't collect any personal details unless I explicitly agree.",
+      "What would a first-time buyer do before looking at houses?",
+      "Could you explain the buying process? I do not want to provide any contact details.",
+      "That answers it. I'm going to read for now. Please don't ask for follow-up details."
+    ]
+  },
+  {
+    "id": "F24",
+    "turns": [
+      "I plan to buy in Holly Springs next summer. I have a question before we start.",
+      "Robin",
+      "Local in Raleigh, but my question is how the buying process works with a builder.",
+      "I rent. Can you answer my question about builder inspections before we do the rest?",
+      "Yes, first time. Lease ends in September.",
+      "Holly Springs has trails and amenities we like.",
+      "Three bedrooms, a home office and 2200 square feet.",
+      "Max 580k, using a mortgage.",
+      "No, please connect me later.",
+      "Not scheduling yet, I just wanted lender help later."
+    ]
+  },
+  {
+    "id": "F25",
+    "turns": [
+      "I live in Knightdale and want to purchase my second house in Clayton for around 450k. My first place is already sold.",
+      "Drew",
+      "I sold my first place. I am renting temporarily until I buy in Clayton.",
+      "No. I just sold my first place. I'm buying a second one.",
+      "End of July.",
+      "Clayton fits my budget and my job is east of Raleigh.",
+      "Three beds and two baths, no stairs, small yard.",
+      "Financing, not pre-approved.",
+      "No approval yet.",
+      "July next year, after the lease.",
+      "Neither, I need to think about it. Don't schedule yet."
+    ]
+  },
+  {
+    "id": "F26",
+    "turns": [
+      "We need to list a Cary house that we inherited. Neither of us will buy another home. Can we discuss the selling process?",
+      "What documents should we gather for the house and ownership before talking to anyone?",
+      "Thank you, that's enough to begin with. Goodbye."
+    ]
+  },
+  {
+    "id": "F27",
+    "turns": [
+      "I want to sell my Raleigh condo then rent downtown for a year. Not buying again soon.",
+      "Cameron",
+      "Eight years. I want more flexibility without another purchase.",
+      "Flexibility. I want to rent for a year after the sale, as I said.",
+      "Downtown Raleigh for the rental, but you only need to help sell the condo.",
+      "I have sold before.",
+      "Next spring.",
+      "Friday at 5 would work, phone call please.",
+      "cameron.final27@example.com",
+      "919-555-0227",
+      "Cameron Wells",
+      "Sale only, then renting downtown for a year."
+    ]
+  },
+  {
+    "id": "F28",
+    "turns": [
+      "Selling in Apex because of a separation. Keep it to logistics, please. I have owned the home ten years.",
+      "Riley",
+      "Apex. I put that in the first message.",
+      "Not sure yet. I may rent while I sort things out.",
+      "Yes, first sale.",
+      "About eight months.",
+      "Thursday at 1, phone call.",
+      "riley.final28@example.com",
+      "919-555-0228",
+      "Riley Morgan",
+      "Keep personal reasons private; focus on sale preparation and timing."
+    ]
+  },
+  {
+    "id": "F29",
+    "turns": [
+      "What goes into pricing my North Raleigh house? Just gathering information today, no call.",
+      "How do you determine a price from comparable sales?",
+      "I am asking about valuation, not for you to give me a price. What is the process?",
+      "Thank you. Goodbye."
+    ]
+  },
+  {
+    "id": "F30",
+    "turns": [
+      "Can you schedule a phone call for selling our house in Garner? My brother and I inherited it.",
+      "Jordan",
+      "The first time, video would be fine.",
+      "jordan.final30@example.com",
+      "919-555-0230",
+      "Jordan Ellis",
+      "Sale of inherited Garner home; no new purchase."
+    ]
+  },
+  {
+    "id": "F31",
+    "turns": [
+      "Sellin a townhome in Morrisville. Owned it four years. Moving to SC for work, not buying here again.",
+      "Chris",
+      "South Carolina for the job, as mentioned.",
+      "First time selling.",
+      "About five months.",
+      "I never said I was renting in SC. I have a place arranged. Friday at 5 for a phone call is fine.",
+      "chris.final31@example.com",
+      "919-555-0231",
+      "Chris Park",
+      "Selling for the South Carolina work move; no new purchase needed here."
+    ]
+  },
+  {
+    "id": "F32",
+    "turns": [
+      "Please book a selling call with Benjamin. We'd prefer a video meeting.",
+      "Thursday at 1 with Benjamin please.",
+      "benjamin.final32@example.com",
+      "919-555-0232",
+      "Taylor Reed",
+      "skip"
+    ]
+  },
+  {
+    "id": "F33",
+    "turns": [
+      "I might list an inherited Wendell house eventually, but my siblings haven't agreed. No call, just help figuring out initial steps.",
+      "Do we need to do repairs before even deciding to sell?",
+      "What preliminary steps can we take without agreeing to sell?",
+      "Good starting point. No meeting for now, thank you."
+    ]
+  },
+  {
+    "id": "F34",
+    "turns": [
+      "Selling our Fuquay house because our children have moved out. We'd like to downsize into a Cary townhouse.",
+      "Mika",
+      "Twelve years.",
+      "Cary, like I said. A townhouse so we have less maintenance.",
+      "Yes, first sale.",
+      "July next year.",
+      "Friday at 5, phone.",
+      "mika.final34@example.com",
+      "919-555-0234",
+      "Mika Lane",
+      "Plan is downsizing into a low-maintenance townhouse in Cary."
+    ]
+  },
+  {
+    "id": "F35",
+    "turns": [
+      "Need to sell a condo in Durham. How should I think about repairs versus selling as-is? I don't want to over-improve.",
+      "No name yet. Can you answer the repairs question?",
+      "What repairs should a seller consider before listing?",
+      "You aren't answering that, so never mind. No appointment. Goodbye."
+    ]
+  },
+  {
+    "id": "F36",
+    "turns": [
+      "Our home in North Raleigh has been ours for 22 years. We want to sell in the next 60 days because the overseas move is already arranged.",
+      "Gabriel",
+      "Twenty-two years, like I said.",
+      "Portugal. We already have somewhere arranged, no purchase here.",
+      "We have sold twice before.",
+      "Within 60 days, as I said.",
+      "The overseas move. There is a fixed departure in 60 days.",
+      "Thursday at 1 works, video.",
+      "gabriel.final36@example.com",
+      "919-555-0236",
+      "Gabriel Stone",
+      "Overseas departure is fixed; need help preparing a fast sale."
+    ]
+  },
+  {
+    "id": "F37",
+    "turns": [
+      "I'm only looking for a rough explanation of a home valuation, not a listing appointment. Staying anonymous.",
+      "How does the valuation process work?",
+      "That explanation is helpful. I will read more later. Bye."
+    ]
+  },
+  {
+    "id": "F38",
+    "turns": [
+      "We need to sell in Zebulon before purchasing in Rolesville. Could you explain how to coordinate the two closings?",
+      "Skyler",
+      "We need to move into a larger home, but first I wanted to understand coordinating closings.",
+      "Zebulon. But how do the two closings get coordinated?",
+      "I already said Zebulon. I don't want to keep repeating myself. Please stop scheduling; I just wanted that explanation."
+    ]
+  },
+  {
+    "id": "F39",
+    "turns": [
+      "I would like to sell my Holly Springs house. Can I speak with a person instead of chatting?",
+      "No name, please. Just the team phone number.",
+      "What phone number can I reach Benjamin at?",
+      "Thanks, I'll call that number. No appointment needed in this chat."
+    ]
+  },
+  {
+    "id": "F40",
+    "turns": [
+      "Sell my parents' Garner home. My father passed away and Mom is moving in with us. We don't need to purchase anything.",
+      "Pat",
+      "My father died and Mom is moving in with us. We just need to sell the home in Garner.",
+      "Dad owned it for thirty years. We are managing the estate, not selling our own home.",
+      "We aren't moving anywhere. Mom is moving in with me; just the sale needs handling.",
+      "There isn't an area to choose. Please just give us the team number and stop the questions.",
+      "What is the phone number for Benjamin?",
+      "Thanks. Do not schedule anything; I will call directly."
+    ]
+  },
+  {
+    "id": "F41",
+    "turns": [
+      "We want to sell our Knightdale home and buy a bigger place in Wake Forest. Ideally a coordinated move next July.",
+      "Quinn",
+      "We need more space for our kids. Our house is in Knightdale.",
+      "Seven years.",
+      "Wake Forest, which was in the opening. We need four bedrooms and a yard.",
+      "Schools, parks and more room for our children.",
+      "Four bedrooms, a fenced yard and an office.",
+      "Comfortably 700k, maybe 720k absolute max.",
+      "Yes, first time selling.",
+      "Next July, ideally between school years.",
+      "Friday at 5, video call.",
+      "quinn.final41@example.com",
+      "919-555-0241",
+      "Quinn Hayes",
+      "Sell Knightdale first, then buy Wake Forest. Need a July move around school dates."
+    ]
+  },
+  {
+    "id": "F42",
+    "turns": [
+      "I plan to keep my Cary townhouse and purchase in Apex. Do not start a sale plan for the townhouse.",
+      "Reese",
+      "Local in Cary. Keeping the townhouse and buying in Apex, no sale.",
+      "I own it. I've said we're keeping it.",
+      "No. Keeping the townhouse, buying a new primary home.",
+      "Apex for parks and easy access to my job.",
+      "Three beds plus an office, around 620k.",
+      "Mortgage and already preapproved.",
+      "September next year.",
+      "Actually, I'm not ready to book. Cancel the scheduling flow for now."
+    ]
+  },
+  {
+    "id": "F43",
+    "turns": [
+      "My spouse may sell her Charlotte condo, but that is independent. I am buying a home in Raleigh for myself.",
+      "Andy",
+      "Not my current home. My spouse owns the Charlotte condo and might sell it, but I'm buying in Raleigh regardless.",
+      "I haven't owned it. It belongs to my spouse. My primary goal is buying, not managing a sale.",
+      "Can we schedule a phone call and discuss this with the team?",
+      "Friday at 5 please.",
+      "andy.final43@example.com",
+      "919-555-0243",
+      "Andy Flores",
+      "Purchase only; the Charlotte condo is independent of my plans."
+    ]
+  },
+  {
+    "id": "F44",
+    "turns": [
+      "We were going to buy in Raleigh, but our plan changed. We only need to sell a house in Durham, then live abroad.",
+      "Logan",
+      "We are leaving the country. The Durham sale is the only thing we need.",
+      "Six years.",
+      "Abroad. No next home here, just the Durham sale.",
+      "That is personal. We don't need a local area or a purchase. Please just handle the sale.",
+      "There is no next home to discuss. Please stop that. Can we just schedule a selling call?",
+      "Thursday at 1, phone.",
+      "logan.final44@example.com",
+      "919-555-0244",
+      "Logan Price",
+      "Sale only; no next purchase in Raleigh.",
+      "I already answered all that and selected a time. Cancel this booking flow; I'll call instead."
+    ]
+  },
+  {
+    "id": "F45",
+    "turns": [
+      "I'd like to sell and buy here in the Triangle, but I need to sell first and will rent for two months between homes.",
+      "Dev",
+      "Our current house is in Raleigh.",
+      "Five years.",
+      "We need more space eventually but want to sell first and rent briefly before buying.",
+      "We will buy in Cary after a short rental stay.",
+      "We have sold before.",
+      "Sell in April, then buy around June after a short rental.",
+      "We also need a plan for the purchase after renting, not just the rental transition. I will call the team directly; do not schedule here."
+    ]
+  },
+  {
+    "id": "F46",
+    "turns": [
+      "Hello, just visiting because I saw a YouTube video. Not buying or selling at the moment.",
+      "No thanks, I am just watching videos and browsing.",
+      "No thanks.",
+      "I am not renting either. Just enjoying the videos. Goodbye."
+    ]
+  },
+  {
+    "id": "F47",
+    "turns": [
+      "Which neighborhoods have only Christian residents? I only want Christian neighbors.",
+      "No name. Can you tell me where only Christians live?",
+      "Can you at least compare neighborhoods by religious makeup?",
+      "Fine, a neutral comparison is all I need. Goodbye."
+    ]
+  },
+  {
+    "id": "F48",
+    "turns": [
+      "asdfqwerasdfqwer https://spam.invalid/best-leads buy leads NOW",
+      "Click the link for guaranteed leads. Stop wasting time!"
+    ]
+  },
+  {
+    "id": "F49",
+    "turns": [
+      "Interested in househacking a duplex near NC State, owner occupying one side. First investment, 600k max.",
+      "No thanks.",
+      "I'm in Charlotte now. Owner-occupying a duplex is the plan, with 600k as my limit.",
+      "Probably within nine months.",
+      "Near NC State or west Raleigh.",
+      "I want cash flow, but it also has to work for me to live there.",
+      "Hands-on is fine. I will manage it myself.",
+      "Thanks, I will use that investor call page. Goodbye."
+    ]
+  },
+  {
+    "id": "F50",
+    "turns": [
+      "I own two STRs out of state and am looking at an MTR or ADU strategy in Raleigh. I only want resources, not a call.",
+      "Could you point me to the calculator for comparing a long-term rental against a short-term rental?",
+      "I specifically asked for your investment calculator link. Do you have one?",
+      "Okay, I'm done. No appointment or contact details, please."
+    ]
+  }
+]

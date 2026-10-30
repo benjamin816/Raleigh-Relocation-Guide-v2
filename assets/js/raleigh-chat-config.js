@@ -2,6 +2,34 @@
 window.RaleighChatConfig = {
   "informationalAnswers": [
     {
+      "pattern": "\\bHOA\\b",
+      "answer": "For an HOA property, compare the current dues, what they cover, planned increases or assessments, reserves, and the rules that matter to you. Ask for the current governing documents and available financial and meeting records for the specific community; a listing summary alone is not the complete picture."
+    },
+    {
+      "pattern": "\\b(?:repairs?|as[- ]is|over[- ]?improv\\w*|prepar\\w*)\\b.{0,90}\\b(?:sell|sale|list|decid)|\\b(?:sell|sale|list)\\w*\\b.{0,90}\\b(?:repairs?|as[- ]is|prepar\\w*)",
+      "answer": "Before spending on repairs, separate safety or maintenance problems from cosmetic upgrades. Gather repair estimates and compare the likely selling options, including selling as-is. You do not need to commit to renovations just to start gathering information. The right preparation depends on the property, your timing, and what buyers would be comparing it with."
+    },
+    {
+      "pattern": "\\b(?:lender|loan officer)\\b.{0,65}\\b(?:do|role|job|explain|cost)|\\b(?:what|how)\\b.{0,50}\\b(?:closing costs?|lender)\\b",
+      "answer": "A lender reviews your finances, explains loan options, and provides estimates of payments, cash needed, and closing costs. Ask the lender which costs would be paid upfront and whether any can be financed under the specific loan. This chat cannot determine approval, exact down payment, or loan terms."
+    },
+    {
+      "pattern": "\\b(?:first[- ]time buyer|buyer)\\b.{0,55}\\b(?:do|before looking)|\\bbuying process\\b",
+      "answer": "Before viewing homes, set a comfortable total budget, speak with a lender if you will finance, and separate your must-haves from preferences. Then compare areas and homes, review an offer and its deadlines with your team, arrange the appropriate inspections, and prepare for closing. You can learn about these steps before committing to a purchase."
+    },
+    {
+      "pattern": "\\b(?:coordinat\\w*|two closings|sell first|buy.*sell|sell.*buy)\\b.{0,80}\\b(?:closings?|process|work)|\\bclosings?\\b.{0,50}\\b(?:coordinat\\w*|two)\\b",
+      "answer": "A coordinated sale and purchase starts with matching the timelines, funding needs, and contract deadlines. The team can help compare approaches such as buying after the sale closes or using temporary housing between homes. Your lender and closing attorney need to confirm the financing and closing arrangements; do not assume both transactions must close at exactly the same time."
+    },
+    {
+      "pattern": "\\b(?:how long|length|duration)\\b.{0,50}\\b(?:call|meeting|consult)\\b",
+      "answer": "Our exploration-call appointments are scheduled for 60 minutes. You can use that time to discuss your goals, timing, areas, and questions with the team."
+    },
+    {
+      "pattern": "\\b(?:valuation|comparable sales|determine.*price|pricing.*house|price.*comparable)\\b",
+      "answer": "A valuation compares recent closed sales of similar homes, then considers location, size, layout, condition, and features. Current competing listings and your timing also matter. This chat can explain the process but cannot provide a reliable property-specific value."
+    },
+    {
       "pattern": "\\b(?:accessib\\w*|wheelchair|step[- ]free|mobility)\\b",
       "answer": "For accessibility, compare the actual entry route, steps, doorway widths, bathroom layout, bedroom access, and any elevator or single-level needs. Listing labels alone may not tell you whether a home works for you. Write down the measurements and features you need so those can be checked on each property."
     },

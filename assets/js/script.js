@@ -925,6 +925,8 @@
     };
 
     var track = function (eventName, properties) {
+      // End-to-end diagnostics must never count as real visitor traffic.
+      if (/[?&]analytics_diagnostic=/.test(window.location.href) && !/^diagnostic_/.test(eventName)) eventName = "diagnostic_" + eventName;
       if (!eventName) {
         return;
       }
@@ -1060,17 +1062,17 @@
       if (document.visibilityState === "hidden") {
         updateEngagedTime();
         visibleSinceMs = 0;
-        flush(false);
+        // Preserve brief visits too, including closing a mobile browser tab.
+        track("engagement_heartbeat", { heartbeat_trigger: "visibility_hidden" });
+        flush(true);
         return;
       }
       visibleSinceMs = Date.now();
     });
 
     window.setInterval(function () {
-      if (document.visibilityState !== 'visible') return;
-      track("engagement_heartbeat", {
-        heartbeat_interval_ms: 30000
-      });
+      if (document.visibilityState !== "visible") return;
+      track("engagement_heartbeat", { heartbeat_interval_ms: 30000 });
     }, 30000);
 
     window.addEventListener("pagehide", function () {
@@ -4937,7 +4939,7 @@
     chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test13";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261030-test56";
+    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261030-test57";
     configScript.src = "/assets/js/raleigh-chat-config.js?v=" + chatVersion;
     configScript.onload = function () {
       var engineScript = document.createElement("script");

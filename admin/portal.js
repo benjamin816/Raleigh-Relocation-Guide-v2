@@ -238,7 +238,7 @@
         'Website events · ' + result.start + ' to ' + result.end;
       $('analytics-metrics').replaceChildren(metric('Tracked visits', result.visits, 'Unique sessions'),
         metric('Total leads', result.leads == null ? 'Not available' : result.leads, 'Unique contacts · forms, guide downloads & bookings'),
-        metric('Average time on site', duration(result.averageTimeSeconds), 'Tracked visible-tab time'),
+        metric('Average time on site', result.averageTimeSeconds == null ? 'Collecting timing' : duration(result.averageTimeSeconds), result.averageTimeSeconds == null ? 'Reliable timing starts with new public visits' : 'Visible-tab time · ' + (result.measuredTimeVisits || 0) + ' measured visits'),
         metric('Average pages per visit', result.averagePages == null ? 'Not available' : result.averagePages.toFixed(1), 'Page views per session'),
         metric('Chat conversations', result.chatConversations == null ? 'Not available' : result.chatConversations, 'Conversations with a visitor reply'),
         metric('Chat → booked call', result.chatConversion == null ? 'No conversations yet' : result.chatConversion.toFixed(1) + '%', (result.chatBooked || 0) + ' confirmed bookings'),

@@ -21,6 +21,8 @@ Promise.resolve().then(()=>{
   scope.analyticsTracker.track('metric_probe',{});scope.analyticsTracker.flush(false);
   const events=sent.flatMap(batch=>batch.events);
   assert.equal(events.find(event=>event.event_name==='metric_probe').engaged_time_ms,15000);
-  assert.equal(events.filter(event=>event.event_name==='engagement_heartbeat').length,0);
+  assert.equal(events.filter(event=>event.event_name==='engagement_heartbeat').length,1);
+  assert.equal(events.find(event=>event.event_name==='engagement_heartbeat').engaged_time_ms,10000);
+  assert.equal(events.find(event=>event.event_name==='engagement_heartbeat').interaction_source,'metrics_v2');
   console.log('Visible time excludes ten minutes spent in a hidden tab.');
 });
