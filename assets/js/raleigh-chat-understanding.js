@@ -1,6 +1,14 @@
 (function(root,factory){var api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.RaleighChatUnderstanding=api;})(typeof window==='object'?window:globalThis,function(){
   'use strict';
   function scrub(text){return String(text||'').replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/ig,'[email]').replace(/(?:\+?\d[\d ().-]{7,}\d)/g,function(match){return match.replace(/\D/g,'').length>=10?'[phone]':match;});}
+  function directMeaning(text,context,engine){
+    if(context.booking||context.awaitingFirstName||context.contact||context.ended)return null;
+    var value=String(text).trim().replace(/[’]/g,"'");
+    if(/^(?:hi|hello|hey|good (?:morning|afternoon|evening)|how(?:'s| is) it going|how are you(?: doing)?|what(?:'s| is) up)[.!?\s]*$/i.test(value))return 'hello';
+    if(/^(?:(?:i(?:'m| am)?|we(?:'re| are)?)\s+)?(?:(?:looking|want|hoping)\s+to\s+)?(?:buy|buying|purchase|purchasing|sell|selling|buy and sell|sell and buy|both)(?:\s+(?:a|my|our|the)\s+(?:home|house|property))?[.!\s]*$/i.test(value))return value;
+    if(/^(?:budget|priorityBudget)$/.test(context.question||'')&&!engine.asksQuestion(value)&&engine.extractBudget(value))return value;
+    return null;
+  }
   function eligible(text,context,engine){
     if(context.awaitingFirstName||context.contact||context.ended||context.booking&&context.booking!=='choose')return false;
     if(engine.classifySafety(text)||engine.endsConversation(text)||engine.declinesScheduling(text)||engine.declinesContact(text)||/^(?:forget|forget me|clear chat|delete chat history)$/i.test(text.trim()))return false;
@@ -10,11 +18,12 @@
     return true;
   }
   function canonical(frame,original,context,engine){
+    var direct=directMeaning(original,context,engine);if(direct!==null)return direct;
     if(!frame||typeof frame.certain!=='boolean'||typeof frame.canonical!=='string'||frame.canonical.length>600)return original;
     if(engine.classifySafety(original)||engine.declinesScheduling(original)||engine.declinesContact(original))return original;
     if(frame.kind==='clarify')return 'huh';
     if(!frame.certain)return context.booking?original:'huh';
-    if(frame.kind==='clarify'||frame.kind==='unknown')return 'huh';
+    if(frame.kind==='unknown')return 'huh';
     if(frame.kind==='preamble')return 'I have a question';
     if(frame.kind==='goodbye')return 'Goodbye';
     if(frame.kind==='greeting')return 'hello';
@@ -54,9 +63,11 @@
       cancel:function(){controllers.forEach(function(c){c.abort();});controllers.clear();},
       interpret:async function(text,context){
         if(!eligible(text,context,options.engine))return {mode:'rules',reason:'protected_field'};
+        var direct=directMeaning(text,context,options.engine);
+        if(direct!==null)return {mode:'rules',reason:'clear_message',canonical:direct};
         if(Date.now()<cooldownUntil)return {mode:'fallback',reason:'cooldown'};
         var controller=new AbortController();controllers.add(controller);
-        var timer=setTimeout(function(){controller.abort();},options.timeout||6500);
+        var timer=setTimeout(function(){controller.abort();},options.timeout||2500);
         try{
           var known={};['originCode','currentArea','familyArea','remoteWork','retired','usingFinancing','preApproved','requestedHost'].forEach(function(key){if(context.known&&context.known[key]!==undefined)known[key]=context.known[key];});
           var payload={message:scrub(text),context:{intent:context.intent||'none',question:context.question||'',booking:!!context.booking},known:known,
@@ -73,5 +84,5 @@
       }
     };
   }
-  return {create:create,eligible:eligible,canonical:canonical,scrub:scrub};
+  return {create:create,eligible:eligible,canonical:canonical,scrub:scrub,directMeaning:directMeaning};
 });

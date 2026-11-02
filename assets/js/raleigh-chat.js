@@ -98,6 +98,7 @@
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
   var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, hasUserMessage: false, completed: false, unreadCount: 0, badgeReadyAt: 0, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
   var incomingGeneration = 0;
+  var incomingSequence = 0;
   var incomingQueue = Promise.resolve();
   var aiStatus = root.querySelector('.rchat-test-ai');
   var understanding = config.understandingEnabled && isTestSurface && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) && window.RaleighChatUnderstanding ?
@@ -495,6 +496,7 @@
   function renderMessage(text, byUser, options) {
     options = options || {};
     var row = document.createElement("div");
+    if(byUser&&!options.restoring)log.querySelectorAll('.rchat-read').forEach(function(receipt){receipt.remove();});
     row.className = "rchat-row" + (byUser ? " rchat-row--user" : "") + (options.restoring ? " rchat-row--restored" : "");
     if (!byUser) {
       var img = document.createElement("img");
@@ -529,6 +531,14 @@
       refreshAttention();
     }
     return bubble;
+  }
+  function markLatestUserRead() {
+    log.querySelectorAll('.rchat-read').forEach(function(receipt){receipt.remove();});
+    var contents=log.querySelectorAll('.rchat-row--user .rchat-content');
+    if(!contents.length)return;
+    var receipt=document.createElement('span');
+    receipt.className='rchat-read';receipt.textContent='Read';
+    contents[contents.length-1].appendChild(receipt);
   }
   function safeLink(href) {
     return typeof href === "string" && /^\/(?!\/)[a-z0-9\-_/]*$/i.test(href) ? href : null;
@@ -1886,8 +1896,8 @@
   function receiveText(text) {
     var value=String(text).trim();
     if(!value||state.submitting||state.ended)return;
-    if(!understanding){handleText(value);return;}
-    var generation=incomingGeneration,receivedAt=Date.now(),history=state.history.slice(-4);
+    if(!understanding){handleText(value);markLatestUserRead();return;}
+    var generation=incomingGeneration,sequence=++incomingSequence,receivedAt=Date.now(),history=state.history.slice(-4);
     lastUserSentAt=receivedAt;cancelClarification();interruptBotQueue();
     var privateField=!!state.contact || !!(state.booking && !/^(?:choose|loading|checking)$/.test(state.booking.step));
     message(value,true,{remember:!privateField});sound();
@@ -1897,7 +1907,8 @@
       aiStatus.textContent='Understanding your message…';
       var result=await understanding.interpret(value,context);
       if(generation!==incomingGeneration)return;
-      aiStatus.textContent=result.mode==='ai'?'AI interpreted · existing rules handle the reply':result.mode==='fallback'?'AI unavailable · existing bot handling this message':'Existing rules · contact, safety or scheduling';
+      aiStatus.textContent=result.mode==='ai'?'AI interpreted · existing rules handle the reply':result.mode==='fallback'?'AI unavailable · existing bot handling this message':result.reason==='clear_message'?'Existing rules · clear message':'Existing rules · contact, safety or scheduling';
+      if(sequence===incomingSequence)markLatestUserRead();
       handleText(value,false,{canonical:result.canonical,alreadyShown:true,receivedAt:receivedAt});
     });
   }
@@ -2090,6 +2101,7 @@
       }
       persist();
       if (pendingIntroReply) handleText(pendingIntroReply, true);
+      else if (!state.intent) message("Are you looking to buy or sell real estate in the Raleigh area?", false);
       return;
     }
     if (state.profile.awaitingVisitReason && !replaying) {
@@ -2103,6 +2115,13 @@
     if (!replaying && !state.intent && !state.profile.introAsked && !detectIntent(value) &&
         /\b(?:bored|just browsing|looking around|just exploring|killing time)\b/i.test(value)) {
       offerBrowsingHelp();
+      return;
+    }
+    if (!replaying && !state.profile.introAsked && !state.intent && !state.booking && !state.contact &&
+        /^(?:hi|hello|hey|good (?:morning|afternoon|evening)|how(?:'s| is) it going|how are you(?: doing)?|what(?:'s| is) up)[.!?\s]*$/i.test(value)) {
+      state.profile.introAsked=true;state.profile.awaitingFirstName=true;
+      persist();
+      message("Hi! 😊 I'm Sam, and I can help answer your questions about buying or selling in Raleigh. May I have your first name so I can personalize things for you?",false);
       return;
     }
     if (!replaying && !state.profile.introAsked && !state.intent && !state.booking && !state.contact &&

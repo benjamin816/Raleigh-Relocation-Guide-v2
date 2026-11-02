@@ -49,6 +49,12 @@ deployment credential is not required for normal chatbot operation.
 - Booking time selections and all actual calendar checks remain deterministic.
   The model cannot provide a start time or submit a booking.
 - Unrelated answers become clarification, not invented qualification facts.
+- Clear buy/sell answers and greetings use the existing parser immediately and
+  cannot be rejected by a model's uncertain classification. Price answers to a
+  budget question also bypass inference. Other AI calls have a 2.5-second ceiling;
+  the natural reply pause runs from the original send time, not AI completion.
+- A first greeting introduces Sam and asks for a name. A subtle Read receipt
+  appears below the latest user bubble after processing, before the delayed reply.
 - Timeout, quota, invalid JSON, invalid interpretation and network failures use
   the existing rules. A short circuit breaker avoids repeatedly waiting for an
   unavailable provider. Reset cancels requests and discards stale results.

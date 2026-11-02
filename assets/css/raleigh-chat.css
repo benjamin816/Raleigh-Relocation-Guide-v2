@@ -41,6 +41,7 @@
 .rchat-row--user .rchat-bubble { border-radius:15px 15px 4px 15px; background:#f1db8b; color:var(--rchat-deep); }
 .rchat-time { display:block; margin-top:6px; color:#718075; font-size:10px; line-height:1.3; text-align:right; white-space:nowrap; }
 .rchat-row--user .rchat-time { color:#61552c; }
+.rchat-read { display:block; margin:3px 3px 0 0; color:#718075; font-size:10px; line-height:1.3; text-align:right; }
 .rchat-link { color:#88630b!important; text-decoration:underline; text-underline-offset:2px; font-weight:800; }
 .rchat-link:hover { color:#5f4405!important; }
 .rchat-compose { display:flex; gap:8px; align-items:flex-end; padding:12px 14px; border-top:1px solid #e2e8e2; background:#fff; }
