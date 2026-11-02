@@ -92,7 +92,8 @@ function createSession(id, metadata) {
         return (!preference.host||slot.availableHosts.includes(preference.host)) &&
           (!preference.weekdays?.length||preference.weekdays.includes(day)) &&
           (!preference.date||preference.date===`${parts.year}-${parts.month}-${parts.day}`) &&
-          (!preference.daypart||slot.daypart===preference.daypart);
+          (!preference.daypart||preference.daypart==='midday'?
+            !preference.daypart||(()=>{const h=Number(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',hourCycle:'h23'}).format(new Date(slot.start)));return h>=11&&h<15;})():slot.daypart===preference.daypart);
       });
       if(metadata && metadata.legacyBookingService)slots.forEach(slot=>delete slot.referralMinutes);
       return Promise.resolve(slots);

@@ -1,6 +1,6 @@
-# Test chat language interpretation
+# Living in Raleigh chat language interpretation
 
-The Test website uses `assets/js/raleigh-chat-understanding.js` before the existing
+The website uses `assets/js/raleigh-chat-understanding.js` before the existing
 conversation engine. AI interprets a message; the existing engine writes replies
 and controls qualification, consent, contacts and calendar calls. This is not a
 generative replacement of Sam's approved talk tracks.
@@ -18,9 +18,9 @@ Free plan. No paid plan or billing method was added. At the free daily AI limit,
 inference fails and the client uses the existing bot. The 12-per-minute IP limit
 also falls back. Rate limiting is approximate, not an authentication mechanism.
 
-Only `http://127.0.0.1:8777` and `http://localhost:8777` are allowed. Production
-origins are explicitly rejected. The browser also gates AI to the local Test
-surface. The existing live booking/admin relay is a separate, unchanged Worker.
+Authorized origins are `https://raleighncguide.com`, `https://www.raleighncguide.com`,
+`http://127.0.0.1:8777`, and `http://localhost:8777`. AI is enabled on the public
+site for the November 2 promotion. Reset and AI diagnostic controls stay local-only. The existing live booking/admin relay is a separate, unchanged Worker.
 This interpreter has no Calendar, Sheet, email or booking credentials/routes.
 
 Build the approved-flow playbook after changing the chat configuration:
@@ -100,3 +100,10 @@ All 80 captured-frame turns are retained in `chat-ai-dialogue-replay.test.cjs`.
 
 **Chat appointment creation remains paused in the existing booking service.**
 This rollout does not restore it or deploy the pending short-referral service.
+
+## November 2 production promotion
+
+Owner authorized publication and restored chat booking authority. The existing
+AI Worker URL remains unchanged. Booking service version 18 supports 15-minute
+phone referrals and weekend midday filters; private portal authentication is
+unchanged. Earlier paused-booking statements above describe the testing period.

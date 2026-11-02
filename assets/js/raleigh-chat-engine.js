@@ -213,9 +213,14 @@
     if (/\b(own|owner|homeowner|mortgage|my house|my home)\b/.test(text)) return "owning";
     return null;
   }
+  function uncertainArea(value) {
+    var text=normalize(value);
+    return /\b(?:unsure|not (?:(?:really|quite|too) )?(?:sure|certain)|no (?:idea|clue)|don['’]?t (?:really )?know|do not (?:really )?know|haven['’]?t (?:thought|decided|considered)|undecided|idk)\b/i.test(text)&&
+      !/\b(?:amenities|shopping|dining|schools?|commut\w*|parks?|trails?|family|walkab\w*|yard|bedrooms?|bathrooms?)\b/i.test(text);
+  }
   function isUnclearAnswer(value, questionKey) {
     var text = normalize(value).replace(/[.!?]+$/, "").trim();
-    if(/^(?:priorities|priorityMore)$/.test(questionKey||'')&&/^(?:i(?:'m| am)? )?(?:unsure|not sure|don't know|do not know|no idea|undecided|idk)(?: yet)?$/.test(text))return false;
+    if(/^(?:priorities|priorityMore)$/.test(questionKey||'')&&uncertainArea(value))return false;
     if (questionKey === "intro" && /^(?:not sure|i don't know|idk)$/.test(text)) return true;
     if (/^(?:bruh|bro|lol|lmao|huh|what|whatever|okay|ok|sure|yep|yeah|nah|um+|hmm+)$/.test(text)) return true;
     if (/^(?:i )?(?:do not|don['’]?t) understand[.!?]*$|^(?:i am |i'm )?(?:confused|not following)[.!?]*$|^not sure what you mean[.!?]*$/.test(text)) return true;
@@ -472,5 +477,5 @@
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";
     return null;
   }
-  return { socialGreeting: socialGreeting, assistantTopic: assistantTopic, mergeHome: mergeHome, normalizeInput: normalizeRouting, transactionPlan: transactionPlan, extractBudget: extractBudget, financingType: financingType, endsConversation: endsConversation, cancelsScheduling: cancelsScheduling, sellThenRent: sellThenRent, declinesContact: declinesContact, researchOnly: researchOnly, explicitBooking: explicitBooking, extractFacts: extractFacts, declinesScheduling: declinesScheduling, declinesName: declinesName, rentalOnly: rentalOnly, detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
+  return { uncertainArea: uncertainArea, socialGreeting: socialGreeting, assistantTopic: assistantTopic, mergeHome: mergeHome, normalizeInput: normalizeRouting, transactionPlan: transactionPlan, extractBudget: extractBudget, financingType: financingType, endsConversation: endsConversation, cancelsScheduling: cancelsScheduling, sellThenRent: sellThenRent, declinesContact: declinesContact, researchOnly: researchOnly, explicitBooking: explicitBooking, extractFacts: extractFacts, declinesScheduling: declinesScheduling, declinesName: declinesName, rentalOnly: rentalOnly, detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
 });

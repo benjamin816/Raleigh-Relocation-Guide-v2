@@ -182,7 +182,7 @@ function chatBookingPreference_(value) {
   const raw = value && typeof value === 'object' ? value : {};
   const host = /^(Benjamin|Ricardo)$/i.test(String(raw.host || ''))
     ? String(raw.host).toLowerCase() === 'benjamin' ? 'Benjamin' : 'Ricardo' : '';
-  const daypart = /^(morning|afternoon|evening)$/i.test(String(raw.daypart || ''))
+  const daypart = /^(morning|afternoon|evening|midday)$/i.test(String(raw.daypart || ''))
     ? String(raw.daypart).toLowerCase() : '';
   const weekdays = Array.isArray(raw.weekdays) ? raw.weekdays.filter(function (day) {
     return Number.isInteger(day) && day >= 0 && day <= 6;
@@ -196,11 +196,17 @@ function chatDaypart_(start) {
   return hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
 }
 
+function chatDaypartMatches_(start, daypart) {
+  if (!daypart) return true;
+  const hour = Number(Utilities.formatDate(start, CHAT_ZONE, 'H'));
+  return daypart === 'midday' ? hour >= 11 && hour < 15 : chatDaypart_(start) === daypart;
+}
+
 function chatSlotMatches_(start, preference) {
   if (preference.date && Utilities.formatDate(start, CHAT_ZONE, 'yyyy-MM-dd') !== preference.date) return false;
   const weekday = Number(Utilities.formatDate(start, CHAT_ZONE, 'u')) % 7;
   if (preference.weekdays.length && preference.weekdays.indexOf(weekday) === -1) return false;
-  if (preference.daypart && chatDaypart_(start) !== preference.daypart) return false;
+  if (!chatDaypartMatches_(start, preference.daypart)) return false;
   if (!preference.host) return true;
   const available = chatAvailableHosts_(start, new Date(start.getTime() + CHAT_MINUTES * 60000));
   return available.some(function (host) { return host.name === preference.host; });
@@ -287,7 +293,7 @@ function getChatBookingSlots(filters) {
           return host.name === preference.host;
         })) && (!preference.date || Utilities.formatDate(start, CHAT_ZONE, 'yyyy-MM-dd') === preference.date) &&
             (!preference.weekdays.length || preference.weekdays.indexOf(day.getDay()) !== -1) &&
-            (!preference.daypart || chatDaypart_(start) === preference.daypart)) {
+            chatDaypartMatches_(start, preference.daypart)) {
           slots.push({ start: start.toISOString(), minutes: CHAT_MINUTES, referralMinutes: 15, daypart: chatDaypart_(start),
             availableHosts: availableHosts.map(function (host) { return host.name; }),
             dueHostAvailable: availableHosts.some(function (host) { return host.name === dueHost; }) });

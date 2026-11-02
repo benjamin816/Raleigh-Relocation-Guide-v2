@@ -1,5 +1,5 @@
 import knowledge from './knowledge.mjs';
-const ORIGINS=new Set(['http://127.0.0.1:8777','http://localhost:8777']);
+const ORIGINS=new Set(['https://raleighncguide.com','https://www.raleighncguide.com','http://127.0.0.1:8777','http://localhost:8777']);
 const KINDS=['answer','question','human','goodbye','clarify','preamble','greeting','unknown'];
 const INTENTS=['buying','selling','combined','relocating','investing','renting','rent_then_buy','rent_only','none'];
 const MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast';
@@ -23,9 +23,9 @@ export function validateFrame(frame,original,context={}){
 }
 export default {async fetch(request,env){
  const origin=request.headers.get('Origin')||'',url=new URL(request.url);
- if(!ORIGINS.has(origin))return response(origin,{ok:false,error:'Test origin required.'},403);
+ if(!ORIGINS.has(origin))return response(origin,{ok:false,error:'Website origin required.'},403);
  if(request.method==='OPTIONS')return response(origin,{ok:true});
- if(url.pathname==='/status'&&request.method==='GET')return response(origin,{ok:true,enabled:env.AI_ENABLED==='true',version:knowledge.version,model:MODEL,scope:'test',bookingAuthority:false});
+ if(url.pathname==='/status'&&request.method==='GET')return response(origin,{ok:true,enabled:env.AI_ENABLED==='true',version:knowledge.version,model:MODEL,scope:'living-in-raleigh',bookingAuthority:false});
  if(url.pathname!=='/interpret'||request.method!=='POST')return response(origin,{ok:false,error:'Not found.'},404);
  const fallback=reason=>response(origin,{ok:false,fallback:true,reason});
  if(env.AI_ENABLED!=='true'||!env.AI)return fallback('disabled');

@@ -5,8 +5,7 @@
   if (!config || !engine || document.querySelector(".rchat")) return;
   var path = window.location.pathname.replace(/index\.html$/, "");
   if (config.excludedPaths.indexOf(path) !== -1) return;
-  var isTestSurface = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) ||
-    (window.__raleighPreviewMode === true && /^\/raleigh-chat-preview-[a-f0-9]{32}\/$/.test(path));
+  var isTestSurface = /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname);
 
   var root = document.createElement("aside");
   root.className = "rchat";
@@ -101,9 +100,9 @@
   var incomingSequence = 0;
   var incomingQueue = Promise.resolve();
   var aiStatus = root.querySelector('.rchat-test-ai');
-  var understanding = config.understandingEnabled && isTestSurface && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) && window.RaleighChatUnderstanding ?
+  var understanding = config.understandingEnabled && (!config.understandingTestOnly||isTestSurface) && /^(localhost|127\.0\.0\.1|(?:www\.)?raleighncguide\.com)$/.test(window.location.hostname) && window.RaleighChatUnderstanding ?
     window.RaleighChatUnderstanding.create({endpoint:config.understandingEndpoint,knowledgeVersion:config.understandingKnowledgeVersion,engine:engine}) : null;
-  if(understanding){aiStatus.hidden=false;aiStatus.style.cssText='font-size:11px;padding:4px 12px;color:#52645a;background:#f5f7f4';aiStatus.textContent='AI interpreter ready · existing bot is backup';}
+  if(understanding&&isTestSurface){aiStatus.hidden=false;aiStatus.style.cssText='font-size:11px;padding:4px 12px;color:#52645a;background:#f5f7f4';aiStatus.textContent='AI interpreter ready · existing bot is backup';}
   function trackConversation(eventName) {
     var tracker = window.__livrAnalyticsTracker;
     if (!tracker || typeof tracker.track !== 'function') return;
@@ -685,6 +684,7 @@
     if (/\bricardo\b/i.test(value) && !/\b(?:benjamin|ben)\b/i.test(value)) next.host = "Ricardo";
     if (/\bmornings?\b/i.test(value)) next.daypart = "morning";
     if (/\bafternoons?\b/i.test(value)) next.daypart = "afternoon";
+    if (/\b(?:midday|lunchtime|lunch time|around lunch|noon)\b/i.test(value)) next.daypart = "midday";
     if (/\bevenings?\b|\bafter (?:5|five)\b/i.test(value)) next.daypart = "evening";
     if (requestedClock(value) && !/\b(?:mornings?|afternoons?|evenings?)\b/i.test(value)) next.daypart = "";
     if (/\bweekends?\b/i.test(value)) { next.weekdays = [0, 6]; next.date = ""; }
@@ -716,7 +716,7 @@
     return next;
   }
   function hasBookingPreference(value) {
-    return /\b(?:benjamin|ben|ricardo|morning|afternoon|evening|weekend|weekday|sunday|monday|tuesday|wednesday|thursday|friday|saturday|tomorrow|today|after (?:5|five))s?\b/i.test(value) || /\b20\d{2}-\d{2}-\d{2}\b/.test(value);
+    return /\b(?:benjamin|ben|ricardo|morning|afternoon|evening|midday|lunchtime|noon|weekend|weekday|sunday|monday|tuesday|wednesday|thursday|friday|saturday|tomorrow|today|after (?:5|five))s?\b/i.test(value) || /\b20\d{2}-\d{2}-\d{2}\b/.test(value);
   }
   function bookingFailed(error) {
     state.booking = null;
@@ -841,6 +841,7 @@
     }
     state.booking = { step: "loading", slots: [], allSlots: [], offset: 0, details: {},
       preference: requestedPreference };
+    if(state.profile.preferredCallType==='phone')state.booking.details.callType='phone';
     if (state.profile.outOfStateReferral) { state.booking.referral = true; state.booking.details.callType = "phone"; }
     var formatRequest=(request || "").replace(/\b(?:instead of|rather than|not|no)\s+(?:a\s+)?(?:video|zoom|google meet|virtual|phone|telephone)(?:\s+call)?\b/gi, "");
     if (/\b(phone|telephone)\b/i.test(formatRequest)) state.booking.details.callType = "phone";
@@ -1177,8 +1178,7 @@
       ].filter(function(item){return !item.omit && !item.pattern.test(suppliedArea);}).map(function(item){return item.label;});
       wording = "Is there anything else that's super important to you about the area" + (areaExamples.length ? ", like " + areaExamples.join(", ") : "") + "?";
       var initialPriorities=String(state.profile.facts.priorities||'');
-      if(/\b(?:unsure|not sure|don't know|do not know|no idea|haven't thought|undecided|idk)\b/i.test(initialPriorities)&&
-          !/\b(?:amenities|shopping|dining|schools?|commut\w*|parks?|trails?|family|walkab\w*)\b/i.test(initialPriorities)){
+      if(engine.uncertainArea(initialPriorities)&&areaExamples.length){
         prefix='';
         var suggestions=areaExamples.length>1?areaExamples.slice(0,-1).join(', ')+', or '+areaExamples[areaExamples.length-1]:areaExamples.join('');
         wording="Totally get it - how about things like "+suggestions+"?";
@@ -1621,7 +1621,7 @@
       state.profile.priorityAnswered = true;
       state.profile.priorityPrice = mentionsPrice(answer);
       if (/\bcommut(?:e|ing)\b/i.test(answer) && !state.profile.remoteWork && !state.profile.retired) state.profile.commuteMentioned = true;
-      state.profile.prioritySingle = question.key === "priorities" && !state.profile.priorityPrice && !state.profile.commuteMentioned && !/,|;|\band\b|\bplus\b|&/i.test(answer);
+      state.profile.prioritySingle = question.key === "priorities" && !state.profile.priorityPrice && !state.profile.commuteMentioned && (engine.uncertainArea(answer)||!/,|;|\band\b|\bplus\b|&/i.test(answer));
       if (homeDetailCount(answer)) state.profile.homeDetailsGiven = true;
     }
     if (question && question.key === "commuteDestination") {
@@ -2058,6 +2058,10 @@
       return;
     }
     if ((asksForBenjaminNumber(value) || asksForTeamMember(value)) && !engine.explicitBooking(value)) {
+      if(/\b(?:phone|telephone)\b/i.test(originalValue)&&!/\b(?:not|no|instead of|rather than)\s+(?:a\s+)?(?:phone|telephone)\b/i.test(originalValue)){
+        state.profile.preferredCallType='phone';
+        if(state.booking)state.booking.details.callType='phone';
+      }
       answerSideQuestion(value, null); return;
     }
     if (/\b(?:calculator|resources?|guides?|learn more|buying page|selling page)\b/i.test(value) &&
@@ -2297,7 +2301,7 @@
     }
     var conditionalMeeting = /\b(?:if|when)\s+(?:we|i)\s+(?:do\s+)?(?:talk|meet|call|book)\b/i.test(value);
     var directContactQuestion = !conditionalMeeting && (asksForBenjaminNumber(value) || asksForTeamMember(value));
-    var selectingTime = state.booking && state.booking.step === "choose" && /\b(?:first|second|one|two|1|2|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}(?::\d{2})?\s*(?:am|pm))\b/i.test(value);
+    var selectingTime = state.booking && state.booking.step === "choose" && (hasBookingPreference(value) || !!requestedClock(value) || /\b(?:first|second|one|two|1|2|today|tomorrow|monday|tuesday|wednesday|thursday|friday|saturday|sunday|\d{1,2}(?::\d{2})?\s*(?:am|pm))\b/i.test(value));
     if (state.questionDetour) {
       state.questionDetour = false;
       persist();

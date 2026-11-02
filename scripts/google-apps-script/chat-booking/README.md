@@ -49,3 +49,24 @@ This source update needs deployment to the existing booking web app before live 
 The existing Test web app now runs version 17, adding revocable 30-day admin device sessions. Initial Google authentication is unchanged; a valid Google identity is exchanged for an opaque device token. Every subsequent private request verifies the stored token digest, expiry and current allowed email list. Signing out revokes the device session. The existing Cloudflare Worker forwards these device tokens to Apps Script for validation; it never turns an unverified device token into an identity assertion. Its existing URL binding and signing secret were preserved.
 
 The local Test portal was verified in Chrome after one normal Google sign-in: a newly created tab opened Upcoming Appointments automatically under the same authorized account with a fresh data update. Browser tests cover reopening with empty tab storage; service tests cover expiry, invalid tokens, logout and account removal. The temporary deployment token was deleted and its local temporary copy removed. Public chatbot booking authority remains paused; the separate 15-minute referral-call source changes were not deployed with this session-only update. No Test-to-main merge was performed.
+
+## November 2, 2026 live release
+
+The owner authorized restoring public chat booking authority and promoting Test
+to main. Existing web-app deployment updated to version 18 under the same team
+account and URL. `CHAT_BOOKING_TEST_READ_ONLY` is now `false`. Version 18 includes
+15-minute seller-referral phone calls and `midday` availability (11 a.m.–before
+3 p.m. Eastern), within the existing appointment windows and individual host
+conflict checks. Existing normal exploration calls remain 60 minutes.
+
+A real 15-minute phone test assigned Benjamin, created the calendar event and
+verified both the Assignment and Chat Appointments rows and standard pre-call
+marker. The event and exact test rows were immediately removed. No existing
+appointment was changed. The temporary owner verification function was removed
+before deployment. The pre-call emailer remains the single existing sender;
+this verification did not wait for or send a test pre-call email.
+
+Rollback copies of both branches and current live Code.gs are in the verified
+local backup `backups/chat-live-20261102-155810/`. Its Git bundle preserves local
+Test, remote Test and remote main history before promotion. Version 17 remains
+available in Apps Script deployment history.

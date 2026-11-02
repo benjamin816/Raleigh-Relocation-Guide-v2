@@ -4,7 +4,7 @@
   function directMeaning(text,context,engine){
     if(context.booking||context.awaitingFirstName||context.contact||context.ended)return null;
     var value=String(text).trim().replace(/[’]/g,"'");
-    if(/^(?:priorities|priorityMore)$/.test(context.question||'')&&/^(?:i(?:'m| am)? )?(?:unsure|not sure|don't know|do not know|no idea|undecided|idk)(?: yet)?[.!? ]*$/i.test(value))return value;
+    if(/^(?:priorities|priorityMore)$/.test(context.question||'')&&engine.uncertainArea(value))return value;
     if(engine.socialGreeting(value))return 'hello';
     if(/^(?:hi|hello|hey|good (?:morning|afternoon|evening)|how(?:'s| is) it going|how are you(?: doing)?|what(?:'s| is) up)[.!?\s]*$/i.test(value))return 'hello';
     if(/^(?:(?:i(?:'m| am)?|we(?:'re| are)?)\s+)?(?:(?:looking|want|hoping)\s+to\s+)?(?:buy|buying|purchase|purchasing|sell|selling|buy and sell|sell and buy|both)(?:\s+(?:a|my|our|the)\s+(?:home|house|property))?[.!\s]*$/i.test(value))return value;
@@ -39,7 +39,10 @@
     if(frame.kind==='human'){
       if(/\bricardo\b/i.test(original)&&/\b(?:benjamin|ben)\b/i.test(original))return original;
       var name=/\bricardo\b/i.test(original)?'Ricardo':/\b(?:benjamin|ben)\b/i.test(original)?'Benjamin':'a team member';
-      return /\b(?:number|phone number|direct line)\b/i.test(original)?'What phone number can I reach '+name+' at?':'Can I speak with '+name+'?';
+      if(/\b(?:number|phone number|direct line)\b/i.test(original))return 'What phone number can I reach '+name+' at?';
+      // A human-request rewrite must retain the explicitly requested format.
+      if(/\b(?:phone|telephone)\b/i.test(original)&&!/\b(?:not|no|instead of|rather than)\s+(?:a\s+)?(?:phone|telephone)\b/i.test(original))return 'Can I speak with '+name+' by phone?';
+      return 'Can I speak with '+name+'?';
     }
     if(context.booking)return original;
     if(!['answer','question'].includes(frame.kind)||!frame.canonical.trim()||/https?:|<[^>]+>/.test(frame.canonical))return original;

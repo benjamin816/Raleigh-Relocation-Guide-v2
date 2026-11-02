@@ -97,6 +97,8 @@ assert.deepEqual(Array.from(context.getChatBookingSlots().slice(0, 2), slot => s
   ['afternoon', 'evening'], 'Default options include afternoon and evening');
 assert.equal(calendarReads, 6, 'Availability reads the shared calendar and five host calendars once each');
 assert.equal(context.getChatBookingSlots({ daypart: 'evening' }).every(slot => slot.daypart === 'evening'), true);
+assert.equal(context.chatBookingPreference_({daypart:'midday'}).daypart,'midday');
+assert.equal(context.getChatBookingSlots({daypart:'midday'}).every(slot=>{const h=new Date(slot.start).getHours();return h>=11&&h<15;}),true,'Lunch openings stay within the midday range');
 context.chatBookingWindows_ = () => [];
 const details = { requestId: 'test-request-123456789', start: start.toISOString(), name: 'Test Person', email: 'test@example.com', phone: '9195550100', notes: '=IMPORTXML("bad")', purpose: 'Buy' };
 assert.equal(context.chatPickHost_(context.CHAT_HOSTS || [{name:'Benjamin'},{name:'Ricardo'}],
