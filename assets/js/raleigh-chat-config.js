@@ -228,6 +228,11 @@ window.RaleighChatConfig = {
           "text": "Do you already have family or friends in the Raleigh area?"
         },
         {
+          "key": "originHousing",
+          "when": "out",
+          "text": "Do you have a home there that you'd need to sell, or are you currently renting?"
+        },
+        {
           "key": "priorities",
           "when": "outNeedsPriorities",
           "text": "When it comes to the area you choose to live in, what's most important to you?"

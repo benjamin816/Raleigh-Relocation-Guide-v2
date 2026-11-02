@@ -2,7 +2,7 @@ const assert=require('node:assert/strict');
 const {createSession}=require('./helpers/chat-isolated.cjs');
 (async()=>{
  const s=createSession('area-schools-commute');
- for(const t of ["I'm buying a home, moving from Minnesota.",'Ben','Warmer weather.'])await s.send(t);
+ for(const t of ["I'm buying a home, moving from Minnesota.",'Ben','Warmer weather.','We have a home to sell.'])await s.send(t);
  assert.match(s.audit().transcript.at(-1).bot,/area you choose to live in/);
  let r=(await s.send('Schools.')).botMessage;
  assert.match(r,/Wake County schools!/);assert.doesNotMatch(r,/like[^?]*schools/i);

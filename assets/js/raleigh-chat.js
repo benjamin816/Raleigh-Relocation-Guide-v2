@@ -1116,7 +1116,7 @@
       if (state.profile.noScheduling || state.profile.researchOnly) { informationalReply(); return; }
       var sellerSummer = state.intent === "selling" && /\bnext summer\b/i.test(state.profile.targetTiming || "");
       var buyerSummer = /^(buying|relocating)$/.test(state.intent) && /\bsummer\b/i.test(state.profile.targetTiming || "");
-      var finish = state.profile.researchTimeline ? config.conversationResponses.researchTimeline : state.profile.saleOnly && !state.profile.sellThenRent ? "An exploration call with the team can help you put together a game plan for your sale, preparation, and timing." : state.profile.sellThenRent ? "An exploration call can help plan your sale and the transition to renting. We can keep the discussion focused on sale logistics." : state.profile.sensitiveMove ? "We can keep personal details private. An exploration call can focus on the sale logistics and timing you want help with." : state.profile.shortTiming ? "Well, great. Based on that timing, we should absolutely set up an exploration call with the team to help build you a game plan around your move." : sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish;
+      var finish = state.profile.researchTimeline ? config.conversationResponses.researchTimeline : state.profile.saleOnly && !state.profile.sellThenRent ? "An exploration call with the team can help you put together a game plan for your sale, preparation, and timing." : state.profile.sellThenRent ? "An exploration call can help plan your sale and the transition to renting. We can keep the discussion focused on sale logistics." : state.profile.sensitiveMove ? "We can keep personal details private. An exploration call can focus on the practical steps and timing for your move." : state.profile.shortTiming ? "Well, great. Based on that timing, we should absolutely set up an exploration call with the team to help build you a game plan around your move." : sellerSummer ? (flow.finishNextSummer || flow.finish) : buyerSummer ? "That's a great time to make the move. That's typically when we see the most options on the buy side here in our market, and it's often one of the best times to sell. A one-on-one conversation with the team would be a great next step to build a game plan around your move." : (prefix ? prefix + " " : "") + flow.finish;
       message(finish, false);
       if (flow.booking === "general") startBooking();
       else link("Book an investing exploration call", config.bookingLinks.investing);
@@ -1187,6 +1187,7 @@
     message((prefix ? prefix + " " : "") + personal + wording, false);
   }
   function answerAcknowledgement(question, answer) {
+    if (engine.isSensitiveFamilyReason(answer)) return "I'm so sorry to hear that." + (state.profile.familyNearby ? " It makes sense that you'd want to be closer to your family." : "");
     if (state.profile.sensitiveMove) return /^(?:timing|nextDestination|whySell|whySellSolo|ownedYears|timingReason)$/.test(question && question.key) ? "Understood." : "Got it.";
     if (!question) return "Got it.";
     var text = String(answer || "").toLowerCase();
@@ -1242,6 +1243,10 @@
     var p=state.profile, text=String(value), plan=engine.transactionPlan(text);
     var rentalQuestion=/\b(?:work with|help|assist|do|handle|offer|find)\b.{0,35}\b(?:renters|rentals?|renting|rental search)\b/i.test(text) && engine.asksQuestion(text);
     var futureRent=asksToRent(text) || engine.rentalOnly(text) || plan.sellThenRent || /\b(?:will|going to|plan to|planning to)\s+(?:only )?(?:be )?renting\b/i.test(text);
+    if (p.rentalOnly && plan.explicit && plan.id==='buying' && !futureRent) {
+      p.rentalOnly=false;p.informationOnly=false;p.rentalPlanConfirmed=false;p.pendingRentalPlan=false;
+      p.rentalHorizon='';persist();
+    }
     if (!p.pendingRentalPlan && !futureRent && !rentalQuestion) return false;
     if (futureRent) p.rentalPlanConfirmed=true;
     if (plan.id==='buying' && !futureRent && !rentalQuestion) {p.pendingRentalPlan=false;return false;}
@@ -1307,7 +1312,7 @@
     link("Explore Raleigh guides", "/learning-center/");
   }
   function asksToRent(value) {
-    return /\b(?:looking|want|need|plan|planning|going|hoping|thinking|interested)\s+to\s+rent\b|\brent(?:ing)?\s+(?:first|for now|instead|now)\b|\b(?:looking|searching)\s+for\s+(?:a\s+)?rental\b/i.test(value);
+    return /\b(?:looking|want|need|plan|planning|going|hoping|thinking|interested)\s+to\s+rent\b|\bmoving\b.{0,45}\bto rent\b|\brent(?:ing)?\s+(?:first|for now|instead|now)\b|\b(?:looking|searching)\s+for\s+(?:a\s+)?rental\b/i.test(value);
   }
   function mentionsPrice(value) {
     return /\b(?:price|prices|pricing|budget|affordab\w*|cheap\w*|cost of living|costs? less|lower cost|lower price|more for (?:my|our|the) money)\b|(?:\$\s?\d[\d,]*|\b\d{3,4}\s?k\b)/i.test(value);
@@ -2255,7 +2260,7 @@
         askQuestion();
         return;
       }
-      if (explicitTopicChange && detected && detected.id !== state.intent && !(state.intent === "selling" && activeQuestions()[state.question].key === "nextDestination") && !((state.intent === "buying" && detected.id === "relocating") || (state.intent === "relocating" && detected.id === "buying"))) {
+      if (explicitTopicChange && detected && detected.id !== state.intent && !(state.intent === "selling" && (detected.id === "relocating" || activeQuestions()[state.question].key === "nextDestination")) && !((state.intent === "buying" && detected.id === "relocating") || (state.intent === "relocating" && detected.id === "buying"))) {
         startFlow(detected.id, false, detected.combined, value);
         return;
       }

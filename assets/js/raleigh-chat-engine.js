@@ -130,8 +130,11 @@
   }
   function rentalOnly(value) { return transactionPlan(value).rentOnly && !/\b(?:invest|investment|investing|investor|landlord|rent out|rent my|own.*rental)\b/i.test(value); }
   function asksQuestion(value) { return /\?|^\s*(how|what|where|when|why|can|could|do|does|is|are|should|tell me|explain)\b|\b(?:my question|i have a question|could you|can you|please (?:explain|give|show))\b/i.test(value); }
+  function visitorResidenceText(value) {
+    return String(value || '').replace(/\b(?:my|our|his|her|their|the)\s+(?:family|relatives|parents|friends|mother(?:[- ]in[- ]law)?|father(?:[- ]in[- ]law)?|mom|dad|sister|brother|daughter|son)\b.{0,20}?\b(?:live[sd]?|is living|are living)\s+(?:in|near)\s+[^.!?;,]+?(?=\s+(?:and|but)\b|[.!?;,]|$)/ig, ' ');
+  }
   function detectLocation(value, config) {
-    var text = normalize(value).replace(/\b(?:work|working) from home\b/g, '').replace(/\bfrom (?:now|here|there)\b/g, '');
+    var text = normalize(visitorResidenceText(value)).replace(/\b(?:work|working) from home\b/g, '').replace(/\bfrom (?:now|here|there)\b/g, '');
     // A planned rental destination does not make an out-of-state visitor local.
     text = text.replace(/\b(?:will|plan to|planning to|going to|want to)\s+(?:be )?(?:rent(?:ing)?|live|living)\s+in\s+[a-z ]+?(?=[,.!?]|$)/g, ' ');
     var barePlace = text.replace(/^[\s.,!?]+|[\s.,!?]+$/g, "");
@@ -237,7 +240,8 @@
   // a destination from relatives' addresses, or an investment from renting.
   function extractFacts(value, config, intent, questionKey) {
     var text = String(value || '').replace(/[’]/g, "'"), lower = normalizeRouting(text), facts = {}, match;
-    var location = detectLocation(text, config);
+    var residenceText = visitorResidenceText(text);
+    var location = detectLocation(residenceText, config);
     var correctedOrigin = text.match(/\b(?:i|we) meant\s+([a-z][a-z ,.-]{1,55}?)(?=[—–.!?;]|$|\s+(?:to buy|to sell|and|for)\b)/i);
     if (correctedOrigin) location = resolveOrigin({type:'out',place:correctedOrigin[1].trim()},config);
     var futureRental = /\b(?:will|plan to|planning to|going to|want to)\s+(?:only )?(?:be )?(?:rent(?:ing)?|live|living)\s+in\b/i.test(text);
@@ -256,7 +260,7 @@
       else facts.tenure = tenancy[1];
     }
     var areas = '(?:North Raleigh|South Raleigh|Raleigh|Cary|Apex|Durham|Wake Forest|Holly Springs|Fuquay[- ]Varina|Garner|Knightdale|Wendell|Zebulon|Rolesville|Morrisville|Chapel Hill|Clayton)';
-    match = text.match(new RegExp('(?:live|living|rent|renting|already|local)\\s+(?:here\\s+)?in\\s+(' + areas + ')\\b', 'i'));
+    match = residenceText.match(new RegExp('(?:live|living|rent|renting|already|local)\\s+(?:here\\s+)?in\\s+(' + areas + ')\\b', 'i'));
     if (match && !futureRental && !(location && location.type === 'out')) { facts.currentArea = match[1]; facts.location = { type: 'local', place: '' }; }
     if (intent === 'selling' || /\b(?:sell|selling|seller|list)\b/.test(lower)) {
       match = text.match(new RegExp('(?:home|house|townhome|townhouse|duplex|condo|rental)\\s+(?:is\\s+)?in\\s+(' + areas + ')\\b', 'i'));
@@ -344,7 +348,8 @@
     if (/\b(?:second (?:home|house|purchase)|bought before|purchase my second|sold my first)\b/i.test(text) || /^no\b.*\bfirst\b/i.test(text)) facts.firstTime = 'Has bought before';
     if (/\b(?:own|owning)\b/i.test(text) && plan.keepHome) facts.tenure = 'owning';
     if (/\b(?:we|i)\b.{0,20}\b(?:lease|renting)\b/i.test(text)) facts.tenure = 'renting';
-    var local = (config.localAreas || []).find(function (area) { return new RegExp('\\b(?:live[ds]?|living|own|local)\\b.{0,15}\\b(?:in )?' + area.replace(/[-]/g,'[- ]') + '\\b','i').test(text); });
+    // Only the visitor's residence changes their origin, never a relative's address.
+    var local = (config.localAreas || []).find(function (area) { return new RegExp('(?:^|\\b(?:i|we)(?:\\x27m|\\x27re| am| are)?\\s+)(?:currently\\s+)?(?:live|living|own|local)\\b.{0,15}\\b(?:in )?' + area.replace(/[-]/g,'[- ]') + '\\b','i').test(text); });
     if (local) { facts.currentArea = local; facts.location = {type:'local',place:''}; }
     var placePattern = '(' + (config.localAreas || []).join('|') + ')';
     var currentHome = text.match(new RegExp('\\b(?:sell\\w*|list\\w*)\\b.{0,15}\\bin\\s+'+placePattern,'i'));

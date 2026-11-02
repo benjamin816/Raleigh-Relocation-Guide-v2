@@ -70,13 +70,13 @@ for (const phrase of ['I will hurt your team', 'I will kill you', 'I will attack
 for (const phrase of ['I only want a white neighborhood', 'Tell me the racial makeup', 'Avoid black neighbors']) check(engine.classifySafety(phrase), 'discrimination', phrase);
 for (const phrase of ['My current place is shit', 'Damn, this is expensive']) check(engine.classifySafety(phrase), 'language', phrase);
 const branches = [
-  ['buying', { location: 'out' }, false, 'location,whyRaleigh,priorities,areas,home,budget,timing'],
+  ['buying', { location: 'out' }, false, 'location,whyRaleigh,originHousing,priorities,areas,home,budget,timing'],
   ['buying', { location: 'local', tenure: 'renting' }, false, 'location,currentArea,tenure,firstTime,leaseEnd,areas,home,budget,timing'],
   ['buying', { location: 'local', tenure: 'owning' }, false, 'location,currentArea,tenure,willSell,areas,home,budget,timing'],
   ['relocating', { location: 'out' }, false, 'location,whyRaleigh,originHousing,priorities,areas,home,budget,timing'],
   ['relocating', { location: 'local', tenure: 'renting' }, false, 'location,moveGoal,currentArea,tenure,firstTime,leaseEnd,areas,home,budget,timing'],
   ['relocating', { location: 'local', tenure: 'owning' }, false, 'location,moveGoal,currentArea,tenure,willSell,areas,home,budget,timing'],
-  ['buying', { location: 'out', areasNeedFollowup: true, budgetKnown: true }, false, 'location,whyRaleigh,priorities,areas,areasReason,home,financing,timing'],
+  ['buying', { location: 'out', areasNeedFollowup: true, budgetKnown: true }, false, 'location,whyRaleigh,originHousing,priorities,areas,areasReason,home,financing,timing'],
   ['relocating', { location: 'out', areasNeedFollowup: true, budgetKnown: true }, false, 'location,whyRaleigh,originHousing,priorities,areas,areasReason,home,financing,timing'],
   ['relocating', { location: 'out', rentalClarificationNeeded: true }, false, 'location,whyRaleigh,originHousing,priorities,areas,rentalPlan,home,budget,timing'],
   ['relocating', { location: 'out', newJob: true }, false, 'location,whyRaleigh,jobLocation,jobStart,originHousing,priorities,areas,home,budget,timing'],
