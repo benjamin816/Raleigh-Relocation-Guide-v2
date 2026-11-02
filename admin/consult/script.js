@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   var endpoint = 'https://script.google.com/macros/s/AKfycbysLAettKRWslMW8YgG3BxftA2eBL_gsZFdK70bN7B3xu-aG_stqdNqg3jYBB5aqoMa2g/exec';
+  var relayEndpoint = window.RALEIGH_BOOKING_RELAY_URL || '';
   var bridge, currentHost = '', allSlots = [], nextUp = '', pageIndex = 0, loading = false;
   var status = document.getElementById('status');
   var bookingCard = document.getElementById('booking-card');
@@ -30,6 +31,11 @@
     return ready;
   }
   function call(method, args) {
+    if (relayEndpoint) return fetch(relayEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ method: method, args: args || [] }), cache: 'no-store' }).then(function (response) {
+      if (!response.ok) throw new Error('The booking service is unavailable.');
+      return response.json();
+    }).then(function (message) { if (!message.ok) throw new Error(message.error || 'The booking request failed.'); return message.result; });
     return connect().then(function () { return new Promise(function (resolve, reject) {
       var id = randomId();
       var timer = setTimeout(function () { delete bridge.pending[id]; reject(new Error('Booking request timed out.')); }, 30000);
@@ -53,6 +59,7 @@
       slot.availableHosts.indexOf(currentHost) !== -1);
   }
   function render() {
+    document.getElementById('availability').hidden = !currentHost;
     var calendar = calendarDays(), first = pageIndex * 5, visible = calendar.slice(first, first + 5);
     var shortDate = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', month: 'short', day: 'numeric' });
     document.getElementById('date-range').textContent = shortDate.format(visible[0]) + ' – ' + shortDate.format(visible[4]);
@@ -91,13 +98,18 @@
     }).catch(function (error) { loading = false; days.textContent = ''; notice(error.message, true); });
   }
   function changeHost() { currentHost = document.querySelector('input[name="host"]:checked').value; pageIndex = 0; render(); }
-  document.getElementById('unlock-form').addEventListener('submit', function (event) {
-    event.preventDefault(); notice('Checking access…');
-    var field = document.getElementById('passcode');
-    if (field.value !== '123456') { field.value = ''; notice('Incorrect passcode.', true); return; }
-    field.value = ''; unlockCard.hidden = true; bookingCard.hidden = false;
+  function unlockBooking() {
+    unlockCard.hidden = true; bookingCard.hidden = false;
     notice('Choose who will take the call.'); loadAvailability();
-  });
+  }
+  if (new URLSearchParams(location.search).get('portal') === '1' && window.parent !== window) {
+    var portalCredential = sessionStorage.getItem('lirAdminCredential');
+    if (portalCredential) {
+      notice('Checking team sign-in…');
+      call('admin', [portalCredential, 'session', {}]).then(function () { unlockBooking(); })
+        .catch(function () { notice('Please sign in to the team portal again.', true); });
+    }
+  }
   document.querySelectorAll('input[name="host"]').forEach(function (input) { input.addEventListener('change', changeHost); });
   document.getElementById('refresh-slots').addEventListener('click', loadAvailability);
   document.getElementById('previous-days').addEventListener('click', function () { pageIndex--; render(); });
@@ -113,7 +125,7 @@
       email: String(form.get('email') || ''), phone: String(form.get('phone') || ''), callType: String(form.get('callType') || ''),
       purpose: String(form.get('purpose') || ''), notes: String(form.get('notes') || '') };
     bookButton.disabled = true; notice('Confirming the calendar and booking…');
-    call('book', [details]).then(function (result) {
+    call('admin', [sessionStorage.getItem('lirAdminCredential') || '', 'book', details]).then(function (result) {
       if (!result || !result.booked || result.assignedHost !== host.value) throw new Error('Booking needs manual assignment review.');
       notice('Booked with ' + (result.assignedHost === 'Both' ? 'Benjamin and Ricardo' : result.assignedHost) + '. The calendar invitation was sent. The standard pre-call email is queued.');
       event.target.reset(); currentHost = ''; allSlots = []; pageIndex = 0; render(); loadAvailability(true);
