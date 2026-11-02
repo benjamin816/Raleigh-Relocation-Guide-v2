@@ -82,7 +82,21 @@ function createSession(id, metadata) {
   function bookingCall(method, args) {
     const captured = clone(args || []);
     serviceCalls.push({ boundary: 'bookingCall', method, args: captured, atTurn: transcript.length });
-    if (method === 'slots') { const slots=clone(deterministicSlots); if(metadata && metadata.legacyBookingService) slots.forEach(slot=>delete slot.referralMinutes); return Promise.resolve(slots); }
+    if (method === 'slots') {
+      // Model the service's filtering contract, rather than returning Thursday
+      // when the application explicitly requested Friday.
+      const preference=captured[0]||{};
+      const slots=clone(deterministicSlots).filter(slot=>{
+        const parts=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',year:'numeric',month:'2-digit',day:'2-digit',weekday:'long'}).formatToParts(new Date(slot.start)).map(p=>[p.type,p.value]));
+        const day=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'].indexOf(parts.weekday);
+        return (!preference.host||slot.availableHosts.includes(preference.host)) &&
+          (!preference.weekdays?.length||preference.weekdays.includes(day)) &&
+          (!preference.date||preference.date===`${parts.year}-${parts.month}-${parts.day}`) &&
+          (!preference.daypart||slot.daypart===preference.daypart);
+      });
+      if(metadata && metadata.legacyBookingService)slots.forEach(slot=>delete slot.referralMinutes);
+      return Promise.resolve(slots);
+    }
     if (method === 'suggest') return Promise.resolve({ available: false });
     if (method === 'book') {
       const payload = captured[0] || {};

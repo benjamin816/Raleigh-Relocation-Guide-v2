@@ -56,11 +56,12 @@ const originalCases=[
 const cases=process.argv[2]?JSON.parse(fs.readFileSync(process.argv[2],'utf8')).cases:originalCases;
 const answers={currentArea:'Garner',tenure:'We rent our current place',firstTime:'This will be our first purchase',leaseEnd:'Our lease is up in May',willSell:'We will sell it',whyRaleigh:'We want a milder climate and a fresh start',familyNearby:'Morrisville',priorityFamilyArea:'Morrisville',originHousing:'We own a home and will sell it before moving',priorities:'Walkable parks and groceries nearby',priorityMore:'Good access to groceries would be helpful',commuteDestination:'Duke Hospital',commuteRange:'Ideally 20 minutes; 35 would be my limit',priorityBudget:'650k ceiling',priorityFinancing:'We will use a mortgage',areas:'Morrisville and Cary',areasReason:'To be close to greenways',home:'Three bedrooms, two full baths, and a fenced yard',homeMore:'Also a first-floor primary bedroom',budget:'650k ceiling',financing:'We will use a mortgage',preapproval:'We still need a lender',timing:'Next fall',timingReason:'That is when the lease ends',currentHome:'Holly Springs',ownedYears:'We have owned it for nine years',whySell:'We have outgrown it',whySellSolo:'We need to downsize',nextDestination:'Raleigh',nextAreaReason:'Closer to work',nextHome:'Four bedrooms, office space and a garage',sellingExperience:'We have sold two homes before',moveGoal:'We plan to buy',jobLocation:'Duke Hospital',jobStart:'April of next year',experience:'This would be our first investment',strategy:'A duplex for long-term rentals',goals:'Long-term appreciation',involvement:'I want it fairly passive',salePriority:'Both'};
 function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.booking;
+ if(p.pendingRentalSale)return c.originHousing||'We will sell our current home';
  if(p.pendingRentalPlan)return counts.rental?c.rentalClarify||c.rental||'Three months, then buying':c.rental||'Three months, then buying';
  if(p.awaitingFirstName)return counts.firstName?c.nameRetry||'Morgan':c.name||'Morgan';
  if(p.awaitingOriginState)return c.originState||'Florida';
  if(p.awaitingTimelineYear)return 'Next year, but nothing is firm';
- if(b){if(b.step==='choose')return c.choice||'The second option';if(b.step==='format')return c.phone?'Phone please':'Video is fine';if(b.step==='email')return c.invalidEmail&&!counts.invalidEmail?'morgan-at-example-dot-com':'morgan.test@example.com';if(b.step==='phone')return c.refusePhone?'I prefer not to give my phone number':'(919) 555-0143';if(b.step==='name')return c.fullName||'Morgan Blake';if(b.step==='purpose')return c.selling?'Selling our house':'Buying a home';if(b.step==='notes')return 'A garage workshop is on our wish list. Please keep that in the notes.';return null;}
+ if(b){if(b.step==='choose')return c.choice||(b.slots.length===1?'The first option':'The second option');if(b.step==='format')return c.phone?'Phone please':'Video is fine';if(b.step==='email')return c.invalidEmail&&!counts.invalidEmail?'morgan-at-example-dot-com':'morgan.test@example.com';if(b.step==='phone')return c.refusePhone?'I prefer not to give my phone number':'(919) 555-0143';if(b.step==='name')return c.fullName||'Morgan Blake';if(b.step==='purpose')return c.selling?'Selling our house':'Buying a home';if(b.step==='notes')return 'A garage workshop is on our wish list. Please keep that in the notes.';return null;}
  if(!st.intent)return 'We are looking to buy and are relocating from Florida';
  const k=p.currentQuestionKey;if(!k||k==='location')return c.local?'We live in Garner':c.origin||'We currently live in Tampa, Florida';
  if(k==='familyNearby'||k==='priorityFamilyArea')return c.family||'Morrisville';
@@ -68,8 +69,18 @@ function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.boo
  if(k==='priorityBudget'&&c.budget)return c.budget;
  if(c[k]!==undefined)return c[k];return answers[k]||null;
 }
-(async()=>{const out=[];for(const c of cases){const s=createSession(c.id,{label:c.label});const issues=[],counts={},evidence=[];let inject=false,bookInject=false,closed=false;
- async function send(t){const before=s.audit();const r=await s.send(t);const after=s.audit();evidence.push({user:t,keyBefore:before.internalState.profile.currentQuestionKey||'',bookingBefore:before.internalState.booking?.step||'',response:r.botMessage});
+(async()=>{const out=[];for(const c of cases){const s=createSession(c.id,{label:c.label,...c.metadata});const issues=[],counts={},evidence=[],stepsDone=new Set();let inject=false,bookInject=false,closed=false;
+ function checkResult(check,before,after,reply){
+  if(!check)return;
+  const at=key=>key.split('.').reduce((a,k)=>a==null?undefined:a[k],after.internalState);
+  if(check.includes&&!new RegExp(check.includes,'i').test(reply))issues.push('missing-reply:'+check.includes);
+  if(check.excludes&&new RegExp(check.excludes,'i').test(reply))issues.push('unwanted-reply:'+check.excludes);
+  if(check.sameQuestion&&before.internalState.profile.currentQuestionKey!==after.internalState.profile.currentQuestionKey)issues.push('detour-lost-current-question');
+  for(const [key,value] of Object.entries(check.state||{}))if(JSON.stringify(at(key))!==JSON.stringify(value))issues.push('state-mismatch:'+key+'='+JSON.stringify(at(key)));
+  if(check.noBook&&after.serviceCalls.some(x=>x.method==='book'))issues.push('unexpected-booking-after-step');
+ }
+ async function send(t,check){const before=s.audit();const r=await s.send(t);const after=s.audit();evidence.push({user:t,keyBefore:before.internalState.profile.currentQuestionKey||'',bookingBefore:before.internalState.booking?.step||'',response:r.botMessage});
+  checkResult(check,before,after,r.botMessage);
   if(!r.botMessage&&!after.internalState.ended&&!after.internalState.completed)issues.push('blank-response');
   if(c.noSympathy&&/sick of/.test(t)&&/sorry to hear/i.test(r.botMessage))issues.push('literal-illness-reply-to-an-idiom');
   if(c.noCongratulations&&/job|divorc/i.test(t)&&/congrats|congratulations|super exciting/i.test(r.botMessage))issues.push('inappropriate-celebration');
@@ -79,9 +90,12 @@ function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.boo
   if(c.mustStayQuestion&&t===c.inject&&before.internalState.profile.currentQuestionKey!==after.internalState.profile.currentQuestionKey)issues.push('gibberish-advanced-the-question');
   return r;
  }
- try{await send(c.opening);for(let turn=0;turn<36;turn++){
+ try{await send(c.opening,c.openingCheck);for(let turn=0;turn<45;turn++){
   const a=s.audit(),st=a.internalState,p=st.profile,b=st.booking;
   if(a.outcome==='confirmed'||st.ended||st.completed){closed=true;break;}
+  const stage=p.pendingRentalPlan?'rental':p.awaitingFirstName?'firstName':b?'booking:'+b.step:p.currentQuestionKey||'origin';
+  const stepIndex=(c.steps||[]).findIndex((step,index)=>!stepsDone.has(index)&&(step.at===stage||step.at==='any')&&(!step.afterTurns||a.transcript.length>=step.afterTurns));
+  if(stepIndex>=0){const step=c.steps[stepIndex];stepsDone.add(stepIndex);await send(step.text,step.check);continue;}
   if((p.rentalOnly||p.informationOnly)&&c.noBook){await send('Thanks, that answers my question. Goodbye.');closed=true;break;}
   if(c.investor&&a.transcript.some(t=>/Book an investing exploration call/.test(t.bot))){await send('Thanks, I will use that investor booking link. Goodbye.');closed=true;break;}
   if(!inject&&c.injectKey&&c.injectKey===p.currentQuestionKey&&!p.awaitingFirstName){inject=true;await send(c.inject);if(c.injectFollowup)await send(c.injectFollowup);continue;}
@@ -96,11 +110,15 @@ function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.boo
   if(c.refusePhone&&b?.step==='phone'){if(s.audit().serviceCalls.some(x=>x.method==='book'))issues.push('booked-without-required-phone');await send('Okay, I will call the team myself. Goodbye.');closed=true;break;}
  }
  const a=s.audit(),p=a.internalState.profile,books=a.serviceCalls.filter(x=>x.method==='book');
+ checkResult(c.finalCheck,a,a,a.transcript.at(-1)?.bot||'');
+ if(c.steps&&stepsDone.size!==c.steps.length)issues.push('test-step-not-reached:'+c.steps.filter((_,i)=>!stepsDone.has(i)).map(x=>x.at).join(','));
+ if(c.expectedStart&&books.some(x=>x.args[0].start!==c.expectedStart))issues.push('wrong-exact-slot');
+ if(c.expectedCallType&&books.some(x=>x.args[0].callType!==c.expectedCallType))issues.push('wrong-call-format');
  if(a.blockedAttempts.length)issues.push('unmocked-external-operation');
  if(c.noBook&&books.length)issues.push('unwanted-booking');
  if(c.investor&&a.serviceCalls.length)issues.push('investor-used-chat-booking');
  if(c.host&&books.some(x=>x.args[0].preferredHost!==c.host))issues.push('wrong-host-request');
- if(c.choice&&/Friday/i.test(c.choice)&&books.some(x=>!x.args[0].start.startsWith('2026-11-06')))issues.push('wrong-day-selected-from-acceptance');
+ if(c.choice&&!c.expectedStart&&/Friday/i.test(c.choice)&&books.some(x=>!x.args[0].start.startsWith('2026-11-06')))issues.push('wrong-day-selected-from-acceptance');
  if(c.expectedBudget&&p.priorityBudgetAmount!==c.expectedBudget)issues.push('budget-correction-not-retained');
  if(c.expectedFunding&&p.usingFinancing!==true)issues.push('financing-negation-not-retained');
  if(c.notApproved&&p.preApproved===true)issues.push('negative-preapproval-read-as-approved');

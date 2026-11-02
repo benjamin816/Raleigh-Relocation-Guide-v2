@@ -609,14 +609,15 @@
     return { hour: Number(implied[1]), minute: Number(implied[2] || 0), meridiem: Number(implied[1]) >= 9 && Number(implied[1]) < 12 ? "am" : "pm" };
   }
   function offeredBookingChoice(value, slots) {
-    var text = String(value).toLowerCase();
+    var text = String(value).toLowerCase().replace(/\b(mon|tues?|wed|thu|thurs?|fri|sat|sun)\b\.?/g,function(day){return {mon:'monday',tue:'tuesday',tues:'tuesday',wed:'wednesday',thu:'thursday',thur:'thursday',thurs:'thursday',fri:'friday',sat:'saturday',sun:'sunday'}[day.replace(/\.$/,'')]||day;});
     if (/\b(?:different|other|alternative|neither|don't work|do not work|doesn't work|does not work|not (?:the )?(?:first|second))\b/.test(text)) return null;
     var clock = requestedClock(text);
     var day = /\b(today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.exec(text);
     var explicitDate = /\b20\d{2}-\d{2}-\d{2}\b/.exec(text);
     if (/\b(?:earlier|early)\b/.test(text)) return slots[0] || null;
     if (/\b(?:later|late)\b/.test(text)) return slots[1] || null;
-    var index = !clock && !day && !explicitDate && /\b(?:2|two|second|latter)\b/.test(text) ? 1 : !clock && !day && !explicitDate && /\b(?:1|one|first|former)\b/.test(text) ? 0 : -1;
+    var hasPeriod=/\b(?:morning|afternoon|evening)\b/.test(text);
+    var index = !clock && !day && !explicitDate && !hasPeriod && /\b(?:2|two|2nd|second|latter)\b/.test(text) ? 1 : !clock && !day && !explicitDate && !hasPeriod && /\b(?:1|one|1st|first|former)\b/.test(text) ? 0 : -1;
     if (index >= 0) return slots[index] || null;
     if (!day && !explicitDate && !clock) {
       var period=/\b(morning|afternoon|evening)\s+(?:option|one|time|slot)\b/.exec(text);
@@ -658,6 +659,8 @@
   function bookingPreferenceFromText(value, current) {
     var next = Object.assign({ host: "", daypart: "", weekdays: [], date: "" }, current || {});
     if (/\b(no preference|any time|any day|whoever is available)\b/i.test(value)) return { host: "", daypart: "", weekdays: [], date: "" };
+    var namedHost=String(value).match(/\b(?:recommended|prefer|with|instead of)\s+(?:a call with\s+)?(Benjamin|Ben|Ricardo)\b/i);
+    if(namedHost)next.host=/^ricardo$/i.test(namedHost[1])?'Ricardo':'Benjamin';
     if (/\b(?:benjamin|ben)\b/i.test(value) && !/\bricardo\b/i.test(value)) next.host = "Benjamin";
     if (/\bricardo\b/i.test(value) && !/\b(?:benjamin|ben)\b/i.test(value)) next.host = "Ricardo";
     if (/\bmornings?\b/i.test(value)) next.daypart = "morning";
@@ -818,8 +821,9 @@
     state.booking = { step: "loading", slots: [], allSlots: [], offset: 0, details: {},
       preference: requestedPreference };
     if (state.profile.outOfStateReferral) { state.booking.referral = true; state.booking.details.callType = "phone"; }
-    if (/\b(phone|telephone)\b/i.test(request || "")) state.booking.details.callType = "phone";
-    else if (config.chatVideoBookingEnabled && /\b(video|zoom|google meet|virtual)\b/i.test(request || "")) state.booking.details.callType = "video";
+    var formatRequest=(request || "").replace(/\b(?:instead of|rather than|not|no)\s+(?:a\s+)?(?:video|zoom|google meet|virtual|phone|telephone)(?:\s+call)?\b/gi, "");
+    if (/\b(phone|telephone)\b/i.test(formatRequest)) state.booking.details.callType = "phone";
+    else if (config.chatVideoBookingEnabled && /\b(video|zoom|google meet|virtual)\b/i.test(formatRequest)) state.booking.details.callType = "video";
     loadBookingSlots(state.booking);
   }
   function loadBookingSlots(booking) {
@@ -844,11 +848,15 @@
   }
   function handleBookingAnswer(value) {
     var booking = state.booking;
+    if(booking.step==='choose') {
+      value=String(value).replace(/\b(?:not|no)\s+(?:on\s+)?(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/gi,' ').replace(/\b(?:sunday|monday|tuesday|wednesday|thursday|friday|saturday)\s+(?:does not|doesn't|won't|will not)\s+work\b/gi,' ');
+    }
     if (booking.referral && /\b(video|zoom|meet|virtual)\b/i.test(value)) {
       message("This referral appointment is a quick phone call to learn about your current home. Would you like to continue with that, or contact the team at 919-737-7896 about another format?", false); return;
     }
-    if (/\b(video|zoom|meet|virtual)\b/i.test(value)) booking.details.callType = "video";
-    else if (/\b(phone|telephone|call me)\b/i.test(value)) booking.details.callType = "phone";
+    var formatValue=value.replace(/\b(?:instead of|rather than|not|no)\s+(?:a\s+)?(?:video|zoom|google meet|virtual|phone|telephone)(?:\s+call)?\b/gi, "");
+    if (/\b(video|zoom|meet|virtual)\b/i.test(formatValue)) booking.details.callType = "video";
+    else if (/\b(phone|telephone|call me)\b/i.test(formatValue)) booking.details.callType = "phone";
     if (engine.cancelsScheduling(value) || engine.declinesScheduling(value)) {
       state.booking = null;
       state.profile.noScheduling = true;
@@ -1243,12 +1251,20 @@
     }
   }
   function routeRentalPlan(value) {
-    if (state.booking || state.intent === "investing") return false;
+    var investmentRequest=(config.investingKeywords||[]).some(function(term){return new RegExp('\\b'+String(term).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\b','i').test(engine.normalizeInput(value));});
+    if (state.booking || state.intent === "investing" || investmentRequest) return false;
     var p=state.profile, text=String(value), plan=engine.transactionPlan(text);
     var origin=p.facts && p.facts.location;
     if(origin){p.location=origin.type;p.origin=origin.place||'';p.originCode=origin.stateCode||'';p.originCity=origin.city||'';}
     var rentalQuestion=/\b(?:work with|help|assist|do|handle|offer|find)\b.{0,35}\b(?:renters|rentals?|renting|rental search)\b/i.test(text) && engine.asksQuestion(text);
     var futureRent=asksToRent(text) || engine.rentalOnly(text) || plan.sellThenRent || /\b(?:will|going to|plan to|planning to)\s+(?:only )?(?:be )?renting\b/i.test(text);
+    if(p.pendingRentalSale){
+      if(/\b(?:sell|selling|list|listing)\b/i.test(text)&&!engine.transactionPlan(text).keepHome){p.originSale=true;p.facts.originHousing='Home to sell';}
+      else if(/\b(?:no|keep|keeping|not selling)\b/i.test(text)){p.originSale=false;p.facts.willSell='No';}
+      else {message("Will you be selling your current home, or keeping it?",false);return true;}
+      p.pendingRentalSale=false;p.rentalSaleAnswered=true;
+      if(routeSellerReferral(text))return true;explainRentalOnly();return true;
+    }
     if (p.rentalOnly && plan.explicit && plan.id==='buying' && !futureRent) {
       p.rentalOnly=false;p.informationOnly=false;p.rentalPlanConfirmed=false;p.pendingRentalPlan=false;
       p.rentalHorizon='';persist();
@@ -1278,6 +1294,9 @@
       persist();startBooking();return true;
     }
     if (routeSellerReferral(text)) return true;
+    if(p.location==='out' && /own/i.test(p.facts && p.facts.originHousing || '') && !p.rentalSaleAnswered && p.facts.willSell!=='No') {
+      p.pendingRentalSale=true;message("Will you be selling your current home before moving, or keeping it?",false);persist();return true;
+    }
     explainRentalOnly();return true;
   }
   function routeSellerReferral(value) {
@@ -1361,7 +1380,7 @@
       if (familyPlace) { state.profile.facts.familyArea = familyPlace[1]; state.profile.facts.familyNearby = familyPlace[1]; }
     }
     if (/\b(?:mornings?|afternoons?|evenings?|weekends?|weekdays?)\b/i.test(text)) state.profile.bookingPreference = bookingPreferenceFromText(text, state.profile.bookingPreference);
-    if (/\b(?:work(?:ing)? remotely|remote (?:job|work|position)|work(?:ing)? from home|fully remote|wfh)\b/i.test(text)) state.profile.facts.remoteWork = true;
+    if (/\b(?:work(?:ing)? remotely|remote (?:job|work|position)|work(?:ing)? from home|fully remote|(?:am|are|'m|'re) (?:both )?remote|wfh)\b/i.test(text)) state.profile.facts.remoteWork = true;
     if (/\b(?:retired|retiring|in retirement)\b/i.test(text)) state.profile.facts.retired = true;
     if (/\b(?:no kids|no children|don't have (?:any )?(?:kids|children)|just me|single person|single guy|single woman)\b/i.test(text)) state.profile.facts.noChildren = true;
     else if (/\b(?:have kids|have children|our kids|our children)\b/i.test(text)) state.profile.facts.noChildren = false;
@@ -1421,6 +1440,7 @@
   }
   function acceptAnswer(answer) {
     var question = activeQuestions().find(function(q){return q.key===state.profile.currentQuestionKey;}) || activeQuestions()[state.question];
+    if(question && /^(?:budget|priorityBudget)$/.test(question.key) && /^\s*\d[\d,]{4,8}\s*$/.test(answer) && priceAmount(answer)>=10000 && priceAmount(answer)<=50000000) answer='$'+answer.trim();
     if (question && question.key === "timing" && state.intent !== "investing") {
       var uncertainTiming = /\b(?:not sure|unsure|undecided|don['’]?t know|no idea|can['’]?t say|haven['’]?t decided|just (?:started|starting|began)|no (?:set )?(?:timeline|timeframe|date))\b/i.test(answer);
       if (uncertainTiming && !state.profile.timelineYearAsked) {
@@ -1448,8 +1468,8 @@
       scheduleClarification("Sorry, I don't quite understand. " + question.text);
       return;
     }
-    if (question && /^(?:financing|priorityFinancing)$/.test(question.key) && !engine.financingType(answer) && !/\b(?:not sure|unsure|don't know|undecided)\b/i.test(answer)) { scheduleClarification("Would you use financing or buy with cash? It's okay if you're not sure yet."); return; }
-    if (question && /^(?:budget|priorityBudget)$/.test(question.key) && !engine.extractBudget(answer) && !/\b(?:not sure|unsure|don't know|no idea|undecided|need a lender)\b/i.test(answer)) { scheduleClarification("What home price would feel comfortable? It's okay if you're not sure yet."); return; }
+    if (question && /^(?:financing|priorityFinancing)$/.test(question.key) && !engine.financingType(answer) && !/\b(?:not sure|unsure|don't know|do not know|undecided)\b/i.test(answer)) { scheduleClarification("Would you use financing or buy with cash? It's okay if you're not sure yet."); return; }
+    if (question && /^(?:budget|priorityBudget)$/.test(question.key) && !engine.extractBudget(answer) && !/\b(?:not sure|unsure|don't know|do not know|no idea|undecided|need a lender)\b/i.test(answer)) { scheduleClarification("What home price would feel comfortable? It's okay if you're not sure yet."); return; }
     var flowQuestions = config.flows[state.intent].questions;
     var questionPosition = flowQuestions.indexOf(question);
     markPreapproval(answer);
@@ -1605,7 +1625,7 @@
     if (question && question.key === "homeMore") state.profile.homeSingle = false;
     if (question && question.key === "budget") {
       state.profile.budgetAsked = true;
-      state.profile.budgetKnown = !/\b(?:not sure|don't know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);
+      state.profile.budgetKnown = !/\b(?:not sure|don't know|do not know|unsure|no idea|haven't decided|need a lender)\b/i.test(answer);
     }
     if (question && question.key === "timing") {
       state.profile.targetTiming = answer;
@@ -1760,16 +1780,18 @@
     return /^(?:i (?:have|had|got) (?:a |one |another |quick )?question|can i ask (?:you )?(?:a |one )?question|can i ask you something|ask a question|quick question|one question|question for you)\s*[.!?]*$/i.test(value);
   }
   function requestedPerson(value) {
+    var named=String(value).match(/\b(?:recommended|prefer|with|instead of)\s+(?:a call with\s+)?(Benjamin|Ben|Ricardo)\b/i);
+    if(named)return /^ricardo$/i.test(named[1])?'Ricardo':'Benjamin';
     if (/\b(?:benjamin|ben)\b/i.test(value) && !/\bricardo\b/i.test(value)) return "Benjamin";
     if (/\bricardo\b/i.test(value) && !/\b(?:benjamin|ben)\b/i.test(value)) return "Ricardo";
     return "";
   }
   function asksForBenjaminNumber(value) {
-    return /\b(?:what|which)\s+(?:phone\s+)?number\b.{0,40}\b(?:call|text|reach)\b|\b(?:team|benjamin|ben)\b.{0,70}\b(?:number|phone|call|text|reach)\b|\b(?:number|phone|call|text|reach)\b.{0,70}\b(?:team|benjamin|ben)\b/i.test(value);
+    return /\bcan (?:i|we) (?:call|text) you\b|\b(?:what|which)\s+(?:phone\s+)?number\b.{0,40}\b(?:call|text|reach)\b|\b(?:team|benjamin|ben)\b.{0,70}\b(?:number|phone|call|text|reach)\b|\b(?:number|phone|call|text|reach)\b.{0,70}\b(?:team|benjamin|ben)\b/i.test(value);
   }
   function asksForTeamMember(value) {
     return /^(?:human|a human|real person|talk to somebody|speak to somebody)\s*[.!?]*$/i.test(value) ||
-      /\b(?:speak|talk|connect|reach)\s+(?:me\s+)?(?:with|to)\s+(?:a |the )?(?:team(?: member)?|person|human|agent|someone|somebody|benjamin|ben|ricardo)\b/i.test(value) ||
+      /\b(?:speak|talk|connect|reach)\s+(?:me\s+)?(?:with|to)\s+(?:a |the )?(?:real )?(?:team(?: member)?|person|human|agent|someone|somebody|benjamin|ben|ricardo)\b/i.test(value) ||
       /\b(?:get|put)\s+me\s+(?:in touch|connected)\s+with\s+(?:a |the )?(?:team|person|human|agent|someone|somebody|benjamin|ben|ricardo)\b/i.test(value);
   }
   function asksToMeetNamedHost(value) {
@@ -1797,7 +1819,8 @@
   function answerSideQuestion(value, faq) {
     var humanRequest = asksForBenjaminNumber(value) || asksForTeamMember(value);
     var person = humanRequest ? requestedPerson(value) : "";
-    if (person) { state.profile.requestedHost = person; persist(); }
+    var changeHost=!!person && (!state.booking || asksForTeamMember(value) || /\b(?:meet|book|schedule|prefer|switch|instead)\b/i.test(value));
+    if (changeHost) { state.profile.requestedHost = person; persist(); }
     if (person === "Benjamin") message("Benjamin's direct call and text line is " + config.benjaminDirectPhone + ". You can call or text him anytime.", false);
     else if (person === "Ricardo") message("You can reach Ricardo through the Living in Raleigh team line at 919-737-7896. You can call or text us there.", false);
     else if (humanRequest) message("Absolutely. You can call or text the Living in Raleigh team at 919-737-7896.", false);
@@ -1806,7 +1829,7 @@
     else message(config.unknownQuestion || "That's a great question for the team to cover on your call.", false);
     if (humanRequest && (state.profile.noContact || state.profile.noScheduling || state.profile.informationOnly)) return;
     if (humanRequest) {
-      if (state.booking && person && state.booking.preference.host !== person) {
+      if (state.booking && changeHost && state.booking.preference.host !== person) {
         state.booking.preference.host = person;
         message("To make sure " + person + " is prepared, I'll check the next openings with " + person + ".", false);
         state.booking.step = "loading";
@@ -2069,6 +2092,11 @@
       else message("What would you like to know about Raleigh?", false);
       return;
     }
+    if ((state.profile.remoteWork || state.profile.facts.remoteWork) && state.profile.currentQuestionKey && /^commute/.test(state.profile.currentQuestionKey)) {
+      state.profile.remoteWork=true;state.profile.commuteMentioned=false;state.profile.commuteDestinationKnown=true;state.profile.commuteRangeKnown=true;
+      state.profile.currentQuestionKey='';askQuestion("Got it—with remote work, we can focus on the areas and home that suit you.");return;
+    }
+    if (state.profile.facts.areaCorrection) { delete state.profile.facts.areaCorrection; askQuestion("Got it—I'll keep that area preference in mind.");return; }
     var correctedIntent = detectIntent(value);
     if (state.intent==='selling' && state.combined && state.profile.facts.combined && correctedIntent && correctedIntent.id==='buying' && /\b(?:also|too|as well)\b/i.test(value)) {
       askQuestion("Got it—we'll plan your sale and next purchase together.");return;

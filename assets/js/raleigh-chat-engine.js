@@ -34,7 +34,7 @@
     var raw = normalizeRouting(value);
     var text = raw.replace(/\b(?:we|i) (?:were|was|had been)\s+(?:going to|planning to|thinking about)\s+(?:buy\w*|sell\w*)[^,.]*[,\.]?/g, ' ');
     var externalSale = /\b(?:partner|spouse)\b.{0,65}\b(?:condo|house|home|sell)\b/.test(text) && /\b(?:independent|isn't mine|not mine|belongs to|regardless|for myself|for me|my (?:purchase|plans?))\b/.test(text);
-    var noPurchase = /\b(?:not|don't|do not|won't|will not|no|neither)\s+(?:(?:be|need|want|planning|looking|going|to|a|another|next|new|local|home|purchase|here|again|soon|of us|us will)\s+)*(?:buy\w*|purchas\w*)\b|\b(?:sale|sell\w*) only\b|\bonly (?:need to |want to )?sell\b/.test(text);
+    var noPurchase = /\b(?:not|don't|do not|won't|will not|no|neither)\s+(?:(?:be|need|want|plans?|planning|looking|going|to|a|another|next|new|local|home|purchase|here|again|soon|of us|us will)\s+)*(?:buy\w*|purchas\w*)\b|\b(?:sale|sell\w*) only\b|\bonly (?:need to |want to )?sell\b/.test(text);
     var noHomeToSell = /\b(?:no|nothing|don['’]?t have (?:a|any)|do not have (?:a|any))\s+(?:(?:home|house|property)\s+)?to sell\b/.test(text);
     var keep = noHomeToSell || /\b(?:keep|keeping)\b.{0,50}\b(?:home|house|townhouse|townhome|it|property)\b|\b(?:not|don't|do not|won't|will not)\s+(?:need to |want to |plan to |be |looking to )?sell\b|\bno sale\b/.test(text);
     var primary = text.match(/\b(?:main|primary) (?:goal|focus|priority) (?:is|will be)\s+(buy\w*|purchas\w*|sell\w*)/);
@@ -158,7 +158,7 @@
       return (config.originCities[code] || []).some(function (city) { return barePlace === normalize(city); });
     })) return { type: "out", place: barePlace };
     if (/\b(already (?:live|living|here|local)|(?:i (?:live|am living|am)|i'm) (?:here|in (?:(?:north|south|east|west) )?(?:raleigh|cary|durham|the triangle))|i'm local|i am local|from (?:raleigh|cary|durham))\b/.test(text)) return { type: "local", place: "" };
-    var from = text.match(/\b(?:from|live in|living in|rent in|renting in|retired in|work remotely in|selling in|moving from|relocating from|i am in|i'm in|we are in)\s+([a-z][a-z .-]{1,35}?)(?=\s*(?:,|;|\.|!|\?|[—–]|$|\s+(?:with|and|because|but|to|for|in\s+\d+|within)\b))/);
+    var from = text.match(/\b(?:from|live in|living in|rent in|renting in|retired in|work(?:ing)? remotely in|own (?:a |our |my )?(?:home |house |property )?in|selling in|moving from|relocating from|i am in|i'm in|we are in)\s+([a-z][a-z .-]{1,35}?)(?=\s*(?:,|;|\.|!|\?|[—–]|$|\s+(?:as|with|and|because|but|to|for|in\s+\d+|within)\b))/);
     if (from && !/^(?:raleigh|cary|durham|the triangle|north carolina|nc|out of state)$/.test(from[1].trim())) return { type: "out", place: from[1].trim().replace(/\s+/g, " ") };
     if (/\bout of state\b/.test(text)) return { type: "out", place: "" };
     if (/\b(local(?:ly)?|already here|in the triangle)\b/.test(text)) return { type: "local", place: "" };
@@ -166,7 +166,7 @@
   }
   function resolveOrigin(location, config) {
     if (!location || location.type !== "out" || !location.place) return location;
-    var raw = normalize(location.place).replace(/,?\s+not\s+.+$/, "").replace(/[.,]+$/, "");
+    var raw = normalize(location.place).replace(/\s+state$/,'').replace(/,?\s+not\s+.+$/, "").replace(/[.,]+$/, "");
     var states = config.originStates || {};
     var cities = config.originCities || {};
     if (location.stateCode && states[location.stateCode]) return {type:'out',place:states[location.stateCode].toLowerCase(),stateCode:location.stateCode,city:location.city || ''};
@@ -260,7 +260,7 @@
     var correctedOrigin = correctedHome || text.match(/\b(?:i|we) meant\s+([a-z][a-z ,.-]{1,55}?)(?=[—–.!?;]|$|\s+(?:to buy|to sell|and|for)\b)/i);
     if (correctedOrigin) location = resolveOrigin({type:'out',place:correctedOrigin[1].trim()},config);
     var futureRental = /\bto rent in\b|\b(?:will|plan to|planning to|going to|want to)\s+(?:only )?(?:be )?(?:rent(?:ing)?|live|living)\s+in\b/i.test(text);
-    if (location && !(futureRental && location.type === 'local') && (questionKey === 'location' || correctedOrigin || /\b(?:from|live|living|local|out of state|rent(?:ing)? in|retired in|work remotely in|selling in|i am in|i'm in)\b/i.test(text))) facts.location = resolveOrigin(location, config);
+    if (location && !(futureRental && location.type === 'local') && (questionKey === 'location' || correctedOrigin || /\b(?:from|live|living|own|local|out of state|rent(?:ing)? in|retired in|work(?:ing)? remotely in|own (?:a |our |my )?(?:home |house |property )?in|selling in|i am in|i'm in)\b/i.test(text))) facts.location = resolveOrigin(location, config);
     var leaseCity = text.match(/\b(?:our|my)\s+([a-z]+(?:\s+[a-z]+)?)\s+lease\b/i);
     if (!facts.location && leaseCity) {
       var leaseOrigin = resolveOrigin({type:'out',place:leaseCity[1]},config);
@@ -270,6 +270,7 @@
     if (leaseEnd) facts.leaseEnd = leaseEnd[0];
     if (questionKey === 'location' && (config.localAreas || []).some(function (area) { return normalize(area) === normalize(text).replace(/[.!?]+$/, ''); })) facts.currentArea = text;
     var tenancy = text.match(/\b(?:i|we)(?:'re|'m| are| am)?\s+(?:(?:currently|already) )?(rent(?:ing)?|own(?:ing)?)\b/i);
+    if (location && location.type==='out' && /\b(?:we|i) own\b/i.test(text)) facts.originHousing='Own current home';
     if (tenancy) {
       if (location && location.type === 'out') facts.originHousing = tenancy[0];
       else facts.tenure = tenancy[1];
@@ -353,6 +354,8 @@
       facts.areas=desiredArea[1];
       if (/\b(?:because|for parks|for trails|for walkability|for schools|for the commute)\b/i.test(text)) facts.areasReason=text;
     }
+    var changedArea=text.match(new RegExp('\\b(?:actually|instead|now)\\b.{0,25}\\bprefer\\s+(' + areas + ')\\b','i'));
+    if(changedArea){facts.areas=changedArea[1];facts.areaCorrection=true;}
     var plan = transactionPlan(text);
     var goalAnswer = /^(?:originHousing|willSell|financing|priorityFinancing|budget|priorityBudget|preapproval|timing|timingReason|ownedYears)$/.test(questionKey||'');
     var goalCorrection = /\b(?:main|primary) (?:goal|focus)|\b(?:switch|actually|focus on|no longer|plan changed|only need to sell)\b/i.test(text);
