@@ -13,6 +13,7 @@ assert.equal(result.ok,true);assert.equal(result.interpretation.canonical,frame.
 const before=calls;result=await(await worker.fetch(request({message:'buy a home'}),{...env,CHAT_RATE_LIMIT:{limit:async()=>({success:false})}})).json();assert.equal(result.reason,'rate_limit');assert.equal(calls,before);
 assert.equal((await(await worker.fetch(request({message:'buy'}),{...env,AI_ENABLED:'false'})).json()).reason,'disabled');
 assert.equal((await(await worker.fetch(request({message:'buy'}),{...env,AI:{run:async()=>{throw Error('quota exhausted');}}})).json()).fallback,true);
+assert.equal((await(await worker.fetch(request({message:'buy'}),{...env,AI:{run:async()=>{throw Error('4006: used up your daily free allocation of 10,000 neurons');}}})).json()).reason,'daily_limit');
 for(const bad of [{...frame,canonical:'I can spend 900000'},{...frame,canonical:'Your appointment is booked'},{...frame,canonical:'https://evil.example'},{...frame,kind:'book'},null])assert.equal(validateFrame(bad,'buy a home'),null);
 assert.equal(validateFrame({...frame,kind:'question',topic:'invented_answer'},'question'),null);
 assert.equal(validateFrame({...frame,topic:'faq_1'},'buy a home').topic,'none','Answers cannot smuggle in a FAQ detour');

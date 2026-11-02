@@ -47,5 +47,5 @@ export default {async fetch(request,env){
   frame=validateFrame(frame,body.message,context);
   if(!frame)return fallback('invalid_output');
   return response(origin,{ok:true,version:knowledge.version,model:MODEL,interpretation:frame,usage:result.usage||null});
- }catch{return fallback('unavailable');}
+ }catch(error){return fallback(/daily free allocation|10,000 neurons/i.test(String(error?.message||error))?'daily_limit':'unavailable');}
 }};
