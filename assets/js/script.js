@@ -4936,10 +4936,10 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261102-test14";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261102-live1";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261102-test70";
+    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261102-live1";
     configScript.src = "/assets/js/raleigh-chat-config.js?v=" + chatVersion;
     configScript.onload = function () {
       var engineScript = document.createElement("script");

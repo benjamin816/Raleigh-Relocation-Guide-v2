@@ -8,6 +8,7 @@ This repository is organized for pure static hosting on GitHub Pages using folde
 - `/2026/` 2026 guide lead magnet
 - `/areas/` areas hub
 - `/videos/` videos page
+- `/calculator/` real estate investment calculator (built from the separate One-Stop-Rental-App repository)
 
 ## Shared assets
 - `/assets/css/styles.css`
