@@ -1,7 +1,7 @@
 // Independent first-pass batch. Does not modify the application or call live services.
 const fs=require('node:fs');
 const {createSession}=require('./helpers/chat-isolated.cjs');
-const cases=[
+const originalCases=[
  ['One-line detailed relocation','My wife and I are buying in Raleigh. We live in Maine, own a house to sell, want 3 beds and 2 baths near parks, and our budget is $620k.',{originCode:'ME'}],
  ['Missing letters','im relocting frm michigan to raliegh',{origin:'Michigan',originCode:'MI'}],
  ['Casual purchase spelling','wanna purchse a house around cary',{origin:'Atlanta',originCode:'GA'}],
@@ -53,6 +53,7 @@ const cases=[
  ['Question while choosing time','Please set up a phone call about buying',{direct:true,injectBooking:'Before I pick, can I speak to a person?',phoneResponse:true}],
  ['Spam warning then recovery','Looking to buy a home in Raleigh',{injectKey:'location',inject:'asdfghjkl',mustStayQuestion:true,origin:'Tampa'}]
 ].map(([label,opening,opts={}],i)=>({id:'N'+String(i+1).padStart(2,'0'),label,opening,...opts}));
+const cases=process.argv[2]?JSON.parse(fs.readFileSync(process.argv[2],'utf8')).cases:originalCases;
 const answers={currentArea:'Garner',tenure:'We rent our current place',firstTime:'This will be our first purchase',leaseEnd:'Our lease is up in May',willSell:'We will sell it',whyRaleigh:'We want a milder climate and a fresh start',familyNearby:'Morrisville',priorityFamilyArea:'Morrisville',originHousing:'We own a home and will sell it before moving',priorities:'Walkable parks and groceries nearby',priorityMore:'Good access to groceries would be helpful',commuteDestination:'Duke Hospital',commuteRange:'Ideally 20 minutes; 35 would be my limit',priorityBudget:'650k ceiling',priorityFinancing:'We will use a mortgage',areas:'Morrisville and Cary',areasReason:'To be close to greenways',home:'Three bedrooms, two full baths, and a fenced yard',homeMore:'Also a first-floor primary bedroom',budget:'650k ceiling',financing:'We will use a mortgage',preapproval:'We still need a lender',timing:'Next fall',timingReason:'That is when the lease ends',currentHome:'Holly Springs',ownedYears:'We have owned it for nine years',whySell:'We have outgrown it',whySellSolo:'We need to downsize',nextDestination:'Raleigh',nextAreaReason:'Closer to work',nextHome:'Four bedrooms, office space and a garage',sellingExperience:'We have sold two homes before',moveGoal:'We plan to buy',jobLocation:'Duke Hospital',jobStart:'April of next year',experience:'This would be our first investment',strategy:'A duplex for long-term rentals',goals:'Long-term appreciation',involvement:'I want it fairly passive',salePriority:'Both'};
 function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.booking;
  if(p.pendingRentalPlan)return counts.rental?c.rentalClarify||c.rental||'Three months, then buying':c.rental||'Three months, then buying';
@@ -115,6 +116,6 @@ function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.boo
  out.push({...a,label:c.label,issues:[...new Set(issues)],evidence});
  }catch(e){out.push({...s.audit(),label:c.label,issues:[...new Set([...issues,'runtime:'+e.message])],evidence});}
  }
- const dir='output/chat-fresh-50-batch2-2026-11-02';fs.mkdirSync(dir,{recursive:true});fs.writeFileSync(dir+'/first-pass.json',JSON.stringify(out,null,2));
+ const dir=process.argv[3]||'output/chat-fresh-50-batch2-2026-11-02';fs.mkdirSync(dir,{recursive:true});const target=dir+'/'+(process.env.CHAT_RESULT_FILE||'repaired-replay.json');if(target.endsWith('/first-pass.json')&&fs.existsSync(target))throw Error('Frozen first-pass results already exist; use a different replay filename.');fs.writeFileSync(target,JSON.stringify(out,null,2));
  console.log(JSON.stringify({total:out.length,turns:out.reduce((n,r)=>n+r.transcript.length,0),passing:out.filter(r=>!r.issues.length).length,flagged:out.filter(r=>r.issues.length).map(r=>({id:r.sessionId,label:r.label,issues:r.issues}))},null,2));
 })().catch(e=>{console.error(e);process.exitCode=1});

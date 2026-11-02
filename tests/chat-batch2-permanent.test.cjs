@@ -1,0 +1,12 @@
+const assert=require('node:assert/strict'),{createSession}=require('./helpers/chat-isolated.cjs'),engine=require('../assets/js/raleigh-chat-engine.js');
+(async()=>{
+ for(const t of ['Sick of snow','Sick and tired of high prices','I am sick of paying rent'])assert.equal(engine.isSensitiveFamilyReason(t),false);
+ assert.equal(engine.isSensitiveFamilyReason('My mom has cancer and is sick and tired of the hospital'),true);
+ for(const t of ['Parks','Trails','Greenways','Groceries'])assert.equal(engine.isUnclearAnswer(t,'priorities'),false);
+ assert.equal(engine.extractBudget('four hundred fifty thousand max'),'$450000');assert.equal(engine.extractBudget('not six hundred thousand'),'');assert.equal(engine.extractBudget('five hundred thousand, not seven hundred thousand'),'$500000');assert.equal(engine.extractBudget('one million two hundred thousand'),'$1200000');
+ for(const [choice,date] of [['the Friday one','2026-11-06'],['the latter','2026-11-06'],['the Thursday one','2026-11-05'],['the former','2026-11-05']]){const s=createSession(choice);await s.send('Book a phone call about buying');await s.send(choice);assert(s.audit().internalState.booking.start.startsWith(date),choice);}
+ const both=createSession('add-purchase');for(const t of ['I need to sell my home in Durham','Morgan','Actually we will buy a new home in Raleigh too.'])await both.send(t);assert.equal(both.audit().internalState.combined,true);assert.equal(both.audit().internalState.intent,'selling');assert.equal(both.audit().internalState.profile.facts.currentHome,'Durham');assert(!both.audit().internalState.profile.facts.ownedYears);
+ const rent=createSession('rental-synonym');await rent.send('Relocating from Alaska to rent a place. No home to sell.');assert.equal(rent.audit().internalState.profile.pendingRentalPlan,true);await rent.send('Eighteen months');assert.equal(rent.audit().internalState.profile.rentalOnly,true);assert.equal(rent.audit().serviceCalls.length,0);
+ const referral=createSession('sale-city');await referral.send('Selling our home in Salt Lake City and moving to Raleigh to rent for at least a year.');assert.equal(referral.audit().internalState.profile.outOfStateReferral,true);assert.match(referral.audit().transcript[0].bot,/Salt Lake City/);assert.equal(referral.audit().internalState.booking.details.callType,'phone');
+ console.log('Permanent Batch 2 failures and adjacent budget/identity guards passed. No live writes.');
+})().catch(e=>{console.error(e);process.exitCode=1});

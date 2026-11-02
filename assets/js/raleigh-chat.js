@@ -612,13 +612,17 @@
     var text = String(value).toLowerCase();
     if (/\b(?:different|other|alternative|neither|don't work|do not work|doesn't work|does not work|not (?:the )?(?:first|second))\b/.test(text)) return null;
     var clock = requestedClock(text);
-    if (/\b(?:earlier|early)\b/.test(text)) return slots[0] || null;
-    if (/\b(?:later|late)\b/.test(text)) return slots[1] || null;
-    var index = !clock && /\b(?:2|two|second)\b/.test(text) ? 1 : !clock && /\b(?:1|one|first)\b/.test(text) ? 0 : -1;
-    if (index >= 0) return slots[index] || null;
     var day = /\b(today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i.exec(text);
     var explicitDate = /\b20\d{2}-\d{2}-\d{2}\b/.exec(text);
-    if (!day && !explicitDate && !clock) return null;
+    if (/\b(?:earlier|early)\b/.test(text)) return slots[0] || null;
+    if (/\b(?:later|late)\b/.test(text)) return slots[1] || null;
+    var index = !clock && !day && !explicitDate && /\b(?:2|two|second|latter)\b/.test(text) ? 1 : !clock && !day && !explicitDate && /\b(?:1|one|first|former)\b/.test(text) ? 0 : -1;
+    if (index >= 0) return slots[index] || null;
+    if (!day && !explicitDate && !clock) {
+      var period=/\b(morning|afternoon|evening)\s+(?:option|one|time|slot)\b/.exec(text);
+      if (period) { var choices=slots.filter(function(slot){var h=Number(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'numeric',hourCycle:'h23'}).format(new Date(slot.start)));return period[1]==='morning'?h<12:period[1]==='evening'?h>=17:h>=12&&h<17;}); return choices.length===1?choices[0]:null; }
+      return null;
+    }
     var today = bookingDayKey(new Date());
     var tomorrow = new Date(today + "T12:00:00Z");
     tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
@@ -629,7 +633,7 @@
       if (day && (day[1] === "today" ? date !== today : day[1] === "tomorrow" ? date !== tomorrow.toISOString().slice(0, 10) : parts.weekday.toLowerCase() !== day[1])) return false;
       return !clock || Number(parts.hour) === clock.hour && Number(parts.minute) === clock.minute && parts.dayPeriod.toLowerCase() === clock.meridiem;
     });
-    var accepting = /\b(?:works|good|fine|great|perfect|take|choose|pick|book|yes|let'?s do|let us do|can do|that time)\b/i.test(text) ||
+    var accepting = /\b(?:works|good|fine|great|perfect|take|choose|pick|book|yes|let'?s do|let us do|can do|that time|one)\b/i.test(text) ||
       /^(?:today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)[.!]?$/i.test(text.trim());
     return (clock || accepting) && matches.length === 1 ? matches[0] : null;
   }
@@ -1241,6 +1245,8 @@
   function routeRentalPlan(value) {
     if (state.booking || state.intent === "investing") return false;
     var p=state.profile, text=String(value), plan=engine.transactionPlan(text);
+    var origin=p.facts && p.facts.location;
+    if(origin){p.location=origin.type;p.origin=origin.place||'';p.originCode=origin.stateCode||'';p.originCity=origin.city||'';}
     var rentalQuestion=/\b(?:work with|help|assist|do|handle|offer|find)\b.{0,35}\b(?:renters|rentals?|renting|rental search)\b/i.test(text) && engine.asksQuestion(text);
     var futureRent=asksToRent(text) || engine.rentalOnly(text) || plan.sellThenRent || /\b(?:will|going to|plan to|planning to)\s+(?:only )?(?:be )?renting\b/i.test(text);
     if (p.rentalOnly && plan.explicit && plan.id==='buying' && !futureRent) {
@@ -1250,8 +1256,8 @@
     if (!p.pendingRentalPlan && !futureRent && !rentalQuestion) return false;
     if (futureRent) p.rentalPlanConfirmed=true;
     if (plan.id==='buying' && !futureRent && !rentalQuestion) {p.pendingRentalPlan=false;return false;}
-    var duration=text.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|a few|few)(?:[-– ]+(?:to[- ]+)?(\d+|three|six|twelve))?\s*(?:[- ]?(?:plus|or more)|\+)?[- ]*(months?|mos|years?)\b/i);
-    var numbers={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,'a few':3,few:3};
+    var duration=text.match(/\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|a few|few)(?:[-– ]+(?:to[- ]+)?(\d+|three|six|twelve))?\s*(?:[- ]?(?:plus|or more)|\+)?[- ]*(months?|mos|years?)\b/i);
+    var numbers={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,eleven:11,twelve:12,thirteen:13,fourteen:14,fifteen:15,sixteen:16,seventeen:17,eighteen:18,nineteen:19,twenty:20,'a few':3,few:3};
     var months=duration ? (numbers[(duration[2]||duration[1]).toLowerCase()] || Number(duration[2]||duration[1])) * (/year/i.test(duration[3])?12:1) : 0;
     var horizon=months && months<=3 ? 'short' : months>=6 || /\b(?:annual lease|year[- ]long|a year|at least a year)\b/i.test(text) ? 'long' : '';
     if (!horizon) {
@@ -1312,7 +1318,7 @@
     link("Explore Raleigh guides", "/learning-center/");
   }
   function asksToRent(value) {
-    return /\b(?:looking|want|need|plan|planning|going|hoping|thinking|interested)\s+to\s+rent\b|\bmoving\b.{0,45}\bto rent\b|\brent(?:ing)?\s+(?:first|for now|instead|now)\b|\b(?:looking|searching)\s+for\s+(?:a\s+)?rental\b/i.test(value);
+    return /\bhelp\s+(?:(?:me|us|someone)\s+)?(?:to\s+)?rent\b|\b(?:looking|want|need|plan|planning|going|hoping|thinking|interested)\s+to\s+rent\b|\b(?:mov\w*|relocat\w*|coming|headed)\b.{0,80}\bto rent\b|\brent(?:ing)?\s+(?:first|for now|instead|now)\b|\b(?:looking|searching)\s+for\s+(?:a\s+)?rental\b/i.test(value);
   }
   function mentionsPrice(value) {
     return /\b(?:price|prices|pricing|budget|affordab\w*|cheap\w*|cost of living|costs? less|lower cost|lower price|more for (?:my|our|the) money)\b|(?:\$\s?\d[\d,]*|\b\d{3,4}\s?k\b)/i.test(value);
@@ -1334,7 +1340,12 @@
     var text = String(value || "");
     var current = state.intent && (activeQuestions().find(function(q){return q.key===state.profile.currentQuestionKey;}) || activeQuestions()[state.question]);
     var detected = engine.detectIntent(text, config);
-    var facts = engine.extractFacts(text, config, state.intent || detected && detected.id, current && current.key);
+    var addingPurchase=state.intent==='selling' && detected && detected.id==='buying' && /\b(?:too|also|as well)\b/i.test(text) && !/\b(?:not selling|no longer sell|instead of selling)\b/i.test(text);
+    var facts = engine.extractFacts(text, config, state.intent || detected && detected.id, addingPurchase ? null : current && current.key);
+    if (addingPurchase) delete facts.currentHome;
+    if (state.intent==='selling' && facts.transactionGoal==='buying' && /\b(?:too|also|as well)\b/i.test(text) && !/\b(?:not selling|no longer sell|instead of selling)\b/i.test(text)) {
+      facts.transactionGoal='selling';facts.combined=true;facts.saleOnly=false;state.combined=true;
+    }
     if (facts.home) { state.profile.homeDetailEvidence = ((state.profile.homeDetailEvidence || "") + " " + text).trim().slice(-1600); facts.home = engine.mergeHome((state.profile.facts || {}).home, facts.home); }
     state.profile.facts = Object.assign({}, state.profile.facts || {}, facts);
     if (facts.budget) state.profile.priorityBudgetAmount = priceAmount(facts.budget);
@@ -1361,7 +1372,7 @@
     if (key === 'home' && facts.home && homeDetailCount(facts.home) < 2 && !facts.homeAnswered) return false;
     if (key==='priorityBudget') return !!facts.budget;
     if (key==='priorityFinancing') return !!facts.financing;
-    if (key==='nextHome') return !!facts.home && homeDetailCount(facts.home)>=2;
+    if (key==='nextHome') return !!facts.home && homeDetailCount(state.profile.homeDetailEvidence || facts.nextHome || facts.home)>=2;
     if (key==='familyNearby' || key==='priorityFamilyArea') return !!facts.familyArea || facts.familyNearbyAnswered===true || facts.hasFamilyNearby===false;
     if (key==='preapproval') return !!facts.preapproval || state.profile.preApproved===true || state.profile.preapprovalAsked===true;
     if (key==='moveGoal') return !!facts.transactionGoal;
@@ -1754,7 +1765,7 @@
     return "";
   }
   function asksForBenjaminNumber(value) {
-    return /\b(?:team|benjamin|ben)\b.{0,70}\b(?:number|phone|call|text|reach)\b|\b(?:number|phone|call|text|reach)\b.{0,70}\b(?:team|benjamin|ben)\b/i.test(value);
+    return /\b(?:what|which)\s+(?:phone\s+)?number\b.{0,40}\b(?:call|text|reach)\b|\b(?:team|benjamin|ben)\b.{0,70}\b(?:number|phone|call|text|reach)\b|\b(?:number|phone|call|text|reach)\b.{0,70}\b(?:team|benjamin|ben)\b/i.test(value);
   }
   function asksForTeamMember(value) {
     return /^(?:human|a human|real person|talk to somebody|speak to somebody)\s*[.!?]*$/i.test(value) ||
@@ -2059,6 +2070,9 @@
       return;
     }
     var correctedIntent = detectIntent(value);
+    if (state.intent==='selling' && state.combined && state.profile.facts.combined && correctedIntent && correctedIntent.id==='buying' && /\b(?:also|too|as well)\b/i.test(value)) {
+      askQuestion("Got it—we'll plan your sale and next purchase together.");return;
+    }
     if (state.intent === 'investing' && !state.profile.investmentSale && state.profile.facts.investmentSale && !state.booking) {
       state.profile.investmentSale = true;
       state.question = activeQuestions().findIndex(function (question) { return question.key === 'salePriority'; });
