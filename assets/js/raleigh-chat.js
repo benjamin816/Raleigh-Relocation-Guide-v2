@@ -1850,7 +1850,9 @@
       if (item) message(item.prompt, false);
       else message(config.contactConsentPrompt, false);
     } else if (state.intent && state.question >= 0 && state.question < activeQuestions().length) askQuestion();
-    else message("What would you like to know about Raleigh?", false);
+    else if(state.profile.awaitingVisitReason)message("What has you looking at our website today?",false);
+    else if(state.profile.informationOnly||state.profile.noScheduling)message("What would you like to know about Raleigh?",false);
+    else message(config.welcome, false);
   }
   function answerSideQuestion(value, faq) {
     var humanRequest = asksForBenjaminNumber(value) || asksForTeamMember(value);
@@ -1940,7 +1942,7 @@
     }
     var safety = engine.classifySafety(originalValue, state.previousInput);
     var assistantTopic=engine.assistantTopic(originalValue)||(interpretation&&/^assistant_(?:identity|capabilities|privacy)$/.test(interpretation.topic||'')?interpretation.topic:'');
-    if (!assistantTopic && (!interpretation || interpretation.kind!=='question') && (!state.booking || state.booking.step === 'choose' || state.booking.step === 'loading')) captureVisitorContext(value);
+    if (!assistantTopic && !engine.socialGreeting(originalValue) && (!interpretation || interpretation.kind!=='question') && (!state.booking || state.booking.step === 'choose' || state.booking.step === 'loading')) captureVisitorContext(value);
     state.previousInput = originalValue;
     var strikes = safety ? safetyRecord(safety) : 0;
     if (safety && safety !== "language") {
@@ -1997,10 +1999,18 @@
     var questionTopic=semanticQuestion&&interpretation.topic||'';
     var topicMatch=questionTopic.match(/^(faq|info)_(\d+)$/);
     var approvedAnswer=topicMatch&&(topicMatch[1]==='faq'?config.faq:config.informationalAnswers)[Number(topicMatch[2])];
+    if(engine.socialGreeting(originalValue)){
+      if(!state.profile.introAsked&&!state.intent&&!state.booking&&!state.contact){
+        state.profile.introAsked=true;state.profile.awaitingFirstName=true;persist();
+      }
+      message(config.socialGreetingAnswer,false);
+      resumeAfterQuestion();
+      return;
+    }
     if(assistantTopic){
       message(config.assistantAnswers[assistantTopic],false);
       if(assistantTopic==='assistant_privacy')link('Read our privacy policy','/privacy-policy/');
-      if(state.profile.awaitingFirstName||state.booking||state.contact||state.intent)resumeAfterQuestion();
+      resumeAfterQuestion();
       return;
     }
     if (state.booking && !/^(?:choose|loading|checking)$/.test(state.booking.step)) {
@@ -2158,7 +2168,8 @@
         /^(?:hi|hello|hey|good (?:morning|afternoon|evening)|how(?:'s| is) it going|how are you(?: doing)?|what(?:'s| is) up)[.!?\s]*$/i.test(value)) {
       state.profile.introAsked=true;state.profile.awaitingFirstName=true;
       persist();
-      message("Hi! 😊 I'm Sam, and I can help answer your questions about buying or selling in Raleigh. May I have your first name so I can personalize things for you?",false);
+      message("Hi! 😊 I'm Sam, and I can help answer your questions about buying or selling in Raleigh.",false);
+      resumeAfterQuestion();
       return;
     }
     if (!replaying && !state.profile.introAsked && !state.intent && !state.booking && !state.contact &&

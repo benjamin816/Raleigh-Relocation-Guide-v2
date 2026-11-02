@@ -4,6 +4,7 @@
   function directMeaning(text,context,engine){
     if(context.booking||context.awaitingFirstName||context.contact||context.ended)return null;
     var value=String(text).trim().replace(/[’]/g,"'");
+    if(engine.socialGreeting(value))return 'hello';
     if(/^(?:hi|hello|hey|good (?:morning|afternoon|evening)|how(?:'s| is) it going|how are you(?: doing)?|what(?:'s| is) up)[.!?\s]*$/i.test(value))return 'hello';
     if(/^(?:(?:i(?:'m| am)?|we(?:'re| are)?)\s+)?(?:(?:looking|want|hoping)\s+to\s+)?(?:buy|buying|purchase|purchasing|sell|selling|buy and sell|sell and buy|both)(?:\s+(?:a|my|our|the)\s+(?:home|house|property))?[.!\s]*$/i.test(value))return value;
     if(/^(?:budget|priorityBudget)$/.test(context.question||'')&&!engine.asksQuestion(value)&&engine.extractBudget(value))return value;

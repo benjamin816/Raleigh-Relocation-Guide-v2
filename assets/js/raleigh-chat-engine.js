@@ -146,6 +146,9 @@
     if(/\b(?:what (?:do|will) you do with my (?:data|details|information)|who (?:can|will) (?:see|read) (?:this|my messages)|(?:is|are) (?:this chat|my messages|my data) (?:private|confidential|stored)|privacy policy)\b/.test(text))return 'assistant_privacy';
     return '';
   }
+  function socialGreeting(value) {
+    return /^(?:(?:hi|hey|hello)[,! .]*\s*)?(?:how (?:are|r) (?:you|u)(?: doing)?|how(?:'s| is) it going|how(?:'s| is) your day(?: going)?)[?!. ]*$/i.test(normalize(value));
+  }
   function visitorResidenceText(value) {
     return String(value || '').replace(/\b(?:my|our|his|her|their|the)\s+(?:(?:closest|best|close|extended|immediate)\s+)?(?:family|relatives|parents|friends|mother(?:[- ]in[- ]law)?|father(?:[- ]in[- ]law)?|mom|dad|sister|brother|daughter|son)\b.{0,20}?\b(?:live[sd]?|is living|are living)\s+(?:in|near)\s+[^.!?;,]+?(?=\s+(?:and|but)\b|[.!?;,]|$)/ig, ' ');
   }
@@ -468,5 +471,5 @@
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";
     return null;
   }
-  return { assistantTopic: assistantTopic, mergeHome: mergeHome, normalizeInput: normalizeRouting, transactionPlan: transactionPlan, extractBudget: extractBudget, financingType: financingType, endsConversation: endsConversation, cancelsScheduling: cancelsScheduling, sellThenRent: sellThenRent, declinesContact: declinesContact, researchOnly: researchOnly, explicitBooking: explicitBooking, extractFacts: extractFacts, declinesScheduling: declinesScheduling, declinesName: declinesName, rentalOnly: rentalOnly, detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
+  return { socialGreeting: socialGreeting, assistantTopic: assistantTopic, mergeHome: mergeHome, normalizeInput: normalizeRouting, transactionPlan: transactionPlan, extractBudget: extractBudget, financingType: financingType, endsConversation: endsConversation, cancelsScheduling: cancelsScheduling, sellThenRent: sellThenRent, declinesContact: declinesContact, researchOnly: researchOnly, explicitBooking: explicitBooking, extractFacts: extractFacts, declinesScheduling: declinesScheduling, declinesName: declinesName, rentalOnly: rentalOnly, detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
 });
