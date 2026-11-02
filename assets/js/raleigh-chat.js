@@ -17,6 +17,7 @@
       '<div class="rchat-log" role="log" aria-live="polite" aria-relevant="additions"></div>' +
       '<button class="rchat-new" type="button" hidden>New message ↓</button>' +
       '<button class="rchat-test-reset" type="button" hidden>Reset test conversation</button>' +
+      '<div class="rchat-test-ai" role="status" hidden></div>' +
       '<div class="rchat-file-status" hidden><span class="rchat-file-name"></span><button class="rchat-file-remove" type="button" aria-label="Remove attached file">×</button></div>' +
       '<form class="rchat-compose"><textarea class="rchat-input" rows="1" maxlength="2000" aria-label="Type a message" placeholder="Type a Message..." autocomplete="off"></textarea>' +
         '<button class="rchat-tool rchat-mic" type="button" aria-label="Speak a message" title="Speak a message"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="13" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v4m-4 0h8"/></svg></button>' +
@@ -92,10 +93,16 @@
   avatar.src = config.avatar;
   root.querySelector(".rchat-head-title").textContent = config.title;
 
-  var storageKey = "raleigh-guide-chat-v1";
+  var storageKey = config.conversationStorageKey || "raleigh-guide-chat-v1";
   var resumeQuestionOnOpen = false;
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
   var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, hasUserMessage: false, completed: false, unreadCount: 0, badgeReadyAt: 0, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
+  var incomingGeneration = 0;
+  var incomingQueue = Promise.resolve();
+  var aiStatus = root.querySelector('.rchat-test-ai');
+  var understanding = config.understandingEnabled && isTestSurface && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) && window.RaleighChatUnderstanding ?
+    window.RaleighChatUnderstanding.create({endpoint:config.understandingEndpoint,engine:engine}) : null;
+  if(understanding){aiStatus.hidden=false;aiStatus.style.cssText='font-size:11px;padding:4px 12px;color:#52645a;background:#f5f7f4';aiStatus.textContent='AI interpreter ready · existing bot is backup';}
   function trackConversation(eventName) {
     var tracker = window.__livrAnalyticsTracker;
     if (!tracker || typeof tracker.track !== 'function') return;
@@ -1876,8 +1883,27 @@
     persist();
     message("😊 I'm Sam. May I have your first name so I can personalize things for you?", false);
   }
-  function handleText(text, replaying) {
-    var value = String(text).replace(/[’]/g, "'").trim();
+  function receiveText(text) {
+    var value=String(text).trim();
+    if(!value||state.submitting||state.ended)return;
+    if(!understanding){handleText(value);return;}
+    var generation=incomingGeneration,receivedAt=Date.now(),history=state.history.slice(-4);
+    lastUserSentAt=receivedAt;cancelClarification();interruptBotQueue();
+    var privateField=!!state.contact || !!(state.booking && !/^(?:choose|loading|checking)$/.test(state.booking.step));
+    message(value,true,{remember:!privateField});sound();
+    incomingQueue=incomingQueue.catch(function(){}).then(async function(){
+      if(generation!==incomingGeneration||state.ended)return;
+      var context={intent:state.intent,question:state.profile.currentQuestionKey,booking:state.booking&&state.booking.step,contact:!!state.contact,awaitingFirstName:!!state.profile.awaitingFirstName,ended:state.ended,known:state.profile,history:history};
+      aiStatus.textContent='Understanding your message…';
+      var result=await understanding.interpret(value,context);
+      if(generation!==incomingGeneration)return;
+      aiStatus.textContent=result.mode==='ai'?'AI interpreted · existing rules handle the reply':result.mode==='fallback'?'AI unavailable · existing bot handling this message':'Existing rules · contact, safety or scheduling';
+      handleText(value,false,{canonical:result.canonical,alreadyShown:true,receivedAt:receivedAt});
+    });
+  }
+  function handleText(text, replaying, interpretation) {
+    var originalValue = String(text).replace(/[’]/g, "'").trim();
+    var value = interpretation && interpretation.canonical || originalValue;
     if (!value || state.submitting || state.ended) return;
     if (!replaying && !state.profile.analyticsConversationStarted) {
       trackConversation('chat_conversation_started');
@@ -1886,7 +1912,7 @@
     state.hasUserMessage = true;
     persist();
     if (!replaying) {
-      lastUserSentAt = Date.now();
+      lastUserSentAt = interpretation && interpretation.receivedAt || Date.now();
       cancelClarification();
       interruptBotQueue();
     }
@@ -1898,12 +1924,12 @@
       sound();
       return;
     }
-    var safety = engine.classifySafety(value, state.previousInput);
+    var safety = engine.classifySafety(originalValue, state.previousInput);
     if (!state.booking || state.booking.step === 'choose' || state.booking.step === 'loading') captureVisitorContext(value);
-    state.previousInput = value;
+    state.previousInput = originalValue;
     var strikes = safety ? safetyRecord(safety) : 0;
     if (safety && safety !== "language") {
-      message(value, true, { remember: false });
+      if(!interpretation || !interpretation.alreadyShown) message(originalValue, true, { remember: false });
       sound();
       if (strikes >= 2 || safety === "hate" || safety === "threat") {
         state.ended = true;
@@ -1922,8 +1948,8 @@
       return;
     }
     var contactCommand = /^(contact|send a message|ask a question|talk to someone|speak to someone|human)$/i.test(value);
-    if (!replaying) {
-      message(value, true, { remember: !state.contact && !contactCommand });
+    if (!replaying && (!interpretation || !interpretation.alreadyShown)) {
+      message(originalValue, true, { remember: !state.contact && !contactCommand });
       sound();
     }
     if (engine.endsConversation(value)) {
@@ -2339,6 +2365,8 @@
     else scheduleClarification(config.fallback);
   }
   function clearConversation() {
+    incomingGeneration+=1;incomingQueue=Promise.resolve();
+    if(understanding){understanding.cancel();aiStatus.textContent='AI interpreter ready · existing bot is backup';}
     stopVoiceTyping();
     cancelClarification();
     interruptBotQueue();
@@ -2527,7 +2555,7 @@
     input.value = "";
     sizeInput();
     sendButton.disabled = true;
-    handleText(value);
+    receiveText(value);
   });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && !panel.hidden) close();

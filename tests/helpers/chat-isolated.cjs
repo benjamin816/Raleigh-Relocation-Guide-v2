@@ -185,11 +185,11 @@ function createSession(id, metadata) {
     return null;
   }
 
-  async function send(userText) {
+  async function send(userText, interpretation) {
     if (poisoned) throw new Error('Session is poisoned by an isolation failure');
     if (typeof userText !== 'string' || !userText.trim()) throw new Error('send requires a non-empty message string');
     messages.length = 0;
-    context.handleText(userText, false);
+    context.handleText(userText, false, interpretation);
     await settle();
     const botMessage = messages.join(' / ');
     transcript.push({ turn: transcript.length + 1, user: userText, bot: botMessage });

@@ -1,0 +1,11 @@
+{
+  "name": "lir-chat-understanding-test",
+  "main": "worker.mjs",
+  "account_id": "4ec65fe1a3762657105b3b40ca3991b3",
+  "compatibility_date": "2026-11-02",
+  "workers_dev": true,
+  "ai": { "binding": "AI" },
+  "ratelimits": [{ "name": "CHAT_RATE_LIMIT", "namespace_id": "2026110201", "simple": { "limit": 12, "period": 60 } }],
+  "observability": { "enabled": false },
+  "vars": { "MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8-fast", "AI_ENABLED": "true" }
+}

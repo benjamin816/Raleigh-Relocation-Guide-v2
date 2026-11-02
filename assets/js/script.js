@@ -4939,15 +4939,22 @@
     chatStyles.href = "/assets/css/raleigh-chat.css?v=20261028-test13";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
-    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261102-test65";
+    var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261102-test66";
     configScript.src = "/assets/js/raleigh-chat-config.js?v=" + chatVersion;
     configScript.onload = function () {
       var engineScript = document.createElement("script");
       engineScript.src = "/assets/js/raleigh-chat-engine.js?v=" + chatVersion;
       engineScript.onload = function () {
-        var chatScript = document.createElement("script");
-        chatScript.src = "/assets/js/raleigh-chat.js?v=" + chatVersion;
-        document.head.appendChild(chatScript);
+        var startChat = function () {
+          var chatScript = document.createElement("script");
+          chatScript.src = "/assets/js/raleigh-chat.js?v=" + chatVersion;
+          document.head.appendChild(chatScript);
+        };
+        var understandingScript = document.createElement("script");
+        understandingScript.src = "/assets/js/raleigh-chat-understanding.js?v=" + chatVersion;
+        understandingScript.onload = startChat;
+        understandingScript.onerror = startChat;
+        document.head.appendChild(understandingScript);
       };
       document.head.appendChild(engineScript);
     };

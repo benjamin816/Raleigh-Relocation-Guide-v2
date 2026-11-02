@@ -1,0 +1,168 @@
+[
+  {
+    "id": "H01",
+    "seed": [],
+    "message": "wanna purchse a place round raleigh",
+    "frame": {
+      "kind": "answer",
+      "intent": "relocating",
+      "certain": true,
+      "answersQuestion": false,
+      "canonical": "Want to purchase a place around Raleigh."
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "kind": "answer"
+  },
+  {
+    "id": "H02",
+    "seed": [
+      "We are buying and moving from Texas.",
+      "Alex"
+    ],
+    "message": "could i get an actual person pls",
+    "frame": {
+      "kind": "human",
+      "intent": "none",
+      "certain": true,
+      "answersQuestion": false,
+      "canonical": "Can I speak with a real person?"
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "kind": "human",
+    "replyPattern": "919.?737.?7896"
+  },
+  {
+    "id": "H03",
+    "seed": [
+      "We are buying and moving from Texas.",
+      "Alex"
+    ],
+    "message": "can i ask u somethin real quick",
+    "frame": {
+      "kind": "preamble",
+      "intent": "none",
+      "certain": true,
+      "answersQuestion": false,
+      "canonical": "Can I ask you something real quick"
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "kind": "preamble",
+    "replyPattern": "what.*question"
+  },
+  {
+    "id": "H04",
+    "seed": [
+      "We are buying and moving from Texas.",
+      "Alex"
+    ],
+    "message": "catch ya later",
+    "frame": {
+      "kind": "goodbye",
+      "intent": "none",
+      "certain": true,
+      "answersQuestion": false,
+      "canonical": "catch ya later"
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "kind": "goodbye",
+    "completed": true
+  },
+  {
+    "id": "H05",
+    "seed": [
+      "We are buying and moving from Texas.",
+      "Alex"
+    ],
+    "message": "wait im not followin what u mean",
+    "frame": {
+      "kind": "clarify",
+      "intent": "none",
+      "certain": false,
+      "answersQuestion": false,
+      "canonical": "I'm not following what you mean."
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "kind": "clarify"
+  },
+  {
+    "id": "H06",
+    "seed": [],
+    "message": "im into househackin a duplex",
+    "frame": {
+      "kind": "answer",
+      "intent": "investing",
+      "certain": true,
+      "answersQuestion": false,
+      "canonical": "I'm into househacking a duplex"
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "intent": "investing"
+  },
+  {
+    "id": "H07",
+    "seed": [],
+    "message": "prolly lease a place there first then buy once we know the area",
+    "frame": {
+      "kind": "answer",
+      "intent": "rent_then_buy",
+      "certain": true,
+      "answersQuestion": false,
+      "canonical": "Prolly lease a place there first then buy once we know the area"
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "intent": "rent_then_buy",
+    "rental": true
+  },
+  {
+    "id": "H08",
+    "seed": [
+      "Book a call with Ricardo about buying."
+    ],
+    "message": "can somebody real help me",
+    "frame": {
+      "kind": "human",
+      "intent": "none",
+      "certain": true,
+      "answersQuestion": false,
+      "canonical": "Can somebody real help me"
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "kind": "human",
+    "replyPattern": "919.?737.?7896"
+  },
+  {
+    "id": "H09",
+    "seed": [
+      "We are buying and moving from Texas.",
+      "Alex"
+    ],
+    "message": "whats the min downpayment usually",
+    "frame": {
+      "kind": "question",
+      "intent": "none",
+      "certain": true,
+      "answersQuestion": false,
+      "canonical": "What is the minimum down payment usually?"
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "kind": "question",
+    "replyPattern": "lender"
+  },
+  {
+    "id": "H10",
+    "seed": [
+      "We are buying and moving from Texas.",
+      "Alex"
+    ],
+    "message": "my sandwich was delicious",
+    "frame": {
+      "kind": "unknown",
+      "intent": "none",
+      "certain": false,
+      "answersQuestion": false,
+      "canonical": ""
+    },
+    "model": "@cf/meta/llama-3.1-8b-instruct-fp8-fast",
+    "kind": "unknown"
+  }
+]

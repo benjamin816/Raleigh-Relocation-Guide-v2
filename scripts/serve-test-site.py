@@ -3,6 +3,8 @@
 from argparse import ArgumentParser
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+import io
+import re
 from urllib.parse import unquote, urlsplit
 
 
@@ -16,6 +18,30 @@ class TestSiteHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         self.send_error(404)
+
+    def end_headers(self):
+        # Test changes must be visible without asking the owner to clear Chrome.
+        self.send_header("Cache-Control", "no-store, max-age=0")
+        super().end_headers()
+
+    def send_head(self):
+        target = Path(self.translate_path(self.path))
+        if target.is_dir():
+            target = target / "index.html"
+        if target.is_file() and target.suffix.lower() == ".html":
+            # Each page uses the current loader even if its authored query
+            # version predates the chatbot. Only the local server rewrites it.
+            version = (SITE_ROOT / "assets/js/script.js").stat().st_mtime_ns
+            content = target.read_text(encoding="utf-8")
+            content = re.sub(r'(src=["\'](?:/|(?:\.\./)*)?assets/js/script\.js)(?:\?[^"\']*)?(["\'])',
+                             lambda match: f'{match[1]}?v=local-{version}{match[2]}', content)
+            body = content.encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            return io.BytesIO(body)
+        return super().send_head()
 
     def translate_path(self, path):
         pathname = unquote(urlsplit(path).path)
