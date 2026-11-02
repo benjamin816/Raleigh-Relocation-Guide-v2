@@ -1,5 +1,11 @@
 // Raleigh chat conversation configuration. Update through the TEST branch chat workflow.
 window.RaleighChatConfig = {
+  "understandingKnowledgeVersion": "2026-11-02-test6",
+  "assistantAnswers": {
+    "assistant_identity": "I'm Sam, the Living in Raleigh team's automated website assistant. I use AI to help understand your messages and the team's guidance to respond. You can reach Benjamin or Ricardo by calling or texting 919-737-7896.",
+    "assistant_capabilities": "I can help with common questions about buying or selling around Raleigh, share resources you ask for, and check the team's call availability. Benjamin and Ricardo handle advice specific to your home or situation.",
+    "assistant_privacy": "You can ask questions here without giving your name or contact details. If you choose to arrange a call or send a request, your details go to the team. Please avoid sharing sensitive financial or medical information in chat. Our privacy policy explains more."
+  },
   "rentalConversation": {
     "qualifier": "Got it. A lot of relocators do the same thing so they can test out the area first. Is your plan to rent for a few months while you search for a permanent home, or do you plan to rent for the next 12-plus months?",
     "services": "Our market doesn't have a system set up for us to work directly with renters. Most of our rentals don't go through the MLS. We do, however, offer free resources here on our website, plus our Living in Raleigh YouTube channel, to help you find the right area. We absolutely welcome you to reach back out when you're starting to look for a more permanent home.",

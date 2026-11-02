@@ -1,0 +1,809 @@
+[
+  {
+    "id": "D01",
+    "turns": [
+      {
+        "text": "Are you an AI?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you an AI?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "What can you help with?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "What can you help with?",
+          "kind": "question",
+          "topic": "assistant_capabilities",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Jamie",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "Texas",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am from Texas",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "better weather",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I'm looking at moving to Raleigh for the better weather.",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D02",
+    "turns": [
+      {
+        "text": "How's it going?",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "hello"
+        }
+      },
+      {
+        "text": "Taylor",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "We are moving from Ohio",
+        "interpretation": {
+          "mode": "fallback",
+          "reason": "timeout"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D03",
+    "turns": [
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Are you a robot?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you a robot?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D04",
+    "turns": [
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "Texas",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am from Texas",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "r u an ai or a person",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you an AI or a person?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "closer to family",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I want to be closer to family",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D05",
+    "turns": [
+      {
+        "text": "Book a call with the team",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Can I speak with a team member?",
+          "kind": "human",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Are you an AI?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you an AI?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Any Saturday options?",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "I have a question",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I have a question",
+          "kind": "preamble",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "How long do those calls last?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "How long do those calls last?",
+          "kind": "question",
+          "topic": "info_5",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D06",
+    "turns": [
+      {
+        "text": "Book a phone call",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Can I speak with a team member?",
+          "kind": "human",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "first",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "Are you an AI?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you an AI?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "What is this chat for?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "What is this chat for?",
+          "kind": "question",
+          "topic": "assistant_capabilities",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D07",
+    "turns": [
+      {
+        "text": "wanna purchse a place round raleigh",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I want to buy a home. I want to purchase a place around Raleigh.",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Taylor",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "movin frm TX",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am moving from Texas.",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "whats the min downpayment usually",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "What's the minimum down payment usually?",
+          "kind": "question",
+          "topic": "faq_1",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D08",
+    "turns": [
+      {
+        "text": "im into househackin a duplex",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am interested in investing. I'm interested in house hacking a duplex.",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "Are you a real human?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you a real human?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "I live in Texas",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I live in Texas",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D09",
+    "turns": [
+      {
+        "text": "gonna lease for a year, no plans to purchase",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am only looking to rent. I plan to lease for a year, with no plans to buy.",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Only renting, no plans to buy",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am only looking to rent. I am only renting, with no plans to buy.",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Are you AI?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you AI?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D10",
+    "turns": [
+      {
+        "text": "How much down payment do I need?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "What is my required down payment?",
+          "kind": "question",
+          "topic": "faq_1",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "I want to buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "I want to buy"
+        }
+      },
+      {
+        "text": "Jordan",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D11",
+    "turns": [
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "Ohio",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am from Ohio",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "how much of the price do i need to fund myself versus borrow",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "How much of the price do I need to fund myself versus borrow",
+          "kind": "question",
+          "topic": "faq_1",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "what recurring charges come with one of those neighborhood associations",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "What recurring charges come with a neighborhood association?",
+          "kind": "question",
+          "topic": "faq_16",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D12",
+    "turns": [
+      {
+        "text": "What will Apple's stock price be tomorrow?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "What will Apple's stock price be tomorrow?",
+          "kind": "question",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D13",
+    "turns": [
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Who gets my details?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Who receives my details?",
+          "kind": "question",
+          "topic": "assistant_privacy",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "No thanks",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D14",
+    "turns": [
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "Texas",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am from Texas",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "could i get an actual person pls",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Can I speak with a team member?",
+          "kind": "human",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "I have a question",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I have a question",
+          "kind": "preamble",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Are you AI?",
+        "interpretation": {
+          "mode": "fallback",
+          "reason": "timeout"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D15",
+    "turns": [
+      {
+        "text": "We want to buy in Raleigh; we rent in Cary, need four beds with a yard around $600k next summer, using financing.",
+        "interpretation": {
+          "mode": "fallback",
+          "reason": "unavailable"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "What will interest rates be exactly next June?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "What will interest rates be next June?",
+          "kind": "question",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D16",
+    "turns": [
+      {
+        "text": "I want to buy and already live in Cary.",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I want to buy a home. I want to buy and already live in Cary.",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "How can you help me?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "How can you help me?",
+          "kind": "question",
+          "topic": "assistant_capabilities",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "Are you Benjamin?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you Benjamin?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D17",
+    "turns": [
+      {
+        "text": "hshsj",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "qwertyuiop",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D18",
+    "turns": [
+      {
+        "text": "I want buying information but no calls and do not ask for my personal details.",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "Are you AI?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Are you AI?",
+          "kind": "question",
+          "topic": "assistant_identity",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "how much of the price would i need to pay from savings rather than borrow",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "How much of the price would I need to pay from savings rather than borrow",
+          "kind": "question",
+          "topic": "faq_1",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D19",
+    "turns": [
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "I have a question",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I have a question",
+          "kind": "preamble",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "How much down payment do I need?",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "How much down payment do I need?",
+          "kind": "question",
+          "topic": "faq_1",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "I'm moving from Minnesota",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I'm moving from Minnesota",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  },
+  {
+    "id": "D20",
+    "turns": [
+      {
+        "text": "buy",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "clear_message",
+          "canonical": "buy"
+        }
+      },
+      {
+        "text": "Alex",
+        "interpretation": {
+          "mode": "rules",
+          "reason": "protected_field"
+        }
+      },
+      {
+        "text": "Texas",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "I am from Texas",
+          "kind": "answer",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "what would we actually cover if we sat down together on that introductory chat",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "What would we discuss in an introductory chat?",
+          "kind": "question",
+          "topic": "assistant_capabilities",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      },
+      {
+        "text": "catch ya later",
+        "interpretation": {
+          "mode": "ai",
+          "canonical": "Goodbye",
+          "kind": "goodbye",
+          "topic": "none",
+          "model": "@cf/meta/llama-3.3-70b-instruct-fp8-fast"
+        }
+      }
+    ]
+  }
+]

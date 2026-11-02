@@ -6,7 +6,7 @@ const vm = require('node:vm');
 
 const repo = path.resolve(__dirname, '../..');
 const sourceFiles = {
-  chat: path.join(repo, 'assets/js/raleigh-chat.js'),
+  chat: process.env.CHAT_TEST_SOURCE || path.join(repo, 'assets/js/raleigh-chat.js'),
   config: path.join(repo, 'assets/js/raleigh-chat-config.js'),
   engine: path.join(repo, 'assets/js/raleigh-chat-engine.js')
 };

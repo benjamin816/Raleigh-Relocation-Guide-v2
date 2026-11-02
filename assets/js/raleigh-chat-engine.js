@@ -138,6 +138,14 @@
   }
   function rentalOnly(value) { return transactionPlan(value).rentOnly && !/\b(?:invest|investment|investing|investor|landlord|rent out|rent my|own.*rental)\b/i.test(value); }
   function asksQuestion(value) { return /\?|^\s*(how|what|where|when|why|can|could|do|does|is|are|should|tell me|explain)\b|\b(?:my question|i have a question|could you|can you|please (?:explain|give|show))\b/i.test(value); }
+  function assistantTopic(value) {
+    var text=normalize(value);
+    if(/^(?:are|r) (?:you|u) (?:benjamin|ben|ricardo)[?!. ]*$/.test(text))return 'assistant_identity';
+    if(/\b(?:are|r) (?:you|u)\b.{0,35}\b(?:ai|a bot|a robot|human|real|automated|a person)\b|\b(?:is this|am i (?:talking|speaking|chatting) (?:to|with))\b.{0,45}\b(?:ai|bot|robot|human|person|automated)\b|^(?:who (?:are|r) (?:you|u)|(?:you|u) (?:a )?(?:bot|robot|ai|human))[?!. ]*$/i.test(text))return 'assistant_identity';
+    if(/\b(?:what (?:can|do) you (?:do|help)|what are you able to do|how can you help|what is this chat for|what's this chat for)\b/.test(text))return 'assistant_capabilities';
+    if(/\b(?:what (?:do|will) you do with my (?:data|details|information)|who (?:can|will) (?:see|read) (?:this|my messages)|(?:is|are) (?:this chat|my messages|my data) (?:private|confidential|stored)|privacy policy)\b/.test(text))return 'assistant_privacy';
+    return '';
+  }
   function visitorResidenceText(value) {
     return String(value || '').replace(/\b(?:my|our|his|her|their|the)\s+(?:(?:closest|best|close|extended|immediate)\s+)?(?:family|relatives|parents|friends|mother(?:[- ]in[- ]law)?|father(?:[- ]in[- ]law)?|mom|dad|sister|brother|daughter|son)\b.{0,20}?\b(?:live[sd]?|is living|are living)\s+(?:in|near)\s+[^.!?;,]+?(?=\s+(?:and|but)\b|[.!?;,]|$)/ig, ' ');
   }
@@ -460,5 +468,5 @@
     if (/\b(fuck|shit|damn|crap|bullshit)\b/.test(text)) return "language";
     return null;
   }
-  return { mergeHome: mergeHome, normalizeInput: normalizeRouting, transactionPlan: transactionPlan, extractBudget: extractBudget, financingType: financingType, endsConversation: endsConversation, cancelsScheduling: cancelsScheduling, sellThenRent: sellThenRent, declinesContact: declinesContact, researchOnly: researchOnly, explicitBooking: explicitBooking, extractFacts: extractFacts, declinesScheduling: declinesScheduling, declinesName: declinesName, rentalOnly: rentalOnly, detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
+  return { assistantTopic: assistantTopic, mergeHome: mergeHome, normalizeInput: normalizeRouting, transactionPlan: transactionPlan, extractBudget: extractBudget, financingType: financingType, endsConversation: endsConversation, cancelsScheduling: cancelsScheduling, sellThenRent: sellThenRent, declinesContact: declinesContact, researchOnly: researchOnly, explicitBooking: explicitBooking, extractFacts: extractFacts, declinesScheduling: declinesScheduling, declinesName: declinesName, rentalOnly: rentalOnly, detectIntent: detectIntent, detectLocation: detectLocation, resolveOrigin: resolveOrigin, detectTenure: detectTenure, isUnclearAnswer: isUnclearAnswer, extractFirstName: extractFirstName, isSensitiveFamilyReason: isSensitiveFamilyReason, classifyMoveTiming: classifyMoveTiming, activeQuestions: activeQuestions, asksQuestion: asksQuestion, findFaq: findFaq, wantsResources: wantsResources, wantsBooking: wantsBooking, classifySafety: classifySafety };
 });

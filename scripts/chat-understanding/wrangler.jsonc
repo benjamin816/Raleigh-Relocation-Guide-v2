@@ -7,5 +7,5 @@
   "ai": { "binding": "AI" },
   "ratelimits": [{ "name": "CHAT_RATE_LIMIT", "namespace_id": "2026110201", "simple": { "limit": 12, "period": 60 } }],
   "observability": { "enabled": false },
-  "vars": { "MODEL": "@cf/meta/llama-3.1-8b-instruct-fp8-fast", "AI_ENABLED": "true" }
+  "vars": { "MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast", "AI_ENABLED": "true" }
 }

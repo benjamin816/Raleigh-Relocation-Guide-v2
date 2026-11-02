@@ -10,17 +10,24 @@
     return null;
   }
   function eligible(text,context,engine){
-    if(context.awaitingFirstName||context.contact||context.ended||context.booking&&context.booking!=='choose')return false;
+    if(context.ended)return false;
+    var question=engine.asksQuestion(text)||engine.assistantTopic(text);
+    if((context.awaitingFirstName||context.contact||context.booking&&context.booking!=='choose')&&!question)return false;
     if(engine.classifySafety(text)||engine.endsConversation(text)||engine.declinesScheduling(text)||engine.declinesContact(text)||/^(?:forget|forget me|clear chat|delete chat history)$/i.test(text.trim()))return false;
     // Contact values and explicit time selections never need an AI rewrite.
     if(/@|(?:\d[ ().+-]*){10,}/.test(text))return false;
     if(context.booking && /\d|\b(?:first|second|former|latter|one|two|monday|tuesday|wednesday|thursday|friday|saturday|sunday|today|tomorrow|morning|afternoon|evening|midday|noon|weekend)\b/i.test(text))return false;
     return true;
   }
+  function keepQuestion(text,frame,engine){
+    return engine.asksQuestion(text)&&!/^when (?:my|our|the)\b/i.test(text)&&
+      (frame.kind==='answer'||frame.kind==='unknown'||frame.kind==='human'&&!/\b(?:talk|speak|connect|contact|reach|call|text|phone|number|human|person|someone|somebody|team member|agent|realtor|real)\b/i.test(text));
+  }
   function canonical(frame,original,context,engine){
     var direct=directMeaning(original,context,engine);if(direct!==null)return direct;
     if(!frame||typeof frame.certain!=='boolean'||typeof frame.canonical!=='string'||frame.canonical.length>600)return original;
     if(engine.classifySafety(original)||engine.declinesScheduling(original)||engine.declinesContact(original))return original;
+    if(keepQuestion(original,frame,engine))return original;
     if(frame.kind==='clarify')return 'huh';
     if(!frame.certain)return context.booking?original:'huh';
     if(frame.kind==='unknown')return 'huh';
@@ -67,7 +74,7 @@
         if(direct!==null)return {mode:'rules',reason:'clear_message',canonical:direct};
         if(Date.now()<cooldownUntil)return {mode:'fallback',reason:'cooldown'};
         var controller=new AbortController();controllers.add(controller);
-        var timer=setTimeout(function(){controller.abort();},options.timeout||2500);
+        var timer=setTimeout(function(){controller.abort();},options.timeout||4000);
         try{
           var known={};['originCode','currentArea','familyArea','remoteWork','retired','usingFinancing','preApproved','requestedHost'].forEach(function(key){if(context.known&&context.known[key]!==undefined)known[key]=context.known[key];});
           var payload={message:scrub(text),context:{intent:context.intent||'none',question:context.question||'',booking:!!context.booking},known:known,
@@ -75,8 +82,10 @@
           var response=await fetcher(options.endpoint,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal:controller.signal,cache:'no-store'});
           var body=await response.json();
           if(!response.ok||!body.ok||!body.interpretation)throw new Error(body.reason||'unavailable');
+          if(options.knowledgeVersion&&body.version!==options.knowledgeVersion)throw new Error('knowledge_mismatch');
           failures=0;
-          return {mode:'ai',canonical:canonical(body.interpretation,text,context,options.engine),kind:body.interpretation.kind,model:body.model};
+          var rawQuestion=keepQuestion(text,body.interpretation,options.engine);
+          return {mode:'ai',canonical:canonical(body.interpretation,text,context,options.engine),kind:rawQuestion?'question':body.interpretation.certain?body.interpretation.kind:'unknown',topic:body.interpretation.certain&&body.interpretation.kind==='question'?body.interpretation.topic||'none':'none',model:body.model};
         }catch(error){
           failures++;if(failures>=2||/rate_limit/.test(error.message))cooldownUntil=Date.now()+60000;
           return {mode:'fallback',reason:error.name==='AbortError'?'timeout':error.message==='rate_limit'?'rate_limit':'unavailable'};

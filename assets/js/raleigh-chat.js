@@ -102,7 +102,7 @@
   var incomingQueue = Promise.resolve();
   var aiStatus = root.querySelector('.rchat-test-ai');
   var understanding = config.understandingEnabled && isTestSurface && /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname) && window.RaleighChatUnderstanding ?
-    window.RaleighChatUnderstanding.create({endpoint:config.understandingEndpoint,engine:engine}) : null;
+    window.RaleighChatUnderstanding.create({endpoint:config.understandingEndpoint,knowledgeVersion:config.understandingKnowledgeVersion,engine:engine}) : null;
   if(understanding){aiStatus.hidden=false;aiStatus.style.cssText='font-size:11px;padding:4px 12px;color:#52645a;background:#f5f7f4';aiStatus.textContent='AI interpreter ready · existing bot is backup';}
   function trackConversation(eventName) {
     var tracker = window.__livrAnalyticsTracker;
@@ -784,14 +784,15 @@
     message(action === 'booking' ? "Booking a call requires your name, email, and phone number. Would you like to continue, or keep chatting without sharing those details?" :
       "To send a message to the team, I'd need your contact details. May I ask for those, or would you prefer to keep chatting anonymously?", false);
   }
-  function informationalReply(value) {
+  function informationalReply(value, approvedAnswer) {
     state.profile.informationOnly = true;
     state.question = -1;
     var first = !state.profile.informationalIntroShown;
     var faq = value && engine.findFaq(value, config);
     var flow = config.flows[state.intent];
     var guidance = informationalGuidance(value);
-    if (value && /calculator/i.test(value)) { message('Yes, here is the investment calculator.',false); link('Open the investment calculator','/calculator/'); }
+    if(approvedAnswer)message(approvedAnswer.answer,false);
+    else if (value && /calculator/i.test(value)) { message('Yes, here is the investment calculator.',false); link('Open the investment calculator','/calculator/'); }
     else if (value && (asksForBenjaminNumber(value) || asksForTeamMember(value))) message("You can call or text the team at " + (config.benjaminDirectPhone || '919-737-7896') + ".", false);
     else if (guidance) message(guidance, false);
     else if (faq && !/exploration call|book a call|schedule a call/i.test(faq.answer)) message(faq.answer, false);
@@ -1831,7 +1832,9 @@
     return !!requestedPerson(value) && /\b(?:book|schedule|appointment|meeting|meet|call|time|slot)\b/i.test(value);
   }
   function resumeAfterQuestion() {
-    if (state.booking) {
+    if(state.profile.awaitingFirstName){
+      message("May I have your first name? You can also say no thanks.",false);
+    } else if (state.booking) {
       var booking = state.booking;
       if (booking.step === "choose" && booking.slots.length) {
         message("Would " + booking.slots.map(function (slot) { return bookingLabel(slot.start); }).join(" or ") + " work for an introduction call, or would another time be better?", false);
@@ -1847,7 +1850,7 @@
       if (item) message(item.prompt, false);
       else message(config.contactConsentPrompt, false);
     } else if (state.intent && state.question >= 0 && state.question < activeQuestions().length) askQuestion();
-    else message(config.fallback, false);
+    else message("What would you like to know about Raleigh?", false);
   }
   function answerSideQuestion(value, faq) {
     var humanRequest = asksForBenjaminNumber(value) || asksForTeamMember(value);
@@ -1909,7 +1912,7 @@
       if(generation!==incomingGeneration)return;
       aiStatus.textContent=result.mode==='ai'?'AI interpreted · existing rules handle the reply':result.mode==='fallback'?'AI unavailable · existing bot handling this message':result.reason==='clear_message'?'Existing rules · clear message':'Existing rules · contact, safety or scheduling';
       if(sequence===incomingSequence)markLatestUserRead();
-      handleText(value,false,{canonical:result.canonical,alreadyShown:true,receivedAt:receivedAt});
+      handleText(value,false,{canonical:result.canonical,kind:result.kind,topic:result.topic,alreadyShown:true,receivedAt:receivedAt});
     });
   }
   function handleText(text, replaying, interpretation) {
@@ -1936,7 +1939,8 @@
       return;
     }
     var safety = engine.classifySafety(originalValue, state.previousInput);
-    if (!state.booking || state.booking.step === 'choose' || state.booking.step === 'loading') captureVisitorContext(value);
+    var assistantTopic=engine.assistantTopic(originalValue)||(interpretation&&/^assistant_(?:identity|capabilities|privacy)$/.test(interpretation.topic||'')?interpretation.topic:'');
+    if (!assistantTopic && (!interpretation || interpretation.kind!=='question') && (!state.booking || state.booking.step === 'choose' || state.booking.step === 'loading')) captureVisitorContext(value);
     state.previousInput = originalValue;
     var strikes = safety ? safetyRecord(safety) : 0;
     if (safety && safety !== "language") {
@@ -1987,9 +1991,21 @@
       informationalReply(value);
       return;
     }
+    // A question is a detour at every stage, including first-name and contact
+    // prompts. Carry the model's speech act through instead of discarding it.
+    var semanticQuestion=interpretation&&interpretation.kind==='question';
+    var questionTopic=semanticQuestion&&interpretation.topic||'';
+    var topicMatch=questionTopic.match(/^(faq|info)_(\d+)$/);
+    var approvedAnswer=topicMatch&&(topicMatch[1]==='faq'?config.faq:config.informationalAnswers)[Number(topicMatch[2])];
+    if(assistantTopic){
+      message(config.assistantAnswers[assistantTopic],false);
+      if(assistantTopic==='assistant_privacy')link('Read our privacy policy','/privacy-policy/');
+      if(state.profile.awaitingFirstName||state.booking||state.contact||state.intent)resumeAfterQuestion();
+      return;
+    }
     if (state.booking && !/^(?:choose|loading|checking)$/.test(state.booking.step)) {
-      var bookingQuestion = engine.asksQuestion(value) && state.booking.step !== 'notes';
-      if (bookingQuestion) answerSideQuestion(value, engine.findFaq(value, config));
+      var bookingQuestion = (semanticQuestion||engine.asksQuestion(value)) && state.booking.step !== 'notes';
+      if (bookingQuestion) answerSideQuestion(value, approvedAnswer||engine.findFaq(value, config));
       else handleBookingAnswer(value);
       return;
     }
@@ -2042,7 +2058,7 @@
     }
     if (engine.researchOnly(value) || state.profile.informationOnly && !engine.explicitBooking(value)) {
       state.intent = state.intent || (detectIntent(value) || {}).id || null;
-      informationalReply(value);
+      informationalReply(value,approvedAnswer);
       return;
     }
     if (!state.booking && engine.rentalOnly(value)) { explainRentalOnly(); return; }
@@ -2060,9 +2076,30 @@
       return;
     }
     var earlyGuidance = (engine.asksQuestion(value) || /\b(?:give me|show me|could you|can you|explain|explanation|help|question|what|how)\b/i.test(value)) && informationalGuidance(value);
-    if (earlyGuidance && !state.booking && !engine.explicitBooking(value)) {
+    if (earlyGuidance && !approvedAnswer && !state.booking && !engine.explicitBooking(value)) {
       message(earlyGuidance, false);
       if (state.intent && !state.profile.awaitingFirstName) askQuestion();
+      return;
+    }
+    var requestedTime=state.booking&&state.booking.step==='choose'&&(hasBookingPreference(value)||!!requestedClock(value)||/\d|\b(?:mon|tues?|wed|thurs?|fri|sat|sun)\b|\b(?:different|other|alternative|more|another)\b.{0,25}\b(?:times|slots|openings|options)\b|^(?:first|second|one|two)$/i.test(value.trim()));
+    var statedGoal=detectIntent(value)&&/^(?:actually\b|i(?:'m| am)?\s+(?:also\s+)?(?:want|need|plan|intend|would like|looking|moving|selling|buying)|we(?:'re| are)?\s+(?:also\s+)?(?:want|need|plan|looking|moving|selling|buying)|(?:can|could|do|would)\s+(?:you|your team)\s+(?:help|assist|work)\b)/i.test(value);
+    if(!isQuestionPreamble(value)&&!engine.explicitBooking(value)&&!engine.researchOnly(value)&&!statedGoal&&!requestedTime&&
+        (semanticQuestion||!state.intent&&engine.asksQuestion(value))&&
+        !asksForBenjaminNumber(value)&&!asksForTeamMember(value)&&!engine.wantsResources(value)&&
+        !/\b(?:calculator|give me|show me)\b/i.test(value)&&
+        !(state.contact&&state.contact.step<config.contactQuestions.length&&config.contactQuestions[state.contact.step].key==='question')&&
+        !(state.booking&&state.booking.step==='notes')){
+      var detourFaq=engine.findFaq(value,config);
+      var detourGuidance=informationalGuidance(value);
+      if(approvedAnswer||detourGuidance||detourFaq){
+        message(approvedAnswer?approvedAnswer.answer:detourGuidance||detourFaq.answer,false);
+        if(state.profile.awaitingFirstName||state.booking||state.contact||state.intent)resumeAfterQuestion();
+        return;
+      }
+      // A question with no approved answer must not become a name, budget,
+      // motivation, or a made-up answer. Offer a person and retain the step.
+      message("I don't have a reliable answer to that in chat. You can call or text the team at 919-737-7896, and they'll help you with it.",false);
+      if(state.profile.awaitingFirstName||state.booking||state.contact||state.intent)resumeAfterQuestion();
       return;
     }
     if (state.profile.pendingContactPermission && !replaying) {

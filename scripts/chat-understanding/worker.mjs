@@ -2,12 +2,14 @@ import knowledge from './knowledge.mjs';
 const ORIGINS=new Set(['http://127.0.0.1:8777','http://localhost:8777']);
 const KINDS=['answer','question','human','goodbye','clarify','preamble','greeting','unknown'];
 const INTENTS=['buying','selling','combined','relocating','investing','renting','rent_then_buy','rent_only','none'];
-const MODEL='@cf/meta/llama-3.1-8b-instruct-fp8-fast';
+const MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast';
+const TOPICS=['none',...knowledge.answerTopics.map(item=>item.id)];
 export function redact(value){return String(value||'').replace(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/ig,'[email]').replace(/(?:\+?\d[\d ().-]{7,}\d)/g,match=>match.replace(/\D/g,'').length>=10?'[phone]':match);}
 function response(origin,body,status=200){return new Response(JSON.stringify(body),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff',...(ORIGINS.has(origin)?{'Access-Control-Allow-Origin':origin,'Access-Control-Allow-Methods':'POST, OPTIONS, GET','Access-Control-Allow-Headers':'Content-Type','Vary':'Origin'}:{})}});}
-const schema={type:'object',additionalProperties:false,properties:{kind:{type:'string',enum:KINDS},intent:{type:'string',enum:INTENTS},certain:{type:'boolean'},answersQuestion:{type:'boolean'},canonical:{type:'string'}},required:['kind','intent','certain','answersQuestion','canonical']};
+const schema={type:'object',additionalProperties:false,properties:{kind:{type:'string',enum:KINDS},intent:{type:'string',enum:INTENTS},certain:{type:'boolean'},answersQuestion:{type:'boolean'},topic:{type:'string',enum:TOPICS},canonical:{type:'string'}},required:['kind','intent','certain','answersQuestion','topic','canonical']};
 export function validateFrame(frame,original,context={}){
  if(!frame||!KINDS.includes(frame.kind)||!INTENTS.includes(frame.intent)||typeof frame.certain!=='boolean'||typeof frame.answersQuestion!=='boolean'||typeof frame.canonical!=='string'||frame.canonical.length>600)return null;
+ if(frame.topic!==undefined&&!TOPICS.includes(frame.topic))return null;
  if(/https?:|<[^>]+>|\[email\]|\[phone\]/i.test(frame.canonical))return null;
  // No added or changed numeric facts. Numeric conversions fall back to the
  // original deterministic parser rather than risking a fabricated budget/time.
@@ -17,7 +19,7 @@ export function validateFrame(frame,original,context={}){
  if(/\b(?:confirmed|booked|available at|calendar invite|appointment created)\b/i.test(frame.canonical))return null;
  if(frame.kind==='answer' && /\?\s*$/.test(frame.canonical))frame={...frame,kind:'question',answersQuestion:false};
  if(context.question && frame.kind==='answer' && frame.intent==='none' && !frame.answersQuestion)return {kind:'unknown',intent:'none',certain:false,canonical:''};
- return {kind:frame.kind,intent:frame.intent,certain:frame.certain,answersQuestion:frame.answersQuestion,canonical:frame.canonical.trim()};
+ return {kind:frame.kind,intent:frame.intent,certain:frame.certain,answersQuestion:frame.answersQuestion,topic:frame.kind==='question'&&frame.certain?(frame.topic||'none'):'none',canonical:frame.canonical.trim()};
 }
 export default {async fetch(request,env){
  const origin=request.headers.get('Origin')||'',url=new URL(request.url);
@@ -38,7 +40,7 @@ export default {async fetch(request,env){
  const known={};for(const key of ['originCode','currentArea','familyArea','remoteWork','retired','usingFinancing','preApproved','requestedHost']){
   const value=body.known?.[key];if(typeof value==='boolean'||typeof value==='string'&&value.length<=80)known[key]=value;
  }
- const system='You are a message classifier and spelling normalizer, NOT the chatbot. Output the meaning and speech act of ONLY the latest visitor message. answersQuestion=true ONLY if it supplies information asked by currentQuestion, or states a real-estate goal when no currentQuestion exists. An understandable but unrelated statement is kind=unknown, answersQuestion=false, certain=false. Do not invent a motivation or home requirement from an unrelated remark. kind=human means ANY request for a human, agent, real person or direct contact. kind=preamble means asking permission to ask a question. kind=goodbye means ending the conversation. kind=clarify means the visitor does not understand our question. kind=question means an actual information question. kind=answer means a real answer or stated real-estate goal. kind=unknown means unrelated or unintelligible.\n'+JSON.stringify({role:knowledge.role,rules:knowledge.rules,currentQuestion:knowledge.questions[context.question]||'',examples:knowledge.examples})+'\nReturn ONLY JSON matching this schema: '+JSON.stringify(schema)+'. canonical is a brief faithful rewrite of the visitor message, never a reply. Questions stay questions; do not put answers in canonical. certain=false only if you cannot understand the message. An understandable statement of uncertainty is certain=true. Never mistake uncertainty about buying for uncertainty about the sentence meaning.';
+ const system='You are a message classifier and spelling normalizer, NOT the chatbot. Output the meaning and speech act of ONLY the latest visitor message. answersQuestion=true ONLY if it supplies information asked by currentQuestion, or states a real-estate goal when no currentQuestion exists. An understandable but unrelated statement is kind=unknown, answersQuestion=false, certain=false. Do not invent a motivation or home requirement from an unrelated remark. kind=human means ANY request for a human, agent, real person or direct contact. kind=preamble means asking permission to ask a question. kind=goodbye means ending the conversation. kind=clarify means the visitor does not understand our question. kind=question means an actual information question. kind=answer means a real answer or stated real-estate goal. kind=unknown means unrelated or unintelligible.\n'+JSON.stringify({role:knowledge.role,rules:knowledge.rules,currentQuestion:knowledge.questions[context.question]||'',answerTopics:knowledge.answerTopics,examples:knowledge.examples})+'\nReturn ONLY JSON matching this schema: '+JSON.stringify(schema)+'. canonical is a brief faithful rewrite of the visitor message, never a reply. Questions stay questions; do not put answers in canonical. certain=false only if you cannot understand the message. An understandable statement of uncertainty is certain=true. Never mistake uncertainty about buying for uncertainty about the sentence meaning.';
  try{
   const result=await env.AI.run(MODEL,{messages:[{role:'system',content:system},{role:'user',content:JSON.stringify({context,known,history,latest:redact(body.message)})}],temperature:0,max_tokens:220,response_format:{type:'json_schema',json_schema:schema}});
   let frame=result?.response;if(typeof frame==='string')frame=JSON.parse(frame.replace(/^```(?:json)?\s*|\s*```$/g,''));

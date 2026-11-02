@@ -3,7 +3,7 @@ import worker,{validateFrame,redact} from './worker.mjs';
 const origin='http://127.0.0.1:8777',url='https://ai.example.test/interpret';
 const frame={kind:'answer',intent:'buying',certain:true,answersQuestion:true,canonical:'I want to buy a home.'};
 let calls=0;
-const env={AI_ENABLED:'true',AI:{run:async(model,request)=>{calls++;assert.equal(model,'@cf/meta/llama-3.1-8b-instruct-fp8-fast');assert(!JSON.stringify(request).includes('person@example.com'));return {response:JSON.stringify(frame),usage:{total_tokens:100}};}},CHAT_RATE_LIMIT:{limit:async()=>({success:true})}};
+const env={AI_ENABLED:'true',AI:{run:async(model,request)=>{calls++;assert.equal(model,'@cf/meta/llama-3.3-70b-instruct-fp8-fast');assert(!JSON.stringify(request).includes('person@example.com'));return {response:JSON.stringify(frame),usage:{total_tokens:100}};}},CHAT_RATE_LIMIT:{limit:async()=>({success:true})}};
 const request=(body,from=origin)=>new Request(url,{method:'POST',headers:{Origin:from},body:JSON.stringify(body)});
 assert.equal((await worker.fetch(request({message:'buy a home'},'https://evil.example'),env)).status,403);
 assert.equal((await worker.fetch(request({message:'buy a home'},'https://raleighncguide.com'),env)).status,403,'No production origin');
@@ -13,6 +13,9 @@ const before=calls;result=await(await worker.fetch(request({message:'buy a home'
 assert.equal((await(await worker.fetch(request({message:'buy'}),{...env,AI_ENABLED:'false'})).json()).reason,'disabled');
 assert.equal((await(await worker.fetch(request({message:'buy'}),{...env,AI:{run:async()=>{throw Error('quota exhausted');}}})).json()).fallback,true);
 for(const bad of [{...frame,canonical:'I can spend 900000'},{...frame,canonical:'Your appointment is booked'},{...frame,canonical:'https://evil.example'},{...frame,kind:'book'},null])assert.equal(validateFrame(bad,'buy a home'),null);
+assert.equal(validateFrame({...frame,kind:'question',topic:'invented_answer'},'question'),null);
+assert.equal(validateFrame({...frame,topic:'faq_1'},'buy a home').topic,'none','Answers cannot smuggle in a FAQ detour');
+assert.equal(validateFrame({...frame,kind:'question',topic:'assistant_identity',canonical:'Are you an AI?'},'Are you an AI?').topic,'assistant_identity');
 assert.equal(validateFrame(frame,'buy',{booking:true}).certain,false,'Model cannot choose a slot');
 assert.equal(validateFrame({...frame,canonical:'What is the minimum down payment?'},'whats the min downpayment').kind,'question','A rewritten question cannot advance qualification as an answer');
 assert.equal(redact('Email person@example.com; phone 919-555-0143'),'Email [email]; phone [phone]');
