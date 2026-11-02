@@ -215,6 +215,7 @@
   }
   function isUnclearAnswer(value, questionKey) {
     var text = normalize(value).replace(/[.!?]+$/, "").trim();
+    if(/^(?:priorities|priorityMore)$/.test(questionKey||'')&&/^(?:i(?:'m| am)? )?(?:unsure|not sure|don't know|do not know|no idea|undecided|idk)(?: yet)?$/.test(text))return false;
     if (questionKey === "intro" && /^(?:not sure|i don't know|idk)$/.test(text)) return true;
     if (/^(?:bruh|bro|lol|lmao|huh|what|whatever|okay|ok|sure|yep|yeah|nah|um+|hmm+)$/.test(text)) return true;
     if (/^(?:i )?(?:do not|don['’]?t) understand[.!?]*$|^(?:i am |i'm )?(?:confused|not following)[.!?]*$|^not sure what you mean[.!?]*$/.test(text)) return true;

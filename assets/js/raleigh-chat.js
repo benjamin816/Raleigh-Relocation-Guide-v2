@@ -1171,11 +1171,18 @@
       var suppliedArea = [state.profile.facts.priorities, state.profile.facts.priorityMore].filter(Boolean).join(" ");
       var areaExamples = [
         {label:"nearby amenities", pattern:/\b(?:amenities|parks?|trails?|greenways?)\b/i},
-        {label:"shopping", pattern:/\b(?:shopping|shops?|groceries|stores?)\b/i},
+        {label:"shopping & dining", pattern:/\b(?:shopping|shops?|groceries|stores?|dining|restaurants?)\b/i},
         {label:"schools", pattern:/\bschools?\b/i, omit:state.profile.retired || state.profile.noChildren},
         {label:"your commute", pattern:/\bcommut(?:e|ing)\b/i, omit:state.profile.remoteWork || state.profile.retired}
       ].filter(function(item){return !item.omit && !item.pattern.test(suppliedArea);}).map(function(item){return item.label;});
       wording = "Is there anything else that's super important to you about the area" + (areaExamples.length ? ", like " + areaExamples.join(", ") : "") + "?";
+      var initialPriorities=String(state.profile.facts.priorities||'');
+      if(/\b(?:unsure|not sure|don't know|do not know|no idea|haven't thought|undecided|idk)\b/i.test(initialPriorities)&&
+          !/\b(?:amenities|shopping|dining|schools?|commut\w*|parks?|trails?|family|walkab\w*)\b/i.test(initialPriorities)){
+        prefix='';
+        var suggestions=areaExamples.length>1?areaExamples.slice(0,-1).join(', ')+', or '+areaExamples[areaExamples.length-1]:areaExamples.join('');
+        wording="Totally get it - how about things like "+suggestions+"?";
+      }
     }
     if (question.key === "commuteRange" && /\b(?:RTP|Research Triangle Park)\b/i.test(state.profile.commuteDestination || "")) {
       prefix = "";
