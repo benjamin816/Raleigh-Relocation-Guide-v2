@@ -75,7 +75,7 @@
   }
   function endsConversation(value) {
     var text = normalize(value);
-    return /\b(?:goodbye|goodby|goodye|bye)[.!]*$|\b(?:that's all|that is all)(?: for now)?[.!]*$|\b(?:i'm|i am) (?:done|leaving)\b|\b(?:stop|end|close) (?:the |this |my )?(?:chat|conversation|questions)\b/.test(text);
+    return /\b(?:goodbye|goodby|goodye|bye)(?: for now)?[.!]*$|\b(?:that's all|that is all)(?: for now)?[.!]*$|\b(?:i'm|i am) (?:done|leaving)\b|\b(?:stop|end|close) (?:the |this |my )?(?:chat|conversation|questions)\b/.test(text);
   }
   function detectIntent(value, config) {
     var text = normalizeRouting(value).replace(/\b(?:not|no longer)\s+(?:an?\s+|interested in\s+|looking to\s+)?(?:invest(?:ing|ment|or)?|sell(?:ing)?|buy(?:ing)?)\b/g, '');
@@ -206,6 +206,7 @@
     var text = normalize(value).replace(/[.!?]+$/, "").trim();
     if (questionKey === "intro" && /^(?:not sure|i don't know|idk)$/.test(text)) return true;
     if (/^(?:bruh|bro|lol|lmao|huh|what|whatever|okay|ok|sure|yep|yeah|nah|um+|hmm+)$/.test(text)) return true;
+    if (/^(?:i )?(?:do not|don['’]?t) understand[.!?]*$|^(?:i am |i'm )?(?:confused|not following)[.!?]*$|^not sure what you mean[.!?]*$/.test(text)) return true;
     if (!/^(?:whyRaleigh|priorities|priorityMore|home|homeMore)$/.test(questionKey || "")) return false;
     if (!/^[a-z]{3,20}$/.test(text)) return false;
     return !/^(?:weather|climate|warmth|family|friends|job|work|career|retirement|prices?|affordability|cost|commute|schools?|shopping|amenities|walkability|safety|space|yard|backyard|bedrooms?|bathrooms?|garage|pool|office|location|quiet|community|lifestyle|opportunity|opportunities|parks?|trails?|greenways?|groceries|restaurants?|dining|healthcare|transit|accessibility|hospitals?|trees|privacy|raleigh|cary|apex|durham)$/.test(text);
@@ -427,6 +428,7 @@
         case "homeSingle": return profile.homeSingle === true;
         case "budgetNeeded": return profile.budgetKnown !== true && profile.budgetAsked !== true;
         case "budgetKnown": return profile.budgetKnown === true && profile.financingKnown !== true;
+        case "financingNeeded": return (profile.budgetKnown === true || profile.budgetAsked === true) && profile.financingKnown !== true;
         case "needsPreapproval": return profile.usingFinancing === true && profile.preApproved !== true && profile.preapprovalAsked !== true;
         case "combined": return combined === true;
         case "solo": return combined !== true;
@@ -446,6 +448,7 @@
         return !/(^|\.)(?:zillow\.com|redfin\.com|realtor\.com|raleighncguide\.com)$/.test(host);
       } catch (_) { return true; }
     })) return "spam";
+    if (/^(?:asdfghjkl|qwertyuiop|zxcvbnm)[.!?]*$/.test(text)) return 'gibberish';
     if (/([^\s])\1{12,}/.test(text) || /^[bcdfghjklmnpqrstvwxz]{5,12}$/.test(text) || /\b[bcdfghjklmnpqrstvwxyz]{9,}\b/.test(text) || /\b(?:asdf|qwer|zxcv){2,}\b/.test(text)) return "gibberish";
     if (previous && text === normalize(previous) && text.length > 60) return "spam";
     if (/\b(?:click|visit|sign up)\b.{0,65}\b(?:guaranteed leads|instant deals)\b|\b(?:advertising|promoting) my link\b/.test(text)) return "spam";

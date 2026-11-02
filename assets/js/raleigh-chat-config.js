@@ -292,7 +292,7 @@ window.RaleighChatConfig = {
         },
         {
           "key": "financing",
-          "when": "budgetKnown",
+          "when": "financingNeeded",
           "text": "Do you think you'll be buying with cash or using financing?"
         },
         {
@@ -527,7 +527,7 @@ window.RaleighChatConfig = {
         },
         {
           "key": "financing",
-          "when": "budgetKnown",
+          "when": "financingNeeded",
           "text": "Do you think you'll be buying with cash or using financing?"
         },
         {

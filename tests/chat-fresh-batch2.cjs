@@ -54,6 +54,8 @@ const originalCases=[
  ['Spam warning then recovery','Looking to buy a home in Raleigh',{injectKey:'location',inject:'asdfghjkl',mustStayQuestion:true,origin:'Tampa'}]
 ].map(([label,opening,opts={}],i)=>({id:'N'+String(i+1).padStart(2,'0'),label,opening,...opts}));
 const cases=process.argv[2]?JSON.parse(fs.readFileSync(process.argv[2],'utf8')).cases:originalCases;
+const crypto=require('node:crypto');
+const provenance={startedAt:new Date().toISOString(),fixture:process.argv[2]||'built-in batch2',sources:Object.fromEntries(['assets/js/raleigh-chat.js','assets/js/raleigh-chat-engine.js','tests/chat-fresh-batch2.cjs','tests/helpers/chat-isolated.cjs'].map(path=>[path,crypto.createHash('sha256').update(fs.readFileSync(path)).digest('hex')]))};
 const answers={currentArea:'Garner',tenure:'We rent our current place',firstTime:'This will be our first purchase',leaseEnd:'Our lease is up in May',willSell:'We will sell it',whyRaleigh:'We want a milder climate and a fresh start',familyNearby:'Morrisville',priorityFamilyArea:'Morrisville',originHousing:'We own a home and will sell it before moving',priorities:'Walkable parks and groceries nearby',priorityMore:'Good access to groceries would be helpful',commuteDestination:'Duke Hospital',commuteRange:'Ideally 20 minutes; 35 would be my limit',priorityBudget:'650k ceiling',priorityFinancing:'We will use a mortgage',areas:'Morrisville and Cary',areasReason:'To be close to greenways',home:'Three bedrooms, two full baths, and a fenced yard',homeMore:'Also a first-floor primary bedroom',budget:'650k ceiling',financing:'We will use a mortgage',preapproval:'We still need a lender',timing:'Next fall',timingReason:'That is when the lease ends',currentHome:'Holly Springs',ownedYears:'We have owned it for nine years',whySell:'We have outgrown it',whySellSolo:'We need to downsize',nextDestination:'Raleigh',nextAreaReason:'Closer to work',nextHome:'Four bedrooms, office space and a garage',sellingExperience:'We have sold two homes before',moveGoal:'We plan to buy',jobLocation:'Duke Hospital',jobStart:'April of next year',experience:'This would be our first investment',strategy:'A duplex for long-term rentals',goals:'Long-term appreciation',involvement:'I want it fairly passive',salePriority:'Both'};
 function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.booking;
  if(p.pendingRentalSale)return c.originHousing||'We will sell our current home';
@@ -79,7 +81,7 @@ function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.boo
   for(const [key,value] of Object.entries(check.state||{}))if(JSON.stringify(at(key))!==JSON.stringify(value))issues.push('state-mismatch:'+key+'='+JSON.stringify(at(key)));
   if(check.noBook&&after.serviceCalls.some(x=>x.method==='book'))issues.push('unexpected-booking-after-step');
  }
- async function send(t,check){const before=s.audit();const r=await s.send(t);const after=s.audit();evidence.push({user:t,keyBefore:before.internalState.profile.currentQuestionKey||'',bookingBefore:before.internalState.booking?.step||'',response:r.botMessage});
+ async function send(t,check){const before=s.audit(),issueCount=issues.length;const r=await s.send(t);const after=s.audit();evidence.push({user:t,keyBefore:before.internalState.profile.currentQuestionKey||'',bookingBefore:before.internalState.booking?.step||'',response:r.botMessage});
   checkResult(check,before,after,r.botMessage);
   if(!r.botMessage&&!after.internalState.ended&&!after.internalState.completed)issues.push('blank-response');
   if(c.noSympathy&&/sick of/.test(t)&&/sorry to hear/i.test(r.botMessage))issues.push('literal-illness-reply-to-an-idiom');
@@ -88,9 +90,10 @@ function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.boo
   if(c.phoneResponse&&t=== (c.inject||c.injectBooking)&&!/919.?737.?7896/.test(r.botMessage))issues.push('direct-contact-question-not-answered');
   if(c.rejectName&&new RegExp('Nice to meet you, '+c.rejectName,'i').test(r.botMessage))issues.push('confusion-accepted-as-a-name');
   if(c.mustStayQuestion&&t===c.inject&&before.internalState.profile.currentQuestionKey!==after.internalState.profile.currentQuestionKey)issues.push('gibberish-advanced-the-question');
+  evidence.at(-1).issuesAtTurn=issues.slice(issueCount);
   return r;
  }
- try{await send(c.opening,c.openingCheck);for(let turn=0;turn<45;turn++){
+ try{await send(c.opening,c.openingCheck);for(const line of c.script||[])await send(line.text,line.check);if(c.scriptOnly)closed=true;for(let turn=0;!c.scriptOnly&&turn<45;turn++){
   const a=s.audit(),st=a.internalState,p=st.profile,b=st.booking;
   if(a.outcome==='confirmed'||st.ended||st.completed){closed=true;break;}
   const stage=p.pendingRentalPlan?'rental':p.awaitingFirstName?'firstName':b?'booking:'+b.step:p.currentQuestionKey||'origin';
@@ -135,5 +138,6 @@ function continuation(a,c,counts){const st=a.internalState,p=st.profile,b=st.boo
  }catch(e){out.push({...s.audit(),label:c.label,issues:[...new Set([...issues,'runtime:'+e.message])],evidence});}
  }
  const dir=process.argv[3]||'output/chat-fresh-50-batch2-2026-11-02';fs.mkdirSync(dir,{recursive:true});const target=dir+'/'+(process.env.CHAT_RESULT_FILE||'repaired-replay.json');if(target.endsWith('/first-pass.json')&&fs.existsSync(target))throw Error('Frozen first-pass results already exist; use a different replay filename.');fs.writeFileSync(target,JSON.stringify(out,null,2));
+ fs.writeFileSync(target.replace(/\.json$/,'-manifest.json'),JSON.stringify({...provenance,finishedAt:new Date().toISOString(),resultsSha256:crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex')},null,2));
  console.log(JSON.stringify({total:out.length,turns:out.reduce((n,r)=>n+r.transcript.length,0),passing:out.filter(r=>!r.issues.length).length,flagged:out.filter(r=>r.issues.length).map(r=>({id:r.sessionId,label:r.label,issues:r.issues}))},null,2));
 })().catch(e=>{console.error(e);process.exitCode=1});

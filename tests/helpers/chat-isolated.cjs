@@ -170,7 +170,8 @@ function createSession(id, metadata) {
   });
 
   for (const name of ['persist','sound','cancelClarification','interruptBotQueue','updateAttachmentAvailability','offerPreapprovalUpload']) context[name] = () => {};
-  context.safetyRecord = () => (state.profile.safetyStrikes = (state.profile.safetyStrikes || 0) + 1);
+  context.safetyRecord = reason => reason === 'language' ? (state.profile.safetyStrikes || 0) :
+    (state.profile.safetyStrikes = (state.profile.safetyStrikes || 0) + 1);
   vm.createContext(context);
   for (const name of conversationFunctions) vm.runInContext(funcs[name], context);
   for (const name of bookingFunctions) vm.runInContext(funcs[name], context);

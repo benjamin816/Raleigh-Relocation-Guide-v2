@@ -616,7 +616,7 @@
     var explicitDate = /\b20\d{2}-\d{2}-\d{2}\b/.exec(text);
     if (/\b(?:earlier|early)\b/.test(text)) return slots[0] || null;
     if (/\b(?:later|late)\b/.test(text)) return slots[1] || null;
-    var hasPeriod=/\b(?:morning|afternoon|evening)\b/.test(text);
+    var hasPeriod=/\b(?:morning|afternoon|evening|midday)\b/.test(text);
     var index = !clock && !day && !explicitDate && !hasPeriod && /\b(?:2|two|2nd|second|latter)\b/.test(text) ? 1 : !clock && !day && !explicitDate && !hasPeriod && /\b(?:1|one|1st|first|former)\b/.test(text) ? 0 : -1;
     if (index >= 0) return slots[index] || null;
     if (!day && !explicitDate && !clock) {
@@ -631,11 +631,14 @@
       var parts = bookingSlotParts(slot.start);
       var date = bookingDayKey(slot.start);
       if (explicitDate && date !== explicitDate[0]) return false;
+      var h=Number(parts.hour)%12+(String(parts.dayPeriod).toLowerCase()==='pm'?12:0);
+      if(hasPeriod && (/\bmorning\b/.test(text)?h>=12:/\bevening\b/.test(text)?h<17:/\bmidday\b/.test(text)?h<11||h>15:h<12||h>=17))return false;
       if (day && (day[1] === "today" ? date !== today : day[1] === "tomorrow" ? date !== tomorrow.toISOString().slice(0, 10) : parts.weekday.toLowerCase() !== day[1])) return false;
       return !clock || Number(parts.hour) === clock.hour && Number(parts.minute) === clock.minute && parts.dayPeriod.toLowerCase() === clock.meridiem;
     });
-    var accepting = /\b(?:works|good|fine|great|perfect|take|choose|pick|book|yes|let'?s do|let us do|can do|that time|one)\b/i.test(text) ||
+    var accepting = /\b(?:works|good|fine|great|perfect|take|choose|pick|book|yes|let'?s do|let us do|can do|that time|one|option)\b/i.test(text) ||
       /^(?:today|tomorrow|sunday|monday|tuesday|wednesday|thursday|friday|saturday)[.!]?$/i.test(text.trim());
+    accepting=accepting || /\bplease\b/.test(text)&& !/\?|\b(?:any|options|do you have)\b/.test(text);
     return (clock || accepting) && matches.length === 1 ? matches[0] : null;
   }
   function normalizeSuggestedTime(value) {
@@ -1257,7 +1260,9 @@
     var origin=p.facts && p.facts.location;
     if(origin){p.location=origin.type;p.origin=origin.place||'';p.originCode=origin.stateCode||'';p.originCity=origin.city||'';}
     var rentalQuestion=/\b(?:work with|help|assist|do|handle|offer|find)\b.{0,35}\b(?:renters|rentals?|renting|rental search)\b/i.test(text) && engine.asksQuestion(text);
-    var futureRent=asksToRent(text) || engine.rentalOnly(text) || plan.sellThenRent || /\b(?:will|going to|plan to|planning to)\s+(?:only )?(?:be )?renting\b/i.test(text);
+    var futureRent=asksToRent(text) || engine.rentalOnly(text) || plan.sellThenRent || /\b(?:will|going to|plan to|planning to)\s+(?:only )?(?:be )?rent(?:ing)?\b/i.test(text);
+    var localSale=(state.intent==='selling'||plan.id==='selling') && (p.location==='local'||(config.localAreas||[]).some(function(area){return String(p.facts && p.facts.currentHome||'').toLowerCase()===area.toLowerCase();}));
+    if(localSale && !state.combined && !plan.combined && (futureRent||p.sellThenRent||p.facts && p.facts.sellThenRent))return false;
     if(p.pendingRentalSale){
       if(/\b(?:sell|selling|list|listing)\b/i.test(text)&&!engine.transactionPlan(text).keepHome){p.originSale=true;p.facts.originHousing='Home to sell';}
       else if(/\b(?:no|keep|keeping|not selling)\b/i.test(text)){p.originSale=false;p.facts.willSell='No';}
@@ -1359,6 +1364,10 @@
     var text = String(value || "");
     var current = state.intent && (activeQuestions().find(function(q){return q.key===state.profile.currentQuestionKey;}) || activeQuestions()[state.question]);
     var detected = engine.detectIntent(text, config);
+    if(/\b(?:book|schedule|arrange|consult(?:ation)?|appointment|meet|call)\b/i.test(text) && !/\b(?:number|direct line|phone number)\b/i.test(text)){
+      var host=requestedPerson(text);if(host)state.profile.requestedHost=host;
+      if(host || /\b(?:monday|tuesday|wednesday|thursday|friday|saturday|sunday|weekend|morning|afternoon|evening)\b/i.test(text)) state.profile.bookingPreference=bookingPreferenceFromText(text,state.profile.bookingPreference);
+    }
     var addingPurchase=state.intent==='selling' && detected && detected.id==='buying' && /\b(?:too|also|as well)\b/i.test(text) && !/\b(?:not selling|no longer sell|instead of selling)\b/i.test(text);
     var facts = engine.extractFacts(text, config, state.intent || detected && detected.id, addingPurchase ? null : current && current.key);
     if (addingPurchase) delete facts.currentHome;
@@ -1442,7 +1451,7 @@
     var question = activeQuestions().find(function(q){return q.key===state.profile.currentQuestionKey;}) || activeQuestions()[state.question];
     if(question && /^(?:budget|priorityBudget)$/.test(question.key) && /^\s*\d[\d,]{4,8}\s*$/.test(answer) && priceAmount(answer)>=10000 && priceAmount(answer)<=50000000) answer='$'+answer.trim();
     if (question && question.key === "timing" && state.intent !== "investing") {
-      var uncertainTiming = /\b(?:not sure|unsure|undecided|don['’]?t know|no idea|can['’]?t say|haven['’]?t decided|just (?:started|starting|began)|no (?:set )?(?:timeline|timeframe|date))\b/i.test(answer);
+      var uncertainTiming = /\b(?:not sure|unsure|undecided|don['’]?t know|no idea|can['’]?t say|haven['’]?t decided|just (?:started|starting|began|researching)|no (?:set )?(?:timeline|timeframe|date))\b/i.test(answer);
       if (uncertainTiming && !state.profile.timelineYearAsked) {
         state.profile.timelineYearAsked = true;
         state.profile.awaitingTimelineYear = true;
@@ -1464,11 +1473,17 @@
         !/\b(?:yes|no|first|never|before|experience|experienced|new to|own|owned|invested|rentals?|years?|\d+)\b/i.test(answer)) {
       scheduleClarification("Just to clarify: " + question.text); return;
     }
-    if (question && engine.isUnclearAnswer(answer, question.key)) {
-      scheduleClarification("Sorry, I don't quite understand. " + question.text);
+    var unclear=question && engine.isUnclearAnswer(answer,question.key);
+    var unrelatedHome=question && /^(?:home|homeMore|nextHome)$/.test(question.key) && !homeDetailCount(answer) && !/\b(?:home|house|room|space|layout|kitchen|storage|closet|porch|patio|deck|garden|land|acre|lot|fence|floor|story|storey|stairs|elevator|light|bright|modern|maintenance|accessible|accessibility|wheelchair|privacy|quiet|new construction|open plan|open concept|townhome|condo|brick|master|primary|basement|workshop|view|waterfront|ranch|pool|price|budget|afford|walkable|nothing else|that's all|no more|not sure|haven't decided)\w*\b/i.test(answer);
+    if(unclear || unrelatedHome){
+      var key=question.key, attempts=state.profile.unclearAnswers=state.profile.unclearAnswers||{};
+      attempts[key]=(attempts[key]||0)+1;
+      if(attempts[key]>=2)message("I'm still not quite following. You can call or text the team at 919-737-7896 if that's easier. " + question.text,false);
+      else scheduleClarification("Sorry, I don't quite understand. " + question.text);
       return;
     }
-    if (question && /^(?:financing|priorityFinancing)$/.test(question.key) && !engine.financingType(answer) && !/\b(?:not sure|unsure|don't know|do not know|undecided)\b/i.test(answer)) { scheduleClarification("Would you use financing or buy with cash? It's okay if you're not sure yet."); return; }
+    if(question && state.profile.unclearAnswers)delete state.profile.unclearAnswers[question.key];
+    if (question && /^(?:financing|priorityFinancing)$/.test(question.key) && !engine.financingType(answer) && !/\b(?:not sure|unsure|don't know|do not know|no idea|haven't decided|undecided)\b/i.test(answer)) { scheduleClarification("Would you use financing or buy with cash? It's okay if you're not sure yet."); return; }
     if (question && /^(?:budget|priorityBudget)$/.test(question.key) && !engine.extractBudget(answer) && !/\b(?:not sure|unsure|don't know|do not know|no idea|undecided|need a lender)\b/i.test(answer)) { scheduleClarification("What home price would feel comfortable? It's okay if you're not sure yet."); return; }
     var flowQuestions = config.flows[state.intent].questions;
     var questionPosition = flowQuestions.indexOf(question);
@@ -1777,7 +1792,7 @@
     }
   }
   function isQuestionPreamble(value) {
-    return /^(?:i (?:have|had|got) (?:a |one |another |quick )?question|can i ask (?:you )?(?:a |one )?question|can i ask you something|ask a question|quick question|one question|question for you)\s*[.!?]*$/i.test(value);
+    return /^(?:i (?:have|had|got) (?:a |one |another |quick )?question|can i ask (?:you )?(?:a |one )?question|can i ask you something|can i ask (?:one |a |a quick )?thing|ask a question|quick question|one question|question for you)\s*[.!?]*$/i.test(value);
   }
   function requestedPerson(value) {
     var named=String(value).match(/\b(?:recommended|prefer|with|instead of)\s+(?:a call with\s+)?(Benjamin|Ben|Ricardo)\b/i);
@@ -1790,8 +1805,9 @@
     return /\bcan (?:i|we) (?:call|text) you\b|\b(?:what|which)\s+(?:phone\s+)?number\b.{0,40}\b(?:call|text|reach)\b|\b(?:team|benjamin|ben)\b.{0,70}\b(?:number|phone|call|text|reach)\b|\b(?:number|phone|call|text|reach)\b.{0,70}\b(?:team|benjamin|ben)\b/i.test(value);
   }
   function asksForTeamMember(value) {
+    if(/^(?:i|we) (?:really )?(?:need|want|would like) (?:a |an? )?(?:real )?(?:human|person|agent|realtor)\b/i.test(value))return true;
     return /^(?:human|a human|real person|talk to somebody|speak to somebody)\s*[.!?]*$/i.test(value) ||
-      /\b(?:speak|talk|connect|reach)\s+(?:me\s+)?(?:with|to)\s+(?:a |the )?(?:real )?(?:team(?: member)?|person|human|agent|someone|somebody|benjamin|ben|ricardo)\b/i.test(value) ||
+      /\b(?:speak|talk|connect|reach)\s+(?:me\s+)?(?:with|to)\s+(?:an? |the )?(?:real )?(?:team(?: member)?|person|human|(?:real estate )?agent|realtor|representative|someone|somebody|benjamin|ben|ricardo)\b/i.test(value) ||
       /\b(?:get|put)\s+me\s+(?:in touch|connected)\s+with\s+(?:a |the )?(?:team|person|human|agent|someone|somebody|benjamin|ben|ricardo)\b/i.test(value);
   }
   function asksToMeetNamedHost(value) {
@@ -1939,6 +1955,15 @@
       if (bookingQuestion) answerSideQuestion(value, engine.findFaq(value, config));
       else handleBookingAnswer(value);
       return;
+    }
+    if(!state.booking && state.profile.currentQuestionKey==='timing' && engine.researchOnly(value) && /\b(?:not sure|unsure|undecided|just researching|just started)\b/i.test(value) && !/\b(?:only|no call|don't|do not)\b/i.test(value)){
+      state.profile.researchOnly=false;state.profile.noScheduling=false;state.profile.informationOnly=false;
+      acceptAnswer(value);return;
+    }
+    var budgetQuestion=/^(?:budget|priorityBudget)$/.test(state.profile.currentQuestionKey||'');
+    var uncertainBudget=/\b(?:whatever (?:we|i) (?:can )?qualify for|depend(?:s|ing) on (?:the lender|approval|what (?:we|i) qualify)|(?:rather|prefer to|want to) discuss (?:the )?(?:price|budget) (?:on|during) (?:the |our )?call|need to (?:speak|talk) (?:with|to) (?:a |the )?lender)\b/i.test(value);
+    if(!state.booking && !state.profile.awaitingFirstName && budgetQuestion && uncertainBudget){
+      state.profile.budgetContext=value;acceptAnswer('Not sure yet');return;
     }
     var updatedGoal = state.profile.facts && state.profile.facts.transactionGoal;
     if (updatedGoal && state.intent && state.intent !== 'investing' && updatedGoal !== state.intent &&
