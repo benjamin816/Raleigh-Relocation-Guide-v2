@@ -106,6 +106,7 @@ function adminPortalRequest(credential, action, payload) {
     case 'book': return bookAppointment_(data, true);
     case 'customCheck': return adminCheckCustomTime_(data);
     case 'customBook': return bookAppointment_(data, true, true);
+    case 'addAttendee': return adminAddAttendee_(data, viewer);
     case 'assignment': return adminChangeAssignment_(data, viewer);
     case 'cancel': return adminCancelAppointment_(data, viewer);
     default: throw new Error('Unknown admin action.');
@@ -215,7 +216,8 @@ function adminUpcoming_() {
         purpose: details.purpose, host: actualName || row[4] || 'Unassigned', hostEmail: row[5] || '',
         email: details.email || tracked.email, phone: details.phone || tracked.phone,
         videoUrl: links.videoUrl, calendarUrl: links.calendarUrl,
-        emailStatus: tracked.status || 'Not yet logged', guests: guests };
+        emailStatus: tracked.status || 'Not yet logged', guests: guests,
+        additionalAttendees: chatReadExtraContacts_(event.getDescription()).filter(function (contact) { return guests.some(function (email) { return email.toLowerCase() === contact.email; }); }) };
     });
   const counts = { Benjamin: 0, Ricardo: 0 };
   const month = Utilities.formatDate(now, CHAT_ZONE, 'yyyy-MM');
@@ -288,6 +290,31 @@ function adminChangeAssignment_(data, viewer) {
       'Admin transfer by ' + viewer.email, 'Assigned', Utilities.formatDate(new Date(), CHAT_ZONE, 'yyyy-MM-dd HH:mm')]]);
     CacheService.getScriptCache().remove('portal-appointments-v2');
     return { ok: true, host: target };
+  } finally { lock.releaseLock(); }
+}
+
+function adminAddAttendee_(data, viewer) {
+  if (data.confirm !== true) throw new Error('Confirm adding this attendee and sending the calendar invitation.');
+  const lock = LockService.getScriptLock(); lock.waitLock(20000);
+  try {
+    const event = adminFindEvent_(data.id), details = adminBookingDetails_(event);
+    const contact = chatExtraContacts_([data.attendee], details.email)[0];
+    const contacts = chatReadExtraContacts_(event.getDescription());
+    if (event.getGuestList().some(function (guest) { return guest.getEmail().toLowerCase() === contact.email; })) return { ok: true, alreadyPresent: true };
+    if (contacts.length >= 10) throw new Error('This appointment already has 10 additional attendees.');
+    // Patch the exact instance atomically: preserve every existing RSVP and attendee,
+    // conference link, host assignment, reminder, and primary pre-call email state.
+    const matches = Calendar.Events.list(CHAT_CALENDAR_ID, { iCalUID: event.getId(), timeMin: new Date(event.getStartTime().getTime() - 1000).toISOString(), timeMax: event.getEndTime().toISOString(), singleEvents: true, maxResults: 100 }).items || [];
+    const resource = matches.find(function (item) { return item.status !== 'cancelled' && item.start && new Date(item.start.dateTime).getTime() === event.getStartTime().getTime(); });
+    if (!resource || resource.attendeesOmitted) throw new Error('Could not safely read the complete calendar invitation. No attendee was added.');
+    const guests = resource.attendees || [];
+    if (guests.some(function (guest) { return String(guest.email || '').toLowerCase() === contact.email; })) return { ok: true, alreadyPresent: true };
+    const description = String(resource.description || event.getDescription() || '');
+    const marker = '\nAdditional attendees (admin portal):\n';
+    const updated = description.includes(marker) ? description.trimEnd() + '\n' + chatExtraDescription_([contact]).split(marker)[1] : description + chatExtraDescription_([contact]);
+    Calendar.Events.patch({ attendees: guests.concat([{ email: contact.email, displayName: contact.name }]), description: updated }, CHAT_CALENDAR_ID, resource.id, { sendUpdates: 'all' });
+    CacheService.getScriptCache().remove('portal-appointments-v2');
+    return { ok: true, attendee: contact };
   } finally { lock.releaseLock(); }
 }
 

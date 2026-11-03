@@ -31,3 +31,11 @@ events.set('ricardo.collier90@gmail.com',[event('2026-02-06T02:00Z','2026-02-06T
 fail='ricardo@triangleexperts.com';assert.throws(()=>ctx.adminPortalRequest('isolated-admin','customBook',{...details,requestId:'isolated-request-0003'}),/Could not read/);assert.equal(writes.length,1);fail='';
 const both=ctx.adminPortalRequest('isolated-admin','customBook',{...details,preferredHost:'Both',requestId:'isolated-request-0004'});assert.equal(both.assignedHost,'Both');assert(writes[1].options.guests.includes('benjamin.carver@exprealty.com'));assert(writes[1].options.guests.includes('ricardo@triangleexperts.com'));
 console.log('Private custom checks/bookings: auth, dates, DST gaps/ambiguity, hosts/Both, free/conflicting/adjacent events, read failure, privacy, recheck, idempotency, public-feed isolation passed. All calendars and writes are in-memory mocks.');
+
+assert.throws(()=>ctx.adminPortalRequest('isolated-admin','customBook',{...details,requestId:'attendee-phone-00001',phone:''}),/check your booking/);
+assert.throws(()=>ctx.bookChatAppointment({...details,requestId:'attendee-public-0001',phone:'',callType:'office'}),/check your booking/);
+for(const key of props.keys())if(key.startsWith('CHAT_BOOKING_EMAIL_'))props.delete(key);
+const extra={name:'Second Client',email:'second@example.invalid',phone:''};
+const withExtra=ctx.adminPortalRequest('isolated-admin','customBook',{...details,requestId:'attendee-office-0001',email:'office@example.invalid',phone:'',callType:'office',attendees:[extra]});
+assert.equal(withExtra.booked,true);const created=writes.at(-1);assert(created.options.guests.includes(extra.email));assert(created.options.guests.includes('ricardo@triangleexperts.com'));assert(created.options.description.includes('Second Client <second@example.invalid>'));assert.equal(ctx.chatReadExtraContacts_(created.options.description)[0].email,extra.email);
+console.log('Admin office booking permits no primary phone, phone call requires primary phone, public requirement unchanged, extra guest persisted and invited.');

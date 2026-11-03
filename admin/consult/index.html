@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex,nofollow,noarchive">
   <title>Admin consultation booking | Living in Raleigh</title>
-  <link rel="stylesheet" href="/admin/consult/style.css?v=20261103-custom1">
+  <link rel="stylesheet" href="/admin/consult/style.css?v=20261103-attendees1">
 </head>
 <body>
   <main class="shell">
@@ -22,7 +22,8 @@
           <div id="days" class="day-columns">Choose who will take the call to see openings.</div>
           <p id="custom-selected" class="custom-selected" hidden></p>
         </section>
-        <div class="grid"><label>First and last name<input name="name" autocomplete="name" required minlength="2"></label><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Phone<input name="phone" type="tel" autocomplete="tel" required></label><label>Meeting type<select name="callType"><option value="video">Google video call</option><option value="phone">Phone call</option><option value="office">North Raleigh office</option></select></label><label>Looking to<select name="purpose" required><option value="">Choose one</option><option value="Buy">Buy</option><option value="Sell">Sell</option><option value="Buy and sell">Buy and sell</option><option value="Invest">Invest</option><option value="Other">Other</option></select></label></div>
+        <div class="grid"><label>First and last name<input name="name" autocomplete="name" required minlength="2"></label><label>Email<input name="email" type="email" autocomplete="email" required></label><label>Phone<input id="primary-phone" name="phone" type="tel" autocomplete="tel"><small id="phone-help">Optional for video and office appointments.</small></label><label>Meeting type<select id="meeting-type" name="callType"><option value="video">Google video call</option><option value="phone">Phone call</option><option value="office">North Raleigh office</option></select></label><label>Looking to<select name="purpose" required><option value="">Choose one</option><option value="Buy">Buy</option><option value="Sell">Sell</option><option value="Buy and sell">Buy and sell</option><option value="Invest">Invest</option><option value="Other">Other</option></select></label></div>
+        <fieldset><legend>Additional attendees</legend><p>Each additional person needs a name and email. Their phone number is optional.</p><div id="additional-attendees"></div><button id="add-attendee" type="button">Add another attendee</button></fieldset>
         <label>Notes for the team<textarea name="notes" rows="4" maxlength="1000"></textarea></label>
         <button id="book-button" type="submit" disabled>Book selected time</button>
       </form>
@@ -40,6 +41,6 @@
     <p id="status" role="status" aria-live="polite"></p>
   </main>
   <script src="/assets/js/booking-relay-config.js?v=20261029-2" defer></script>
-  <script src="/admin/consult/script.js?v=20261103-custom1" defer></script>
+  <script src="/admin/consult/script.js?v=20261103-attendees1" defer></script>
 </body>
 </html>

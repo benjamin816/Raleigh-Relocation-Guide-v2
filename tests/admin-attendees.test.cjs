@@ -1,0 +1,16 @@
+const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
+const c=vm.createContext({console});for(const p of ['Code.gs','AdminPortalService.gs'])vm.runInContext(fs.readFileSync('scripts/google-apps-script/chat-booking/'+p,'utf8'),c);
+const primary='primary@example.invalid',extra={name:'Second Person',email:'SECOND@example.invalid',phone:''};
+assert.equal(c.chatExtraContacts_([extra],primary)[0].email,'second@example.invalid');
+for(const v of [{...extra,name:''},{...extra,email:''},{...extra,phone:'123'},{...extra,name:'Bad\nname'}, {...extra,email:primary},{...extra,email:'ricardo@triangleexperts.com'}])assert.throws(()=>c.chatExtraContacts_([v],primary));
+assert.throws(()=>c.chatExtraContacts_([extra,extra],primary));assert.throws(()=>c.chatExtraContacts_(Array(11).fill(extra),primary));
+const block=c.chatExtraDescription_([extra]);assert.equal(c.chatReadExtraContacts_(block)[0].name,extra.name);
+let patch=null,removed=false;const start=new Date(Date.now()+86400000),end=new Date(+start+3600000),old='Booked by:\nPrimary\n'+primary+'\n\nOriginal notes and preferences';
+c.adminFindEvent_=()=>({getId:()=> 'fixture-event-id@example.invalid',getStartTime:()=>start,getEndTime:()=>end,getDescription:()=>old,getGuestList:()=>[{getEmail:()=>primary},{getEmail:()=> 'ricardo@triangleexperts.com'}]});
+c.adminBookingDetails_=()=>({email:primary});c.LockService={getScriptLock:()=>({waitLock(){},releaseLock(){}})};c.CacheService={getScriptCache:()=>({remove(){removed=true;}})};
+const attendees=[{email:primary,responseStatus:'accepted'},{email:'ricardo@triangleexperts.com',responseStatus:'accepted'},{email:'livinginraleighteam@gmail.com',responseStatus:'needsAction'}];
+c.Calendar={Events:{list:()=>({items:[{id:'calendar-resource-id',start:{dateTime:start.toISOString()},attendees,description:old,hangoutLink:'https://meet.google.com/fixture'}]}),patch:(data,calendar,id,options)=>{patch={data,calendar,id,options};}}};
+assert.throws(()=>c.adminAddAttendee_({confirm:false},{}),/Confirm/);c.adminAddAttendee_({confirm:true,id:'fixture',attendee:extra},{email:'admin@example.invalid'});
+assert.equal(patch.data.attendees.length,4);assert.equal(patch.data.attendees[1].responseStatus,'accepted');assert.equal(patch.data.attendees[2].email,'livinginraleighteam@gmail.com');assert.equal(patch.data.attendees[3].displayName,'Second Person');assert(patch.data.description.startsWith(old));assert.equal(patch.options.sendUpdates,'all');assert.deepEqual(Object.keys(patch.data).sort(),['attendees','description']);assert(removed);
+patch=null;assert.throws(()=>c.adminAddAttendee_({confirm:true,id:'fixture',attendee:{name:'Primary',email:primary}},{}),/different email/);assert.equal(patch,null);
+console.log('Additional attendees: validation, optional phone, duplicate protection, existing RSVP/team/host preservation, exact event instance, notification and cache invalidation passed using mocks.');

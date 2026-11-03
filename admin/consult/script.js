@@ -10,6 +10,28 @@
   var unlockCard = document.getElementById('unlock-card');
   var days = document.getElementById('days');
   var bookButton = document.getElementById('book-button');
+  var extraRows = [];
+  function phoneRequirement() {
+    var required = document.getElementById('meeting-type').value === 'phone';
+    document.getElementById('primary-phone').required = required;
+    document.getElementById('phone-help').textContent = required ? 'Required for the first contact on a phone call.' : 'Optional for video and office appointments.';
+  }
+  document.getElementById('meeting-type').addEventListener('change', phoneRequirement);
+  document.getElementById('add-attendee').addEventListener('click', function () {
+    if (extraRows.length >= 10) return;
+    var row = document.createElement('div'); row.className = 'grid extra-attendee';
+    var contact = { row: row };
+    [['name', 'Full name', 'text'], ['email', 'Email', 'email'], ['phone', 'Phone (optional)', 'tel']].forEach(function (field) {
+      var label = document.createElement('label'), input = document.createElement('input');
+      label.textContent = field[1]; input.type = field[2]; input.required = field[0] !== 'phone'; input.maxLength = field[0] === 'phone' ? 30 : 200;
+      if (field[0] === 'name') input.minLength = 2;
+      contact[field[0]] = input; label.appendChild(input); row.appendChild(label);
+    });
+    var remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Remove attendee';
+    remove.addEventListener('click', function () { row.remove(); extraRows = extraRows.filter(function (item) { return item !== contact; }); document.getElementById('add-attendee').disabled = false; });
+    row.appendChild(remove); document.getElementById('additional-attendees').appendChild(row); extraRows.push(contact);
+    document.getElementById('add-attendee').disabled = extraRows.length >= 10; contact.name.focus();
+  });
   function randomId() { return Array.from(crypto.getRandomValues(new Uint8Array(24)), function (n) { return n.toString(16).padStart(2, '0'); }).join(''); }
   function notice(value, error) { status.textContent = value; status.className = error ? 'error' : ''; }
   function connect() {
@@ -184,13 +206,14 @@
     var form = new FormData(event.currentTarget);
     var details = { requestId: randomId(), start: start, preferredHost: host.value, name: String(form.get('name') || ''),
       email: String(form.get('email') || ''), phone: String(form.get('phone') || ''), callType: String(form.get('callType') || ''),
-      purpose: String(form.get('purpose') || ''), notes: String(form.get('notes') || '') };
+      purpose: String(form.get('purpose') || ''), notes: String(form.get('notes') || ''),
+      attendees: extraRows.map(function (item) { return { name: item.name.value, email: item.email.value, phone: item.phone.value }; }) };
     if (custom) { details.date = custom.date; details.time = custom.time; }
     bookButton.disabled = true; notice('Confirming the calendar and booking…');
     call('admin', [sessionStorage.getItem('lirAdminCredential') || '', custom ? 'customBook' : 'book', details]).then(function (result) {
       if (!result || !result.booked || result.assignedHost !== host.value) throw new Error('Booking needs manual assignment review.');
       notice('Booked with ' + (result.assignedHost === 'Both' ? 'Benjamin and Ricardo' : result.assignedHost) + '. The calendar invitation was sent. The standard pre-call email is queued.');
-      event.target.reset(); currentHost = ''; allSlots = []; pageIndex = 0; render(); loadAvailability(true);
+      event.target.reset(); extraRows = []; document.getElementById('additional-attendees').replaceChildren(); document.getElementById('add-attendee').disabled = false; phoneRequirement(); currentHost = ''; allSlots = []; pageIndex = 0; render(); loadAvailability(true);
     }).catch(function (error) { notice(error.message, true); loadAvailability(true); });
   });
 }());

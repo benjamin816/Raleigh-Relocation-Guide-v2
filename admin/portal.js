@@ -108,7 +108,7 @@
     $('signin').hidden = true; $('workspace').hidden = false;
     $('account').textContent = result.viewer.email;
     var scheduleFrame = document.querySelector('#schedule iframe');
-    if (scheduleFrame) scheduleFrame.src = '/admin/consult/?portal=1&v=20261103-custom1';
+    if (scheduleFrame) scheduleFrame.src = '/admin/consult/?portal=1&v=20261103-attendees1';
     if (location.hash === '#appointments') selectTab('appointments');
     else if (location.hash === '#analytics') selectTab('analytics');
   }
@@ -217,6 +217,21 @@
             .then(function () { status('Appointment cancelled.'); loadAppointments(); }); }); })
       .catch(function (error) { status(error.message); });
   }
+  var attendeeAppointment = null;
+  function openAttendee(appt) {
+    resetTransfer(); attendeeAppointment = appt; $('attendee-form').reset(); $('attendee-status').textContent = '';
+    $('attendee-save').disabled = false; $('attendee-context').textContent = appt.client + ' · ' + formatTime(appt.start) + '. The existing host and pre-call email stay unchanged.';
+    $('attendee-dialog').showModal(); $('attendee-name').focus();
+  }
+  $('attendee-close').addEventListener('click', function () { $('attendee-dialog').close(); });
+  $('attendee-form').addEventListener('submit', function (event) {
+    event.preventDefault(); if (!attendeeAppointment || $('attendee-save').disabled) return;
+    $('attendee-save').disabled = true; $('attendee-status').textContent = 'Adding attendee…';
+    admin('addAttendee', { id: attendeeAppointment.id, confirm: true, attendee: { name: $('attendee-name').value, email: $('attendee-email').value, phone: $('attendee-phone').value } })
+      .then(function (result) { $('attendee-dialog').close(); status(result.alreadyPresent ? 'This attendee is already on the invitation.' : 'Attendee added. Calendar invitation sent.'); loadAppointments(); })
+      .catch(function (error) { $('attendee-status').textContent = error.message; })
+      .finally(function () { $('attendee-save').disabled = false; });
+  });
   function loadAppointments() {
     return loadSnapshot('appointments', function () { return admin('appointments'); }, renderAppointments, 'appointments-updating');
   }
@@ -250,7 +265,9 @@
           calendarLink.textContent = 'Open calendar event'; calendarLink.target = '_blank'; calendarLink.rel = 'noopener';
           details.appendChild(calendarLink);
         }
+        (appt.additionalAttendees || []).forEach(function (contact) { details.appendChild(detail('Additional attendee', contact.name + ' · ' + contact.email + (contact.phone ? ' · ' + contact.phone : ''))); });
         var actions = document.createElement('div'); actions.className = 'actions';
+        actions.appendChild(actionButton('Add attendee', function () { openAttendee(appt); }));
         ['Benjamin', 'Ricardo', 'Both'].filter(function (host) { return host !== appt.host; }).forEach(function (host) {
           actions.appendChild(actionButton(host === 'Both' ? 'Add both hosts' : 'Transfer to ' + host,
             function (event) { changeHost(appt, host, event.currentTarget); }));
