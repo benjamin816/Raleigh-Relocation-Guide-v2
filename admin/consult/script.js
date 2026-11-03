@@ -3,6 +3,7 @@
   var endpoint = 'https://script.google.com/macros/s/AKfycbysLAettKRWslMW8YgG3BxftA2eBL_gsZFdK70bN7B3xu-aG_stqdNqg3jYBB5aqoMa2g/exec';
   var relayEndpoint = window.RALEIGH_BOOKING_RELAY_URL || '';
   var bridge, currentHost = '', allSlots = [], nextUp = '', pageIndex = 0, loading = false;
+  var unavailableHosts = [];
   var customSelection = null, customChecked = null, customRevision = 0;
   var customDialog = document.getElementById('custom-time-dialog');
   var status = document.getElementById('status');
@@ -121,12 +122,16 @@
       if (!result || !Array.isArray(result.slots) || !/^(Benjamin|Ricardo)$/.test(result.nextUp || '')) {
         throw new Error('The booking service needs its availability update before this page can show times.');
       }
-      allSlots = result.slots; nextUp = result.nextUp;
+      allSlots = result.slots; nextUp = result.nextUp; unavailableHosts = result.unavailableHosts || [];
+      if (unavailableHosts.length && preserveNotice !== true) notice('Calendar access needs attention for ' + unavailableHosts.join(' and ') + '. Their openings are hidden until every required calendar can be checked.', true);
       document.getElementById('next-up').textContent = 'Based on round robin, ' + nextUp + ' is next up. Choose who will take this call.';
       loading = false; render();
     }).catch(function (error) { loading = false; days.textContent = ''; notice(error.message, true); });
   }
-  function changeHost() { closeCustom(); clearCustom(); currentHost = document.querySelector('input[name="host"]:checked').value; pageIndex = 0; render(); }
+  function changeHost() { closeCustom(); clearCustom(); currentHost = document.querySelector('input[name="host"]:checked').value; pageIndex = 0; render();
+    var blocked = unavailableHosts.filter(function (name) { return currentHost === 'Both' || currentHost === name; });
+    notice(blocked.length ? 'Calendar access needs attention for ' + blocked.join(' and ') + '. No booking can be confirmed until every required calendar can be checked.' : '', !!blocked.length);
+  }
   function clearCustom() {
     customSelection = null; document.getElementById('custom-selected').hidden = true;
   }

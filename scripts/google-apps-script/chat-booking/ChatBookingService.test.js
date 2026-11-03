@@ -91,11 +91,11 @@ const fullAvailability = context.getChatBookingSlots({ all: true });
 assert.equal(fullAvailability.nextUp, 'Benjamin');
 assert.equal(fullAvailability.slots.length > 6, true, 'One calendar read returns more than one page of slots');
 assert.equal(fullAvailability.slots.every(slot => slot.availableHosts.includes('Benjamin') && slot.availableHosts.includes('Ricardo')), true);
-assert.equal(calendarReads, 6, 'Full availability reads each conflict calendar only once');
+assert.equal(calendarReads, 7, 'Full availability reads each conflict calendar only once');
 calendarReads = 0;
 assert.deepEqual(Array.from(context.getChatBookingSlots().slice(0, 2), slot => slot.daypart),
   ['afternoon', 'evening'], 'Default options include afternoon and evening');
-assert.equal(calendarReads, 6, 'Availability reads the shared calendar and five host calendars once each');
+assert.equal(calendarReads, 7, 'Availability reads the shared calendar and six host calendars once each');
 assert.equal(context.getChatBookingSlots({ daypart: 'evening' }).every(slot => slot.daypart === 'evening'), true);
 assert.equal(context.chatBookingPreference_({daypart:'midday'}).daypart,'midday');
 assert.equal(context.getChatBookingSlots({daypart:'midday'}).every(slot=>{const h=new Date(slot.start).getHours();return h>=11&&h<15;}),true,'Lunch openings stay within the midday range');

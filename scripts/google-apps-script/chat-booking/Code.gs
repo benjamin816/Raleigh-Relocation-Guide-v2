@@ -14,7 +14,7 @@ const CHAT_HOSTS = [
     'mrcarver.jr01@gmail.com'
   ] },
   { name: 'Ricardo', inviteEmail: 'ricardo.realestate23@gmail.com', aliases: ['ricardo@triangleexperts.com'], calendars: [
-    'ricardo.collier90@gmail.com', 'ricardo@triangleexperts.com'
+    'ricardo.collier90@gmail.com', 'ricardo@triangleexperts.com', 'ricardo.realestate23@gmail.com'
   ] }
 ];
 const CHAT_LEAD_SPREADSHEET_ID = '1V-4tnKUm22SXO9qTkBpC027gUU1eY_YwS6M2BplU8Uo';
@@ -165,9 +165,11 @@ function chatSetTeamFree_(event) {
 function chatAvailableHosts_(start, end) {
   const assigned = chatAssignedBusy_(start, end);
   return CHAT_HOSTS.filter(function (host) {
-    return chatRangeFree_(assigned[host.name], start, end) && host.calendars.every(function (id) {
-      return chatBusyEvents_(id, start, end, true).length === 0;
-    });
+    try {
+      return chatRangeFree_(assigned[host.name], start, end) && host.calendars.every(function (id) {
+        return chatBusyEvents_(id, start, end, true).length === 0;
+      });
+    } catch (_) { return false; } // Unknown calendar access is never free time.
   });
 }
 
@@ -273,9 +275,13 @@ function getChatBookingSlots(filters) {
   });
   const assignedBusy = chatAssignedBusy_(startDay, searchEnd, null, teamEvents);
   const hostBusy = CHAT_HOSTS.map(function (host) {
-    return { host: host, calendars: host.calendars.map(function (id) {
-      return chatBusyRanges_(id, startDay, searchEnd, true);
-    }).concat([assignedBusy[host.name]]) };
+    try {
+      return { host: host, calendars: host.calendars.map(function (id) {
+        return chatBusyRanges_(id, startDay, searchEnd, true);
+      }).concat([assignedBusy[host.name]]) };
+    } catch (_) {
+      return { host: host, unavailable: true, calendars: [[[startDay.getTime(), searchEnd.getTime()]]] };
+    }
   });
   for (let dayIndex = 0; dayIndex < horizon && (includeAll || slots.length < 12); dayIndex++) {
     const day = new Date(startDay.getFullYear(), startDay.getMonth(), startDay.getDate() + dayIndex);
@@ -306,7 +312,7 @@ function getChatBookingSlots(filters) {
       new Date(a.start).getTime() - new Date(b.start).getTime();
   });
   if (includeAll) {
-    return { nextUp: dueHost, slots: slots.sort(function (a, b) {
+    return { nextUp: dueHost, unavailableHosts: hostBusy.filter(function (entry) { return entry.unavailable; }).map(function (entry) { return entry.host.name; }), slots: slots.sort(function (a, b) {
       return new Date(a.start).getTime() - new Date(b.start).getTime();
     }) };
   }

@@ -26,7 +26,7 @@ const RR = {
     },
     {
       name: 'Ricardo', inviteEmail: 'ricardo.realestate23@gmail.com', aliases: ['ricardo@triangleexperts.com'],
-      calendars: ['ricardo.collier90@gmail.com', 'ricardo@triangleexperts.com']
+      calendars: ['ricardo.collier90@gmail.com', 'ricardo@triangleexperts.com', 'ricardo.realestate23@gmail.com']
     }
   ]
 };
@@ -115,13 +115,22 @@ function rrLedger_() {
 }
 
 function rrReadBusy_(start,end) {
-  const result = {};
+  const result = {unavailableHosts:[]};
   const appointments = rrBookings_(rrCalendar_(RR.targetId), start, end);
   RR.hosts.forEach(host => {
     const windows = [];
     host.calendars.forEach(id => {
-      const cal = rrCalendar_(id); // Fail closed; never treat a missing calendar as free.
-      cal.getEvents(start,end).forEach(event => {
+      let sourceEvents;
+      try { sourceEvents = rrCalendar_(id).getEvents(start,end); }
+      catch (_) {
+        // Missing one required calendar makes this host unavailable for the
+        // entire scan. Keep the other host's verified availability usable.
+        windows.push({start:new Date(start),end:new Date(end)});
+        if(!result.unavailableHosts.includes(host.name))result.unavailableHosts.push(host.name);
+        console.warn('Required calendar unreadable; host unavailable: '+host.name);
+        return;
+      }
+      sourceEvents.forEach(event => {
         if (event.getTag('MIRROR_BLOCK')==='1' || event.getTag('MIRROR_SOURCE')) return;
         try {
           if (event.getTransparency()===CalendarApp.EventTransparency.TRANSPARENT) return;
@@ -336,13 +345,14 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
       stats.needsReview++; continue;
     }
     const existingHosts=rrGuestAssignment_(event);
-    const choice=existingHosts ? {host:{name:existingHosts.name,inviteEmail:RR.hosts.filter(h=>existingHosts.name==='Both'||h.name===existingHosts.name).map(h=>h.inviteEmail).join(',')},reason:'Existing calendar attendees'} : rrPickHost_(available,counts,rows);
+    const unreadableRequestedHost=existingHosts && (busy.unavailableHosts||[]).some(name=>existingHosts.name==='Both'||existingHosts.name===name);
+    const choice=unreadableRequestedHost ? null : existingHosts ? {host:{name:existingHosts.name,inviteEmail:RR.hosts.filter(h=>existingHosts.name==='Both'||h.name===existingHosts.name).map(h=>h.inviteEmail).join(',')},reason:'Existing calendar attendees'} : rrPickHost_(available,counts,rows);
     const link=rrEventLink_(event);
     const prior=byId[id];
     const nowText=rrFormat_(new Date());
     const values=[id,rrFormat_(event.getDateCreated()),rrFormat_(s),rrFormat_(e),
       choice?choice.host.name:'',choice?choice.host.inviteEmail:'',
-      choice?choice.reason:'Both hosts busy','',nowText,link,''];
+      choice?choice.reason:unreadableRequestedHost?'Required host calendar unreadable':'Both hosts busy','',nowText,link,''];
     values[7]=choice?'Assigned':'Needs review';
     const rowNum=prior?prior.row:sheet.getLastRow()+1;
     sheet.getRange(rowNum,1,1,RR_HEAD.length).setValues([values]);
@@ -351,7 +361,7 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
     byId[id]=record;
     if (!choice) {
       stats.needsReview++;
-      sheet.getRange(rowNum,11).setValue(rrNotify_(event,null,link,'Both hosts appear busy; please assign manually.'));
+      sheet.getRange(rowNum,11).setValue(rrNotify_(event,null,link,unreadableRequestedHost?'Required host calendar unreadable; please review calendar access before assigning.':'Both hosts appear busy; please assign manually.'));
       continue;
     }
     rrEnsureGuest_(event,choice.host);
