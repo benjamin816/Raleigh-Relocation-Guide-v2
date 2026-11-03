@@ -108,7 +108,7 @@
     $('signin').hidden = true; $('workspace').hidden = false;
     $('account').textContent = result.viewer.email;
     var scheduleFrame = document.querySelector('#schedule iframe');
-    if (scheduleFrame) scheduleFrame.src = '/admin/consult/?portal=1';
+    if (scheduleFrame) scheduleFrame.src = '/admin/consult/?portal=1&v=20261103-custom1';
     if (location.hash === '#appointments') selectTab('appointments');
     else if (location.hash === '#analytics') selectTab('analytics');
   }

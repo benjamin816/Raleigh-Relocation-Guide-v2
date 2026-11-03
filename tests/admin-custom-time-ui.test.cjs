@@ -1,5 +1,8 @@
 const fs=require('fs'),vm=require('vm'),assert=require('node:assert/strict');
 const source=fs.readFileSync('admin/consult/script.js','utf8'),html=fs.readFileSync('admin/consult/index.html','utf8');
+assert(fs.readFileSync('admin/portal.js','utf8').includes('/admin/consult/?portal=1&v=20261103-custom1'));
+assert(fs.readFileSync('admin/index.html','utf8').includes('/admin/consult/?portal=1&v=20261103-custom1'));
+assert(fs.readFileSync('admin/index.html','utf8').includes('/admin/portal.js?v=20261103-custom1'));
 class Element{constructor(tag='div'){this.tagName=tag;this.children=[];this.events={};this.hidden=false;this.disabled=false;this.value='';this.attrs={};this.open=false;}append(...v){this.children.push(...v)}appendChild(v){this.children.push(v);return v}replaceChildren(){this.children=[]}setAttribute(k,v){this.attrs[k]=v}addEventListener(k,fn){this.events[k]=fn}focus(){}showModal(){this.open=true}close(){this.open=false}fire(k,extra={}){return this.events[k]?.({preventDefault(){},target:this,currentTarget:this,...extra})}}
 const ids={};for(const m of html.matchAll(/id="([^"]+)"/g))ids[m[1]]=new Element();
 const hosts=['Benjamin','Ricardo','Both'].map(value=>Object.assign(new Element('input'),{value,name:'host',checked:false}));
