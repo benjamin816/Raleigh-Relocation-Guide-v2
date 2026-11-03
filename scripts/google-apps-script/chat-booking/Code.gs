@@ -376,9 +376,9 @@ function chatReadExtraContacts_(description) {
   }).filter(Boolean);
 }
 
-function chatBookingDescription_(name, email, phone, notes, host, callType, purpose, attendees) {
+function chatBookingDescription_(name, email, phone, notes, host, callType, purpose, attendees, adminBooking) {
   const preference = callType === 'phone' ? '1. Phone call' : callType === 'office' ? '2. In-person meeting at the North Raleigh office' : 'Google video call';
-  return 'Booked through the Living in Raleigh website chat.\n' +
+  return (adminBooking ? 'Booked through the Living in Raleigh admin portal.\nInternal booking notification: suppressed (admin booking)\n' : 'Booked through the Living in Raleigh website chat.\n') +
     'Pre-call email: standard pipeline\n' +
     'Assigned host: ' + host + '\n' +
     'Booked by:\n' + name + '\n' + email + '\n' + phone + '\n' +
@@ -391,12 +391,12 @@ function chatBookingDescription_(name, email, phone, notes, host, callType, purp
     "I'm looking forward to meeting you. Please feel free to invite your spouse, family, or anyone else who should be on this call.\n" + chatExtraDescription_(attendees);
 }
 
-function chatVideoEvent_(requestId, start, end, name, email, phone, notes, host, purpose, attendees) {
+function chatVideoEvent_(requestId, start, end, name, email, phone, notes, host, purpose, attendees, adminBooking) {
   const payload = {
     summary: 'Exploration Call: Living in Raleigh Team (' + name + ')',
     start: { dateTime: start.toISOString(), timeZone: CHAT_ZONE },
     end: { dateTime: end.toISOString(), timeZone: CHAT_ZONE },
-    description: chatBookingDescription_(name, email, phone, notes, host.name, 'video', purpose, attendees),
+    description: chatBookingDescription_(name, email, phone, notes, host.name, 'video', purpose, attendees, adminBooking),
     attendees: [{ email: email, displayName: name }].concat((attendees || []).map(function (contact) { return { email: contact.email, displayName: contact.name }; })).concat(host.inviteEmail.split(',').map(function (address) { return { email: address }; })),
     conferenceData: { createRequest: { requestId: requestId, conferenceSolutionKey: { type: 'hangoutsMeet' } } },
     reminders: { useDefault: false, overrides: [{ method: 'email', minutes: 1440 }, { method: 'popup', minutes: 30 }] }
@@ -500,9 +500,9 @@ function bookAppointment_(details, authorizedAdmin, adminCustom) {
     const emailTotal = Number(properties.getProperty(emailKey) || '0');
     if (total >= 20 || emailTotal >= 2) throw new Error('Chat booking is temporarily unavailable. Please call the team at 919-737-7896.');
     const calendar = chatCalendar_(CHAT_CALENDAR_ID);
-    const video = callType === 'video' ? chatVideoEvent_(requestId, start, end, name, email, phone, notes, choice.host, purpose, attendees) : null;
+    const video = callType === 'video' ? chatVideoEvent_(requestId, start, end, name, email, phone, notes, choice.host, purpose, attendees, authorizedAdmin) : null;
     const event = video ? null : calendar.createEvent('Exploration Call: Living in Raleigh Team (' + name + ')', start, end, {
-      description: chatBookingDescription_(name, email, phone, notes, choice.host.name, callType, purpose, attendees),
+      description: chatBookingDescription_(name, email, phone, notes, choice.host.name, callType, purpose, attendees, authorizedAdmin),
       location: callType === 'office' ? 'North Raleigh office' : 'Phone call',
       guests: [email, choice.host.inviteEmail].concat(attendees.map(function (contact) { return contact.email; })).join(','), sendInvites: true
     });
@@ -514,13 +514,14 @@ function bookAppointment_(details, authorizedAdmin, adminCustom) {
     try {
       const tagged = event || calendar.getEventById(eventId);
       if (tagged) tagged.setTag('RR_ASSIGNED_HOST', choice.host.name);
+      if (tagged && authorizedAdmin) tagged.setTag('RR_SUPPRESS_BOOKED_EMAIL', 'admin');
       if (tagged) chatSetTeamFree_(tagged);
     } catch (tagError) { console.warn('Assignment tag could not be saved: ' + tagError); }
     const format = function (value) { return Utilities.formatDate(value, CHAT_ZONE, 'yyyy-MM-dd HH:mm'); };
     let hostPending = false;
     try {
       assignment.sheet.appendRow([eventId, format(new Date()), format(start), format(end), choice.host.name,
-        choice.host.inviteEmail, choice.reason, 'Assigned', format(new Date()), video ? video.eventUrl : '', '']);
+        choice.host.inviteEmail, choice.reason, 'Assigned', format(new Date()), video ? video.eventUrl : '', authorizedAdmin ? 'Suppressed (admin)' : '']);
     } catch (assignmentError) {
       hostPending = true;
       try {
@@ -542,7 +543,7 @@ function bookAppointment_(details, authorizedAdmin, adminCustom) {
         sheet.appendRow(['Booked At', 'Calendar Event ID', 'Starts At', 'Name', 'Email', 'Phone', 'Notes', 'Source', 'Status']);
       }
       sheet.appendRow([new Date(), eventId, start, chatSheetText_(name), chatSheetText_(email), chatSheetText_(phone),
-        chatSheetText_(notes), 'Website chat · ' + callType, 'Booked']);
+        chatSheetText_(notes), (authorizedAdmin ? 'Admin portal · ' : 'Website chat · ') + callType, 'Booked']);
     } catch (sheetError) {
       try {
         MailApp.sendEmail('livinginraleighteam@gmail.com', 'Chat booking needs lead-sheet repair',

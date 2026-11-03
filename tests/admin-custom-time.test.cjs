@@ -39,3 +39,5 @@ const extra={name:'Second Client',email:'second@example.invalid',phone:''};
 const withExtra=ctx.adminPortalRequest('isolated-admin','customBook',{...details,requestId:'attendee-office-0001',email:'office@example.invalid',phone:'',callType:'office',attendees:[extra]});
 assert.equal(withExtra.booked,true);const created=writes.at(-1);assert(created.options.guests.includes(extra.email));assert(created.options.guests.includes('ricardo@triangleexperts.com'));assert(created.options.description.includes('Second Client <second@example.invalid>'));assert.equal(ctx.chatReadExtraContacts_(created.options.description)[0].email,extra.email);
 console.log('Admin office booking permits no primary phone, phone call requires primary phone, public requirement unchanged, extra guest persisted and invited.');
+
+assert.equal(assignments.at(-1)[10],'Suppressed (admin)');assert.match(writes.at(-1).options.description,/Internal booking notification: suppressed \(admin booking\)/);

@@ -322,10 +322,10 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
       }
       const host=RR.hosts.find(h=>h.name===record.values[4]);
       rrSetTeamFree_(event);
-      if (host && record.values[10]!=='Sent') {
-        rrNotify_(event,host,rrEventLink_(event),record.values[6]);
-        sheet.getRange(record.row,11).setValue('Sent');
-        record.values[10]='Sent';
+      if (host && !['Sent','Suppressed (admin)'].includes(record.values[10])) {
+        const notification=rrNotify_(event,host,rrEventLink_(event),record.values[6]);
+        sheet.getRange(record.row,11).setValue(notification);
+        record.values[10]=notification;
       }
       stats.alreadyAssigned++; continue;
     }
@@ -351,8 +351,7 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
     byId[id]=record;
     if (!choice) {
       stats.needsReview++;
-      rrNotify_(event,null,link,'Both hosts appear busy; please assign manually.');
-      sheet.getRange(rowNum,11).setValue('Sent');
+      sheet.getRange(rowNum,11).setValue(rrNotify_(event,null,link,'Both hosts appear busy; please assign manually.'));
       continue;
     }
     rrEnsureGuest_(event,choice.host);
@@ -361,8 +360,7 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
     if(choice.host.name==='Both'){counts.Benjamin++;counts.Ricardo++;}
     else counts[choice.host.name]++;
     stats.assigned++;
-    rrNotify_(event,choice.host,link,choice.reason);
-    sheet.getRange(rowNum,11).setValue('Sent');
+    sheet.getRange(rowNum,11).setValue(rrNotify_(event,choice.host,link,choice.reason));
   }
   return stats;
 }
@@ -403,6 +401,8 @@ function rrEventLink_(event) {
 }
 
 function rrNotify_(event,host,link,reason) {
+  if ((typeof event.getTag === 'function' && event.getTag('RR_SUPPRESS_BOOKED_EMAIL') === 'admin') ||
+      /^Booked through the Living in Raleigh admin portal\.\r?\nInternal booking notification: suppressed \(admin booking\)(?:\r?\n|$)/.test(String(event.getDescription() || ''))) return 'Suppressed (admin)';
   const who=host?host.name:'Needs manual assignment';
   const body='A Living in Raleigh exploration call was booked.\n\n'+
     'Assigned to: '+who+'\n'+
@@ -411,6 +411,7 @@ function rrNotify_(event,host,link,reason) {
     'Calendar event: '+link+'\n';
   MailApp.sendEmail({to:RR.notificationEmail,
     subject:'Exploration call booked — '+who+' — '+rrFormat_(event.getStartTime()),body});
+  return 'Sent';
 }
 
 function rrFormat_(date) {
