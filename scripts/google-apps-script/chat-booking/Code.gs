@@ -423,12 +423,13 @@ function bookChatAppointment(details) {
   return bookAppointment_(details, false);
 }
 
-function bookAppointment_(details, authorizedAdmin) {
+function bookAppointment_(details, authorizedAdmin, adminCustom) {
+  if (adminCustom && !authorizedAdmin) throw new Error('Custom times require team sign-in.');
   if (!authorizedAdmin && PropertiesService.getScriptProperties().getProperty('CHAT_BOOKING_TEST_READ_ONLY') === 'true')
     throw new Error('Chat booking is paused for testing. No appointment was created. Please call the team at 919-737-7896 if you need to book now.');
   if (!details || typeof details !== 'object') throw new Error('Missing booking details.');
   const requestId = String(details.requestId || '');
-  const start = new Date(String(details.start || ''));
+  const start = adminCustom ? adminCustomRange_(details).start : new Date(String(details.start || ''));
   const name = String(details.name || '').trim().slice(0, 100);
   const email = String(details.email || '').trim().toLowerCase().slice(0, 200);
   const phone = String(details.phone || '').trim().slice(0, 30);
@@ -450,10 +451,12 @@ function bookAppointment_(details, authorizedAdmin) {
     const receiptKey = 'chat-booking-receipt-' + requestId;
     const previous = cache.get(receiptKey);
     if (previous) return JSON.parse(previous);
-    if (!chatSlotFree_(start, chatBookingWindows_())) throw new Error('That time was taken. Please choose another.');
+    const customCheck = adminCustom ? adminCheckCustomTime_(details) : null;
+    if (adminCustom ? !customCheck.available : !chatSlotFree_(start, chatBookingWindows_()))
+      throw new Error(adminCustom ? 'This custom time overlaps an existing calendar event. Check it again and choose another time.' : 'That time was taken. Please choose another.');
     const end = new Date(start.getTime() + appointmentMinutes * 60000);
     const assignment = chatAssignmentRows_();
-    const availableHosts = chatAvailableHosts_(start, end);
+    const availableHosts = adminCustom ? CHAT_HOSTS.filter(function (host) { return preferredHost === 'Both' || host.name === preferredHost; }) : chatAvailableHosts_(start, end);
     const choice = bothRequested ? (availableHosts.length === CHAT_HOSTS.length ? {
       host: { name: 'Both', inviteEmail: CHAT_HOSTS.map(function (host) { return host.inviteEmail; }).join(',') },
       reason: 'Both hosts requested'

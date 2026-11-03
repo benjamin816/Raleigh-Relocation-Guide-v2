@@ -70,3 +70,14 @@ Rollback copies of both branches and current live Code.gs are in the verified
 local backup `backups/chat-live-20261102-155810/`. Its Git bundle preserves local
 Test, remote Test and remote main history before promotion. Version 17 remains
 available in Apps Script deployment history.
+
+
+## Private admin custom times (November 3, 2026)
+
+Each of the five visible day columns has a bottom `+` control after a host is chosen. The dialog accepts a custom date and Eastern time, checks calendars, then lets the admin select the checked time and finish the normal client-details form. These are one-off 60-minute appointments within the next 365 days; they do not change public schedule windows or add inventory.
+
+`customCheck` and `customBook` are actions inside `adminPortalRequest`, after the existing account/device-session verification. They are not public bridge methods. `customBook` uses the same event/invitation, host assignment, ledger, lead and pre-call pipeline as normal bookings. It checks calendars again under the existing booking lock immediately before creation and preserves idempotency. A conflict or calendar-read failure prevents booking; there is no override.
+
+For the selected host(s), every overlapping real source-calendar event blocks a custom time, including events marked Free. Synthetic mirror blocks are ignored; assigned team appointments still reserve their assigned host even when the shared-calendar event is Free. Adjacent events are allowed. Conflict responses include only host names and start/end times, never calendar titles, descriptions, attendee lists or calendar IDs. Both requires both hosts to be clear. DST skipped or repeated local start times are rejected explicitly rather than guessed.
+
+Focused tests: `node --test tests/admin-custom-time.test.cjs tests/admin-custom-time-ui.test.cjs`. The backend calendars, writes and UI fetch calls are all in-memory fixtures; no real appointments or invitations are created during verification. Isolated browser fixture/screenshots live under ignored `output/admin-custom-time-review/`.

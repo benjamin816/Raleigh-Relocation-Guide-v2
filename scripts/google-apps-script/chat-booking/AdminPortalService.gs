@@ -102,6 +102,8 @@ function adminPortalRequest(credential, action, payload) {
     case 'appointments': return adminUpcoming_();
     case 'analytics': return adminAnalytics_(String(data.range || 'today'));
     case 'book': return bookAppointment_(data, true);
+    case 'customCheck': return adminCheckCustomTime_(data);
+    case 'customBook': return bookAppointment_(data, true, true);
     case 'assignment': return adminChangeAssignment_(data, viewer);
     case 'cancel': return adminCancelAppointment_(data, viewer);
     default: throw new Error('Unknown admin action.');
@@ -320,4 +322,59 @@ function adminPortalSmoke() {
   const upcoming = adminUpcoming_();
   console.log(JSON.stringify({ visits: analytics.visits, stale: analytics.stale,
     appointments: upcoming.appointments.length, nextUp: upcoming.nextUp }));
+}
+
+
+/** Private one-off time; never changes CHAT_BOOKING_WINDOWS or the public feed. */
+function adminCustomRange_(data) {
+  const host = String(data.preferredHost || data.host || '');
+  if (!/^(Benjamin|Ricardo|Both)$/.test(host)) throw new Error('Choose Benjamin, Ricardo, or Both.');
+  const date = String(data.date || ''), time = String(data.time || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(time))
+    throw new Error('Enter a valid date and time in Eastern Time.');
+  const wall = new Date(date + 'T' + time + ':00Z');
+  if (isNaN(wall.getTime()) || wall.toISOString().slice(0, 16) !== date + 'T' + time)
+    throw new Error('Enter a valid calendar date.');
+  // Resolve against the named zone, not the server/browser timezone. The two
+  // possible Eastern offsets are verified by a round trip through Google.
+  const candidates = [240, 300].map(function (minutes) { return new Date(wall.getTime() + minutes * 60000); })
+    .filter(function (start) { return Utilities.formatDate(start, CHAT_ZONE, 'yyyy-MM-dd HH:mm') === date + ' ' + time; });
+  if (!candidates.length) throw new Error('That Eastern time does not exist because the clocks change. Choose another time.');
+  if (candidates.length > 1) throw new Error('That Eastern time occurs twice because the clocks change. Choose an unambiguous time.');
+  const start = candidates[0];
+  if (start.getTime() <= Date.now() || start.getTime() > Date.now() + 365 * 86400000)
+    throw new Error('Choose a future time within the next 365 days.');
+  return { host: host, start: start, end: new Date(start.getTime() + CHAT_MINUTES * 60000) };
+}
+
+function adminCheckCustomTime_(data) {
+  const range = adminCustomRange_(data), conflicts = [], seen = {};
+  const selected = CHAT_HOSTS.filter(function (host) { return range.host === 'Both' || host.name === range.host; });
+  function add(host, first, last) {
+    if (first.getTime() >= range.end.getTime() || last.getTime() <= range.start.getTime()) return;
+    const key = host + first.toISOString() + last.toISOString();
+    if (!seen[key]) { seen[key] = true; conflicts.push({ host: host, start: first.toISOString(), end: last.toISOString() }); }
+  }
+  try {
+    selected.forEach(function (host) {
+      host.calendars.forEach(function (id) {
+        chatCalendar_(id).getEvents(range.start, range.end).forEach(function (event) {
+          if (event.getTag('MIRROR_BLOCK') === '1' || event.getTag('MIRROR_SOURCE')) return;
+          // Custom booking warns/blocks on real source events even if marked Free.
+          add(host.name, event.getStartTime(), event.getEndTime());
+        });
+      });
+    });
+    const teamEvents = chatCalendar_(CHAT_CALENDAR_ID).getEvents(range.start, range.end);
+    const assigned = chatAssignedBusy_(range.start, range.end, null, teamEvents);
+    selected.forEach(function (host) {
+      assigned[host.name].forEach(function (times) { add(host.name, new Date(times[0]), new Date(times[1])); });
+    });
+    chatBusyEvents_(CHAT_CALENDAR_ID, range.start, range.end, true, teamEvents).forEach(function (event) {
+      if (/^Exploration Call: Living in Raleigh Team/i.test(event.getTitle())) return;
+      selected.forEach(function (host) { add(host.name, event.getStartTime(), event.getEndTime()); });
+    });
+  } catch (_) { throw new Error('Could not read all required calendars. This custom time cannot be confirmed. Please retry.'); }
+  return { available: !conflicts.length, host: range.host, start: range.start.toISOString(), end: range.end.toISOString(),
+    durationMinutes: CHAT_MINUTES, timeZone: CHAT_ZONE, conflicts: conflicts.slice(0, 20) };
 }
