@@ -123,6 +123,9 @@
         throw new Error('The booking service needs its availability update before this page can show times.');
       }
       allSlots = result.slots; nextUp = result.nextUp; unavailableHosts = result.unavailableHosts || [];
+      var warning = document.getElementById('calendar-access-warning');
+      warning.textContent = unavailableHosts.length ? 'Calendar access needs attention for ' + unavailableHosts.join(' and ') + '. Their openings are hidden until every required calendar can be checked.' : '';
+      warning.hidden = !unavailableHosts.length;
       if (unavailableHosts.length && preserveNotice !== true) notice('Calendar access needs attention for ' + unavailableHosts.join(' and ') + '. Their openings are hidden until every required calendar can be checked.', true);
       document.getElementById('next-up').textContent = 'Based on round robin, ' + nextUp + ' is next up. Choose who will take this call.';
       loading = false; render();
@@ -130,6 +133,8 @@
   }
   function changeHost() { closeCustom(); clearCustom(); currentHost = document.querySelector('input[name="host"]:checked').value; pageIndex = 0; render();
     var blocked = unavailableHosts.filter(function (name) { return currentHost === 'Both' || currentHost === name; });
+    var warning = document.getElementById('calendar-access-warning');
+    warning.hidden = !blocked.length; warning.textContent = blocked.length ? 'Calendar access needs attention for ' + blocked.join(' and ') + '. No booking can be confirmed until every required calendar can be checked.' : '';
     notice(blocked.length ? 'Calendar access needs attention for ' + blocked.join(' and ') + '. No booking can be confirmed until every required calendar can be checked.' : '', !!blocked.length);
   }
   function clearCustom() {
