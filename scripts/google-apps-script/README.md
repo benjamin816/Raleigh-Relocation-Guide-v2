@@ -89,3 +89,14 @@ To rebuild the trigger, run `resetBoldTrailLeadTrigger()` and then `installBoldT
 
 For the Relo Guide delivery test helper, you can optionally set `RELO_GUIDE_TEST_EMAIL` in the website-to-sheet Apps Script project. If it is blank, the test helper falls back to `benjamin.raleighrealtor@gmail.com`.
 If you want the guide email to send from a different existing Gmail alias, set `RELO_GUIDE_FROM_ALIAS` to that alias in Script Properties. The alias still has to already exist on the connected Gmail account.
+
+
+## Admin lead source and absent quiz data — local patch, November 3, 2026
+
+- `website-to-sheet-apps-script.txt` puts the human-readable source form/lead magnet first in every ordinary admin lead alert, with an escaped HTML source header and matching first line in plain text. Source page/key and the existing contact/detail sections remain below it. The existing admin recipient, alias, attachments and client-email routing are unchanged.
+- Source labels cover buyer/seller consultation pop-ups, home valuation, call-me, new construction, relocation-guide requests, suburb/neighborhood quizzes, website chat and optional pre-approval uploads. Calculator payloads are labeled when received by this handler; the calculator's separate hosted capture/notification backend is not present in this checkout and has not been modified.
+- Missing/JSON-null/empty quiz results and answers are stored as blank. Genuine stored quiz arrays and legacy named picks are retained. Explicit non-quiz submissions are not classified as quizzes merely because they carry stale quiz fields or appear on a quiz page.
+- `suburb-hood-quiz-results-email-apps-script.txt` now restricts its pending-email scan to actual quiz submissions. Existing non-quiz rows with literal `null` are skipped without changing their quiz-email status. Genuine quiz submissions missing their results still report that error; this patch does not rewrite historical sheet cells or resend prior emails.
+- The guide path currently sends the existing requested guide to the visitor, not a separate admin lead alert. That routing is preserved. Its normalized source is available to the common admin renderer without adding another notification or duplicate delivery.
+- Verify with `node --test tests/admin-lead-email-source.test.cjs`. Set `LEAD_EMAIL_RENDER_FIXTURES=1` to save the exact rendered email HTML and fixture results under `output/admin-lead-email-source-review/`. All Gmail, Sheet and quiz-send actions in these tests are in-memory mocks.
+- Deployment remains pending: update the existing website lead receiver and quiz-results sender projects with these two scripts through the normal Test/Main and Apps Script release workflow. Saving this local patch does not update either live project, install/restart triggers, or send test leads.

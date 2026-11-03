@@ -264,24 +264,19 @@ function normalizeLead_(p) {
     clean_(p.requested_contact_intent) || clean_(p.requested_contact_interest)
   );
   const requestedIntentMeta = requestedContactIntentMeta_(requestedContactIntent);
-  const quizResults = extractQuizResults_(p.results);
-  const quizType = clean_(p.quiz_type);
-  const quizTitle = clean_(p.quiz_title);
-  const quizCity = clean_(p.quiz_city);
-  const quizSlug = clean_(p.quiz_slug);
+  const submittedResults = quizResultEntries_(p.results);
+  const resultEntries = submittedResults.length ? submittedResults : quizResultEntries_(p.quiz_results_json);
+  const quizResults = extractQuizResults_(resultEntries);
+  const quizType = quizText_(p.quiz_type);
+  const quizTitle = quizText_(p.quiz_title);
+  const quizCity = quizText_(p.quiz_city);
+  const quizSlug = quizText_(p.quiz_slug);
   const sourcePage = clean_(p.source_page) || clean_(p.source);
-  const normalizedSourceForQuiz = sourcePage.toLowerCase();
-  const isNeighborhoodQuizLead = Boolean(
-    quizType === 'neighborhood_fit' ||
-    /neighborhood fit/i.test(quizTitle)
-  );
-  const isSuburbQuizLead = Boolean(
-    quizType ||
-    quizTitle ||
-    clean_(p.quiz_results_json) ||
-    normalizedSourceForQuiz.indexOf('/quiz') !== -1 ||
-    normalizedSourceForQuiz.indexOf('raleigh-suburb-quiz') !== -1
-  ) && !isNeighborhoodQuizLead;
+  const quizIdentity = Object.assign({}, p, { source_page: sourcePage });
+  const isQuiz = isQuizSubmission_(quizIdentity);
+  const isNeighborhoodQuizLead = isQuiz && (leadType === 'neighborhood_quiz' ||
+    quizType === 'neighborhood_fit' || /neighborhood/i.test(quizTitle));
+  const isSuburbQuizLead = isQuiz && !isNeighborhoodQuizLead;
 
   return {
     submitted_at: clean_(p.submitted_at) || new Date().toISOString(),
@@ -332,11 +327,11 @@ function normalizeLead_(p) {
     home_eval_property_address: clean_(p.home_eval_property_address),
 
     wants_consultation: toBoolean_(p.wantsConsultation || p.wants_consultation),
-    quiz_top_pick: clean_(quizResults.topPick),
-    quiz_second_pick: clean_(quizResults.secondPick),
-    quiz_third_pick: clean_(quizResults.thirdPick),
-    quiz_results_json: safeJsonString_(p.results),
-    quiz_answers_json: safeJsonString_(p.answers),
+    quiz_top_pick: quizText_(quizResults.topPick || p.quiz_top_pick),
+    quiz_second_pick: quizText_(quizResults.secondPick || p.quiz_second_pick),
+    quiz_third_pick: quizText_(quizResults.thirdPick || p.quiz_third_pick),
+    quiz_results_json: resultEntries.length ? JSON.stringify(resultEntries) : '',
+    quiz_answers_json: safeJsonString_(p.answers || p.quiz_answers_json),
     submission_id: clean_(p.submission_id)
   };
 }
@@ -995,7 +990,8 @@ function sendLeadEmail_(lead, raw, attachment) {
     relo_guide: 'New Raleigh Relocation Guide Request - Website'
   };
   let subject = subjectByType[lead.lead_type] || 'New Website Lead';
-  if (hasText_(lead.quiz_title)) {
+  const isQuizWithResults = isQuizSubmission_(lead) && hasQuizResults_(lead);
+  if (isQuizWithResults && hasText_(lead.quiz_title)) {
     subject = 'New ' + clean_(lead.quiz_title) + ' Lead - Website';
   } else if ((lead.lead_type === 'suburb_quiz' || lead.lead_type === 'neighborhood_quiz') && hasText_(lead.quiz_city)) {
     subject = 'New ' + clean_(lead.quiz_city) + ' Neighborhood Fit Lead - Website';
@@ -1005,6 +1001,8 @@ function sendLeadEmail_(lead, raw, attachment) {
   }
 
   const lines = [];
+  lines.push('SOURCE FORM: ' + leadSourceLabel_(lead, raw));
+  lines.push('');
   lines.push('New website lead received.');
   lines.push('');
   lines.push('Lead Type: ' + leadTypeLabel);
@@ -1077,7 +1075,7 @@ function sendLeadEmail_(lead, raw, attachment) {
     addFieldLineIfPresent_(newConstructionLines, 'Message', lead.new_construction_message || lead.requested_contact_notes);
     appendSectionIfAny_(lines, 'New Construction Inquiry', newConstructionLines);
   }
-  if (lead.lead_type === 'suburb_quiz' || lead.lead_type === 'neighborhood_quiz' || hasText_(lead.quiz_top_pick) || hasText_(lead.quiz_results_json)) {
+  if (isQuizWithResults) {
     const quizLines = [];
     addFieldLineIfPresent_(quizLines, 'Quiz Type', lead.quiz_type);
     addFieldLineIfPresent_(quizLines, 'Quiz Title', lead.quiz_title);
@@ -1296,6 +1294,14 @@ function sendAdminAlertEmail_(subject, body, attachments) {
   }
 
   if (attachments && attachments.length) options.attachments = attachments;
+  const bodyLines = String(body || '').split('\n');
+  if (bodyLines[0].indexOf('SOURCE FORM: ') === 0) {
+    const escape = function (value) { return String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
+    options.htmlBody = '<div style="font-family:Arial,sans-serif;color:#173f33;max-width:720px">' +
+      '<div style="padding:20px;background:#edf5ef;border-left:5px solid #d6aa2b"><strong>Source form / lead magnet</strong>' +
+      '<h1 style="font-size:22px;margin:8px 0 0">' + escape(bodyLines.shift().slice('SOURCE FORM: '.length)) + '</h1></div>' +
+      '<div style="white-space:pre-wrap;padding:20px;line-height:1.5">' + escape(bodyLines.join('\n')) + '</div></div>';
+  }
 
   GmailApp.sendEmail(ALERT_EMAIL, subject, body, options);
 }
@@ -1350,18 +1356,71 @@ function extractQuizResults_(results) {
     return { topPick: '', secondPick: '', thirdPick: '' };
   }
   return {
-    topPick: clean_(results[0] && results[0].suburb),
-    secondPick: clean_(results[1] && results[1].suburb),
-    thirdPick: clean_(results[2] && results[2].suburb)
+    topPick: quizText_(results[0] && (results[0].suburb || results[0].neighborhood || results[0].name)),
+    secondPick: quizText_(results[1] && (results[1].suburb || results[1].neighborhood || results[1].name)),
+    thirdPick: quizText_(results[2] && (results[2].suburb || results[2].neighborhood || results[2].name))
   };
 }
 
-function safeJsonString_(value) {
-  try {
-    return JSON.stringify(value == null ? null : value);
-  } catch (_) {
-    return '';
+function quizText_(value) {
+  const text = clean_(value);
+  return /^(?:null|undefined|\[\]|\{\})$/i.test(text) ? '' : text;
+}
+
+function quizResultEntries_(value) {
+  if (typeof value === 'string') {
+    try { value = JSON.parse(value); } catch (_) { return []; }
   }
+  return Array.isArray(value) ? value.filter(function (entry) {
+    return entry && typeof entry === 'object' && quizText_(entry.suburb || entry.neighborhood || entry.name);
+  }) : [];
+}
+
+function isQuizSubmission_(lead) {
+  const type = clean_(lead.lead_type).toLowerCase();
+  if (type && type !== 'suburb_quiz' && type !== 'neighborhood_quiz') return false;
+  if (type) return true;
+  if (quizText_(lead.quiz_type) || quizText_(lead.quiz_title)) return true;
+  return [lead.source_page, lead.source_key, lead.source].some(function (value) {
+    const path = clean_(value).toLowerCase().replace(/^https?:\/\/[^/]+/, '').split(/[?#]/)[0];
+    return /^\/(?:quiz|raleigh-suburb-quiz)(?:\/|$)/.test(path) || /^(?:suburb_quiz|neighborhood_quiz)$/.test(path);
+  });
+}
+
+function hasQuizResults_(lead) {
+  return Boolean(quizText_(lead.quiz_top_pick) || quizResultEntries_(lead.quiz_results_json).length);
+}
+
+function safeJsonString_(value) {
+  if (typeof value === 'string') {
+    try { value = JSON.parse(value); } catch (_) { return ''; }
+  }
+  if (!value || typeof value !== 'object' || !Object.keys(value).length) return '';
+  try { return JSON.stringify(value); } catch (_) { return ''; }
+}
+
+function leadSourceLabel_(lead, raw) {
+  raw = raw || {};
+  const key = clean_(lead.source_key).toLowerCase();
+  const requested = clean_(lead.requested_contact_source);
+  const form = clean_(raw.form_name);
+  const source = [key, requested, form].join(' ').toLowerCase();
+  let page = clean_(lead.source_page).replace(/^https?:\/\/[^/]+/i, '').split(/[?#]/)[0];
+  const pages = { '/': 'Home page', '/buy/': 'Buyer resources page', '/sell/': 'Seller resources page', '/consult/': 'Consult page', '/relocation/': 'Relocation page', '/learning-center/': 'Learning Center' };
+  page = pages[page] || page;
+  const onPage = function (label) { return label + (page ? ' — ' + page : ''); };
+  if (key === 'website_rule_chat') return /pre.?approval/i.test(requested) ? 'Website chat — optional pre-approval upload' : onPage('Website chat contact form');
+  if (key === 'website_live_chat') return onPage('Website live chat');
+  if (/home_call_me_popup/.test(source)) return onPage('Call me contact pop-up');
+  if (/relo_guide/.test(key) || lead.lead_type === 'relo_guide') return '2026 Raleigh Relocation Guide download';
+  if (isQuizSubmission_(lead)) return (quizText_(lead.quiz_title) || (lead.lead_type === 'neighborhood_quiz' ? (quizText_(lead.quiz_city) || 'Raleigh') + ' Neighborhood Fit Quiz' : 'Raleigh Suburb Quiz')) + ' — results request';
+  if (/calculator/.test(source) || /\/calculator(?:\/|$)/.test(clean_(lead.source_page))) return onPage(/message|inquiry/.test(source) ? 'Investment calculator inquiry form' : 'Investment calculator contact capture');
+  if (lead.lead_type === 'home_eval' || /sell_home_valuation/.test(source)) return onPage('Home valuation request form');
+  if (lead.lead_type === 'new_construction' || /new_construction_page_form/.test(source)) return onPage('New construction inquiry form');
+  if (lead.lead_type === 'buyer') return onPage('Buyer consultation pop-up');
+  if (lead.lead_type === 'seller') return onPage('Seller consultation pop-up');
+  const detail = form || requested || (key && !/^https?:|^\//.test(key) ? key : '');
+  return onPage('Website contact form' + (detail ? ' — ' + detail.replace(/_/g, ' ') : ''));
 }
 
 function yesNo_(value) {
