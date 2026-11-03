@@ -401,26 +401,20 @@ function chatVideoEvent_(requestId, start, end, name, email, phone, notes, host,
     conferenceData: { createRequest: { requestId: requestId, conferenceSolutionKey: { type: 'hangoutsMeet' } } },
     reminders: { useDefault: false, overrides: [{ method: 'email', minutes: 1440 }, { method: 'popup', minutes: 30 }] }
   };
-  const url = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CHAT_CALENDAR_ID) +
-    '/events?conferenceDataVersion=1&sendUpdates=all';
-  const response = UrlFetchApp.fetch(url, {
-    method: 'post', contentType: 'application/json', payload: JSON.stringify(payload),
-    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true
-  });
-  if (response.getResponseCode() < 200 || response.getResponseCode() >= 300) {
-    console.error('Video calendar insert failed: ' + response.getResponseCode() + ' ' + response.getContentText());
-    throw new Error('The video call could not be created. Please try again later.');
-  }
-  const event = JSON.parse(response.getContentText());
+  // Use the already-enabled Calendar service, not UrlFetchApp. Calendar access
+  // must not depend on the separate outbound-web-request permission.
+  const event = Calendar.Events.insert(payload, CHAT_CALENDAR_ID, { conferenceDataVersion: 1, sendUpdates: 'all' });
   let videoUrl = event.hangoutLink || '';
   if (!videoUrl && event.id) {
-    const getUrl = 'https://www.googleapis.com/calendar/v3/calendars/' + encodeURIComponent(CHAT_CALENDAR_ID) +
-      '/events/' + encodeURIComponent(event.id);
     for (let attempt = 0; attempt < 5 && !videoUrl; attempt++) {
       Utilities.sleep(400);
-      const check = UrlFetchApp.fetch(getUrl, { headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
-      if (check.getResponseCode() !== 200) break;
-      const updated = JSON.parse(check.getContentText());
+      let updated;
+      try { updated = Calendar.Events.get(CHAT_CALENDAR_ID, event.id); }
+      catch (error) {
+        // The event exists. Preserve the booking receipt instead of throwing a
+        // post-insert error that could lead the visitor to book a duplicate.
+        console.warn('Meet link readback pending: ' + error); break;
+      }
       videoUrl = updated.hangoutLink || '';
       if (updated.conferenceData && updated.conferenceData.createRequest && updated.conferenceData.createRequest.status &&
           updated.conferenceData.createRequest.status.statusCode === 'failure') break;
@@ -559,4 +553,13 @@ function bookAppointment_(details, authorizedAdmin, adminCustom) {
     cache.put(receiptKey, JSON.stringify(result), 21600);
     return result;
   } finally { lock.releaseLock(); }
+}
+
+// Owner-run, read-only deployment check. Creates no event and sends no email.
+function bookingCalendarReadiness() {
+  const calendar = Calendar.Calendars.get(CHAT_CALENDAR_ID);
+  const recent = Calendar.Events.list(CHAT_CALENDAR_ID, { timeMin: new Date(Date.now() - 3600000).toISOString(), timeMax: new Date(Date.now() + 3600000).toISOString(), maxResults: 10 });
+  const result = { calendarReadable: calendar.id === CHAT_CALENDAR_ID, calendarServiceReady: Array.isArray(recent.items || []),
+    videoBookingUsesCalendarService: true, requiresUrlFetchForBooking: false, createsEvents: false };
+  console.log(JSON.stringify(result)); return result;
 }

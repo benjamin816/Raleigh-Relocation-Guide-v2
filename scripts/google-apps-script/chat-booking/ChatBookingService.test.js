@@ -125,14 +125,13 @@ assert.equal(leadRows.length, 2, 'One booking row and one header');
 assert.equal(leadRows[1][6], "'=IMPORTXML(\"bad\")", 'Spreadsheet formula is escaped');
 assert.equal(assignmentRows[0][4], 'Benjamin', 'First tie goes to Benjamin');
 let videoPayload;
-context.ScriptApp = { getOAuthToken() { return 'test-token'; } };
-context.UrlFetchApp = { fetch(url, options) {
-  assert.match(url, /conferenceDataVersion=1/);
-  videoPayload = JSON.parse(options.payload);
-  return { getResponseCode() { return 200; }, getContentText() { return JSON.stringify({
-    iCalUID: 'video-event@example.com', hangoutLink: 'https://meet.google.com/abc-defg-hij'
-  }); } };
-} };
+context.UrlFetchApp = { fetch() { throw Error('UrlFetchApp permission unavailable'); } };
+context.Calendar = { Events: { insert(payload, calendarId, options) {
+  assert.equal(calendarId, 'livinginraleighteam@gmail.com');
+  assert.equal(options.conferenceDataVersion, 1); assert.equal(options.sendUpdates, 'all');
+  videoPayload = payload;
+  return { id: 'video-resource', iCalUID: 'video-event@example.com', hangoutLink: 'https://meet.google.com/abc-defg-hij' };
+} } };
 const video = context.bookChatAppointment({ ...details, requestId: 'test-video-123456789', email: 'video@example.com', callType: 'video' });
 assert.equal(video.videoUrl, 'https://meet.google.com/abc-defg-hij');
 assert.equal(videoPayload.conferenceData.createRequest.conferenceSolutionKey.type, 'hangoutsMeet');
@@ -172,3 +171,11 @@ const beforePaused=createdEvents;
 assert.throws(()=>context.bookChatAppointment({...referralDetails,requestId:'test-referral-paused123'}),/paused for testing/);
 assert.equal(createdEvents,beforePaused,'Referral cannot bypass the live booking pause');
 console.log('Chat booking availability, direct booking and duplicate checks passed');
+
+// A successful insert followed by failed link lookup must still return a receipt.
+context.Calendar.Events.insert = () => ({id:'pending-resource',iCalUID:'pending-event@example.invalid'});
+context.Calendar.Events.get = () => { throw Error('temporary read failure'); };
+context.Utilities.sleep = () => {};
+const pendingVideo=context.chatVideoEvent_('isolated-request',new Date(),new Date(Date.now()+3600000),'Fixture','fixture@example.invalid','','',{name:'Ricardo',inviteEmail:'ricardo@triangleexperts.com'},'Buy');
+assert.equal(pendingVideo.id,'pending-event@example.invalid');assert.equal(pendingVideo.videoUrl,'');
+console.log('Meet creation succeeds without UrlFetchApp permission; readback failure preserves the created event receipt.');
