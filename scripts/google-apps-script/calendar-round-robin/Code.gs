@@ -17,7 +17,7 @@ const RR = {
   timeZone: 'America/New_York',
   hosts: [
     {
-      name: 'Benjamin', inviteEmail: 'benjamin.carver@exprealty.com',
+      name: 'Benjamin', inviteEmail: 'benjamin.raleighrealtor@gmail.com', aliases: ['benjamin.carver@exprealty.com'],
       calendars: [
         'benjamin.raleighrealtor@gmail.com',
         'benjamindcarver@yahoo.com',
@@ -25,7 +25,7 @@ const RR = {
       ]
     },
     {
-      name: 'Ricardo', inviteEmail: 'ricardo@triangleexperts.com',
+      name: 'Ricardo', inviteEmail: 'ricardo.realestate23@gmail.com', aliases: ['ricardo@triangleexperts.com'],
       calendars: ['ricardo.collier90@gmail.com', 'ricardo@triangleexperts.com']
     }
   ]
@@ -336,7 +336,7 @@ function rrAssignBookings_(target,sheet,start,end,busy,cutover) {
       stats.needsReview++; continue;
     }
     const existingHosts=rrGuestAssignment_(event);
-    const choice=existingHosts ? {host:{name:existingHosts.name,inviteEmail:existingHosts.email},reason:'Existing calendar attendees'} : rrPickHost_(available,counts,rows);
+    const choice=existingHosts ? {host:{name:existingHosts.name,inviteEmail:RR.hosts.filter(h=>existingHosts.name==='Both'||h.name===existingHosts.name).map(h=>h.inviteEmail).join(',')},reason:'Existing calendar attendees'} : rrPickHost_(available,counts,rows);
     const link=rrEventLink_(event);
     const prior=byId[id];
     const nowText=rrFormat_(new Date());
@@ -375,7 +375,7 @@ function rrSetTeamFree_(event) {
 function rrGuestAssignment_(event) {
   const guests=(event.getGuestList()||[]).map(g=>String(g.getEmail()||'').toLowerCase());
   const present=RR.hosts.map(h=>{
-    const matched=[h.inviteEmail].concat(h.calendars).find(email=>guests.includes(email.toLowerCase()));
+    const matched=[h.inviteEmail].concat(h.aliases || [], h.calendars).find(email=>guests.includes(email.toLowerCase()));
     return matched ? { name:h.name, email:matched } : null;
   }).filter(Boolean);
   if (!present.length) return null;

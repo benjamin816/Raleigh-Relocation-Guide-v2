@@ -201,7 +201,7 @@ function adminUpcoming_() {
       const links = adminEventLinks_(event, details.type);
       const guests = event.getGuestList().map(function (guest) { return guest.getEmail(); });
       const actualHosts = CHAT_HOSTS.filter(function (host) {
-        return [host.inviteEmail].concat(host.calendars).some(function (email) { return guests.some(function (guest) { return guest.toLowerCase() === email.toLowerCase(); }); });
+        return [host.inviteEmail].concat(host.aliases || [], host.calendars).some(function (email) { return guests.some(function (guest) { return guest.toLowerCase() === email.toLowerCase(); }); });
       });
       const actualName = actualHosts.length === 2 ? 'Both' : actualHosts.length === 1 ? actualHosts[0].name : '';
       if (actualName && row.length && (row[4] !== actualName)) {
@@ -214,6 +214,7 @@ function adminUpcoming_() {
       return { id: id, start: event.getStartTime().toISOString(), end: event.getEndTime().toISOString(),
         title: event.getTitle(), client: details.client, type: details.type, notes: details.notes,
         purpose: details.purpose, host: actualName || row[4] || 'Unassigned', hostEmail: row[5] || '',
+        hostInvitationNeedsUpdate: actualHosts.some(function (host) { return !guests.some(function (email) { return email.toLowerCase() === host.inviteEmail.toLowerCase(); }) || (host.aliases || []).some(function (alias) { return guests.some(function (email) { return email.toLowerCase() === alias.toLowerCase(); }); }); }),
         email: details.email || tracked.email, phone: details.phone || tracked.phone,
         videoUrl: links.videoUrl, calendarUrl: links.calendarUrl,
         emailStatus: tracked.status || 'Not yet logged', guests: guests,
@@ -274,7 +275,11 @@ function adminChangeAssignment_(data, viewer) {
       const wanted = target === 'Both' || target === host.name;
       const present = currentGuests.includes(host.inviteEmail.toLowerCase());
       if (wanted && !present) event.addGuest(host.inviteEmail);
-      if (!wanted) [host.inviteEmail].concat(host.calendars).forEach(function (email) {
+      // Only an explicit admin action replaces a legacy host invitation.
+      if (wanted) (host.aliases || []).forEach(function (email) {
+        if (email.toLowerCase() !== CHAT_CALENDAR_ID.toLowerCase() && currentGuests.includes(email.toLowerCase())) event.removeGuest(email);
+      });
+      if (!wanted) [host.inviteEmail].concat(host.aliases || [], host.calendars).forEach(function (email) {
         if (email.toLowerCase() !== CHAT_CALENDAR_ID.toLowerCase() && currentGuests.includes(email.toLowerCase())) event.removeGuest(email);
       });
     });

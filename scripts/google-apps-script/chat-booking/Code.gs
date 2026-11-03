@@ -9,11 +9,11 @@ const CHAT_TEAM_FREE_FROM = '2026-10-29T22:10:37Z';
 const CHAT_TEAM_FREE_EXCLUDED = '0k0km3phn87a8g0m8f2pguhf3k'; // Existing Friday appointment: leave untouched.
 // Keep these sources aligned with the live round-robin calendar script's RR.hosts.
 const CHAT_HOSTS = [
-  { name: 'Benjamin', inviteEmail: 'benjamin.carver@exprealty.com', calendars: [
+  { name: 'Benjamin', inviteEmail: 'benjamin.raleighrealtor@gmail.com', aliases: ['benjamin.carver@exprealty.com'], calendars: [
     'benjamin.raleighrealtor@gmail.com', 'benjamindcarver@yahoo.com',
     'mrcarver.jr01@gmail.com'
   ] },
-  { name: 'Ricardo', inviteEmail: 'ricardo@triangleexperts.com', calendars: [
+  { name: 'Ricardo', inviteEmail: 'ricardo.realestate23@gmail.com', aliases: ['ricardo@triangleexperts.com'], calendars: [
     'ricardo.collier90@gmail.com', 'ricardo@triangleexperts.com'
   ] }
 ];
@@ -142,7 +142,7 @@ function chatAssignedBusy_(start, end, excludedId, events) {
     const guests = event.getGuestList().map(function (guest) { return guest.getEmail().toLowerCase(); });
     const tagged = event.getTag('RR_ASSIGNED_HOST');
     const matched = CHAT_HOSTS.filter(function (host) {
-      return [host.inviteEmail].concat(host.calendars).some(function (email) { return guests.includes(email.toLowerCase()); });
+      return [host.inviteEmail].concat(host.aliases || [], host.calendars).some(function (email) { return guests.includes(email.toLowerCase()); });
     });
     // An invitation can be pending or marked Free on a host's copy. The actual
     // assignment still reserves that host; unknown assignments fail closed.
@@ -352,7 +352,7 @@ function chatExtraContacts_(contacts, primaryEmail) {
   if (contacts === undefined) return [];
   if (!Array.isArray(contacts) || contacts.length > 10) throw new Error('Add at most 10 additional attendees.');
   const seen = {}; seen[String(primaryEmail || '').toLowerCase()] = true;
-  const hostEmails = [CHAT_CALENDAR_ID].concat(CHAT_HOSTS.reduce(function (all, host) { return all.concat([host.inviteEmail], host.calendars); }, []));
+  const hostEmails = [CHAT_CALENDAR_ID].concat(CHAT_HOSTS.reduce(function (all, host) { return all.concat([host.inviteEmail], host.aliases || [], host.calendars); }, []));
   return contacts.map(function (contact) {
     if (!contact || typeof contact !== 'object') throw new Error('Each attendee needs a name and email.');
     const name = String(contact.name || '').trim(), email = String(contact.email || '').trim().toLowerCase(), phone = String(contact.phone || '').trim();

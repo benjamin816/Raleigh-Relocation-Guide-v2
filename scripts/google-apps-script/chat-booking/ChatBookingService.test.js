@@ -135,7 +135,7 @@ context.Calendar = { Events: { insert(payload, calendarId, options) {
 const video = context.bookChatAppointment({ ...details, requestId: 'test-video-123456789', email: 'video@example.com', callType: 'video' });
 assert.equal(video.videoUrl, 'https://meet.google.com/abc-defg-hij');
 assert.equal(videoPayload.conferenceData.createRequest.conferenceSolutionKey.type, 'hangoutsMeet');
-assert.equal(videoPayload.attendees[1].email, 'ricardo@triangleexperts.com', 'Second call balances toward Ricardo');
+assert.equal(videoPayload.attendees[1].email, 'ricardo.realestate23@gmail.com', 'Second call balances toward Ricardo');
 assert.equal(leadRows[2][7], 'Website chat · video');
 assert.equal(assignmentRows[1][4], 'Ricardo');
 assert.match(videoPayload.summary, /Exploration Call: Living in Raleigh Team \(Test Person\)/);
