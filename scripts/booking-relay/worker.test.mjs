@@ -64,3 +64,19 @@ try {
   assert.equal((await result.json()).ok,false,'Worker must preserve backend rejection');
 } finally {globalThis.fetch=originalFetch;}
 console.log('Opaque device sessions remain subject to backend verification.');
+
+let upstreamForAllowlist=0;
+try {
+ for (const [email,allowed] of [['ricardo.realestate23@gmail.com',true],['livinginraleighteam@gmail.com',true],['outsider@example.com',false]]) {
+  const before=upstreamForAllowlist;
+  globalThis.fetch=async(url,init)=>{
+   if(url.startsWith('https://oauth2.googleapis.com/tokeninfo')) return new Response(JSON.stringify({aud:'1061582134341-02v0traqlpvcu35stag49oaqh9kj5pdf.apps.googleusercontent.com',iss:'https://accounts.google.com',exp:Math.floor(Date.now()/1000)+300,email_verified:'true',email}));
+   upstreamForAllowlist++; const claim=JSON.parse(Buffer.from(JSON.parse(init.body).args[0].split('.')[1],'base64url').toString()); assert.equal(claim.email,email);
+   return new Response(JSON.stringify({ok:true,result:{viewer:{email}}}));
+  };
+  const response=await relay.fetch(request('https://raleighncguide.com','POST',{method:'admin',args:['x'.repeat(150),'session',{}]}),env);
+  assert.equal((await response.json()).ok,allowed,email);
+  assert.equal(upstreamForAllowlist-before,allowed?1:0);
+ }
+} finally {globalThis.fetch=originalFetch;}
+console.log('Google-verified account allowlist accepts both requested emails and rejects unrelated accounts before forwarding.');

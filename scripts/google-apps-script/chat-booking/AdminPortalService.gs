@@ -3,7 +3,9 @@
 const ADMIN_ALLOWED_EMAILS = [
   'benjamin.carver@exprealty.com',
   'benjamin.raleighrealtor@gmail.com',
-  'ricardo@triangleexperts.com'
+  'ricardo@triangleexperts.com',
+  'ricardo.realestate23@gmail.com',
+  'livinginraleighteam@gmail.com'
 ];
 const ADMIN_ANALYTICS_SHEET_ID = '1onTitTejjU9UxZP6TW5pFj0TFdFq0cewPPIS52cieRE';
 const ADMIN_PRECALL_TAB = 'Appointments Booked Directly';

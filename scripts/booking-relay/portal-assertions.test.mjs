@@ -32,3 +32,8 @@ assert.throws(() => scope.adminVerifyRelay_(assertion(), 'cancel', {}), /does no
 assert.throws(() => scope.adminVerifyRelay_(assertion(), 'session', { id: 'changed' }), /does not match/);
 assert.throws(() => scope.adminVerifyRelay_(assertion().slice(0, -4) + 'xxxx', 'session', {}), /Invalid portal/);
 console.log('Portal assertions reject forgery, replay, expired grants, unapproved accounts, and altered actions/data.');
+
+for (const email of ['ricardo.realestate23@gmail.com','livinginraleighteam@gmail.com']) {
+  assert.equal(scope.adminVerifyRelay_(assertion({email}), 'session', {}).email,email);
+}
+console.log('Both newly authorized portal accounts pass signed assertion checks; unlisted accounts remain rejected.');

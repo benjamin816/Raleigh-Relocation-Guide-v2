@@ -7,7 +7,7 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 const METHODS = new Set(['slots', 'check', 'suggest', 'book', 'adminConfig', 'admin']);
 const ADMIN_CLIENT_ID = '1061582134341-02v0traqlpvcu35stag49oaqh9kj5pdf.apps.googleusercontent.com';
-const ADMIN_EMAILS = new Set(['benjamin.raleighrealtor@gmail.com', 'benjamin.carver@exprealty.com', 'ricardo@triangleexperts.com']);
+const ADMIN_EMAILS = new Set(['benjamin.raleighrealtor@gmail.com', 'benjamin.carver@exprealty.com', 'ricardo@triangleexperts.com', 'ricardo.realestate23@gmail.com', 'livinginraleighteam@gmail.com']);
 function base64url(bytes) {
   return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
