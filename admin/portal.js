@@ -267,7 +267,6 @@
         }
         (appt.additionalAttendees || []).forEach(function (contact) { details.appendChild(detail('Additional attendee', contact.name + ' · ' + contact.email + (contact.phone ? ' · ' + contact.phone : ''))); });
         var actions = document.createElement('div'); actions.className = 'actions';
-        if (appt.hostInvitationNeedsUpdate && /^(Benjamin|Ricardo|Both)$/.test(appt.host)) actions.appendChild(actionButton('Update host invitation', function (event) { changeHost(appt, appt.host, event.currentTarget); }));
         actions.appendChild(actionButton('Add attendee', function () { openAttendee(appt); }));
         ['Benjamin', 'Ricardo', 'Both'].filter(function (host) { return host !== appt.host; }).forEach(function (host) {
           actions.appendChild(actionButton(host === 'Both' ? 'Add both hosts' : 'Transfer to ' + host,

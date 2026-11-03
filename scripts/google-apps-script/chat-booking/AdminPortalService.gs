@@ -214,7 +214,6 @@ function adminUpcoming_() {
       return { id: id, start: event.getStartTime().toISOString(), end: event.getEndTime().toISOString(),
         title: event.getTitle(), client: details.client, type: details.type, notes: details.notes,
         purpose: details.purpose, host: actualName || row[4] || 'Unassigned', hostEmail: row[5] || '',
-        hostInvitationNeedsUpdate: actualHosts.some(function (host) { return !guests.some(function (email) { return email.toLowerCase() === host.inviteEmail.toLowerCase(); }) || (host.aliases || []).some(function (alias) { return guests.some(function (email) { return email.toLowerCase() === alias.toLowerCase(); }); }); }),
         email: details.email || tracked.email, phone: details.phone || tracked.phone,
         videoUrl: links.videoUrl, calendarUrl: links.calendarUrl,
         emailStatus: tracked.status || 'Not yet logged', guests: guests,
@@ -269,16 +268,13 @@ function adminChangeAssignment_(data, viewer) {
     const row = index.byId[event.getId()];
     if (!row || row[7] !== 'Assigned') throw new Error('The appointment assignment needs manual review.');
     if (row[4] !== String(data.expectedHost || '')) throw new Error('Assignment changed. Refresh before trying again.');
+    if (row[4] === target) throw new Error('Choose a different host assignment.');
     if (adminHostConflict_(event, target)) throw new Error('That host has a conflicting calendar event. Choose another assignment.');
     const currentGuests = event.getGuestList().map(function (guest) { return guest.getEmail().toLowerCase(); });
     CHAT_HOSTS.forEach(function (host) {
       const wanted = target === 'Both' || target === host.name;
       const present = currentGuests.includes(host.inviteEmail.toLowerCase());
       if (wanted && !present) event.addGuest(host.inviteEmail);
-      // Only an explicit admin action replaces a legacy host invitation.
-      if (wanted) (host.aliases || []).forEach(function (email) {
-        if (email.toLowerCase() !== CHAT_CALENDAR_ID.toLowerCase() && currentGuests.includes(email.toLowerCase())) event.removeGuest(email);
-      });
       if (!wanted) [host.inviteEmail].concat(host.aliases || [], host.calendars).forEach(function (email) {
         if (email.toLowerCase() !== CHAT_CALENDAR_ID.toLowerCase() && currentGuests.includes(email.toLowerCase())) event.removeGuest(email);
       });
