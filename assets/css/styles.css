@@ -1539,8 +1539,8 @@ a {
 
 .page-learning-center .learning-article-figure img {
   width: 100%;
-  height: clamp(200px, 33vw, 340px);
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   display: block;
 }
 
