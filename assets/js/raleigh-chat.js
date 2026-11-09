@@ -95,6 +95,9 @@
   var storageKey = config.conversationStorageKey || "raleigh-guide-chat-v1";
   var resumeQuestionOnOpen = false;
   var storageDays = Number.isInteger(config.conversationMemoryDays) ? Math.max(1, Math.min(config.conversationMemoryDays, 365)) : 180;
+  var resumeChatMs = 7 * 86400000;
+  var returningGoal = null;
+  var returningGoals = { buying: "looking to buy a home", selling: "looking to sell a home", relocating: "planning a move to Raleigh", investing: "exploring an investment", both: "planning to sell and buy a home" };
   var state = { intent: null, combined: false, question: -1, answers: [], profile: {}, memories: {}, memoryProfiles: {}, history: [], started: false, hasUserMessage: false, completed: false, unreadCount: 0, badgeReadyAt: 0, lastFocus: null, contact: null, booking: null, questionDetour: false, offTrackOffer: false, submitting: false, ended: false, sentMessageSinceOpen: false, previousInput: "" };
   var incomingGeneration = 0;
   var incomingSequence = 0;
@@ -206,7 +209,7 @@
         unreadCount: state.unreadCount, badgeReadyAt: state.badgeReadyAt,
         intent: state.intent, combined: state.combined, question: state.question, questionDetour: state.questionDetour,
         answers: state.answers.map(redact).slice(0, 12),
-        profile: state.profile, memories: state.memories, memoryProfiles: state.memoryProfiles,
+        profile: state.profile, memories: state.memories, memoryProfiles: state.memoryProfiles, returningGoal: returningGoal,
         history: state.history.slice(-80)
       }));
     } catch (_) { /* Browsers may block local storage. Chat still works for this visit. */ }
@@ -256,8 +259,23 @@
   function restore() {
     try {
       var saved = JSON.parse(window.localStorage.getItem(storageKey) || "null");
-      if (!saved || (saved.version !== 1 && saved.version !== 2) || !Number.isFinite(saved.updatedAt) ||
-          Date.now() - saved.updatedAt > storageDays * 86400000 || saved.updatedAt > Date.now() + 86400000) return;
+      if (!saved || (saved.version !== 1 && saved.version !== 2) || !Number.isFinite(saved.updatedAt)) return;
+      var age = Date.now() - saved.updatedAt;
+      if (age > storageDays * 86400000 || age < -86400000) {
+        window.localStorage.removeItem(storageKey);
+        return;
+      }
+      if (age >= resumeChatMs) {
+        var profile = saved.profile || {};
+        var firstName = typeof profile.firstName === "string" ? engine.extractFirstName(profile.firstName) : "";
+        var goal = saved.returningGoal || (saved.combined && saved.intent === "selling" || profile.previousCombinedGoal ? "both" :
+          profile.transactionGoal || saved.intent);
+        returningGoal = Object.prototype.hasOwnProperty.call(returningGoals, goal) ? goal : null;
+        state.profile = firstName ? { firstName: firstName, introAsked: true } : {};
+        persist();
+        return;
+      }
+      returningGoal = Object.prototype.hasOwnProperty.call(returningGoals, saved.returningGoal) ? saved.returningGoal : null;
       state.started = saved.started === true;
       state.hasUserMessage = saved.hasUserMessage === true;
       state.completed = saved.completed === true;
@@ -1977,6 +1995,10 @@
       sound();
     }
     if (engine.endsConversation(value)) {
+      if (state.intent) {
+        state.profile.transactionGoal = state.intent;
+        state.profile.previousCombinedGoal = state.combined;
+      }
       state.booking = null;
       state.contact = null;
       state.intent = null;
@@ -1987,6 +2009,21 @@
       finishConversation();
       message("Take care! If you have questions later, I'll be here.", false);
       return;
+    }
+    if (typeof returningGoal !== "undefined" && returningGoal && !replaying && !safety &&
+        !engine.socialGreeting(originalValue) && !assistantTopic &&
+        !engine.asksQuestion(originalValue) && (!interpretation || interpretation.kind !== "question")) {
+      var confirmedGoal = returningGoal;
+      returningGoal = null;
+      persist();
+      if (/^(?:yes(?: please)?|yep|yeah|correct|still the same|same plan|that's right)[.!]*$/i.test(originalValue)) {
+        startFlow(confirmedGoal === "both" ? "selling" : confirmedGoal, true, confirmedGoal === "both");
+        return;
+      }
+      if (/^(?:no(?: thanks)?|not anymore|plans changed|something else)[.!]*$/i.test(originalValue)) {
+        message("What are you looking to do now?", false);
+        return;
+      }
     }
     // Boundaries and changed consent apply before name collection or time parsing.
     // Clearing a draft never cancels an existing Calendar appointment.
@@ -2454,6 +2491,7 @@
     state.question = -1;
     state.answers = [];
     state.profile = {};
+    returningGoal = null;
     state.memories = {};
     state.memoryProfiles = {};
     state.history = [];
@@ -2509,7 +2547,11 @@
     window.dispatchEvent(new CustomEvent("raleigh-chat-state", { detail: { blocked: true, reason: "custom_chat_open" } }));
     if (!state.started) {
       state.started = true;
-      message(config.welcome, false, { initial: true });
+      var name = state.profile.firstName;
+      var greeting = name || returningGoal ? "Welcome back" + (name ? ", " + name : "") + "! I'm Sam. " : "";
+      message(returningGoal ? greeting + "Last time, you were " + returningGoals[returningGoal] +
+        ". Is that still your plan?" : greeting ? greeting + "What can I help you with today?" : config.welcome,
+        false, { initial: true });
     } else if (resumeQuestionOnOpen) {
       resumeQuestionOnOpen = false;
       if (state.profile.awaitingVisitReason) message("What has you looking at our website today?", false);
