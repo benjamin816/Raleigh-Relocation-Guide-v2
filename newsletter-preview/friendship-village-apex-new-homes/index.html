@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Email preview: Moving to Raleigh? A Closer Look at Friendship Village</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, Helvetica, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #e8ecea; color: #173f33; }
+    .preview-toolbar { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 18px; background: #173f33; color: #fff; box-shadow: 0 2px 12px rgba(0,0,0,.22); }
+    .preview-title { margin: 0; font-size: 16px; line-height: 1.3; }
+    .preview-subtitle { margin: 3px 0 0; font-size: 12px; opacity: .8; }
+    .preview-toggle { display: inline-flex; flex: 0 0 auto; padding: 3px; background: #0e2d24; border: 1px solid rgba(255,255,255,.35); border-radius: 9px; }
+    .preview-toggle button { border: 0; border-radius: 6px; padding: 8px 12px; background: transparent; color: #fff; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .preview-toggle button[aria-pressed="true"] { background: #d6aa2b; }
+    .preview-stage { min-height: calc(100vh - 68px); padding: 22px; overflow: auto; }
+    .preview-frame-shell { width: 1080px; max-width: none; margin: 0 auto; background: #fff; box-shadow: 0 8px 32px rgba(20,45,37,.2); transition: width .2s ease; }
+    .preview-frame-shell[data-mode="mobile"] { width: min(390px, 100%); }
+    iframe { display: block; width: 100%; height: 1600px; border: 0; background: #fff; }
+    @media (max-width: 620px) {
+      .preview-toolbar { align-items: flex-start; padding: 10px 12px; }
+      .preview-subtitle { display: none; }
+      .preview-toggle button { padding: 7px 9px; }
+      .preview-stage { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="preview-toolbar">
+    <div>
+      <h1 class="preview-title">Email preview</h1>
+      <p class="preview-subtitle">The controls are for review only and are not part of the sendable email.</p>
+    </div>
+    <div class="preview-toggle" role="group" aria-label="Email preview size">
+      <button type="button" id="desktop-button" aria-pressed="true">Desktop</button>
+      <button type="button" id="mobile-button" aria-pressed="false">Mobile</button>
+    </div>
+  </header>
+  <main class="preview-stage">
+    <div class="preview-frame-shell" id="frame-shell" data-mode="desktop">
+      <iframe id="email-frame" title="Rendered newsletter email" src="email.html"></iframe>
+    </div>
+  </main>
+  <script>
+    (() => {
+      const shell = document.getElementById('frame-shell');
+      const frame = document.getElementById('email-frame');
+      const desktop = document.getElementById('desktop-button');
+      const mobile = document.getElementById('mobile-button');
+      function resizeFrame() {
+        try {
+          const doc = frame.contentDocument;
+          if (doc) frame.style.height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, 700) + 'px';
+        } catch (_) {}
+      }
+      function setMode(mode) {
+        const isMobile = mode === 'mobile';
+        shell.dataset.mode = mode;
+        desktop.setAttribute('aria-pressed', String(!isMobile));
+        mobile.setAttribute('aria-pressed', String(isMobile));
+        window.setTimeout(resizeFrame, 240);
+      }
+      desktop.addEventListener('click', () => setMode('desktop'));
+      mobile.addEventListener('click', () => setMode('mobile'));
+      frame.addEventListener('load', resizeFrame);
+      window.addEventListener('resize', resizeFrame);
+      setMode('desktop');
+    })();
+  </script>
+</body>
+</html>
