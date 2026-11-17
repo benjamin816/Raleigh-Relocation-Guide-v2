@@ -36,7 +36,26 @@ function saveDraft(){
   }catch(e){draftStatus.textContent='Progress could not be saved. Keep this page open.';}
 }
 function scheduleSave(){draftDirty=true;clearTimeout(saveTimer);saveTimer=setTimeout(saveDraft,200);}
-function changed(){scheduleSave();updateProgress();}
+function hasInformation(values=answers){return Object.values(values).some(value=>Array.isArray(value)?value.some(v=>String(v||'').trim()):typeof value==='string'&&value.trim());}
+function validAnswer(q,a=answers){
+  if(!q)return true;
+  const value=a[q.id];
+  if(q.id==='partner')return !String(a.partnerEmail||'').trim()||validEmail(a.partnerEmail);
+  if(q.id==='source')return value!=='Other'||!!String(a.sourceOther||'').trim();
+  if(!q.required)return true;
+  if(q.id==='dream')return Array.isArray(value)&&value.filter(v=>String(v||'').trim()).length>=3;
+  if(q.type==='email')return validEmail(value);
+  if(q.options)return q.type==='checkbox'?Array.isArray(value)&&value.some(v=>q.options.includes(v)):q.options.includes(value);
+  return typeof value==='string'&&!!value.trim();
+}
+function validEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value||'').trim());}
+function updateControls(){
+  next.disabled=!validAnswer(allQuestions.find(q=>q.id===stepId));
+  document.getElementById('clear-draft').hidden=!hasInformation();
+  const hint=document.getElementById('minimum-answers');
+  if(hint){const n=(answers.dream||[]).filter(v=>String(v||'').trim()).length;hint.textContent=n>=3?'You can add up to 7 must-haves.': 'Please add at least 3 must-haves ('+n+' of 3).';}
+}
+function changed(){scheduleSave();updateProgress();updateControls();}
 function updateProgress(){const steps=activeSteps(),position=Math.max(0,steps.indexOf(stepId));document.getElementById('step').textContent='Step '+(position+1)+' of '+steps.length;document.getElementById('progress').max=steps.length;document.getElementById('progress').value=position+1;}
 function inputField(id,label,type='text'){const wrapper=el('label',null,'field-label');wrapper.append(el('span',label));const input=el('input');input.type=type;input.id=id;input.name=id;input.value=answers[id]||'';input.addEventListener('input',()=>{answers[id]=input.value;changed();});wrapper.append(input);return wrapper;}
 function renderOptions(q,group){
@@ -85,14 +104,14 @@ function render(){
   heading.id='section-title';heading.tabIndex=-1;panel.dataset.section=q?q.section:0;panel.dataset.question=q?q.id:'';panel.classList.remove('completion');
   panel.append(heading);updateProgress();back.disabled=stepId==='intro';next.textContent=stepId===steps.at(-1)?'Finish':'Next';
   if(!q){
-    panel.append(el('p','Tell us what matters most in your next home so we can make the most of our call. Every question is optional. Thank you for taking the time to fill this out!'));
+    panel.append(el('p','Tell us what matters most in your next home so we can make the most of our call. Thank you for taking the time to fill this out!'));
     panel.append(el('p','THE LIVING IN RALEIGH TEAM','signature'));
   }else{
     const group=el('fieldset');group.dataset.type=q.type;group.dataset.question=q.id;
     const label=q.id==='budget'&&answers.finance==='Cash'?'What purchase price or price range do you have in mind?':q.id==='budget'&&answers.finance==='Could go either way'?'What purchase price range and monthly mortgage payment do you have in mind?':q.label;
-    group.append(el('legend',label));if(q.note)group.append(el('p',q.note,'help'));
+    group.append(el('legend',label+(q.required?'':' (optional)')));if(q.note)group.append(el('p',q.note,'help'));
     if(q.id==='dream'||q.id==='nice'){
-      const list=el('div',null,'seven-answers');
+      if(q.id==='dream'){const minimum=el('p',null,'help');minimum.id='minimum-answers';minimum.setAttribute('aria-live','polite');group.append(minimum);}const list=el('div',null,'seven-answers');
       for(let i=0;i<7;i++){const row=el('label',null,'answer-row');if(q.id==='dream')row.append(el('span',String(i+1)));const input=el('input');input.type='text';input.name=q.id+'-'+(i+1);input.setAttribute('aria-label',(q.id==='dream'?'Must-have ':'Nice-to-have ')+(i+1));input.value=Array.isArray(answers[q.id])?answers[q.id][i]||'':'';input.addEventListener('input',()=>{if(!Array.isArray(answers[q.id]))answers[q.id]=Array(7).fill('');answers[q.id][i]=input.value;changed();});row.append(input);list.append(row);}group.append(list);
     }else if(q.type==='partner'){
       const fields=el('div',null,'partner-fields');fields.append(inputField('partnerName','Name'),inputField('partnerPhone','Phone number','tel'),inputField('partnerEmail','Email','email'));group.append(fields);
@@ -101,29 +120,32 @@ function render(){
     else{
       const input=el(q.type==='textarea'?'textarea':'input');if(q.type!=='textarea')input.type=q.type;
       input.id=q.id;input.name=q.id;input.setAttribute('aria-label',label);input.value=answers[q.id]||'';
-      input.addEventListener('input',()=>{answers[q.id]=input.value;changed();});group.append(input);
+      input.addEventListener('input',()=>{answers[q.id]=input.value;changed();});const textWrap=q.type==='textarea'?el('div',null,'textarea-wrap'):group;textWrap.append(input);if(q.type==='textarea')group.append(textWrap);
       if(q.type==='textarea'){
         const clear=el('button',null,'clear clear-text');clear.type='button';clear.setAttribute('aria-label','Clear this answer');clear.title='Clear this answer';
         clear.innerHTML='<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14M10 11v6M14 11v6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-        clear.addEventListener('click',()=>{delete answers[q.id];input.value='';input.focus();changed();});group.append(clear);
+        clear.addEventListener('click',()=>{delete answers[q.id];input.value='';input.focus();changed();});textWrap.append(clear);
       }
     }
     panel.append(group);
   }
-  heading.focus({preventScroll:true});draftDirty=true;saveDraft();
+  updateControls();heading.focus({preventScroll:true});draftDirty=true;saveDraft();
 }
 function complete(){
-  completed=true;panel.replaceChildren();panel.dataset.section='0';panel.dataset.question='';panel.classList.add('completion');
+  completed=true;document.getElementById('step').textContent='Complete';document.getElementById('progress').value=document.getElementById('progress').max;panel.replaceChildren();panel.dataset.section='0';panel.dataset.question='';panel.classList.add('completion');
   const heading=el('h2','Thank you!');heading.id='section-title';heading.tabIndex=-1;panel.append(heading);
   panel.append(el('p','Thank you so much for taking the time to fill this out. We look forward to meeting you!'));
-  const contact=el('p','If you need anything before our call, reach us by ');
-  const email=el('a','livinginraleighteam@gmail.com');email.href='mailto:livinginraleighteam@gmail.com';const text=el('a','(919) 737-7896');text.href='sms:+19197377896';contact.append(email,document.createTextNode(' or '),text,document.createTextNode('.'));panel.append(contact);
+  panel.append(el('p','If you need anything before our call, reach us by email or text.'));
+  const contact=el('div',null,'completion-contact');
+  const email=el('a','livinginraleighteam@gmail.com');email.href='mailto:livinginraleighteam@gmail.com';
+  const text=el('a','(919) 737-7896');text.href='sms:+19197377896';text.className='phone-link';
+  contact.append(email,text);panel.append(contact);
   panel.append(el('p','You can find a breakdown of our call in the email titled “What To Know Before Our Call (Living in Raleigh Team)”.'));
   const count=el('p',null,'countdown');panel.append(count);const redirectAt=Date.now()+30000;
   const tick=()=>{const remaining=Math.max(0,Math.ceil((redirectAt-Date.now())/1000));count.textContent='Redirecting to the home page in '+remaining+' seconds.';if(remaining===0){clearInterval(countdownTimer);window.location.assign('/');}};tick();countdownTimer=setInterval(tick,1000);
   next.hidden=true;back.disabled=false;back.textContent='Back to review';heading.focus({preventScroll:true});saveDraft();
 }
-form.addEventListener('submit',e=>{e.preventDefault();if(completed)return;const steps=activeSteps(),index=steps.indexOf(stepId);if(index===steps.length-1)complete();else{stepId=steps[index+1];render();}});
+form.addEventListener('submit',e=>{e.preventDefault();if(completed||!validAnswer(allQuestions.find(q=>q.id===stepId)))return;const steps=activeSteps(),index=steps.indexOf(stepId);if(index===steps.length-1){const missing=activeQuestions().find(q=>!validAnswer(q));if(missing){stepId=missing.id;render();}else complete();}else{stepId=steps[index+1];render();}});
 back.addEventListener('click',()=>{if(completed){render();return;}const steps=activeSteps(),index=steps.indexOf(stepId);if(index>0){stepId=steps[index-1];render();}});
 document.getElementById('clear-draft').addEventListener('click',()=>{resetDialog.showModal();document.getElementById('cancel-reset').focus();});
 document.getElementById('cancel-reset').addEventListener('click',()=>resetDialog.close());
@@ -151,6 +173,6 @@ function boot(){
   draftId=saved.id;lastRevision=saved.data.revision;
   panel.replaceChildren(el('h2','Welcome back'));panel.dataset.section='0';panel.append(el('p','Your progress is saved. Pick up where you left off.'));
   const resume=el('button','Resume saved answers');resume.type='button';resume.addEventListener('click',()=>{migrate(saved.data);render();});panel.append(resume);
-  next.hidden=true;back.disabled=true;updateProgress();
+  next.hidden=true;back.disabled=true;document.getElementById('clear-draft').hidden=!hasInformation(saved.data.answers);updateProgress();
 }
 boot();
