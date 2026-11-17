@@ -89,7 +89,7 @@ function render(){
     panel.append(el('p','THE LIVING IN RALEIGH TEAM','signature'));
   }else{
     const group=el('fieldset');group.dataset.type=q.type;group.dataset.question=q.id;
-    const label=q.id==='budget'&&answers.finance==='Cash'?'What purchase price or price range do you have in mind?':q.label;
+    const label=q.id==='budget'&&answers.finance==='Cash'?'What purchase price or price range do you have in mind?':q.id==='budget'&&answers.finance==='Could go either way'?'What purchase price range and monthly mortgage payment do you have in mind?':q.label;
     group.append(el('legend',label));if(q.note)group.append(el('p',q.note,'help'));
     if(q.id==='dream'||q.id==='nice'){
       const list=el('div',null,'seven-answers');
