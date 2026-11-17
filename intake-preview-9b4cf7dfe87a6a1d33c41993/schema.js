@@ -14,9 +14,16 @@ const sections = [
         "note": "First and Last Name (Feel free to also include a nickname if you go by something else!)"
       },
       {
+        "id": "email",
+        "label": "Email address used to book your call",
+        "type": "email",
+        "options": null,
+        "note": "Use the same email so we can match your answers to your meeting."
+      },
+      {
         "id": "partner",
-        "label": "Spouse's or Partner's Full Name and Best Contact Info",
-        "type": "textarea",
+        "label": "Spouse or partner's contact information",
+        "type": "partner",
         "options": null,
         "note": null
       },
@@ -102,7 +109,8 @@ const sections = [
         "options": [
           "Yes",
           "No, I Rent",
-          "I Own and Intend to Rent It Out"
+          "I Own and Intend to Rent It Out",
+          "No, I have short-term housing or am staying with family (no lease concerns)"
         ],
         "note": null
       }
@@ -122,23 +130,42 @@ const sections = [
   },
   {
     "title": "Own Your Home",
+    "questions": []
+  },
+  {
+    "title": "Financing",
     "questions": [
       {
-        "id": "sellfirst",
-        "label": "Do You Need to Sell First to Buy?",
+        "id": "finance",
+        "label": "How do you plan to purchase your home?",
+        "type": "radio",
+        "options": [
+          "Financing",
+          "Cash",
+          "Could go either way"
+        ],
+        "note": null
+      },
+      {
+        "id": "cashSaleDependent",
+        "label": "Is your cash purchase dependent on the completed sale of your current home?",
         "type": "radio",
         "options": [
           "Yes",
           "No",
           "Unsure"
-        ],
-        "note": null
-      }
-    ]
-  },
-  {
-    "title": "Financing",
-    "questions": [
+        ]
+      },
+      {
+        "id": "sellfirst",
+        "label": "Do you need to sell your current home before buying?",
+        "type": "radio",
+        "options": [
+          "Yes",
+          "No",
+          "Unsure"
+        ]
+      },
       {
         "id": "budget",
         "label": "Do you have a monthly mortgage payment or purchase price range in mind already? We will work together to make sure this aligns with what you are looking for.",
@@ -150,34 +177,6 @@ const sections = [
         "id": "lender",
         "label": "Have you spoken with a lender? If so, please kindly provide their name and number, alongside the company. Please also include your pre-approval amount if applicable.",
         "type": "textarea",
-        "options": null,
-        "note": null
-      },
-      {
-        "id": "upload",
-        "label": "(Optional: Upload Your Pre-Approval)",
-        "type": "file",
-        "options": null,
-        "note": null
-      },
-      {
-        "id": "finance",
-        "label": "What Type of Financing Do You Plan to Use?",
-        "type": "radio",
-        "options": [
-          "FHA",
-          "VA",
-          "Conventional",
-          "Cash",
-          "USDA",
-          "Other"
-        ],
-        "note": null
-      },
-      {
-        "id": "down",
-        "label": "What Down Payment Percentage Do You Intend to Put Down Toward Your New Home?",
-        "type": "text",
         "options": null,
         "note": null
       }
@@ -225,17 +224,10 @@ const sections = [
     "questions": [
       {
         "id": "questions",
-        "label": "What questions about the process or the area do you have for me?",
+        "label": "What questions do you have for us, or is there anything else you would like us to know?",
         "type": "textarea",
         "options": null,
         "note": null
-      },
-      {
-        "id": "else",
-        "label": "Please note anything else that I should know!",
-        "type": "textarea",
-        "options": null,
-        "note": "e.g. you already know which locations you do or do not want to explore and WHY, you have specific homes you want to know more about or feel they showcase what you are looking for in a home, etc."
       }
     ]
   }
