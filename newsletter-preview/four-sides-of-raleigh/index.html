@@ -49,22 +49,29 @@
       const frame = document.getElementById('email-frame');
       const desktop = document.getElementById('desktop-button');
       const mobile = document.getElementById('mobile-button');
+      let contentObserver;
       function resizeFrame() {
-        try {
-          const doc = frame.contentDocument;
-          if (doc) frame.style.height = Math.max(doc.documentElement.scrollHeight, doc.body.scrollHeight, 700) + 'px';
-        } catch (_) {}
+        const emailBody = frame.contentDocument?.body;
+        if (emailBody) frame.style.height = Math.ceil(emailBody.getBoundingClientRect().height) + 'px';
+      }
+      function observeEmail() {
+        contentObserver?.disconnect();
+        const emailBody = frame.contentDocument?.body;
+        if (!emailBody) return;
+        contentObserver = new ResizeObserver(resizeFrame);
+        contentObserver.observe(emailBody);
+        resizeFrame();
       }
       function setMode(mode) {
         const isMobile = mode === 'mobile';
         shell.dataset.mode = mode;
         desktop.setAttribute('aria-pressed', String(!isMobile));
         mobile.setAttribute('aria-pressed', String(isMobile));
-        window.setTimeout(resizeFrame, 240);
       }
       desktop.addEventListener('click', () => setMode('desktop'));
       mobile.addEventListener('click', () => setMode('mobile'));
-      frame.addEventListener('load', resizeFrame);
+      frame.addEventListener('load', observeEmail);
+      observeEmail();
       window.addEventListener('resize', resizeFrame);
       setMode('desktop');
     })();
