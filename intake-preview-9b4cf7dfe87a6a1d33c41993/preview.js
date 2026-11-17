@@ -71,12 +71,14 @@ function moveMustHave(from,to){
 function dragHandle(index,row){
   const handle=el('button','⠿','drag-handle');handle.type='button';handle.dataset.moveIndex=index;handle.setAttribute('aria-label','Move must-have '+(index+1));handle.title='Drag to reorder. Click for move controls, or use the arrow keys.';
   let drag=null;
-  const cleanup=()=>{for(const node of document.querySelectorAll('.answer-row'))node.classList.remove('dragging','drop-target');};
+  const cleanup=()=>{document.querySelector('.drag-preview')?.remove();for(const node of document.querySelectorAll('.answer-row'))node.classList.remove('dragging','drop-target');};
   handle.addEventListener('pointerdown',event=>{if(event.button!==0)return;drag={x:event.clientX,y:event.clientY,id:event.pointerId,to:index,moved:false};handle.setPointerCapture(event.pointerId);});
   handle.addEventListener('pointermove',event=>{
     if(!drag||drag.id!==event.pointerId)return;
     if(Math.hypot(event.clientX-drag.x,event.clientY-drag.y)>5)drag.moved=true;
-    if(!drag.moved)return;event.preventDefault();row.classList.add('dragging');
+    if(!drag.moved)return;event.preventDefault();
+    if(!drag.ghost){const rect=row.getBoundingClientRect();drag.left=rect.left;drag.top=rect.top;drag.ghost=row.cloneNode(true);drag.ghost.className='answer-row must-have-row drag-preview';drag.ghost.setAttribute('aria-hidden','true');drag.ghost.inert=true;drag.ghost.removeAttribute('data-index');drag.ghost.style.width=rect.width+'px';drag.ghost.style.height=rect.height+'px';for(const input of drag.ghost.querySelectorAll('input')){input.value=row.querySelector('input').value;input.removeAttribute('name');}for(const node of drag.ghost.querySelectorAll('[data-move-index]'))node.removeAttribute('data-move-index');document.body.append(drag.ghost);}
+    drag.ghost.style.left=(drag.left+event.clientX-drag.x)+'px';drag.ghost.style.top=(drag.top+event.clientY-drag.y)+'px';row.classList.add('dragging');
     const target=document.elementFromPoint(event.clientX,event.clientY)?.closest('.must-have-row');
     for(const node of document.querySelectorAll('.answer-row'))node.classList.remove('drop-target');
     if(target){drag.to=Number(target.dataset.index);if(drag.to!==index)target.classList.add('drop-target');}
@@ -144,8 +146,8 @@ function render(){
     const label=q.id==='budget'&&answers.finance==='Cash'?'What purchase price or price range do you have in mind?':q.id==='budget'&&answers.finance==='Could go either way'?'What purchase price range or monthly mortgage payment do you have in mind?':q.label;
     group.append(el('legend',label+(q.required?'':' (optional)')));if(q.note)group.append(el('p',q.note,'help'));
     if(q.id==='dream'||q.id==='nice'){
-      if(q.id==='dream'){const minimum=el('p',null,'help');minimum.id='minimum-answers';minimum.setAttribute('aria-live','polite');group.append(minimum);}const list=el('div',null,'seven-answers');
-      for(let i=0;i<7;i++){const row=el('div',null,'answer-row');if(q.id==='dream'){row.classList.add('must-have-row');row.dataset.index=i;row.append(dragHandle(i,row),el('span',String(i+1)));}const input=el('input');input.type='text';input.name=q.id+'-'+(i+1);input.setAttribute('aria-label',(q.id==='dream'?'Must-have ':'Nice-to-have ')+(i+1));input.value=Array.isArray(answers[q.id])?answers[q.id][i]||'':'';input.addEventListener('input',()=>{if(!Array.isArray(answers[q.id]))answers[q.id]=Array(7).fill('');answers[q.id][i]=input.value;changed();});row.append(input);list.append(row);}group.append(list);if(q.id==='dream'){const status=el('p','Drag a handle to reorder, or tap it for move controls.','help reorder-help');status.id='reorder-status';status.setAttribute('aria-live','polite');group.append(status);}
+      if(q.id==='dream'){const minimum=el('p',null,'sr-only');minimum.id='minimum-answers';minimum.setAttribute('aria-live','polite');group.append(minimum);}const list=el('div',null,'seven-answers');
+      for(let i=0;i<7;i++){const row=el('div',null,'answer-row');if(q.id==='dream'){row.classList.add('must-have-row');row.dataset.index=i;row.append(dragHandle(i,row),el('span',String(i+1)));}const input=el('input');input.type='text';input.name=q.id+'-'+(i+1);input.setAttribute('aria-label',(q.id==='dream'?'Must-have ':'Nice-to-have ')+(i+1));input.value=Array.isArray(answers[q.id])?answers[q.id][i]||'':'';input.addEventListener('input',()=>{if(!Array.isArray(answers[q.id]))answers[q.id]=Array(7).fill('');answers[q.id][i]=input.value;changed();});row.append(input);list.append(row);}group.append(list);if(q.id==='dream'){const status=el('p','Drag a handle to reorder, or tap it for move controls.','sr-only');status.id='reorder-status';status.setAttribute('aria-live','polite');group.append(status);}
     }else if(q.type==='partner'){
       const fields=el('div',null,'partner-fields');fields.append(inputField('partnerName','Name'),inputField('partnerPhone','Phone number','tel'),inputField('partnerEmail','Email','email'));group.append(fields);
       if(answers.partner)group.append(el('p','Your earlier answer: '+answers.partner,'help legacy-answer'));
@@ -178,10 +180,10 @@ function complete(){
 const summary=el('p','You can find a breakdown of our call in the email titled ','completion-summary');summary.append(el('strong','“What To Know Before Our Call (Living in Raleigh Team)”'),document.createTextNode('.'));panel.append(summary);
   const count=el('p',null,'countdown');panel.append(count);const redirectAt=Date.now()+30000;
   const tick=()=>{const remaining=Math.max(0,Math.ceil((redirectAt-Date.now())/1000));count.textContent='Redirecting to the home page in '+remaining+' seconds.';if(remaining===0){clearInterval(countdownTimer);markPreviewReturn();window.location.assign('/');}};tick();countdownTimer=setInterval(tick,1000);
-  next.hidden=true;document.getElementById('clear-draft').hidden=true;back.disabled=false;back.textContent='Back to review';heading.focus({preventScroll:true});saveDraft();
+  next.hidden=true;document.getElementById('clear-draft').hidden=true;back.disabled=false;back.textContent='Update my answers';heading.focus({preventScroll:true});saveDraft();
 }
 form.addEventListener('submit',e=>{e.preventDefault();if(completed||!validAnswer(allQuestions.find(q=>q.id===stepId)))return;const steps=activeSteps(),index=steps.indexOf(stepId);if(index===steps.length-1){const missing=activeQuestions().find(q=>!validAnswer(q));if(missing){stepId=missing.id;render();}else complete();}else{stepId=steps[index+1];render();}});
-back.addEventListener('click',()=>{if(completed){render();return;}const steps=activeSteps(),index=steps.indexOf(stepId);if(index>0){stepId=steps[index-1];render();}});
+back.addEventListener('click',()=>{if(completed){stepId='intro';render();return;}const steps=activeSteps(),index=steps.indexOf(stepId);if(index>0){stepId=steps[index-1];render();}});
 document.getElementById('clear-draft').addEventListener('click',()=>{resetDialog.showModal();document.getElementById('cancel-reset').focus();});
 document.getElementById('cancel-reset').addEventListener('click',()=>resetDialog.close());
 document.getElementById('confirm-reset').addEventListener('click',()=>{
