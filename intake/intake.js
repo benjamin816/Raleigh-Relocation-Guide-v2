@@ -50,8 +50,8 @@ function validAnswer(q,a=answers){
 }
 function validEmail(value){return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(value||'').trim());}
 function updateControls(){
-  next.disabled=production.saving||!production.ready||!validAnswer(allQuestions.find(q=>q.id===stepId));
-  document.getElementById('clear-draft').hidden=production.saving||completed||!hasInformation();
+  next.disabled=!mayEdit()||production.saving||!production.ready||!validAnswer(allQuestions.find(q=>q.id===stepId));
+  document.getElementById('clear-draft').hidden=!mayEdit()||production.saving||completed||!hasInformation();
   const hint=document.getElementById('minimum-answers');
   if(hint){const n=(answers.dream||[]).filter(v=>String(v||'').trim()).length;hint.textContent=n>=3?'You can add up to 7 must-haves.': 'Please add at least 3 must-haves ('+n+' of 3).';}
 }
@@ -62,6 +62,7 @@ let reorderIndex=0,ignoreHandleClick=false;
 const reorderDialog=document.getElementById('reorder-dialog');
 function updateReorderDialog(){document.getElementById('reorder-title').textContent='Move must-have '+(reorderIndex+1);document.getElementById('move-up').disabled=reorderIndex===0;document.getElementById('move-down').disabled=reorderIndex===6;}
 function moveMustHave(from,to){
+  if(!mayEdit())return;
   if(!Number.isInteger(from)||!Number.isInteger(to)||from<0||from>6||to<0||to>6||from===to)return;
   const values=Array.from({length:7},(_,i)=>Array.isArray(answers.dream)?answers.dream[i]||'':'');
   const [value]=values.splice(from,1);values.splice(to,0,value);answers.dream=values;reorderIndex=to;render();
@@ -133,6 +134,7 @@ function renderOptions(q,group){
   sync();
 }
 function render(){
+  if(!mayEdit()){panel.replaceChildren(el('h2','Questionnaire closed'));syncEditWindow();return;}
   clearInterval(countdownTimer);completed=false;panel.replaceChildren();next.hidden=false;back.hidden=false;back.textContent='Back';
   const steps=activeSteps();if(!steps.includes(stepId))stepId='intro';
   const q=allQuestions.find(q=>q.id===stepId),heading=el('h2',q?q.title:'Client Questionnaire');
@@ -180,14 +182,14 @@ function complete(){
 const summary=el('p','You can find a breakdown of our call in the email titled ','completion-summary');summary.append(el('strong','“What To Know Before Our Call (Living in Raleigh Team)”'),document.createTextNode('.'));panel.append(summary);
   const count=el('p',null,'countdown');panel.append(count);const redirectAt=Date.now()+30000;
   const tick=()=>{const remaining=Math.max(0,Math.ceil((redirectAt-Date.now())/1000));count.textContent='Redirecting to the home page in '+remaining+' seconds.';if(remaining===0){clearInterval(countdownTimer);markPreviewReturn();window.location.assign('/');}};tick();countdownTimer=setInterval(tick,1000);
-  next.hidden=true;document.getElementById('clear-draft').hidden=true;back.disabled=false;back.textContent='Update my answers';heading.focus({preventScroll:true});saveDraft();
+  next.hidden=true;document.getElementById('clear-draft').hidden=true;back.disabled=false;back.textContent='Update my answers';back.hidden=false;heading.focus({preventScroll:true});saveDraft();syncEditWindow();
 }
-form.addEventListener('submit',e=>{e.preventDefault();if(!production.ready||production.saving||completed||!validAnswer(allQuestions.find(q=>q.id===stepId)))return;const steps=activeSteps(),index=steps.indexOf(stepId);if(index===steps.length-1){const missing=activeQuestions().find(q=>!validAnswer(q));if(missing){stepId=missing.id;render();}else submitProduction();}else{stepId=steps[index+1];render();}});
-back.addEventListener('click',()=>{if(production.saving)return;if(completed){stepId='intro';render();return;}const steps=activeSteps(),index=steps.indexOf(stepId);if(index>0){stepId=steps[index-1];render();}});
-document.getElementById('clear-draft').addEventListener('click',()=>{resetDialog.querySelector('p').textContent=production.version>0?'This clears the answers you are editing and returns you to the first page. Your previously submitted answers remain saved until you finish an update.':'This will clear every answer and return you to the first page.';resetDialog.showModal();document.getElementById('cancel-reset').focus();});
+form.addEventListener('submit',e=>{e.preventDefault();if(!mayEdit()||!production.ready||production.saving||completed||!validAnswer(allQuestions.find(q=>q.id===stepId)))return;const steps=activeSteps(),index=steps.indexOf(stepId);if(index===steps.length-1){const missing=activeQuestions().find(q=>!validAnswer(q));if(missing){stepId=missing.id;render();}else submitProduction();}else{stepId=steps[index+1];render();}});
+back.addEventListener('click',()=>{if(production.saving||!mayEdit())return;if(completed){stepId='intro';render();return;}const steps=activeSteps(),index=steps.indexOf(stepId);if(index>0){stepId=steps[index-1];render();}});
+document.getElementById('clear-draft').addEventListener('click',()=>{if(!mayEdit())return;resetDialog.querySelector('p').textContent=production.version>0?'This clears the answers you are editing and returns you to the first page. Your previously submitted answers remain saved until you finish an update.':'This will clear every answer and return you to the first page.';resetDialog.showModal();document.getElementById('cancel-reset').focus();});
 document.getElementById('cancel-reset').addEventListener('click',()=>resetDialog.close());
 document.getElementById('confirm-reset').addEventListener('click',()=>{
-  clearTimeout(saveTimer);clearInterval(countdownTimer);
+  if(!mayEdit()){resetDialog.close();return;}clearTimeout(saveTimer);clearInterval(countdownTimer);
   try{const target=draftId||localStorage.getItem(DRAFT_LATEST);if(target)localStorage.removeItem(DRAFT_PREFIX+target);if(localStorage.getItem(DRAFT_LATEST)===target)localStorage.removeItem(DRAFT_LATEST);}catch(e){}
   for(const key of Object.keys(answers))delete answers[key];answers.email=production.email;stepId='intro';resetDialog.close();newDraft();render();
 });
