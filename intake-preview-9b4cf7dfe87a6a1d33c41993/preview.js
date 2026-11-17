@@ -54,6 +54,7 @@ function renderOptions(q,group){
     const label=el('label',null,'option'),input=el('input');
     input.type=q.type;input.name=q.id;input.value=option;inputs.push(input);
     if(q.type==='radio'){
+      input.addEventListener('change',()=>{if(input.checked){answers[q.id]=option;sync();changed();}});
       input.addEventListener('click',()=>{
         if(answers[q.id]===option)delete answers[q.id];else answers[q.id]=option;
         sync();changed();

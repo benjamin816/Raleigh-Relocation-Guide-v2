@@ -9,6 +9,7 @@ const root=process.cwd(),route='/intake-preview-9b4cf7dfe87a6a1d33c41993/';
  await go('partner');assert.equal(await page.locator('.partner-fields input').count(),3);await page.locator('#partnerName').fill('Test Spouse');await page.locator('#partnerPhone').fill('9195550101');await page.locator('#partnerEmail').fill('test@example.com');
  await go('contact');await page.getByLabel('Text',{exact:true}).check();await page.getByLabel('All of the Above!',{exact:true}).check();assert(await page.getByLabel('Text',{exact:true}).isDisabled());await page.getByLabel('All of the Above!',{exact:true}).uncheck();assert(!(await page.getByLabel('Text',{exact:true}).isDisabled()));assert(await page.getByLabel('Text',{exact:true}).isChecked());
  await go('condition');let opt=page.getByLabel('Need Move-in Ready',{exact:true});await opt.click();assert(await opt.isChecked());await opt.click();assert(!(await opt.isChecked()));await opt.click();await page.getByText('Clear selection',{exact:true}).click();assert(!(await opt.isChecked()));
+ await opt.focus();await page.keyboard.press('ArrowUp');assert.equal(await page.evaluate(()=>answers.condition),'Okay with Cosmetic Repairs Needing Done');
  await go('times');await page.locator('textarea').fill('Test answer');await page.getByRole('button',{name:'Clear this answer'}).click();assert.equal(await page.locator('textarea').inputValue(),'');
  await go('sell');assert.equal(await page.locator('input[type=radio]').count(),4);
  const matrix=await page.evaluate(()=>{
@@ -37,6 +38,7 @@ const root=process.cwd(),route='/intake-preview-9b4cf7dfe87a6a1d33c41993/';
  await page.evaluate(id=>{answers.sell='Yes';answers.finance='Cash';answers.source='YouTube';if(id==='lease')answers.sell='No, I Rent';if(id==='lender'||id==='sellfirst')answers.finance='Financing';stepId=id;render()},id);
  const dims=await page.evaluate(()=>({sw:document.documentElement.scrollWidth,sh:document.documentElement.scrollHeight,w:innerWidth,h:innerHeight}));if(dims.sw>dims.w+1||dims.sh>dims.h+1)overflow.push({viewport,id,...dims});
  }
+ for(const mode of ['other','complete']){await page.evaluate(mode=>{if(mode==='other'){answers.source='Other';stepId='source';render();}else complete();},mode);const dims=await page.evaluate(()=>({sh:document.documentElement.scrollHeight,h:innerHeight}));if(dims.sh>dims.h+1)overflow.push({viewport,mode,...dims});}
  for(const id of ['partner','sell','dream','condition']){await go(id);await page.screenshot({path:'intake-qa/'+viewport.width+'-'+id+'.png',fullPage:true});}
  }
  results.push({overflow});
