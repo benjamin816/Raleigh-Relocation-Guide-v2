@@ -185,7 +185,7 @@ const sections = [
       },
       {
         "id": "budget",
-        "label": "Do you have a monthly mortgage payment or purchase price range in mind already? We will work together to make sure this aligns with what you are looking for.",
+        "label": "What purchase price range and monthly mortgage payment do you have in mind?",
         "type": "textarea",
         "options": null,
         "note": null,
@@ -196,7 +196,7 @@ const sections = [
         "label": "Have you spoken with a lender? If so, please kindly provide their name and number, alongside the company. Please also include your pre-approval amount if applicable.",
         "type": "textarea",
         "options": null,
-        "note": "If you haven't spoken with a lender yet, enter “Not yet.”",
+        "note": null,
         "required": true
       }
     ]

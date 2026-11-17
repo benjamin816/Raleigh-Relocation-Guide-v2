@@ -1917,6 +1917,15 @@
       } catch (error) {}
     };
 
+    // Preview completion only: quiet this single homepage arrival, not a booking.
+    var suppressIntakePreviewReturn = false;
+    if (isHomePage) {
+      var previewReturnAt = Number(safeGet(sessionStore, "livrIntakePreviewReturnOnce"));
+      safeRemove(sessionStore, "livrIntakePreviewReturnOnce");
+      var previewReturnAge = Date.now() - previewReturnAt;
+      suppressIntakePreviewReturn = previewReturnAt > 0 && previewReturnAge >= 0 && previewReturnAge < 5 * 60 * 1000;
+    }
+
     var leadPopupSubmittedKey = "livrLeadPopupSubmitted";
     var leadPopupBookingReportedKey = "livrBookingReportedAt";
     var leadPopupReminderShownKey = "livrBookingReminderShown";
@@ -2382,7 +2391,7 @@
     };
 
     var mayShowPopup = function () {
-      return !hasBookingReported && (!hasSubmitted || !hasReminderShown);
+      return !suppressIntakePreviewReturn && !hasBookingReported && (!hasSubmitted || !hasReminderShown);
     };
 
     var isChatOpen = function () {
