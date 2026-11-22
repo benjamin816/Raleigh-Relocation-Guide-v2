@@ -63,8 +63,18 @@
 @keyframes rchat-typing { 0%,60%,100% { transform:translateY(0); opacity:.55; } 30% { transform:translateY(-4px); opacity:1; } }
 @media (max-width:600px) {
   .rchat { right:14px; bottom:max(22px,env(safe-area-inset-bottom)); }
-  .rchat-panel { position:fixed; inset:0 0 78px 0; width:100vw; height:auto; border:0; border-radius:0; }
+  .rchat-panel { position:fixed; top:var(--rchat-top,0px); left:var(--rchat-left,0px); right:auto; bottom:auto; width:var(--rchat-width,100%); height:var(--rchat-height,100dvh); border:0; border-radius:0; }
   .rchat-head { padding-top:max(12px,env(safe-area-inset-top)); }
   .rchat-compose { padding-bottom:max(12px,env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion:reduce) { .rchat *, .rchat *::before { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
+
+@media (max-width:600px) {
+  html.rchat-mobile-open { overflow:hidden; overscroll-behavior:none; }
+  html.rchat-mobile-open body { position:fixed; top:var(--rchat-scroll-top,0px); left:0; right:0; overflow:hidden; }
+  .rchat--mobile-open { z-index:2147483000; inset:0; touch-action:pan-y; }
+  .rchat--mobile-open .rchat-launch,.rchat--mobile-open .rchat-unread { display:none!important; }
+  .rchat-head,.rchat-compose,.rchat-file-status { flex-shrink:0; }
+  .rchat-input { font-size:16px; line-height:20px; }
+  .rchat-panel { max-width:100%; box-shadow:none; }
+}

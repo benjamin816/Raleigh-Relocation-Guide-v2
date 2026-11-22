@@ -2527,6 +2527,52 @@
     newMessageButton.hidden = true;
     window.requestAnimationFrame(function () { log.style.scrollBehavior = previous; });
   }
+  var mobileChat = window.matchMedia("(max-width: 600px)");
+  var mobileScrollY = null;
+  var savedViewport = null;
+  var viewportMeta = document.querySelector('meta[name="viewport"]');
+  function fitMobileChat() {
+    if (panel.hidden || !mobileChat.matches) return;
+    var viewport = window.visualViewport;
+    root.style.setProperty("--rchat-height", (viewport ? viewport.height : window.innerHeight) + "px");
+    root.style.setProperty("--rchat-top", (viewport ? viewport.offsetTop : 0) + "px");
+    root.style.setProperty("--rchat-left", (viewport ? viewport.offsetLeft : 0) + "px");
+    root.style.setProperty("--rchat-width", (viewport ? viewport.width : window.innerWidth) + "px");
+  }
+  function setMobileChat(opened) {
+    var active = opened && mobileChat.matches;
+    if (active && mobileScrollY === null) {
+      mobileScrollY = window.scrollY;
+      document.body.style.setProperty("--rchat-scroll-top", -mobileScrollY + "px");
+      if (viewportMeta) {
+        savedViewport = viewportMeta.getAttribute("content");
+        viewportMeta.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover");
+      }
+    }
+    document.documentElement.classList.toggle("rchat-mobile-open", active);
+    root.classList.toggle("rchat--mobile-open", active);
+    panel.setAttribute("aria-modal", String(active));
+    if (!active && mobileScrollY !== null) {
+      var restoreY = mobileScrollY;
+      mobileScrollY = null;
+      document.body.style.removeProperty("--rchat-scroll-top");
+      if (viewportMeta && savedViewport !== null) viewportMeta.setAttribute("content", savedViewport);
+      savedViewport = null;
+      window.scrollTo(0, restoreY);
+    }
+    if (active) fitMobileChat();
+  }
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", fitMobileChat);
+    window.visualViewport.addEventListener("scroll", fitMobileChat);
+  }
+  window.addEventListener("resize", function () { setMobileChat(!panel.hidden); });
+  root.addEventListener("touchmove", function (event) {
+    if (!panel.hidden && mobileChat.matches && event.touches.length > 1) event.preventDefault();
+  }, { passive: false });
+  root.addEventListener("gesturestart", function (event) {
+    if (!panel.hidden && mobileChat.matches) event.preventDefault();
+  }, { passive: false });
   function open() {
     unlockAudio();
     cancelPulse();
@@ -2542,6 +2588,7 @@
     state.lastFocus = document.activeElement;
     state.sentMessageSinceOpen = false;
     panel.hidden = false;
+    setMobileChat(true);
     launcher.setAttribute("aria-expanded", "true");
     launcher.setAttribute("aria-label", "Close Raleigh help chat");
     window.dispatchEvent(new CustomEvent("raleigh-chat-state", { detail: { blocked: true, reason: "custom_chat_open" } }));
@@ -2558,11 +2605,14 @@
       else askQuestion();
     }
     scrollToLatest();
-    input.focus();
+    if (mobileChat.matches) closeButton.focus({ preventScroll: true });
+    else input.focus();
   }
   function close() {
     stopVoiceTyping();
+    input.blur();
     panel.hidden = true;
+    setMobileChat(false);
     launcher.setAttribute("aria-expanded", "false");
     launcher.setAttribute("aria-label", "Open Raleigh help chat");
     window.dispatchEvent(new CustomEvent("raleigh-chat-state", { detail: { blocked: false, reason: "custom_chat_closed", sentMessage: state.sentMessageSinceOpen } }));
