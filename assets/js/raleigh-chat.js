@@ -2533,11 +2533,13 @@
   var viewportMeta = document.querySelector('meta[name="viewport"]');
   function fitMobileChat() {
     if (panel.hidden || !mobileChat.matches) return;
+    var keepLatest = document.activeElement === input || log.scrollHeight - log.scrollTop - log.clientHeight < 70;
     var viewport = window.visualViewport;
     root.style.setProperty("--rchat-height", (viewport ? viewport.height : window.innerHeight) + "px");
     root.style.setProperty("--rchat-top", (viewport ? viewport.offsetTop : 0) + "px");
     root.style.setProperty("--rchat-left", (viewport ? viewport.offsetLeft : 0) + "px");
     root.style.setProperty("--rchat-width", (viewport ? viewport.width : window.innerWidth) + "px");
+    if (keepLatest) window.requestAnimationFrame(scrollToLatest);
   }
   function setMobileChat(opened) {
     var active = opened && mobileChat.matches;
@@ -2626,6 +2628,12 @@
     (state.lastFocus && state.lastFocus.focus ? state.lastFocus : launcher).focus();
   }
   launcher.addEventListener("click", function () { panel.hidden ? open() : close(); });
+  input.addEventListener("focus", function () {
+    if (!mobileChat.matches || panel.hidden) return;
+    scrollToLatest();
+    fitMobileChat();
+    window.requestAnimationFrame(scrollToLatest);
+  });
   input.addEventListener("input", function () {
     lastInputAt = Date.now();
     sizeInput(true);

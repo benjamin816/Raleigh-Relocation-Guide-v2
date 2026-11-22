@@ -78,3 +78,17 @@
   .rchat-input { font-size:16px; line-height:20px; }
   .rchat-panel { max-width:100%; box-shadow:none; }
 }
+
+@media (max-width:980px) {
+  body:has(.rchat) .mobile-scroll-top {
+    right:30px;
+    bottom:calc(max(22px,env(safe-area-inset-bottom)) + 64px + 70px + 18px);
+  }
+}
+@media (max-width:600px) {
+  html.rchat-mobile-open { background:#fff; }
+  html.rchat-mobile-open body > :not(.rchat) { visibility:hidden!important; }
+  .rchat--mobile-open { background:#fff; height:100lvh; min-height:100%; }
+  .rchat--mobile-open .rchat-panel { isolation:isolate; }
+  html.rchat-mobile-open .mobile-scroll-top { display:none!important; }
+}
