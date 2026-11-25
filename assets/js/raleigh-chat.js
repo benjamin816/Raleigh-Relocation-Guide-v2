@@ -1795,7 +1795,7 @@
       state.submitting = false;
       input.disabled = state.ended;
       sendButton.disabled = input.disabled || !input.value.trim();
-      if (!input.disabled) input.focus();
+      if (!input.disabled && !mobileChat.matches) input.focus({ preventScroll: true });
     });
   }
   function handleContactAnswer(value) {
@@ -2529,46 +2529,75 @@
   }
   var mobileChat = window.matchMedia("(max-width: 600px)");
   var mobileScrollY = null;
-  var savedViewport = null;
-  var viewportMeta = document.querySelector('meta[name="viewport"]');
+  var mobileFitFrame = 0;
+  var mobileSettleTimers = [];
+  var lastMobileHeight = 0;
   function fitMobileChat() {
-    if (panel.hidden || !mobileChat.matches) return;
-    var keepLatest = document.activeElement === input || log.scrollHeight - log.scrollTop - log.clientHeight < 70;
-    var viewport = window.visualViewport;
-    root.style.setProperty("--rchat-height", (viewport ? viewport.height : window.innerHeight) + "px");
-    root.style.setProperty("--rchat-top", (viewport ? viewport.offsetTop : 0) + "px");
-    root.style.setProperty("--rchat-left", (viewport ? viewport.offsetLeft : 0) + "px");
-    root.style.setProperty("--rchat-width", (viewport ? viewport.width : window.innerWidth) + "px");
-    if (keepLatest) window.requestAnimationFrame(scrollToLatest);
+    if (panel.hidden || !mobileChat.matches || mobileFitFrame) return;
+    mobileFitFrame = window.requestAnimationFrame(function () {
+      mobileFitFrame = 0;
+      if (panel.hidden || !mobileChat.matches) return;
+      var editing = document.activeElement === input;
+      var keepLatest = editing || log.scrollHeight - log.scrollTop - log.clientHeight < 70;
+      var viewport = window.visualViewport;
+      var height = viewport ? viewport.height : window.innerHeight;
+      // WebKit can report a transient collapsed viewport while its keyboard animates.
+      // Keep the last usable frame instead of collapsing the conversation into its header.
+      if (!Number.isFinite(height) || height < 180) height = lastMobileHeight || window.innerHeight;
+      lastMobileHeight = height;
+      var width = document.documentElement.clientWidth || window.innerWidth;
+      var top = editing && viewport ? Math.max(0, viewport.offsetTop) : 0;
+      top = Math.min(top, Math.max(0, window.innerHeight - height));
+      root.style.setProperty("--rchat-height", Math.round(height) + "px");
+      root.style.setProperty("--rchat-top", Math.round(top) + "px");
+      root.style.setProperty("--rchat-width", width + "px");
+      if (keepLatest) scrollToLatest();
+    });
+  }
+  function settleMobileChat() {
+    mobileSettleTimers.forEach(window.clearTimeout);
+    mobileSettleTimers = [];
+    fitMobileChat();
+    // Safari may emit its final viewport size only after the keyboard animation.
+    [80, 220, 450].forEach(function (delay) {
+      mobileSettleTimers.push(window.setTimeout(fitMobileChat, delay));
+    });
   }
   function setMobileChat(opened) {
     var active = opened && mobileChat.matches;
-    if (active && mobileScrollY === null) {
-      mobileScrollY = window.scrollY;
-      document.body.style.setProperty("--rchat-scroll-top", -mobileScrollY + "px");
-      if (viewportMeta) {
-        savedViewport = viewportMeta.getAttribute("content");
-        viewportMeta.setAttribute("content", "width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover");
-      }
-    }
+    if (active && mobileScrollY === null) mobileScrollY = window.scrollY;
     document.documentElement.classList.toggle("rchat-mobile-open", active);
     root.classList.toggle("rchat--mobile-open", active);
     panel.setAttribute("aria-modal", String(active));
-    if (!active && mobileScrollY !== null) {
-      var restoreY = mobileScrollY;
-      mobileScrollY = null;
-      document.body.style.removeProperty("--rchat-scroll-top");
-      if (viewportMeta && savedViewport !== null) viewportMeta.setAttribute("content", savedViewport);
-      savedViewport = null;
-      window.scrollTo(0, restoreY);
+    if (active) {
+      // The hidden background need not retain a negative body offset. That offset
+      // gave Safari a second scrolling coordinate system when focusing the input.
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" });
+      settleMobileChat();
+    } else {
+      mobileSettleTimers.forEach(window.clearTimeout);
+      mobileSettleTimers = [];
+      if (mobileFitFrame) window.cancelAnimationFrame(mobileFitFrame);
+      mobileFitFrame = 0;
+      lastMobileHeight = 0;
+      if (mobileScrollY !== null) {
+        var restoreY = mobileScrollY;
+        mobileScrollY = null;
+        window.scrollTo({ top: restoreY, left: 0, behavior: "instant" });
+      }
     }
-    if (active) fitMobileChat();
   }
   if (window.visualViewport) {
     window.visualViewport.addEventListener("resize", fitMobileChat);
     window.visualViewport.addEventListener("scroll", fitMobileChat);
   }
-  window.addEventListener("resize", function () { setMobileChat(!panel.hidden); });
+  window.addEventListener("resize", function () {
+    if (!panel.hidden) {
+      if (mobileChat.matches && mobileScrollY !== null) settleMobileChat();
+      else setMobileChat(true);
+    }
+  });
+  window.addEventListener("orientationchange", settleMobileChat);
   root.addEventListener("touchmove", function (event) {
     if (!panel.hidden && mobileChat.matches && event.touches.length > 1) event.preventDefault();
   }, { passive: false });
@@ -2631,8 +2660,11 @@
   input.addEventListener("focus", function () {
     if (!mobileChat.matches || panel.hidden) return;
     scrollToLatest();
-    fitMobileChat();
+    settleMobileChat();
     window.requestAnimationFrame(scrollToLatest);
+  });
+  input.addEventListener("blur", function () {
+    if (mobileChat.matches && !panel.hidden) settleMobileChat();
   });
   input.addEventListener("input", function () {
     lastInputAt = Date.now();

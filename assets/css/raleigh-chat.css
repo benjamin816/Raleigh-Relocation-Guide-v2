@@ -63,15 +63,15 @@
 @keyframes rchat-typing { 0%,60%,100% { transform:translateY(0); opacity:.55; } 30% { transform:translateY(-4px); opacity:1; } }
 @media (max-width:600px) {
   .rchat { right:14px; bottom:max(22px,env(safe-area-inset-bottom)); }
-  .rchat-panel { position:fixed; top:var(--rchat-top,0px); left:var(--rchat-left,0px); right:auto; bottom:auto; width:var(--rchat-width,100%); height:var(--rchat-height,100dvh); border:0; border-radius:0; }
+  .rchat-panel { position:absolute; top:var(--rchat-top,0px); left:0; right:auto; bottom:auto; width:var(--rchat-width,100%); height:var(--rchat-height,100dvh); border:0; border-radius:0; }
   .rchat-head { padding-top:max(12px,env(safe-area-inset-top)); }
   .rchat-compose { padding-bottom:max(12px,env(safe-area-inset-bottom)); }
 }
 @media (prefers-reduced-motion:reduce) { .rchat *, .rchat *::before { animation:none!important; transition:none!important; scroll-behavior:auto!important; } }
 
 @media (max-width:600px) {
-  html.rchat-mobile-open { overflow:hidden; overscroll-behavior:none; }
-  html.rchat-mobile-open body { position:fixed; top:var(--rchat-scroll-top,0px); left:0; right:0; overflow:hidden; }
+  html.rchat-mobile-open { height:100%; overflow:hidden; overscroll-behavior:none; scroll-behavior:auto; }
+  html.rchat-mobile-open body { position:fixed; inset:0; width:100%; height:100%; overflow:hidden; overscroll-behavior:none; }
   .rchat--mobile-open { z-index:2147483000; inset:0; touch-action:pan-y; }
   .rchat--mobile-open .rchat-launch,.rchat--mobile-open .rchat-unread { display:none!important; }
   .rchat-head,.rchat-compose,.rchat-file-status { flex-shrink:0; }
@@ -88,7 +88,7 @@
 @media (max-width:600px) {
   html.rchat-mobile-open { background:#fff; }
   html.rchat-mobile-open body > :not(.rchat) { visibility:hidden!important; }
-  .rchat--mobile-open { background:#fff; height:100lvh; min-height:100%; }
-  .rchat--mobile-open .rchat-panel { isolation:isolate; }
+  .rchat--mobile-open { background:#fff; height:100%; min-height:0; overflow:hidden; contain:layout paint; }
+  .rchat--mobile-open .rchat-panel { isolation:isolate; margin:0; max-height:none; transition:none; }
   html.rchat-mobile-open .mobile-scroll-top { display:none!important; }
 }
