@@ -4988,7 +4988,7 @@
   (function () {
     var chatStyles = document.createElement("link");
     chatStyles.rel = "stylesheet";
-    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261125-mobile3";
+    chatStyles.href = "/assets/css/raleigh-chat.css?v=20261125-mobile4";
     document.head.appendChild(chatStyles);
     var configScript = document.createElement("script");
     var chatVersion = /^(?:localhost|127\.0\.0\.1)$/.test(window.location.hostname) ? Date.now() : "20261102-live1";
@@ -4999,7 +4999,7 @@
       engineScript.onload = function () {
         var startChat = function () {
           var chatScript = document.createElement("script");
-          chatScript.src = "/assets/js/raleigh-chat.js?v=" + chatVersion + "-mobile-20261125-v3";
+          chatScript.src = "/assets/js/raleigh-chat.js?v=" + chatVersion + "-mobile-20261125-v4";
           document.head.appendChild(chatScript);
         };
         var understandingScript = document.createElement("script");

@@ -2532,6 +2532,7 @@
   var mobileFitFrame = 0;
   var mobileSettleTimers = [];
   var lastMobileHeight = 0;
+  var mobileUnobscuredHeight = 0;
   function fitMobileChat() {
     if (panel.hidden || !mobileChat.matches || mobileFitFrame) return;
     mobileFitFrame = window.requestAnimationFrame(function () {
@@ -2546,8 +2547,15 @@
       if (!Number.isFinite(height) || height < 180) height = lastMobileHeight || window.innerHeight;
       lastMobileHeight = height;
       var width = document.documentElement.clientWidth || window.innerWidth;
-      var top = editing && viewport ? Math.max(0, viewport.offsetTop) : 0;
-      top = Math.min(top, Math.max(0, window.innerHeight - height));
+      // iOS may pan the visual viewport even when innerHeight already equals
+      // the keyboard-reduced height. Do not clamp away that independent offset.
+      var top = viewport ? Math.max(0, viewport.offsetTop) : 0;
+      if (height >= mobileUnobscuredHeight - 40) top = 0;
+      // These wrappers must never retain a native focus-scroll displacement.
+      root.scrollTop = 0;
+      root.scrollLeft = 0;
+      panel.scrollTop = 0;
+      panel.scrollLeft = 0;
       root.style.setProperty("--rchat-height", Math.round(height) + "px");
       root.style.setProperty("--rchat-top", Math.round(top) + "px");
       root.style.setProperty("--rchat-width", width + "px");
@@ -2565,7 +2573,10 @@
   }
   function setMobileChat(opened) {
     var active = opened && mobileChat.matches;
-    if (active && mobileScrollY === null) mobileScrollY = window.scrollY;
+    if (active && mobileScrollY === null) {
+      mobileScrollY = window.scrollY;
+      mobileUnobscuredHeight = window.visualViewport ? window.visualViewport.height : window.innerHeight;
+    }
     document.documentElement.classList.toggle("rchat-mobile-open", active);
     root.classList.toggle("rchat--mobile-open", active);
     panel.setAttribute("aria-modal", String(active));
@@ -2580,6 +2591,7 @@
       if (mobileFitFrame) window.cancelAnimationFrame(mobileFitFrame);
       mobileFitFrame = 0;
       lastMobileHeight = 0;
+      mobileUnobscuredHeight = 0;
       if (mobileScrollY !== null) {
         var restoreY = mobileScrollY;
         mobileScrollY = null;
