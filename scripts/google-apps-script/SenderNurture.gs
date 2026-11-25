@@ -171,3 +171,18 @@ function verifySenderNurtureSetup(){
   ['Mailing Stages','Mailing Audit','Mailing Evidence','Mailing Configuration'].forEach(function(n){var s=ss.getSheetByName(n);result.sheets.push({name:n,rows:s.getLastRow(),protections:s.getProtections(SpreadsheetApp.ProtectionType.SHEET).map(function(p){return {warningOnly:p.isWarningOnly(),domain:p.canDomainEdit(),editors:p.getEditors().map(function(e){return e.getEmail();})};})});});
   Logger.log(JSON.stringify(result));return result;
 }
+
+function armSenderNurtureProspectively(){
+  var lock=LockService.getScriptLock();lock.waitLock(10000);
+  try{
+    var ss=SpreadsheetApp.openById('1V-4tnKUm22SXO9qTkBpC027gUU1eY_YwS6M2BplU8Uo'),sheet=ss.getSheetByName('Mailing Configuration'),cfg=JSON.parse(sheet.getRange(2,2).getValue());
+    if(cfg.mode==='LIVE')return {ok:true,alreadyLive:true,cutoffAt:cfg.cutoffAt};
+    if(!['QA','PAUSED'].includes(cfg.mode))throw Error('Unexpected control state');
+    var triggers=ScriptApp.getProjectTriggers();if(triggers.length!==1||triggers[0].getHandlerFunction()!=='livingSenderSyncLeads')throw Error('Unexpected scheduler topology');
+    ['dGZ5KJ','dLg8Br'].forEach(function(id){var r=livingSenderRequest_('get','/workflows/'+id);livingSenderRequireSuccess_(r,'verify active native workflow');if(r.body.data.status!=='ACTIVE')throw Error('Native workflow is not active');});
+    var watermarks={};['Website Direct Leads','2026 Relocation Guide - Kit','Appointments Booked Directly','Website Chat Leads','Chat Appointments'].forEach(function(n){var source=ss.getSheetByName(n);if(!source)throw Error('Missing source');watermarks[n]=source.getLastRow();});
+    cfg.mode='LIVE';cfg.cutoffAt=new Date().toISOString();cfg.watermarks=watermarks;cfg.staffApproved=true;cfg.noticeVersion='lir-email-updates-v2';cfg.release='20261125';
+    sheet.getRange(2,2).setValue(JSON.stringify(cfg));PropertiesService.getScriptProperties().setProperty('NURTURE_CONTROL',JSON.stringify(cfg));SpreadsheetApp.flush();
+    Logger.log(JSON.stringify({ok:true,mode:cfg.mode,cutoffAt:cfg.cutoffAt,watermarks:cfg.watermarks,triggerAdded:false,oldLeadsEnrolled:false}));return cfg;
+  }finally{lock.releaseLock();}
+}

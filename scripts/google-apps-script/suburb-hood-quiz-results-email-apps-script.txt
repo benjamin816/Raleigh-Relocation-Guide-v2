@@ -188,14 +188,7 @@ function sendSuburbResultsEmail_(lead, isTest) {
       '<p style="margin-top:20px;font-size:12px;color:#5b6770;">This quiz is guidance only. Final fit depends on inventory, timing, and your exact priorities.</p>' +
     '</div>';
 
-  MailApp.sendEmail({
-    to: toEmail,
-    name: CONFIG.EMAIL_FROM_NAME,
-    subject: subject,
-    body: textBody,
-    htmlBody: htmlBody,
-    replyTo: CONFIG.ADMIN_EMAIL
-  });
+  sendTeamQuizEmail_(toEmail, subject, textBody, htmlBody);
 }
 
 function buildSuburbBlockHtml_(suburbName, position) {
@@ -844,12 +837,12 @@ function sendNeighborhoodResultsEmail_(lead, isTest) {
       '</div>' +
     '</div>';
 
-  MailApp.sendEmail({
-    to: toEmail,
-    name: CONFIG.EMAIL_FROM_NAME,
-    subject: 'Your ' + quizCity + ' Neighborhood Quiz Results Are In!',
-    body: textBody,
-    htmlBody: htmlBody,
-    replyTo: CONFIG.ADMIN_EMAIL
-  });
+  sendTeamQuizEmail_(toEmail, 'Your ' + quizCity + ' Neighborhood Quiz Results Are In!', textBody, htmlBody);
 }
+
+function sendTeamQuizEmail_(to, subject, body, html) {
+  var from='livinginraleighteam@gmail.com';
+  if(GmailApp.getAliases().indexOf(from)===-1)throw new Error('Team sender alias unavailable; quiz email held.');
+  GmailApp.sendEmail(to,subject,body,{from:from,name:CONFIG.EMAIL_FROM_NAME,htmlBody:html,replyTo:CONFIG.ADMIN_EMAIL});
+}
+function verifyQuizTeamSender(){Logger.log(JSON.stringify({aliases:GmailApp.getAliases()}));}
