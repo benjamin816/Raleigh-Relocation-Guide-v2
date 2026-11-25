@@ -16,7 +16,7 @@
     }
     return {
       email_marketing_opt_in: true,
-      email_marketing_notice_version: "lir-email-updates-v1",
+      email_marketing_notice_version: "lir-email-updates-v2",
       email_marketing_capture: capture,
       email_marketing_event_id: attempt.id
     };
@@ -2116,7 +2116,7 @@
       "<div class='lead-popup-consent-copy'>",
       "<p class='lead-popup-consent-note'>" + contactRequestDisclosureText + "</p>",
       "</div>",
-      "<label class='lead-popup-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I will confirm using the link you email me, and I can unsubscribe at any time. (Optional)</span></label>",
+      "<label class='lead-popup-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>",
       "<div class='lead-popup-step-actions'>",
       "<button type='button' class='lead-popup-button' data-lead-action='submit' data-submit-ready='false' data-submit-hint='Please complete the form to continue.'>Submit</button>",
       "</div>",
@@ -4118,7 +4118,7 @@
       "<div class='call-contact-consent' data-legal-consent='true'>",
       "<p>" + contactRequestDisclosureText + "</p>",
       "</div>",
-      "<label class='legal-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I will confirm using the link you email me, and I can unsubscribe at any time. (Optional)</span></label>",
+      "<label class='legal-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>",
       "<div class='call-contact-actions'>",
       "<button type='submit' class='call-contact-submit' data-call-contact-submit data-submit-ready='false' data-submit-hint='Please complete the form to continue.'>Contact Us</button>",
       "<a class='call-contact-direct-call' href='tel:+19197377896'>Prefer to call now? 919-737-7896</a>",

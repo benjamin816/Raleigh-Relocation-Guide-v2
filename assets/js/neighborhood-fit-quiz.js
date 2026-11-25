@@ -939,7 +939,7 @@
                 <input type="tel" name="phone" id="phoneInput" autocomplete="tel" required>
               </label>
               <p class="neighborhood-fit-field full" data-legal-consent="true">By submitting, you ask the Living in Raleigh team to contact you by phone or email about your results.</p>
-              <label class='neighborhood-fit-field full legal-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I will confirm using the link you email me, and I can unsubscribe at any time. (Optional)</span></label>
+              <label class='neighborhood-fit-field full legal-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>
             </div>
             <div class="neighborhood-fit-submit-wrap">
               <div class="neighborhood-fit-submit-tooltip">Please complete the form to continue.</div>

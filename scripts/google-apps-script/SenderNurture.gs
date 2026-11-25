@@ -66,7 +66,7 @@ var LirSenderNurture = (function(){
       if(!/^\S+@\S+\.\S+$/.test(email) || r[3]!=='Website Direct Leads' || Number(r[4])<=cfg.watermarks[r[3]])throw Error('Invalid accepted source evidence');
       var source=ss.getSheetByName(r[3]);
       if(!source || Number(r[4])>source.getLastRow() || digest(jsonRow(source.getRange(Number(r[4]),1,1,34).getValues()[0]))!==r[5])throw Error('Accepted source changed');
-      add(email,{id:r[0],kind:r[6],permission:r[9]===true && r[8]==='lir-email-updates-v1',confirmedAt:r[12]||'',revokedAt:r[13]||''});
+      add(email,{id:r[0],kind:r[6],permission:r[9]===true && ['lir-email-updates-v1','lir-email-updates-v2'].includes(r[8]),confirmedAt:r[12]||'',revokedAt:r[13]||''});
     }
     ['Appointments Booked Directly','Chat Appointments'].forEach(function(name){
       var s=ss.getSheetByName(name);if(!s)return;var last=frontier[name],start=cfg.watermarks[name]+1;
