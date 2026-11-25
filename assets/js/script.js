@@ -1,4 +1,37 @@
 (function () {
+  // Separate optional marketing permission; never infers permission from contact or SMS.
+  var emailMarketingAttempts = new WeakMap();
+  function clearEmailMarketingAttempt(root) { if (root) emailMarketingAttempts.delete(root); }
+  function emailMarketingEvidence(root, capture, email) {
+    var box = root && root.querySelector("[data-email-marketing-opt-in]");
+    var identity = String(email || "").trim().toLowerCase();
+    if (!box || box.checked !== true || !identity || !window.crypto || typeof window.crypto.randomUUID !== "function") {
+      clearEmailMarketingAttempt(root);
+      return { email_marketing_opt_in: false };
+    }
+    var attempt = emailMarketingAttempts.get(root);
+    if (!attempt || attempt.identity !== identity || attempt.capture !== capture) {
+      attempt = { identity: identity, capture: capture, id: window.crypto.randomUUID() };
+      emailMarketingAttempts.set(root, attempt);
+    }
+    return {
+      email_marketing_opt_in: true,
+      email_marketing_notice_version: "lir-email-updates-v1",
+      email_marketing_capture: capture,
+      email_marketing_event_id: attempt.id
+    };
+  }
+  window.LirEmailMarketingConsent = emailMarketingEvidence;
+  window.addEventListener("reset", function (event) {
+    clearEmailMarketingAttempt(event.target);
+  }, true);
+  window.addEventListener("change", function (event) {
+    if (event.target && event.target.matches && event.target.matches("[data-email-marketing-opt-in]") &&
+        event.target.checked !== true) {
+      clearEmailMarketingAttempt(event.target.closest("[data-email-marketing-form], form"));
+    }
+  }, true);
+
   var yearNodes = document.querySelectorAll("[data-year]");
   var currentYear = new Date().getFullYear();
   yearNodes.forEach(function (node) {
@@ -2030,7 +2063,7 @@
       "<p class='lead-popup-intro-time'>&#9716; Takes 1 Minute</p>",
       "</div>",
       "</section>",
-      "<section class='lead-popup-screen lead-popup-screen--form' data-lead-screen='form'>",
+      "<section class='lead-popup-screen lead-popup-screen--form' data-lead-screen='form' data-email-marketing-form>",
       "<div class='lead-popup-progress'><span class='lead-popup-progress-fill' data-lead-progress-fill></span></div>",
       "<div class='lead-popup-form-body'>",
       "<section class='lead-popup-step is-active' data-step-index='0'>",
@@ -2083,6 +2116,7 @@
       "<div class='lead-popup-consent-copy'>",
       "<p class='lead-popup-consent-note'>" + contactRequestDisclosureText + "</p>",
       "</div>",
+      "<label class='lead-popup-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I will confirm using the link you email me, and I can unsubscribe at any time. (Optional)</span></label>",
       "<div class='lead-popup-step-actions'>",
       "<button type='button' class='lead-popup-button' data-lead-action='submit' data-submit-ready='false' data-submit-hint='Please complete the form to continue.'>Submit</button>",
       "</div>",
@@ -2696,6 +2730,9 @@
       viewportScrollLock.lock();
       bindLeadPopupScrollGuard();
       lastTrackedStepViewKey = "";
+      var marketingBox = screens.form.querySelector("[data-email-marketing-opt-in]");
+      if (marketingBox) marketingBox.checked = false;
+      clearEmailMarketingAttempt(screens.form);
 
       if (forceOpen) {
         hasStartedForm = false;
@@ -2805,7 +2842,8 @@
         phone: phone,
         full_phone: phoneCountry + " " + phone,
         email: normalizeValue(formState.email),
-        sms_opt_in: false
+        sms_opt_in: false,
+        ...emailMarketingEvidence(screens.form, "buyer_seller_popup", formState.email)
       };
     };
 
@@ -3598,7 +3636,8 @@
         email: email,
         phone_country: "+1",
         phone: phone,
-        sms_opt_in: false
+        sms_opt_in: false,
+        ...emailMarketingEvidence(intakeForm, "new_construction", email)
       };
 
       trackIntakeEvent("new_construction_form_submit_attempt", {});
@@ -3887,7 +3926,8 @@
         email: email,
         phone: phone,
         full_address: propertyAddress,
-        sms_opt_in: false
+        sms_opt_in: false,
+        ...emailMarketingEvidence(homeEvalForm, "home_evaluation", email)
       };
 
       if (!homeEvalAppsScriptUrl || typeof window.fetch !== "function") {
@@ -4078,6 +4118,7 @@
       "<div class='call-contact-consent' data-legal-consent='true'>",
       "<p>" + contactRequestDisclosureText + "</p>",
       "</div>",
+      "<label class='legal-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I will confirm using the link you email me, and I can unsubscribe at any time. (Optional)</span></label>",
       "<div class='call-contact-actions'>",
       "<button type='submit' class='call-contact-submit' data-call-contact-submit data-submit-ready='false' data-submit-hint='Please complete the form to continue.'>Contact Us</button>",
       "<a class='call-contact-direct-call' href='tel:+19197377896'>Prefer to call now? 919-737-7896</a>",
@@ -4244,6 +4285,7 @@
 
     var showSuccessScreen = function () {
       form.reset();
+      clearEmailMarketingAttempt(form);
       clearInvalidState();
       setStatus("", false);
       updateSubmitButtonState();
@@ -4567,7 +4609,8 @@
         email: email,
         phone_country: "+1",
         phone: phone,
-        sms_opt_in: false
+        sms_opt_in: false,
+        ...emailMarketingEvidence(form, "requested_contact_popup", email)
       };
 
       trackAnalyticsEvent("requested_contact_submit_attempt", {

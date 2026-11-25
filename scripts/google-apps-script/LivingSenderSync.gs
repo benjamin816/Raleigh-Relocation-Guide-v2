@@ -16,26 +16,7 @@ const LIVING_SENDER_SOURCES = [
 ];
 
 function livingSenderSyncLeads() {
-  const lock = LockService.getScriptLock();
-  if (!lock.tryLock(1000)) return { ok: false, reason: 'Another sync is running.' };
-  try {
-    livingSenderToken_(); // Fail before opening the lead sheet if setup is incomplete.
-    const spreadsheet = SpreadsheetApp.openById(LIVING_SENDER_SPREADSHEET_ID);
-    const properties = PropertiesService.getScriptProperties();
-    const totals = { ok: true, scanned: 0, created: 0, added: 0, skipped: 0, suppressed: 0, errors: 0, sources: {} };
-    for (const source of LIVING_SENDER_SOURCES) {
-      const sheet = spreadsheet.getSheetByName(source.name);
-      if (!sheet && source.optional) continue;
-      if (!sheet) throw new Error('Missing Living lead tab: ' + source.name);
-      const result = livingSenderSyncSheet_(sheet, source, properties);
-      totals.sources[source.name] = result;
-      for (const key of ['scanned', 'created', 'added', 'skipped', 'suppressed', 'errors']) totals[key] += result[key];
-    }
-    Logger.log(JSON.stringify(totals)); // Counts only; never log contact details or token.
-    return totals;
-  } finally {
-    lock.releaseLock();
-  }
+  return LirSenderNurture.run();
 }
 
 function livingSenderSyncSheet_(sheet, source, properties) {
