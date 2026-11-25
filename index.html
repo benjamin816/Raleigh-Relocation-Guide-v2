@@ -89,6 +89,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Manrope:wght@400;500;600;700;800&family=Newsreader:opsz,wght@6..72,500;6..72,700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css?v=20261102-live1">
+  <link rel="stylesheet" href="/assets/css/client-reviews.css?v=20261125-1">
   <meta name="google-adsense-account" content="ca-pub-5221840001116187">
 </head>
 <body class="page-home">
@@ -111,7 +112,7 @@
               <a href="/relocation/">RELOCATION</a><span class="sep">/</span>
               <div class="menu-dropdown">
                 <a class="menu-trigger" href="/raleighs-hottest-deals/hottest-deals/">RALEIGH'S HOTTEST DEALS</a>
-                <div class="submenu">
+                <div class="submenu">
                   <a href="/raleighs-hottest-deals/hottest-deals/">HOTTEST DEALS</a>
                   <a href="/raleighs-hottest-deals/new-construction-process/">NEW CONSTRUCTION PROCESS</a>
                   <a href="/raleighs-hottest-deals/affordable-new-construction-hotlist/">AFFORDABLE NEW CONSTRUCTION HOTLIST</a>
@@ -249,28 +250,28 @@
         </div>
       </section>
 
-      <section class="section template-band home-client-voices">
+      <section class="section template-band home-client-voices" data-client-reviews aria-label="Client reviews">
         <div class="container home-client-voices-inner">
           <div class="home-client-voices-head">
             <p class="home-client-voices-script">Trusted by Raleigh Homeowners</p>
             <h2>WHAT OUR CLIENTS ARE SAYING</h2>
             <p class="section-copy">Hear from our clients about their experiences working with The Living in Raleigh NC Team. From smooth relocations to successful home sales, we're proud to deliver exceptional results every step of the way.</p>
           </div>
-          <div class="home-client-voices-grid">
-            <article class="home-client-voice">
+          <div class="home-client-voices-grid" aria-live="off">
+            <article class="home-client-voice" data-author-key="100278633276313651213">
               <p class="home-client-voice-mark">&ldquo;</p>
               <p>We have worked with a number of realtors over the years, and Ben has been by far the best. He may be young, but he has the knowledge and professionalism of someone who has been in the field for decades. When working with Ben, you never feel like he&rsquo;s just trying to &ldquo;sell you a house&rdquo; he genuinely wants to make sure you&rsquo;re satisfied.</p>
               <p>Working with Ben feels more like a friendship than a business transaction, which is exactly what you want in a realtor. If you&rsquo;re looking for someone to help you find your next home, look no further!</p>
               <strong>DAVEION K - HOLLY SPRINGS NC</strong>
             </article>
-            <article class="home-client-voice">
+            <article class="home-client-voice" data-author-key="101871403183193360292">
               <p class="home-client-voice-mark">&ldquo;</p>
               <p>My wife and I relocated from Pennsylvania to the Raleigh area and chose Ben after researching agents in the market. From the start, he took the time to understand our timeline, priorities, and the areas that would best fit us.</p>
               <p>Since we were moving from out of state, Ben recorded detailed video walkthroughs and gave honest feedback so we could confidently evaluate homes remotely. He ultimately found us a new construction opportunity with strong builder incentives, negotiated closing costs covered, and helped us lock in a 4.25% interest rate when rates were around 6.8%.</p>
               <p>We were able to close in just one month before our relocation deadline, and the entire process was smooth from start to finish. I would highly recommend Ben to anyone relocating to the Raleigh area.</p>
               <strong>CESAR H - ROLESVILLE NC</strong>
             </article>
-            <article class="home-client-voice">
+            <article class="home-client-voice" data-author-key="106721562190446399462">
               <p class="home-client-voice-mark">&ldquo;</p>
               <p>We highly recommend working with Ben! He has been such a great help to us from selling our old home to buying our forever home!</p>
               <p>Ben was on top of his game when it came to looking for our new home. We didn&rsquo;t make it too easy with our preferred radius and long list of asks. He was very responsive at all times and always had a smile on. We viewed so many homes together our daughter started calling him &ldquo;Uncle Ben&rdquo;</p>
@@ -278,6 +279,17 @@
               <strong>NATALY C - KNIGHTDALE NC</strong>
             </article>
           </div>
+          <div class="client-review-controls" hidden>
+            <button type="button" data-review-prev aria-label="Previous reviews">← Previous</button>
+            <button type="button" data-review-pause aria-pressed="false" aria-label="Pause or play automatic review rotation">Pause</button>
+            <button type="button" data-review-next aria-label="Next reviews">Next →</button>
+            <span class="visually-hidden" role="status" aria-live="polite"></span>
+          </div>
+          <p class="client-review-sources">Read more reviews on Google:
+            <a href="https://share.google/nPSah21Q8vWy5MJh0" target="_blank" rel="noopener noreferrer">Living in Raleigh Team</a>
+            <span aria-hidden="true"> · </span>
+            <a href="https://share.google/QXlWEkw9pWY6wjAxQ" target="_blank" rel="noopener noreferrer">Benjamin Carver</a>
+          </p>
         </div>
       </section>
 
@@ -567,6 +579,7 @@
     </footer>
   </div>
   <script src="assets/js/script.js?v=20261117-intake-return1" defer></script>
+  <script src="/assets/js/client-reviews.js?v=20261125-1" defer></script>
 </body>
 </html>
 

@@ -1,0 +1,17 @@
+.home-client-voices .client-review-controls { display:flex; justify-content:center; gap:12px; margin-top:28px; flex-wrap:wrap; }
+.home-client-voices .client-review-controls[hidden] { display:none; }
+.client-review-controls button { min-height:44px; padding:9px 17px; border:1px solid #d6aa2b; border-radius:7px; background:transparent; color:#fff; font:inherit; cursor:pointer; }
+.client-review-controls button:hover,.client-review-controls button:focus-visible { background:#d6aa2b; color:#173f33; }
+.client-review-controls button:focus-visible,.home-client-voices a:focus-visible,.home-client-voices summary:focus-visible { outline:3px solid #fff; outline-offset:4px; }
+.home-template .client-reviews-ready .home-client-voices-grid { align-items:stretch; }
+.home-template .home-client-voice.client-review-card { display:flex; flex-direction:column; gap:12px; min-height:310px; padding:24px; border:1px solid #ffffff30; border-radius:12px; background:#ffffff08; }
+.home-template .home-client-voice.client-review-card > p:not(.home-client-voice-mark) { font-size:16px; line-height:1.65; }
+.home-template .home-client-voice.client-review-card .client-review-stars { color:#e6b53d; font-size:20px; letter-spacing:3px; }
+.home-template .home-client-voice.client-review-card strong { margin-top:auto; padding-top:12px; }
+.client-review-card a { color:inherit; text-underline-offset:3px; }
+.home-template .home-client-voice.client-review-card .client-review-attribution { font-size:12px; line-height:1.5; color:#d6e3d9; }
+.client-review-card summary { cursor:pointer; color:#e6b53d; font-size:14px; }
+.client-review-card details p { white-space:pre-line; font-size:16px; line-height:1.65; color:#ecf3ee; }
+.home-client-voices .client-review-sources { margin-top:24px; text-align:center; font-size:14px; line-height:1.8; color:#d6e3d9; }
+.client-review-sources a { color:#fff; text-underline-offset:3px; }
+@media (max-width:760px) { .home-template .client-reviews-ready .home-client-voices-grid { grid-template-columns:minmax(0,1fr); } .home-template .home-client-voice.client-review-card { min-height:320px; } }
