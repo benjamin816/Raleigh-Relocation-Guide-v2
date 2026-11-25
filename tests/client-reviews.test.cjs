@@ -36,7 +36,7 @@ test('provider reads every page, rejects partial failures, and never writes a li
 
 test('five-star imports only and abbreviated names',()=>{
  const {displayName}=require('../assets/js/client-reviews.js');
- assert.equal(displayName('Jack Hamm'),'Jack H.');assert.equal(displayName('Eve'),'Eve');
+ assert.equal(displayName('Jack Hamm'),'Jack H.');assert.equal(displayName('Eve'),'Eve');assert.equal(displayName('DAVEION K - HOLLY SPRINGS NC'),'DAVEION K.');
  assert.equal(deduplicate([{author:'A B',text:'Good',rating:4},{author:'C D',text:'Great',rating:5}]).length,1);
 });
 test('provider excludes lower and unknown ratings',async()=>{

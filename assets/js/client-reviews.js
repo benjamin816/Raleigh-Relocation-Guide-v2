@@ -12,7 +12,7 @@
     });
     return result;
   }
-  function displayName(value) { var parts = String(value || '').trim().split(/\s+/); return parts.length > 1 ? parts[0] + ' ' + parts[parts.length - 1].charAt(0).toUpperCase() + '.' : parts[0]; }
+  function displayName(value) { var parts = String(value || '').split(/\s+-\s+/)[0].trim().split(/\s+/); return parts.length > 1 ? parts[0] + ' ' + parts[parts.length - 1].charAt(0).toUpperCase() + '.' : parts[0]; }
   function page(rows, start, size) {
     return Array.from({length: Math.min(size, rows.length)}, function (_, i) { return rows[(start + i) % rows.length]; });
   }
