@@ -14,7 +14,10 @@ var LirNurtureRouting = (function(){
     if(input.inWeekly)return {action:'weekly',mutation:false};
     if(events.some(function(e){return e.kind==='unknown';}))return {action:'hold',reason:'unverified_source_intent'};
     // This is an irreversible assignment, including an uncertain provider write.
-    if(state.firstBlitz)return {action:'retain',route:state.firstBlitz};
+    if(state.firstBlitz){
+      if(state.retryRejectedBlitz&&!input.inBlitz){var allowed=events.some(function(e){return e.permission===true&&e.confirmedAt&&!e.revokedAt&&(state.firstBlitz==='relo'?e.kind==='relocation':e.kind==='passive');});return allowed?{action:'join',route:state.firstBlitz}:{action:'hold',reason:'assigned_blitz_permission_unavailable'};}
+      return {action:'retain',route:state.firstBlitz};
+    }
     if(input.inBlitz)return {action:'hold',reason:'unattributed_existing_blitz'};
     var eligible=events.filter(function(e){return e.permission===true && e.confirmedAt && !e.revokedAt && (e.kind==='relocation'||e.kind==='passive');});
     eligible.sort(function(a,b){return a.confirmedAt.localeCompare(b.confirmedAt)||a.id.localeCompare(b.id);});
@@ -107,13 +110,14 @@ var LirSenderNurture = (function(){
       if(op==='create')response=livingSenderRequest_('post','/subscribers',{email:email,groups:[],trigger_automation:false});
       else if(op==='add')response=livingSenderRequest_('post','/subscribers/groups/'+GROUP[route],{subscribers:[email],trigger_automation:route!=='weekly'});
       else response=livingSenderRequest_('delete','/subscribers/groups/'+GROUP[route],{subscribers:[email],trigger_automation:false});
+      if(response.code===429){if(op==='add'&&route!=='weekly')state.retryRejectedBlitz=true;state.pending=null;state.status='PROVIDER_RATE_LIMITED_RETRY_NEXT_RUN';persist(stages,row,email,state);audit(audits,email,attempt,'DEFINITIVELY_REJECTED_HTTP_429',attempt.subscriber);return false;}
       livingSenderRequireSuccess_(response,'provider mutation');
       audit(audits,email,attempt,'ACKNOWLEDGED_NOT_YET_VERIFIED',attempt.subscriber);
     }catch(err){state.status='PROVIDER_OUTCOME_UNCONFIRMED';persist(stages,row,email,state);audit(audits,email,attempt,'UNKNOWN_DO_NOT_REPOST',attempt.subscriber);return false;}
     var actual=profile(email),present=actual&&actual.groups.includes(GROUP[route]);
     var verified=op==='create'?!!actual:op==='add'?present:actual&&!present;
     if(!verified){state.status='PROVIDER_OUTCOME_UNCONFIRMED';persist(stages,row,email,state);return false;}
-    state.pending=null;state.providerId=actual.id;state.status=op==='remove'?'STOP_GROUP_REMOVED':op==='create'?'PROFILE_CREATED':route==='weekly'?'WEEKLY_VERIFIED':'BLITZ_ENTRY_REQUESTED';
+    state.pending=null;if(op==='add'&&route!=='weekly')state.retryRejectedBlitz=false;state.providerId=actual.id;state.status=op==='remove'?'STOP_GROUP_REMOVED':op==='create'?'PROFILE_CREATED':route==='weekly'?'WEEKLY_VERIFIED':'BLITZ_ENTRY_REQUESTED';
     persist(stages,row,email,state);audit(audits,email,attempt,'INDEPENDENT_READBACK_VERIFIED',actual.id);return true;
   }
   function run(){
@@ -127,7 +131,7 @@ var LirSenderNurture = (function(){
       for(var i=1;i<existing.length;i++){var em=key(existing[i][0]);if(map[em])throw Error('Duplicate mailing state identity');map[em]={row:i+1,state:JSON.parse(existing[i][1])};}
       var count=0,emails=Object.keys(snap.by).sort(),offset=Number(PropertiesService.getScriptProperties().getProperty('NURTURE_SCAN_OFFSET')||0);
       if(!Number.isSafeInteger(offset)||offset<0)throw Error('Invalid scan offset');
-      for(var x=0;x<emails.length && count<10;x++){
+      for(var x=0;x<emails.length && count<6;x++){
         var email=emails[(offset+x)%emails.length],entry=map[email]||{row:0,state:{}},state=entry.state;
         var isQa=/^benjamin\.raleighrealtor\+sender-[a-z0-9-]+@gmail\.com$/.test(email);
         if(cfg.mode==='QA'&&!isQa || cfg.mode==='LIVE'&&isQa)continue;
@@ -148,7 +152,7 @@ var LirSenderNurture = (function(){
         if(decision.action==='stop'){
           for(var route of ['relo','general'])if(p.groups.includes(GROUP[route])){if(!effect(email,state,entry.row,stages,audits,p,snap,ss,'remove',route))break;p=profile(email);}
         }else if(decision.action==='join'){
-          if(!p){effect(email,state,entry.row,stages,audits,p,snap,ss,'create',decision.route);count++;continue;}
+          if(!p){if(!effect(email,state,entry.row,stages,audits,p,snap,ss,'create',decision.route)){count++;continue;}p=profile(email);}
           if(p.status==='active'&&!p.groups.includes(GROUP[decision.route]))effect(email,state,entry.row,stages,audits,p,snap,ss,'add',decision.route);
         }
         count++;
