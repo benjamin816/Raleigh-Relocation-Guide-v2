@@ -31,19 +31,25 @@ export function projectReviews(pages) {
   return {version:1,mode:'google-business-profile',updatedAt:new Date().toISOString(),sources:SOURCES,reviews};
 }
 export async function readProfiles(env, fetcher=fetch) {
-  if(!env.GBP_CLIENT_ID||!env.GBP_CLIENT_SECRET||!env.GBP_REFRESH_TOKEN) throw new Error('GOOGLE_CONNECTION_REQUIRED');
+  if(!env.GBP_CLIENT_ID||!env.GBP_CLIENT_SECRET||(!env.GBP_REFRESH_TOKEN&&!env.GBP_REFRESH_TOKENS)) throw new Error('GOOGLE_CONNECTION_REQUIRED');
   const locations=JSON.parse(env.GBP_LOCATIONS||'{}');
+  const refreshTokens=JSON.parse(env.GBP_REFRESH_TOKENS||'{}'), accessTokens=new Map();
   for(const s of SOURCES) if(!/^accounts\/\d+\/locations\/\d+$/.test(locations[s.id]||''))throw new Error('PROFILE_CONFIGURATION_REQUIRED');
-  const tokenResponse=await fetcher('https://oauth2.googleapis.com/token',{method:'POST',body:new URLSearchParams({client_id:env.GBP_CLIENT_ID,client_secret:env.GBP_CLIENT_SECRET,refresh_token:env.GBP_REFRESH_TOKEN,grant_type:'refresh_token'}),signal:AbortSignal.timeout(10000)});
-  if(!tokenResponse.ok)throw new Error('GOOGLE_AUTHORIZATION_UNAVAILABLE');
-  const token=await tokenResponse.json();if(!token.access_token)throw new Error('GOOGLE_AUTHORIZATION_UNAVAILABLE');
   const pages={};
   for(const source of SOURCES){
+    const refresh=refreshTokens[source.id]||env.GBP_REFRESH_TOKEN;
+    if(!refresh)throw new Error('GOOGLE_CONNECTION_REQUIRED');
+    if(!accessTokens.has(refresh)){
+      const response=await fetcher('https://oauth2.googleapis.com/token',{method:'POST',body:new URLSearchParams({client_id:env.GBP_CLIENT_ID,client_secret:env.GBP_CLIENT_SECRET,refresh_token:refresh,grant_type:'refresh_token'}),signal:AbortSignal.timeout(10000)});
+      if(!response.ok)throw new Error('GOOGLE_AUTHORIZATION_UNAVAILABLE');
+      const token=await response.json();if(!token.access_token)throw new Error('GOOGLE_AUTHORIZATION_UNAVAILABLE');
+      accessTokens.set(refresh,token.access_token);
+    }
     pages[source.id]=[];let next='';const seen=new Set();
     for(let n=0;n<20;n++){
       const url=new URL('https://mybusiness.googleapis.com/v4/'+locations[source.id]+'/reviews');
       url.search=new URLSearchParams({pageSize:'50',orderBy:'updateTime desc',...(next?{pageToken:next}:{})}).toString();
-      const response=await fetcher(url.href,{headers:{Authorization:'Bearer '+token.access_token},signal:AbortSignal.timeout(10000)});
+      const response=await fetcher(url.href,{headers:{Authorization:'Bearer '+accessTokens.get(refresh)},signal:AbortSignal.timeout(10000)});
       if(!response.ok)throw new Error('GOOGLE_REVIEWS_UNAVAILABLE');
       const data=await response.json();
       if(data.reviews!==undefined&&!Array.isArray(data.reviews))throw new Error('GOOGLE_REVIEWS_INVALID');
