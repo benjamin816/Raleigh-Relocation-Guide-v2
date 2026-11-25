@@ -3,22 +3,134 @@
   "mode": "verified-selection",
   "checkedOn": "2026-11-25",
   "sources": [
-    {"id":"team","name":"The Official Living in Raleigh Team","url":"https://share.google/nPSah21Q8vWy5MJh0"},
-    {"id":"benjamin","name":"Benjamin Carver | eXp Raleigh Realtor","url":"https://share.google/QXlWEkw9pWY6wjAxQ"}
+    {
+      "id": "team",
+      "name": "The Official Living in Raleigh Team",
+      "url": "https://share.google/nPSah21Q8vWy5MJh0"
+    },
+    {
+      "id": "benjamin",
+      "name": "Benjamin Carver | eXp Raleigh Realtor",
+      "url": "https://share.google/QXlWEkw9pWY6wjAxQ"
+    }
   ],
   "reviews": [
-    {"id":"team-114614813712268050391","author":"fixapony","authorKey":"114614813712268050391","source":"team","rating":5,"excerpt":true,"text":"The personal video tours that they made of the homes I was interested in were thorough and informative."},
-    {"id":"team-105628578114905946452","author":"Colin Bochicchio","authorKey":"105628578114905946452","source":"team","rating":5,"excerpt":true,"text":"He ensured that we had all the information in working with various builders and has real ethics and integrity."},
-    {"id":"benjamin-117382458136564869428","author":"jose O.","authorKey":"117382458136564869428","source":"benjamin","rating":5,"excerpt":true,"text":"He was patient through every question, explained things clearly, and made what could have been an overwhelming process feel manageable."},
-    {"id":"benjamin-103440213885238931560","author":"Michael Martin","authorKey":"103440213885238931560","source":"benjamin","rating":5,"excerpt":true,"text":"Ben fights for his clients and will learn about your situation and help find the right solution for you when buying or selling a home."},
-    {"id":"benjamin-100190359839544832256","author":"Jack Hamm","authorKey":"100190359839544832256","source":"benjamin","rating":5,"excerpt":true,"text":"Benjamin did an amazing job with our closing"},
-    {"id":"benjamin-110727222821765230078","author":"Jarrod Kolb","authorKey":"110727222821765230078","source":"benjamin","rating":5,"excerpt":true,"text":"We had a great experience dealing with Ben during our relocation! The knowledge he provided was amazing"},
-    {"id":"benjamin-103467476583474988420","author":"Christine W","authorKey":"103467476583474988420","source":"benjamin","rating":5,"excerpt":true,"text":"We had an absolutely fantastic experience working with Benjamin"},
-    {"id":"benjamin-106319625271611546347","author":"Ric Culaton","authorKey":"106319625271611546347","source":"benjamin","rating":5,"excerpt":true,"text":"We had a great experience working with Ben on our investment property."},
-    {"id":"benjamin-117307663441172920232","author":"Eve","authorKey":"117307663441172920232","source":"benjamin","rating":5,"excerpt":true,"text":"We worked with Benjamin and had a great experience with him. We were first time home buyers and he guided us throughout the entire process"},
-    {"id":"benjamin-102757373520111549910","author":"Garima Sharma","authorKey":"102757373520111549910","source":"benjamin","rating":5,"excerpt":true,"text":"We met Ben through Bigger Pockets forum and found him knowledgeable and always eager to assist with any small or major questions"},
-    {"id":"benjamin-116298445592820894082","author":"Arunkumar TJ","authorKey":"116298445592820894082","source":"benjamin","rating":5,"excerpt":true,"text":"Benjamin was more than just a real estate agent; he was a friendly and approachable person who made the entire home-buying process enjoyable."},
-    {"id":"benjamin-107036280150439530284","author":"Jack Parkison","authorKey":"107036280150439530284","source":"benjamin","rating":5,"excerpt":false,"text":"Benjamin was responsive, professional, and super helpful during the home-buying process!"},
-    {"id":"benjamin-118324291768567452092","author":"avinash mahamkali","authorKey":"118324291768567452092","source":"benjamin","rating":5,"excerpt":true,"text":"Ben has been an amazing Realtor for us."}
+    {
+      "id": "team-114614813712268050391",
+      "author": "fixapony",
+      "authorKey": "114614813712268050391",
+      "source": "team",
+      "rating": 5,
+      "excerpt": true,
+      "text": "The personal video tours that they made of the homes I was interested in were thorough and informative."
+    },
+    {
+      "id": "team-105628578114905946452",
+      "author": "Colin Bochicchio",
+      "authorKey": "105628578114905946452",
+      "source": "team",
+      "rating": 5,
+      "excerpt": true,
+      "text": "He ensured that we had all the information in working with various builders and has real ethics and integrity."
+    },
+    {
+      "id": "benjamin-117382458136564869428",
+      "author": "jose O.",
+      "authorKey": "117382458136564869428",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "He was patient through every question, explained things clearly, and made what could have been an overwhelming process feel manageable."
+    },
+    {
+      "id": "benjamin-103440213885238931560",
+      "author": "Michael Martin",
+      "authorKey": "103440213885238931560",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "Ben fights for his clients and will learn about your situation and help find the right solution for you when buying or selling a home."
+    },
+    {
+      "id": "benjamin-100190359839544832256",
+      "author": "Jack Hamm",
+      "authorKey": "100190359839544832256",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "Benjamin did an amazing job with our closing… Everything he did was professional and executed efficient and correctly. 10/10!"
+    },
+    {
+      "id": "benjamin-110727222821765230078",
+      "author": "Jarrod Kolb",
+      "authorKey": "110727222821765230078",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "We had a great experience dealing with Ben during our relocation! The knowledge he provided was amazing"
+    },
+    {
+      "id": "benjamin-103467476583474988420",
+      "author": "Christine W",
+      "authorKey": "103467476583474988420",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "We had an absolutely fantastic experience working with Benjamin"
+    },
+    {
+      "id": "benjamin-106319625271611546347",
+      "author": "Ric Culaton",
+      "authorKey": "106319625271611546347",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "We had a great experience working with Ben on our investment property."
+    },
+    {
+      "id": "benjamin-117307663441172920232",
+      "author": "Eve",
+      "authorKey": "117307663441172920232",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "We worked with Benjamin and had a great experience with him. We were first time home buyers and he guided us throughout the entire process"
+    },
+    {
+      "id": "benjamin-102757373520111549910",
+      "author": "Garima Sharma",
+      "authorKey": "102757373520111549910",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "We met Ben through Bigger Pockets forum and found him knowledgeable and always eager to assist with any small or major questions"
+    },
+    {
+      "id": "benjamin-116298445592820894082",
+      "author": "Arunkumar TJ",
+      "authorKey": "116298445592820894082",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "Benjamin was more than just a real estate agent; he was a friendly and approachable person who made the entire home-buying process enjoyable."
+    },
+    {
+      "id": "benjamin-107036280150439530284",
+      "author": "Jack Parkison",
+      "authorKey": "107036280150439530284",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": false,
+      "text": "Benjamin was responsive, professional, and super helpful during the home-buying process!"
+    },
+    {
+      "id": "benjamin-118324291768567452092",
+      "author": "avinash mahamkali",
+      "authorKey": "118324291768567452092",
+      "source": "benjamin",
+      "rating": 5,
+      "excerpt": true,
+      "text": "Ben has been an amazing Realtor for us."
+    }
   ]
 }

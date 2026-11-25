@@ -20,7 +20,7 @@ export function projectReviews(pages) {
   const reviews=[];
   for(const source of SOURCES) for(const review of pages[source.id]||[]) {
     const author=review.reviewer?.displayName, text=review.comment;
-    if(!author||!text||typeof text!=='string'||review.reviewer?.isAnonymous)continue;
+    if(!author||!text||typeof text!=='string'||review.reviewer?.isAnonymous||RATINGS[review.starRating]!==5)continue;
     const words=text.trim().split(/\s+/), authorKey=KNOWN_AUTHORS[normalize(author)]||source.id+':'+review.reviewId;
     reviews.push({id:source.id+':'+review.reviewId,author,authorKey,
       authorUrl:KNOWN_AUTHORS[normalize(author)]?'https://www.google.com/maps/contrib/'+authorKey+'/reviews':undefined,

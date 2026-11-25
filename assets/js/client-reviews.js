@@ -4,7 +4,7 @@
   function deduplicate(rows) {
     var result = [], ids = new Set(), authors = new Set(), texts = new Set();
     rows.forEach(function (row) {
-      if (!row || typeof row.text !== 'string' || !row.text.trim() || !row.author) return;
+      if (!row || (!row.legacy && row.rating !== 5) || typeof row.text !== 'string' || !row.text.trim() || !row.author) return;
       var author = row.authorKey || normalize(row.author), text = normalize(row.text);
       if ((row.id && ids.has(row.id)) || authors.has(author) || texts.has(text)) return;
       if (row.id) ids.add(row.id);
@@ -12,10 +12,11 @@
     });
     return result;
   }
+  function displayName(value) { var parts = String(value || '').trim().split(/\s+/); return parts.length > 1 ? parts[0] + ' ' + parts[parts.length - 1].charAt(0).toUpperCase() + '.' : parts[0]; }
   function page(rows, start, size) {
     return Array.from({length: Math.min(size, rows.length)}, function (_, i) { return rows[(start + i) % rows.length]; });
   }
-  if (typeof module === 'object' && module.exports) module.exports = {normalize: normalize, deduplicate: deduplicate, page: page};
+  if (typeof module === 'object' && module.exports) module.exports = {normalize: normalize, deduplicate: deduplicate, page: page, displayName: displayName};
   if (!root.document) return;
   var section = document.querySelector('[data-client-reviews]');
   if (!section) return;
@@ -38,19 +39,16 @@
     var fresh = data.mode !== 'google-business-profile' || Date.now() - Date.parse(data.updatedAt) < 30 * 86400000;
     var rows = deduplicate((fresh ? data.reviews : []).concat(legacy));
     if (!rows.length) return;
-    var sources = new Map(data.sources.map(function (s) { return [s.id, s]; }));
-    var mobile = matchMedia('(max-width: 760px)'), reduced = matchMedia('(prefers-reduced-motion: reduce)');
-    var start = 0, userPaused = false, hovered = false, visible = false;
-    var controls = section.querySelector('.client-review-controls'), status = controls.querySelector('[role="status"]');
-    var pause = controls.querySelector('[data-review-pause]');
-    var timer;
-    function safeGoogle(url) {
-      try { var u = new URL(url); return u.protocol === 'https:' && /(^|\.)google\.com$|^share\.google$/.test(u.hostname) ? u.href : null; } catch (_) { return null; }
-    }
-    function link(label, url) {
-      var a = document.createElement('a'); a.textContent = label; a.href = url;
-      a.target = '_blank'; a.rel = 'noopener noreferrer'; return a;
-    }
+    var mobile = matchMedia('(max-width: 760px)');
+    var start = 0;
+    try {
+      var key = 'lir-review-session-v1', saved = sessionStorage.getItem(key);
+      if (saved === null) {
+        start = Number(localStorage.getItem('lir-review-next-v1')) || 0;
+        sessionStorage.setItem(key, String(start));
+        localStorage.setItem('lir-review-next-v1', String((start + 3) % rows.length));
+      } else start = Number(saved) || 0;
+    } catch (_) { start = Math.floor(Math.random() * rows.length); }
     function render(announce) {
       var size = mobile.matches ? 1 : 3;
       grid.replaceChildren();
@@ -69,35 +67,14 @@
           summary.textContent = 'Read full testimonial'; full.textContent = row.text; details.append(summary, full); card.append(details);
         }
         var author = document.createElement('strong');
-        var profile = safeGoogle(row.authorUrl || (row.authorKey && /^\d+$/.test(row.authorKey) ? 'https://www.google.com/maps/contrib/' + row.authorKey + '/reviews' : ''));
-        if (profile && !row.legacy) author.append(link(row.author, profile)); else author.textContent = row.author;
-        card.append(author);
+        author.textContent = displayName(row.author); card.append(author);
         var attribution = document.createElement('p'); attribution.className = 'client-review-attribution';
-        var source = sources.get(row.source), sourceUrl = source && safeGoogle(source.url);
-        if (row.legacy) attribution.textContent = 'Client testimonial';
-        else if (sourceUrl) attribution.append(link('Google review' + (row.excerpt ? ' excerpt' : '') + ' · ' + source.name, sourceUrl));
-        else attribution.textContent = 'Google review excerpt';
+        attribution.textContent = row.legacy ? 'Client testimonial' : 'Google Review';
         card.append(attribution); grid.append(card);
       });
-      section.classList.add('client-reviews-ready'); controls.hidden = rows.length <= size;
-      status.textContent = announce ? 'Showing reviews ' + (start + 1) + '–' + (((start + Math.min(size, rows.length) - 1) % rows.length) + 1) + ' of ' + rows.length : '';
+      section.classList.add('client-reviews-ready');
     }
-    function move(direction, announce) { start = (start + direction * (mobile.matches ? 1 : 3) + rows.length) % rows.length; render(announce); }
-    function resetTimer() {
-      clearInterval(timer);
-      if (userPaused || reduced.matches) return;
-      timer = setInterval(function () {
-        if (visible && !document.hidden && !hovered && !section.contains(document.activeElement) && !section.querySelector('details[open]')) move(1, false);
-      }, 12000);
-    }
-    controls.querySelector('[data-review-prev]').addEventListener('click', function () { move(-1, true); resetTimer(); });
-    controls.querySelector('[data-review-next]').addEventListener('click', function () { move(1, true); resetTimer(); });
-    pause.addEventListener('click', function () { userPaused = !userPaused; pause.textContent = userPaused ? 'Play' : 'Pause'; pause.setAttribute('aria-pressed', String(userPaused)); resetTimer(); });
-    section.addEventListener('mouseenter', function () { hovered = true; }); section.addEventListener('mouseleave', function () { hovered = false; });
     mobile.addEventListener('change', function () { render(false); });
-    reduced.addEventListener('change', resetTimer);
-    if ('IntersectionObserver' in root) new IntersectionObserver(function (entries) { visible = entries[0].isIntersecting; }, {threshold: .1}).observe(section);
-    else visible = true;
-    render(false); resetTimer();
+    render(false);
   }).catch(function () { /* Keep the existing, server-rendered testimonials. */ }).finally(function () { clearTimeout(timeout); });
 })(typeof window !== 'undefined' ? window : globalThis);
