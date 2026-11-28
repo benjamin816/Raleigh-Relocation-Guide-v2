@@ -1,0 +1,58 @@
+/* The suburb and neighborhood quizzes share one lead intake design. */
+.neighborhood-fit-lead-gate.shared-quiz-intake:not([hidden]) {
+  display: block;
+  background: var(--primary-green);
+  color: #fff;
+  border-color: transparent;
+}
+.shared-quiz-intake h2,
+.shared-quiz-intake p,
+.shared-quiz-intake .quiz-field span { color: #fff; }
+.shared-quiz-intake h2,
+.shared-quiz-intake > p,
+.shared-quiz-intake .shared-quiz-form { max-width: 980px; margin-inline: auto; }
+.shared-quiz-intake .shared-quiz-form { display: block; }
+.shared-quiz-intake .quiz-form-grid {
+  display: grid;
+  gap: .9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.shared-quiz-intake .quiz-field { display: grid; gap: .35rem; min-width: 0; }
+.shared-quiz-intake .quiz-field.full { grid-column: 1 / -1; }
+.shared-quiz-intake .quiz-field input:not([type="checkbox"]) {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #cddbe4;
+  border-radius: 12px;
+  padding: .8rem;
+  font: inherit;
+}
+.shared-quiz-intake .quiz-field.quiz-checkbox-option {
+  display: flex;
+  align-items: flex-start;
+  gap: .625rem;
+}
+.shared-quiz-intake .quiz-newsletter-notice {
+  margin: .9rem 0 0;
+  font-weight: 600;
+}
+.shared-quiz-intake .quiz-submit-wrap { margin-top: .8rem; }
+.shared-quiz-intake .quiz-submit {
+  border: 0;
+  border-radius: 999px;
+  padding: .82rem 1.25rem;
+  font: inherit;
+  font-weight: 700;
+  background: var(--brand-gold-500);
+  color: #fff;
+  cursor: pointer;
+}
+.shared-quiz-intake .quiz-submit[disabled],
+.shared-quiz-intake .is-disabled .quiz-submit {
+  opacity: .5;
+  background: var(--brand-gold-500);
+  cursor: not-allowed;
+}
+@media (max-width: 720px) {
+  .shared-quiz-intake .quiz-form-grid { grid-template-columns: minmax(0, 1fr); }
+}
