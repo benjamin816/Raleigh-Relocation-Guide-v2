@@ -9086,3 +9086,27 @@ textarea {
     box-shadow: none;
   }
 }
+
+/* Quiz opt-ins: keep the native checkbox alongside the start of its label. */
+.quiz-field.quiz-checkbox-option,
+.neighborhood-fit-field.quiz-checkbox-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  font-weight: 500;
+}
+.quiz-field.quiz-checkbox-option > input[type="checkbox"],
+.neighborhood-fit-field.quiz-checkbox-option > input[type="checkbox"] {
+  appearance: auto;
+  flex: 0 0 1rem;
+  width: 1rem;
+  min-width: 1rem;
+  height: 1rem;
+  margin: 0.2em 0 0;
+  padding: 0;
+}
+.quiz-field.quiz-checkbox-option > span,
+.neighborhood-fit-field.quiz-checkbox-option > span {
+  flex: 1 1 auto;
+  min-width: 0;
+}

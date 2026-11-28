@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/assets/css/styles.css?v=20261102-live1">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=20261128-quiz-contact1">
   <style>
     :root { --primary-green: #2F5233; --secondary-green: #5F8C63; --accent-light: #E8F5E9; --text-dark: #1F2937; --white: #FFFFFF; --frame: 520px; --border: rgba(17,24,39,.10); --shadow: 0 10px 30px rgba(17,24,39,.08); }
     * { box-sizing: border-box; }
@@ -123,8 +123,9 @@
               <label class="quiz-field"><span>Last name</span><input type="text" name="lastName" autocomplete="family-name" required></label>
               <label class="quiz-field full"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
               <label class="quiz-field full" id="phoneConditional"><span>Phone *</span><input type="tel" name="phone" id="phoneInput" autocomplete="tel" required></label>
-              <p class="quiz-field full" data-legal-consent="true">By submitting, you ask the Living in Raleigh team to contact you by phone or email about your results.</p>
-              <label class='quiz-field full legal-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>
+              <p class="quiz-field full" data-legal-consent="true">By submitting, you agree the Living in Raleigh team may contact you by phone or email about your quiz results.</p>
+              <label class="quiz-field full quiz-checkbox-option"><input type="checkbox" id="wantsConsultation" name="wantsConsultation" autocomplete="off"><span>I'd like someone from the Living in Raleigh team to contact me about my move. (Optional)</span></label>
+              <label class='quiz-field full legal-consent-checkbox quiz-checkbox-option'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>
             </div>
             <div class="quiz-submit-wrap"><button class="quiz-submit" type="submit">Send My Quiz Results</button></div>
             <p class="quiz-msg" id="formMsg" hidden></p>
@@ -162,7 +163,7 @@
     </footer>
   </div>
 
-  <script src="/assets/js/raleigh-suburb-quiz.js?v=20261026-popup-test1" defer></script>
+  <script src="/assets/js/raleigh-suburb-quiz.js?v=20261128-quiz-contact1" defer></script>
   <script src="/assets/js/script.js?v=20261125-mobile4" defer></script>
 </body>
 </html>
