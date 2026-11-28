@@ -938,8 +938,9 @@
                 <span>Phone *</span>
                 <input type="tel" name="phone" id="phoneInput" autocomplete="tel" required>
               </label>
-              <p class="neighborhood-fit-field full" data-legal-consent="true">By submitting, you ask the Living in Raleigh team to contact you by phone or email about your results.</p>
-              <label class='neighborhood-fit-field full legal-consent-checkbox'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>
+              <p class="neighborhood-fit-field full" data-legal-consent="true">By submitting, you agree the Living in Raleigh team may contact you by phone or email about your quiz results.</p>
+              <label class="neighborhood-fit-field full quiz-checkbox-option"><input type="checkbox" id="wantsConsultation" name="wantsConsultation" autocomplete="off"><span>I'd like someone from the Living in Raleigh team to contact me about my move. (Optional)</span></label>
+              <label class='neighborhood-fit-field full legal-consent-checkbox quiz-checkbox-option'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>
             </div>
             <div class="neighborhood-fit-submit-wrap">
               <div class="neighborhood-fit-submit-tooltip">Please complete the form to continue.</div>
@@ -1099,8 +1100,7 @@
         firstName: String(data.get("firstName") || ""),
         lastName: String(data.get("lastName") || ""),
         email: String(data.get("email") || ""),
-        phone: String(data.get("phone") || ""),
-        wantsConsultation: true
+        phone: String(data.get("phone") || "")
       };
     }
 
@@ -1141,7 +1141,7 @@
         last_name: String(formData.get("lastName") || "").trim(),
         email: String(formData.get("email") || "").trim(),
         phone: String(formData.get("phone") || "").trim(),
-        wantsConsultation: true,
+        wantsConsultation: el.wantsConsultation?.checked === true, quiz_callback_requested: el.wantsConsultation?.checked === true,
         ...(window.LirEmailMarketingConsent ? window.LirEmailMarketingConsent(el.form, "neighborhood_quiz", formData.get("email")) : { email_marketing_opt_in: false }),
         results,
         answers

@@ -330,7 +330,8 @@ function normalizeLead_(p) {
     home_eval_phone: clean_(p.home_eval_phone),
     home_eval_property_address: clean_(p.home_eval_property_address),
 
-    wants_consultation: toBoolean_(p.wantsConsultation || p.wants_consultation),
+    // Older quiz clients sent wantsConsultation:true for everyone. Only the new checkbox is evidence.
+    wants_consultation: isQuiz ? p.quiz_callback_requested === true : toBoolean_(p.wantsConsultation || p.wants_consultation),
     quiz_top_pick: quizText_(quizResults.topPick || p.quiz_top_pick),
     quiz_second_pick: quizText_(quizResults.secondPick || p.quiz_second_pick),
     quiz_third_pick: quizText_(quizResults.thirdPick || p.quiz_third_pick),
@@ -547,6 +548,11 @@ function updateTawkLeadRow_(sheet, rowNumber, lead, raw, normalizedPayload) {
 
 function sendLeadEmailAndUpdateStatus_(sheet, rowNumber, lead, raw, attachment) {
   try {
+    if (isQuizSubmission_(lead) && !(raw && raw.quiz_callback_requested === true)) {
+      // Keep the CRM intake and separate result email; only skip the hot-lead admin notification.
+      updateLeadEmailStatus_(sheet, rowNumber, 'skipped_quiz_results_only', '', '');
+      return { status: 'skipped_quiz_results_only', error: '' };
+    }
     if (!leadHasPhoneNumber_(lead)) {
       const skipMessage = 'No phone number provided for admin email.';
       updateLeadEmailStatus_(sheet, rowNumber, 'skipped_no_phone', '', skipMessage);
@@ -1087,7 +1093,6 @@ function sendLeadEmail_(lead, raw, attachment) {
     addFieldLineIfPresent_(quizLines, 'Top Pick', lead.quiz_top_pick);
     addFieldLineIfPresent_(quizLines, 'Second Pick', lead.quiz_second_pick);
     addFieldLineIfPresent_(quizLines, 'Third Pick', lead.quiz_third_pick);
-    addFieldLineIfPresent_(quizLines, 'Requested Team Call', lead.wants_consultation ? 'Yes' : 'No');
     appendSectionIfAny_(lines, lead.lead_type === 'neighborhood_quiz' ? 'Raleigh Neighborhood Quiz Results' : 'Raleigh Suburb Quiz Results', quizLines);
   }
 
