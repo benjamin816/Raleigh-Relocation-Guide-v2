@@ -1,13 +1,19 @@
 /* The suburb and neighborhood quizzes share one lead intake design. */
 .neighborhood-fit-lead-gate.shared-quiz-intake:not([hidden]) {
   display: block;
-  background: var(--primary-green);
+  background: var(--primary-green, #2F5233);
   color: #fff;
   border-color: transparent;
 }
 .shared-quiz-intake h2,
 .shared-quiz-intake p,
 .shared-quiz-intake .quiz-field span { color: #fff; }
+.shared-quiz-intake h2 {
+  font-family: Manrope, sans-serif;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  font-weight: 700;
+}
 .shared-quiz-intake h2,
 .shared-quiz-intake > p,
 .shared-quiz-intake .shared-quiz-form { max-width: 980px; margin-inline: auto; }
