@@ -923,30 +923,21 @@
 
         <section class="neighborhood-fit-results" id="quizResults" hidden aria-live="polite"></section>
 
-        <section class="neighborhood-fit-lead-gate" id="leadGate" hidden>
-          <div class="neighborhood-fit-lead-copy">
-            <p class="neighborhood-fit-script">Your results are ready</p>
-            <h2>Get your ${escapeHtml(config.city)} match delivered by email.</h2>
-            <p>Leave your information below and we’ll send your top three neighborhood matches to your inbox.</p>
-          </div>
-          <form class="neighborhood-fit-form" id="leadForm" novalidate>
-            <div class="neighborhood-fit-form-grid">
-              <label class="neighborhood-fit-field"><span>First name</span><input type="text" name="firstName" autocomplete="given-name" required></label>
-              <label class="neighborhood-fit-field"><span>Last name</span><input type="text" name="lastName" autocomplete="family-name" required></label>
-              <label class="neighborhood-fit-field full"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
-              <label class="neighborhood-fit-field full" id="phoneConditional">
-                <span>Phone *</span>
-                <input type="tel" name="phone" id="phoneInput" autocomplete="tel" required>
-              </label>
-              <p class="neighborhood-fit-field full" data-legal-consent="true">By submitting, you agree the Living in Raleigh team may contact you by phone or email about your quiz results.</p>
-              <label class="neighborhood-fit-field full quiz-checkbox-option"><input type="checkbox" id="wantsConsultation" name="wantsConsultation" autocomplete="off"><span>I'd like someone from the Living in Raleigh team to contact me about my move. (Optional)</span></label>
-              <label class='neighborhood-fit-field full legal-consent-checkbox quiz-checkbox-option'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>
+        <section class="neighborhood-fit-lead-gate shared-quiz-intake" id="leadGate" hidden>
+          <h2>Your quiz is complete.</h2>
+          <p>Enter your information below and we’ll email your quiz results.</p>
+          <form id="leadForm" class="shared-quiz-form neighborhood-fit-form" novalidate>
+            <div class="quiz-form-grid">
+              <label class="quiz-field"><span>First name</span><input type="text" name="firstName" autocomplete="given-name" required></label>
+              <label class="quiz-field"><span>Last name</span><input type="text" name="lastName" autocomplete="family-name" required></label>
+              <label class="quiz-field full"><span>Email</span><input type="email" name="email" autocomplete="email" required></label>
+              <label class="quiz-field full" id="phoneConditional"><span>Phone *</span><input type="tel" name="phone" id="phoneInput" autocomplete="tel" required></label>
+              <p class="quiz-field full" data-legal-consent="true">By submitting, you agree the Living in Raleigh team may contact you by phone or email about your quiz results.</p>
+              <label class="quiz-field full quiz-checkbox-option"><input type="checkbox" id="wantsConsultation" name="wantsConsultation" autocomplete="off"><span>I'd like someone from the Living in Raleigh team to contact me about my move. (Optional)</span></label>
             </div>
-            <div class="neighborhood-fit-submit-wrap">
-              <div class="neighborhood-fit-submit-tooltip">Please complete the form to continue.</div>
-              <button class="neighborhood-fit-submit" type="submit">Send My Results</button>
-            </div>
-            <p class="neighborhood-fit-msg" id="formMsg" hidden></p>
+            <p id="quizNewsletterNotice" class="quiz-newsletter-notice" data-quiz-newsletter-notice="lir-quiz-newsletter-v3">By submitting your information, you’re signing up for the Living in Raleigh email newsletter. Unsubscribe any time.</p>
+            <div class="quiz-submit-wrap neighborhood-fit-submit-wrap"><button class="quiz-submit neighborhood-fit-submit" type="submit" aria-describedby="quizNewsletterNotice">Send My Quiz Results</button></div>
+            <p class="quiz-msg neighborhood-fit-msg" id="formMsg" hidden></p>
           </form>
         </section>
 
@@ -1142,7 +1133,7 @@
         email: String(formData.get("email") || "").trim(),
         phone: String(formData.get("phone") || "").trim(),
         wantsConsultation: el.wantsConsultation?.checked === true, quiz_callback_requested: el.wantsConsultation?.checked === true,
-        ...(window.LirEmailMarketingConsent ? window.LirEmailMarketingConsent(el.form, "neighborhood_quiz", formData.get("email")) : { email_marketing_opt_in: false }),
+        ...(window.LirQuizNewsletterConsent ? window.LirQuizNewsletterConsent(el.form, "neighborhood_quiz", formData.get("email"), getOrCreateSubmissionId()) : { email_marketing_opt_in: false }),
         results,
         answers
       };

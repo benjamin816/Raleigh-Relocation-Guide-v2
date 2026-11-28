@@ -16,6 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/styles.css?v=20261128-quiz-contact1">
+  <link rel="stylesheet" href="/assets/css/quiz-intake.css?v=20261128-quiz-intake2">
   <style>
     :root { --primary-green: #2F5233; --secondary-green: #5F8C63; --accent-light: #E8F5E9; --text-dark: #1F2937; --white: #FFFFFF; --frame: 520px; --border: rgba(17,24,39,.10); --shadow: 0 10px 30px rgba(17,24,39,.08); }
     * { box-sizing: border-box; }
@@ -47,17 +48,11 @@
     .quiz-results.active, .quiz-lead-gate.active, .quiz-success-screen.active { display: block; }
     .quiz-results-grid { display: grid; gap: 0.85rem; margin: 1rem 0 1.1rem; }
     .quiz-result-card { border: 1px solid #d5e2ea; border-radius: 14px; padding: 0.9rem 1rem; background: #f8fcff; }
-    .quiz-form-grid { display: grid; gap: 0.9rem; grid-template-columns: 1fr 1fr; }
-    .quiz-field { display: grid; gap: 0.35rem; }
-    .quiz-field input { border: 1px solid #cddbe4; border-radius: 12px; padding: 0.8rem; font: inherit; }
-    .quiz-field.full { grid-column: 1 / -1; }
     .quiz-checkbox-row { display: grid; grid-template-columns: 1rem minmax(0, 1fr); align-items: start; gap: 0.6rem; }
     .quiz-checkbox-row input[type="checkbox"] { margin: 0.15rem 0 0; width: 1rem; height: 1rem; }
     .quiz-phone-conditional { display: none; }
     .quiz-phone-conditional.active { display: grid; }
-    .quiz-submit-wrap { margin-top: 0.8rem; }
-    .quiz-submit, .quiz-start-over, .quiz-results-cta { border: 0; border-radius: 999px; padding: 0.82rem 1.25rem; font: inherit; font-weight: 700; background: var(--brand-gold-500); color: #fff; cursor: pointer; }
-    .quiz-submit[disabled] { opacity: 0.5; cursor: not-allowed; }
+    .quiz-start-over, .quiz-results-cta { border: 0; border-radius: 999px; padding: 0.82rem 1.25rem; font: inherit; font-weight: 700; background: var(--brand-gold-500); color: #fff; cursor: pointer; }
     .quiz-success-screen { min-height: 56vh; text-align: center; place-items: center; background: #fff; border-radius: 24px; }
     .quiz-success-screen.active { display: grid; }
     .quiz-page.quiz-complete { background: #fff; }
@@ -75,7 +70,7 @@
     .embedHeaderInner { width: min(860px, 100%); margin: 0 auto; padding: 0 2px; }
     .embedWrap { position: relative; width: 100%; background: #fff; overflow: hidden; height: var(--frame); }
     iframe.frame { display: block; width: 100%; border: 0; height: var(--frame); background: #fff; }
-    @media (max-width: 720px) { .quiz-form-grid { grid-template-columns: 1fr; } .quiz-nav { flex-direction: column; } .quiz-btn { width: 100%; } :root { --frame: 680px; } }
+    @media (max-width: 720px) { .quiz-nav { flex-direction: column; } .quiz-btn { width: 100%; } :root { --frame: 680px; } }
     @media (max-width: 420px) { :root { --frame: 760px; } }
     .quiz-card { margin-top: 2rem; text-align: center; background: var(--primary-green); color: #fff; border: 0; border-radius: 0; box-shadow: none; width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); padding: 2.2rem 1rem; }
     .quiz-card > * { width: min(980px, 100%); margin-left: auto; margin-right: auto; text-align: left; }
@@ -114,10 +109,10 @@
             </div>
           </div>
         </div>
-        <div class="quiz-lead-gate" id="leadGate">
+        <div class="quiz-lead-gate shared-quiz-intake" id="leadGate">
           <h2>Your quiz is complete.</h2>
-          <p>Enter your info below and we will send your suburb quiz result summary to your email.</p>
-          <form id="leadForm" novalidate>
+          <p>Enter your information below and we’ll email your quiz results.</p>
+          <form id="leadForm" class="shared-quiz-form" novalidate>
             <div class="quiz-form-grid">
               <label class="quiz-field"><span>First name</span><input type="text" name="firstName" autocomplete="given-name" required></label>
               <label class="quiz-field"><span>Last name</span><input type="text" name="lastName" autocomplete="family-name" required></label>
@@ -125,9 +120,9 @@
               <label class="quiz-field full" id="phoneConditional"><span>Phone *</span><input type="tel" name="phone" id="phoneInput" autocomplete="tel" required></label>
               <p class="quiz-field full" data-legal-consent="true">By submitting, you agree the Living in Raleigh team may contact you by phone or email about your quiz results.</p>
               <label class="quiz-field full quiz-checkbox-option"><input type="checkbox" id="wantsConsultation" name="wantsConsultation" autocomplete="off"><span>I'd like someone from the Living in Raleigh team to contact me about my move. (Optional)</span></label>
-              <label class='quiz-field full legal-consent-checkbox quiz-checkbox-option'><input type='checkbox' data-email-marketing-opt-in autocomplete='off'><span>Email me occasional Living in Raleigh guides, updates, and real estate tips. I can unsubscribe at any time. (Optional)</span></label>
             </div>
-            <div class="quiz-submit-wrap"><button class="quiz-submit" type="submit">Send My Quiz Results</button></div>
+            <p id="quizNewsletterNotice" class="quiz-newsletter-notice" data-quiz-newsletter-notice="lir-quiz-newsletter-v3">By submitting your information, you’re signing up for the Living in Raleigh email newsletter. Unsubscribe any time.</p>
+            <div class="quiz-submit-wrap"><button class="quiz-submit" type="submit" aria-describedby="quizNewsletterNotice">Send My Quiz Results</button></div>
             <p class="quiz-msg" id="formMsg" hidden></p>
           </form>
         </div>
@@ -163,7 +158,8 @@
     </footer>
   </div>
 
-  <script src="/assets/js/raleigh-suburb-quiz.js?v=20261128-quiz-contact1" defer></script>
+  <script src="/assets/js/quiz-newsletter-consent.js?v=20261128-quiz-intake2" defer></script>
+  <script src="/assets/js/raleigh-suburb-quiz.js?v=20261128-quiz-intake2" defer></script>
   <script src="/assets/js/script.js?v=20261125-mobile4" defer></script>
 </body>
 </html>
